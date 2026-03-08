@@ -19,6 +19,8 @@ import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSuperadmin } from "@/hooks/useSuperadmin";
+import { TenantSelector } from "@/components/TenantSelector";
+import { useTenantContext } from "@/hooks/useTenantContext";
 import {
   Sidebar,
   SidebarContent,
