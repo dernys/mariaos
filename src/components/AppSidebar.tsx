@@ -42,6 +42,7 @@ const mainItems = [
   { title: "Tiendas", url: "/tiendas", icon: Store },
   { title: "Almacenes", url: "/almacenes", icon: Warehouse },
   { title: "Turnos", url: "/turnos", icon: Clock },
+  { title: "Contabilidad", url: "/contabilidad", icon: BookOpen },
 ];
 
 const systemItems = [
