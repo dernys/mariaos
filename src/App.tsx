@@ -15,6 +15,7 @@ import Almacenes from "./pages/Almacenes";
 import Configuracion from "./pages/Configuracion";
 import RolesPermisos from "./pages/RolesPermisos";
 import Turnos from "./pages/Turnos";
+import Contabilidad from "./pages/Contabilidad";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import SuperAdmin from "./pages/SuperAdmin";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
             <Route path="/roles" element={<ProtectedRoute><RolesPermisos /></ProtectedRoute>} />
             <Route path="/turnos" element={<ProtectedRoute><Turnos /></ProtectedRoute>} />
+            <Route path="/contabilidad" element={<ProtectedRoute><Contabilidad /></ProtectedRoute>} />
             <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
