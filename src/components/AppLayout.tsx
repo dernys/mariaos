@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,17 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, title }: AppLayoutProps) {
+  const { profile } = useAuth();
+
+  const initials = profile?.full_name
+    ? profile.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "??";
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -32,7 +44,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
               </Button>
               <div className="h-8 w-8 rounded-full gradient-brand flex items-center justify-center text-primary-foreground text-xs font-bold font-heading ml-2">
-                AD
+                {initials}
               </div>
             </div>
           </header>

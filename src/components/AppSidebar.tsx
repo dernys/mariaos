@@ -5,11 +5,15 @@ import {
   Store,
   Warehouse,
   Settings,
-  ChevronDown,
+  Shield,
+  Clock,
   Zap,
+  LogOut,
+  ChevronDown,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
@@ -30,9 +34,11 @@ const mainItems = [
   { title: "Inventario", url: "/inventario", icon: Package },
   { title: "Tiendas", url: "/tiendas", icon: Store },
   { title: "Almacenes", url: "/almacenes", icon: Warehouse },
+  { title: "Turnos", url: "/turnos", icon: Clock },
 ];
 
-const configItems = [
+const systemItems = [
+  { title: "Roles y Permisos", url: "/roles", icon: Shield },
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
@@ -40,10 +46,19 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const currentPath = location.pathname;
+  const { profile, roles, signOut } = useAuth();
 
   const isActive = (path: string) =>
-    path === "/" ? currentPath === "/" : currentPath.startsWith(path);
+    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
+
+  const initials = profile?.full_name
+    ? profile.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "??";
 
   return (
     <Sidebar collapsible="icon">
@@ -74,11 +89,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
@@ -101,13 +112,9 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {configItems.map((item) => (
+              {systemItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <NavLink
                       to={item.url}
                       className="transition-colors"
@@ -126,19 +133,27 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4">
         {!collapsed && (
-          <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent p-3">
-            <div className="h-8 w-8 rounded-full bg-sidebar-primary/20 flex items-center justify-center text-sidebar-primary text-xs font-bold font-heading">
-              T1
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent p-3">
+              <div className="h-8 w-8 rounded-full gradient-brand flex items-center justify-center text-primary-foreground text-xs font-bold font-heading shrink-0">
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-sidebar-accent-foreground truncate">
+                  {profile?.full_name ?? "Usuario"}
+                </p>
+                <p className="text-[10px] text-sidebar-foreground/50">
+                  {roles.length > 0 ? roles.join(", ") : "Sin rol"}
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-sidebar-accent-foreground truncate">
-                Tienda Central
-              </p>
-              <p className="text-[10px] text-sidebar-foreground/50">
-                Tenant activo
-              </p>
-            </div>
-            <ChevronDown className="h-3 w-3 text-sidebar-foreground/40" />
+            <button
+              onClick={signOut}
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Cerrar Sesión
+            </button>
           </div>
         )}
       </SidebarFooter>
