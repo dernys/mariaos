@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { TenantProvider } from "@/hooks/useTenantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import POS from "./pages/POS";
@@ -26,29 +27,31 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
-            <Route path="/inventario" element={<ProtectedRoute><Inventario /></ProtectedRoute>} />
-            <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
-            <Route path="/empleados" element={<ProtectedRoute><Empleados /></ProtectedRoute>} />
-            <Route path="/tiendas" element={<ProtectedRoute><Tiendas /></ProtectedRoute>} />
-            <Route path="/almacenes" element={<ProtectedRoute><Almacenes /></ProtectedRoute>} />
-            <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
-            <Route path="/roles" element={<ProtectedRoute><RolesPermisos /></ProtectedRoute>} />
-            <Route path="/turnos" element={<ProtectedRoute><Turnos /></ProtectedRoute>} />
-            <Route path="/contabilidad" element={<ProtectedRoute><Contabilidad /></ProtectedRoute>} />
-            <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <TenantProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
+              <Route path="/inventario" element={<ProtectedRoute><Inventario /></ProtectedRoute>} />
+              <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
+              <Route path="/empleados" element={<ProtectedRoute><Empleados /></ProtectedRoute>} />
+              <Route path="/tiendas" element={<ProtectedRoute><Tiendas /></ProtectedRoute>} />
+              <Route path="/almacenes" element={<ProtectedRoute><Almacenes /></ProtectedRoute>} />
+              <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
+              <Route path="/roles" element={<ProtectedRoute><RolesPermisos /></ProtectedRoute>} />
+              <Route path="/turnos" element={<ProtectedRoute><Turnos /></ProtectedRoute>} />
+              <Route path="/contabilidad" element={<ProtectedRoute><Contabilidad /></ProtectedRoute>} />
+              <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </TenantProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
