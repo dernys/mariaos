@@ -171,6 +171,24 @@ export type Database = {
           },
         ]
       }
+      superadmins: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tenant_users: {
         Row: {
           created_at: string
