@@ -331,7 +331,10 @@ const SuperAdmin = () => {
                       </div>
                       <div>
                         <h3 className="font-heading font-semibold text-sm">{tenant.name}</h3>
-                        <p className="text-[10px] text-muted-foreground">/{tenant.slug}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-[10px] text-muted-foreground">/{tenant.slug}</p>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted font-medium capitalize">{(tenant as any).business_type || "empresa"}</span>
+                        </div>
                       </div>
                     </div>
                     <span
