@@ -80,7 +80,8 @@ const SuperAdmin = () => {
       phone: form.phone || null,
       address: form.address || null,
       rfc: form.rfc || null,
-    });
+      business_type: form.business_type,
+    } as any);
     if (error) return toast.error(error.message);
     toast.success("Empresa creada correctamente");
     setShowCreate(false);
