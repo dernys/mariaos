@@ -406,6 +406,33 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                     </div>
                   </div>
                 )}
+
+                {p.method === "qr" && (
+                  <div className="flex flex-col items-center gap-3 pt-2 border-t border-border/50">
+                    <div className="bg-white p-3 rounded-lg shadow-sm">
+                      <QRCodeSVG
+                        value={getQrPaymentData(p, remaining > 0 ? remaining : total)}
+                        size={140}
+                        level="M"
+                        includeMargin
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      Escanea el código QR para completar el pago de{" "}
+                      <span className="font-semibold">{parseFloat(p.amount) || 0} {p.currency}</span>
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs gap-1"
+                      onClick={() => copyQrData(idx, getQrPaymentData(p, remaining > 0 ? remaining : total))}
+                    >
+                      {qrCopied === idx ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      {qrCopied === idx ? "Copiado" : "Copiar datos"}
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
