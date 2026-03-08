@@ -55,6 +55,7 @@ const SuperAdmin = () => {
     phone: "",
     address: "",
     rfc: "",
+    business_type: "empresa",
   });
 
   useEffect(() => {
@@ -79,11 +80,12 @@ const SuperAdmin = () => {
       phone: form.phone || null,
       address: form.address || null,
       rfc: form.rfc || null,
-    });
+      business_type: form.business_type,
+    } as any);
     if (error) return toast.error(error.message);
     toast.success("Empresa creada correctamente");
     setShowCreate(false);
-    setForm({ name: "", slug: "", email: "", phone: "", address: "", rfc: "" });
+    setForm({ name: "", slug: "", email: "", phone: "", address: "", rfc: "", business_type: "empresa" });
     fetchTenants();
   };
 
@@ -269,6 +271,18 @@ const SuperAdmin = () => {
                       onChange={(e) => setForm({ ...form, address: e.target.value })}
                     />
                   </div>
+                  <div>
+                    <label className="text-xs font-medium mb-1 block">Tipo de Negocio *</label>
+                    <select
+                      value={form.business_type}
+                      onChange={(e) => setForm({ ...form, business_type: e.target.value })}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="empresa">Empresa / Tienda</option>
+                      <option value="bar">Bar</option>
+                      <option value="restaurant">Restaurante</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" size="sm" onClick={() => setShowCreate(false)}>
@@ -317,7 +331,10 @@ const SuperAdmin = () => {
                       </div>
                       <div>
                         <h3 className="font-heading font-semibold text-sm">{tenant.name}</h3>
-                        <p className="text-[10px] text-muted-foreground">/{tenant.slug}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-[10px] text-muted-foreground">/{tenant.slug}</p>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted font-medium capitalize">{(tenant as any).business_type || "empresa"}</span>
+                        </div>
                       </div>
                     </div>
                     <span
