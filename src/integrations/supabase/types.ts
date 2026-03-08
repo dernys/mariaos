@@ -123,6 +123,7 @@ export type Database = {
           opening_cash: number
           status: string
           store_name: string
+          tenant_id: string | null
           total_sales: number | null
           total_transactions: number | null
           updated_at: string
@@ -138,6 +139,7 @@ export type Database = {
           opening_cash?: number
           status?: string
           store_name: string
+          tenant_id?: string | null
           total_sales?: number | null
           total_transactions?: number | null
           updated_at?: string
@@ -153,10 +155,111 @@ export type Database = {
           opening_cash?: number
           status?: string
           store_name?: string
+          tenant_id?: string | null
           total_sales?: number | null
           total_transactions?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_shifts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      superadmins: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tenant_users: {
+        Row: {
+          created_at: string
+          id: string
+          is_owner: boolean
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_owner?: boolean
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_owner?: boolean
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_users_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          phone: string | null
+          rfc: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          rfc?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          rfc?: string | null
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -193,6 +296,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_superadmin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "gerente" | "supervisor" | "cajero" | "inventarista"
