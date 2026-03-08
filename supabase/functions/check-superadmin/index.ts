@@ -20,10 +20,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Get user from token
     const token = authHeader.replace("Bearer ", "");
@@ -38,6 +37,31 @@ Deno.serve(async (req) => {
 
     const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL");
     const isSuperadmin = user.email === superadminEmail;
+
+    // If superadmin, ensure they're in the superadmins table
+    if (isSuperadmin) {
+      const { data: existing } = await supabase
+        .from("superadmins")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from("superadmins").insert({ user_id: user.id });
+      }
+
+      // Also ensure they have admin role
+      const { data: existingRole } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!existingRole) {
+        await supabase.from("user_roles").insert({ user_id: user.id, role: "admin" });
+      }
+    }
 
     return new Response(
       JSON.stringify({ is_superadmin: isSuperadmin }),
