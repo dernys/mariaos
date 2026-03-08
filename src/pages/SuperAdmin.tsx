@@ -271,6 +271,18 @@ const SuperAdmin = () => {
                       onChange={(e) => setForm({ ...form, address: e.target.value })}
                     />
                   </div>
+                  <div>
+                    <label className="text-xs font-medium mb-1 block">Tipo de Negocio *</label>
+                    <select
+                      value={form.business_type}
+                      onChange={(e) => setForm({ ...form, business_type: e.target.value })}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="empresa">Empresa / Tienda</option>
+                      <option value="bar">Bar</option>
+                      <option value="restaurant">Restaurante</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" size="sm" onClick={() => setShowCreate(false)}>
