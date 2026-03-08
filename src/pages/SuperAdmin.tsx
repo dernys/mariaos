@@ -55,6 +55,7 @@ const SuperAdmin = () => {
     phone: "",
     address: "",
     rfc: "",
+    business_type: "empresa",
   });
 
   useEffect(() => {
