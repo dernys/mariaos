@@ -33,7 +33,7 @@ interface Employee {
 
 interface PaymentLine {
   method: "cash" | "card" | "qr";
-  currency: "CUP" | "USD" | "EUR";
+  currency: string;
   amount: string;
   exchange_rate: string;
   card_last_four: string;
@@ -41,7 +41,12 @@ interface PaymentLine {
   card_description: string;
 }
 
-const EXCHANGE_RATES: Record<string, number> = { CUP: 1, USD: 300, EUR: 330 };
+interface CurrencyConfig {
+  code: string;
+  symbol: string;
+  exchange_rate: number;
+  is_base: boolean;
+}
 
 interface PaymentDialogProps {
   open: boolean;
