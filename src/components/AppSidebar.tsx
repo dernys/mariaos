@@ -9,6 +9,7 @@ import {
   Settings,
   Shield,
   Clock,
+  BookOpen,
   Zap,
   LogOut,
   ChevronDown,
