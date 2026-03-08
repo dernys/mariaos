@@ -41,6 +41,115 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          address: string | null
+          balance: number
+          created_at: string
+          credit_limit: number
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          rfc: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          balance?: number
+          created_at?: string
+          credit_limit?: number
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          rfc?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          balance?: number
+          created_at?: string
+          credit_limit?: number
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          rfc?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string
+          email: string | null
+          hire_date: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          position: string | null
+          salary: number | null
+          tenant_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          hire_date?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          position?: string | null
+          salary?: number | null
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          hire_date?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          position?: string | null
+          salary?: number | null
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -108,6 +217,174 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "app_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_items: {
+        Row: {
+          created_at: string
+          id: string
+          price: number
+          product_name: string
+          qty: number
+          sale_id: string
+          sku: string | null
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price: number
+          product_name: string
+          qty?: number
+          sale_id: string
+          sku?: string | null
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price?: number
+          product_name?: string
+          qty?: number
+          sale_id?: string
+          sku?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_payments: {
+        Row: {
+          amount: number
+          amount_in_base: number
+          card_description: string | null
+          card_holder: string | null
+          card_last_four: string | null
+          created_at: string
+          currency: string
+          exchange_rate: number
+          id: string
+          method: string
+          sale_id: string
+        }
+        Insert: {
+          amount: number
+          amount_in_base: number
+          card_description?: string | null
+          card_holder?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          currency?: string
+          exchange_rate?: number
+          id?: string
+          method?: string
+          sale_id: string
+        }
+        Update: {
+          amount?: number
+          amount_in_base?: number
+          card_description?: string | null
+          card_holder?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          currency?: string
+          exchange_rate?: number
+          id?: string
+          method?: string
+          sale_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_payments_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          customer_id: string | null
+          employee_id: string | null
+          id: string
+          notes: string | null
+          shift_id: string | null
+          status: string
+          subtotal: number
+          tax: number
+          tenant_id: string | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number
+          created_at?: string
+          customer_id?: string | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          shift_id?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          tenant_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          customer_id?: string | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          shift_id?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          tenant_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "sales_shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
