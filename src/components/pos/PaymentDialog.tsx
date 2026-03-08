@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Banknote, CreditCard, QrCode, Plus, Trash2, Search, User } from "lucide-react";
+import { Banknote, CreditCard, QrCode, Plus, Trash2, Search, User, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { QRCodeSVG } from "qrcode.react";
 
 interface CartItem {
   id: number;
@@ -32,7 +33,7 @@ interface Employee {
 
 interface PaymentLine {
   method: "cash" | "card" | "qr";
-  currency: "CUP" | "USD" | "EUR";
+  currency: string;
   amount: string;
   exchange_rate: string;
   card_last_four: string;
@@ -40,7 +41,12 @@ interface PaymentLine {
   card_description: string;
 }
 
-const EXCHANGE_RATES: Record<string, number> = { CUP: 1, USD: 300, EUR: 330 };
+interface CurrencyConfig {
+  code: string;
+  symbol: string;
+  exchange_rate: number;
+  is_base: boolean;
+}
 
 interface PaymentDialogProps {
   open: boolean;
@@ -59,11 +65,17 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   ]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [currencies, setCurrencies] = useState<CurrencyConfig[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [customerSearch, setCustomerSearch] = useState("");
   const [isPartial, setIsPartial] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [qrCopied, setQrCopied] = useState<number | null>(null);
+
+  // Build exchange rates map from DB currencies
+  const exchangeRates: Record<string, number> = {};
+  currencies.forEach((c) => { exchangeRates[c.code] = c.exchange_rate; });
 
   useEffect(() => {
     if (open) {
@@ -71,17 +83,29 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       setSelectedCustomer("");
       setSelectedEmployee("");
       setIsPartial(false);
+      setQrCopied(null);
       fetchData();
     }
   }, [open]);
 
   const fetchData = async () => {
-    const [custRes, empRes] = await Promise.all([
+    const [custRes, empRes, currRes] = await Promise.all([
       supabase.from("customers").select("id, name, credit_limit, balance").order("name"),
       supabase.from("employees").select("id, name, position").eq("is_active", true).order("name"),
+      supabase.from("currencies").select("code, symbol, exchange_rate, is_base").eq("is_active", true).order("code"),
     ]);
     if (custRes.data) setCustomers(custRes.data as Customer[]);
     if (empRes.data) setEmployees(empRes.data as Employee[]);
+    if (currRes.data && currRes.data.length > 0) {
+      setCurrencies(currRes.data as CurrencyConfig[]);
+    } else {
+      // Fallback if no currencies configured
+      setCurrencies([
+        { code: "CUP", symbol: "$", exchange_rate: 1, is_base: true },
+        { code: "USD", symbol: "$", exchange_rate: 300, is_base: false },
+        { code: "EUR", symbol: "€", exchange_rate: 330, is_base: false },
+      ]);
+    }
   };
 
   const totalPaidInBase = payments.reduce((sum, p) => {
@@ -104,9 +128,26 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     const updated = [...payments];
     updated[idx] = { ...updated[idx], [field]: value };
     if (field === "currency") {
-      updated[idx].exchange_rate = String(EXCHANGE_RATES[value] || 1);
+      updated[idx].exchange_rate = String(exchangeRates[value] || 1);
     }
     setPayments(updated);
+  };
+
+  const getQrPaymentData = (p: PaymentLine, saleTotal: number) => {
+    const amt = parseFloat(p.amount) || saleTotal;
+    return JSON.stringify({
+      merchant: "POS-System",
+      amount: amt,
+      currency: p.currency,
+      total_base: amt * (parseFloat(p.exchange_rate) || 1),
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  const copyQrData = (idx: number, data: string) => {
+    navigator.clipboard.writeText(data);
+    setQrCopied(idx);
+    setTimeout(() => setQrCopied(null), 2000);
   };
 
   const handleSubmit = async () => {
@@ -300,9 +341,9 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                     <Select value={p.currency} onValueChange={(v) => updatePayment(idx, "currency", v)}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="CUP">CUP</SelectItem>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
+                        {currencies.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>{c.code} ({c.symbol})</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -363,6 +404,33 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                         placeholder="Visa, Mastercard..."
                       />
                     </div>
+                  </div>
+                )}
+
+                {p.method === "qr" && (
+                  <div className="flex flex-col items-center gap-3 pt-2 border-t border-border/50">
+                    <div className="bg-white p-3 rounded-lg shadow-sm">
+                      <QRCodeSVG
+                        value={getQrPaymentData(p, remaining > 0 ? remaining : total)}
+                        size={140}
+                        level="M"
+                        includeMargin
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      Escanea el código QR para completar el pago de{" "}
+                      <span className="font-semibold">{parseFloat(p.amount) || 0} {p.currency}</span>
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs gap-1"
+                      onClick={() => copyQrData(idx, getQrPaymentData(p, remaining > 0 ? remaining : total))}
+                    >
+                      {qrCopied === idx ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      {qrCopied === idx ? "Copiado" : "Copiar datos"}
+                    </Button>
                   </div>
                 )}
               </div>
