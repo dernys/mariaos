@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,8 @@ import { toast } from "sonner";
 type AuthView = "login" | "register" | "forgot";
 
 const Auth = () => {
+  const { session, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [view, setView] = useState<AuthView>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,13 +20,35 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Redirect when already authenticated
+  useEffect(() => {
+    if (authLoading || !session) return;
+
+    const checkAndRedirect = async () => {
+      try {
+        const { data } = await supabase.functions.invoke("check-superadmin");
+        if (data?.is_superadmin) {
+          navigate("/superadmin", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
+      } catch {
+        navigate("/", { replace: true });
+      }
+    };
+
+    checkAndRedirect();
+  }, [session, authLoading, navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) toast.error(error.message);
-    else toast.success("¡Bienvenido!");
-    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+    }
+    // Redirect handled by useEffect above
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -36,9 +62,14 @@ const Auth = () => {
       });
 
       if (!fnError && data?.success) {
-        toast.success("¡Cuenta de superadmin creada! Puedes iniciar sesión.");
-        setView("login");
-        setLoading(false);
+        toast.success("¡Cuenta de superadmin creada! Iniciando sesión...");
+        // Auto-login after superadmin registration
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (loginError) {
+          toast.error(loginError.message);
+          setLoading(false);
+        }
+        // Redirect handled by useEffect
         return;
       }
     } catch {
@@ -69,6 +100,15 @@ const Auth = () => {
     else toast.success("Correo de recuperación enviado.");
     setLoading(false);
   };
+
+  // Show spinner while checking auth state
+  if (authLoading || session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
