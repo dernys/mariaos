@@ -2,3 +2,6 @@ project_id = "xamrlxcfqniafraahtbc"
 
 [functions.check-superadmin]
 verify_jwt = false
+
+[functions.register-superadmin]
+verify_jwt = false
