@@ -74,7 +74,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="p-4">
+      <SidebarHeader className="p-4 space-y-3">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg gradient-brand flex items-center justify-center shrink-0">
             <Zap className="h-4 w-4 text-primary-foreground" />
@@ -85,11 +85,12 @@ export function AppSidebar() {
                 VentaPro
               </span>
               <span className="text-[10px] text-sidebar-foreground/60">
-                Sistema de Ventas
+                {tenant?.name || "Sistema de Ventas"}
               </span>
             </div>
           )}
         </div>
+        {!collapsed && allTenants.length > 1 && <TenantSelector />}
       </SidebarHeader>
 
       <SidebarContent>
