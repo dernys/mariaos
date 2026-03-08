@@ -1,18 +1,24 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/hooks/useTenant";
+import { logActivity } from "@/hooks/useActivityLog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { ActivityTimeline } from "@/components/ActivityTimeline";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Edit2, Trash2, Users } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Users, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from "date-fns";
 
 interface Employee {
   id: string;
@@ -26,11 +32,24 @@ interface Employee {
   notes: string | null;
 }
 
+interface Shift {
+  id: string;
+  store_name: string;
+  opened_at: string;
+  closed_at: string | null;
+  total_sales: number | null;
+  status: string;
+}
+
 const Empleados = () => {
+  const { user } = useAuth();
+  const tenantId = useTenant();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailEmployee, setDetailEmployee] = useState<Employee | null>(null);
+  const [employeeShifts, setEmployeeShifts] = useState<Shift[]>([]);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [form, setForm] = useState({ name: "", position: "", salary: "0", phone: "", email: "", hire_date: "", notes: "" });
   const { toast } = useToast();
@@ -51,58 +70,48 @@ const Empleados = () => {
 
   const openEdit = (e: Employee) => {
     setEditing(e);
-    setForm({
-      name: e.name, position: e.position || "", salary: String(e.salary),
-      phone: e.phone || "", email: e.email || "",
-      hire_date: e.hire_date || "", notes: e.notes || "",
-    });
+    setForm({ name: e.name, position: e.position || "", salary: String(e.salary), phone: e.phone || "", email: e.email || "", hire_date: e.hire_date || "", notes: e.notes || "" });
     setDialogOpen(true);
   };
 
+  const openDetail = async (e: Employee) => {
+    setDetailEmployee(e);
+    const { data } = await supabase.from("sales_shifts").select("id, store_name, opened_at, closed_at, total_sales, status").eq("employee_id", e.id).order("opened_at", { ascending: false }).limit(50);
+    setEmployeeShifts((data as Shift[]) || []);
+  };
+
   const handleSave = async () => {
-    if (!form.name.trim()) {
-      toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" });
-      return;
-    }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single();
-
+    if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
     const payload = {
-      name: form.name.trim(),
-      position: form.position || null,
-      salary: parseFloat(form.salary) || 0,
-      phone: form.phone || null,
-      email: form.email || null,
-      hire_date: form.hire_date || null,
-      notes: form.notes || null,
-      tenant_id: tu?.tenant_id,
+      name: form.name.trim(), position: form.position || null, salary: parseFloat(form.salary) || 0,
+      phone: form.phone || null, email: form.email || null, hire_date: form.hire_date || null,
+      notes: form.notes || null, tenant_id: tenantId,
     };
-
     if (editing) {
       const { error } = await supabase.from("employees").update(payload).eq("id", editing.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      await logActivity({ entity_type: "employee", entity_id: editing.id, action: "Empleado actualizado", description: `Se actualizó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
       toast({ title: "Empleado actualizado" });
     } else {
-      const { error } = await supabase.from("employees").insert(payload);
+      const { data, error } = await supabase.from("employees").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      if (data) await logActivity({ entity_type: "employee", entity_id: data.id, action: "Empleado creado", description: `Se creó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
       toast({ title: "Empleado creado" });
     }
     setDialogOpen(false);
     fetchEmployees();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, name: string) => {
     const { error } = await supabase.from("employees").delete().eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    await logActivity({ entity_type: "employee", entity_id: id, action: "Empleado eliminado", description: `Se eliminó ${name}`, tenant_id: tenantId, performed_by: user?.id });
     toast({ title: "Empleado eliminado" });
     fetchEmployees();
   };
 
   const filtered = employees.filter((e) =>
-    e.name.toLowerCase().includes(search.toLowerCase()) ||
-    (e.position || "").toLowerCase().includes(search.toLowerCase())
+    e.name.toLowerCase().includes(search.toLowerCase()) || (e.position || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -128,30 +137,23 @@ const Empleados = () => {
                 <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead className="hidden lg:table-cell">Salario</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="w-20">Acciones</TableHead>
+                <TableHead className="w-28">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="font-medium">{e.name}</TableCell>
+                  <TableCell className="font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => openDetail(e)}>{e.name}</TableCell>
                   <TableCell>{e.position || "—"}</TableCell>
                   <TableCell className="hidden sm:table-cell">{e.phone || "—"}</TableCell>
                   <TableCell className="hidden md:table-cell">{e.email || "—"}</TableCell>
                   <TableCell className="hidden lg:table-cell">${e.salary.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Badge variant={e.is_active ? "default" : "secondary"}>
-                      {e.is_active ? "Activo" : "Inactivo"}
-                    </Badge>
-                  </TableCell>
+                  <TableCell><Badge variant={e.is_active ? "default" : "secondary"}>{e.is_active ? "Activo" : "Inactivo"}</Badge></TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <button onClick={() => openEdit(e)} className="p-1.5 rounded hover:bg-muted transition-colors">
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={() => handleDelete(e.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <button onClick={() => openDetail(e)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Historial"><History className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => openEdit(e)} className="p-1.5 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => handleDelete(e.id, e.name)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -169,6 +171,7 @@ const Empleados = () => {
         </div>
       </div>
 
+      {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -176,10 +179,7 @@ const Empleados = () => {
             <DialogDescription>Ingresa los datos del empleado</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div>
-              <Label>Nombre *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </div>
+            <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Puesto</Label><Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} /></div>
               <div><Label>Salario</Label><Input type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} /></div>
@@ -195,6 +195,49 @@ const Empleados = () => {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleSave} className="gradient-brand text-primary-foreground">Guardar</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail Dialog with History */}
+      <Dialog open={!!detailEmployee} onOpenChange={() => setDetailEmployee(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{detailEmployee?.name}</DialogTitle>
+            <DialogDescription>{detailEmployee?.position || "Sin puesto"} · {detailEmployee?.is_active ? "Activo" : "Inactivo"}</DialogDescription>
+          </DialogHeader>
+          {detailEmployee && (
+            <Tabs defaultValue="shifts">
+              <TabsList className="w-full">
+                <TabsTrigger value="shifts" className="flex-1">Turnos</TabsTrigger>
+                <TabsTrigger value="activity" className="flex-1">Actividad</TabsTrigger>
+              </TabsList>
+              <TabsContent value="shifts" className="max-h-64 overflow-y-auto">
+                {employeeShifts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">Sin turnos registrados</p>
+                ) : (
+                  <div className="space-y-2">
+                    {employeeShifts.map((s) => (
+                      <div key={s.id} className="flex items-center justify-between bg-muted/40 rounded-lg p-3">
+                        <div>
+                          <p className="text-xs font-medium">{s.store_name}</p>
+                          <p className="text-[10px] text-muted-foreground">{format(new Date(s.opened_at), "dd/MM/yyyy HH:mm")}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-heading font-semibold text-primary">${s.total_sales || 0}</span>
+                          <Badge variant={s.status === "open" ? "default" : "secondary"} className="text-[10px]">
+                            {s.status === "open" ? "Abierto" : "Cerrado"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="activity">
+                <ActivityTimeline entityType="employee" entityId={detailEmployee.id} />
+              </TabsContent>
+            </Tabs>
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>
