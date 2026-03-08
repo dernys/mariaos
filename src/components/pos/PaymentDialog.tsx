@@ -128,9 +128,26 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     const updated = [...payments];
     updated[idx] = { ...updated[idx], [field]: value };
     if (field === "currency") {
-      updated[idx].exchange_rate = String(EXCHANGE_RATES[value] || 1);
+      updated[idx].exchange_rate = String(exchangeRates[value] || 1);
     }
     setPayments(updated);
+  };
+
+  const getQrPaymentData = (p: PaymentLine, saleTotal: number) => {
+    const amt = parseFloat(p.amount) || saleTotal;
+    return JSON.stringify({
+      merchant: "POS-System",
+      amount: amt,
+      currency: p.currency,
+      total_base: amt * (parseFloat(p.exchange_rate) || 1),
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  const copyQrData = (idx: number, data: string) => {
+    navigator.clipboard.writeText(data);
+    setQrCopied(idx);
+    setTimeout(() => setQrCopied(null), 2000);
   };
 
   const handleSubmit = async () => {
