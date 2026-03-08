@@ -85,7 +85,7 @@ const SuperAdmin = () => {
     if (error) return toast.error(error.message);
     toast.success("Empresa creada correctamente");
     setShowCreate(false);
-    setForm({ name: "", slug: "", email: "", phone: "", address: "", rfc: "" });
+    setForm({ name: "", slug: "", email: "", phone: "", address: "", rfc: "", business_type: "empresa" });
     fetchTenants();
   };
 
