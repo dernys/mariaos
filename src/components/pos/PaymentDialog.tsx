@@ -65,11 +65,17 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   ]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [currencies, setCurrencies] = useState<CurrencyConfig[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [customerSearch, setCustomerSearch] = useState("");
   const [isPartial, setIsPartial] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [qrCopied, setQrCopied] = useState<number | null>(null);
+
+  // Build exchange rates map from DB currencies
+  const exchangeRates: Record<string, number> = {};
+  currencies.forEach((c) => { exchangeRates[c.code] = c.exchange_rate; });
 
   useEffect(() => {
     if (open) {
@@ -77,17 +83,29 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       setSelectedCustomer("");
       setSelectedEmployee("");
       setIsPartial(false);
+      setQrCopied(null);
       fetchData();
     }
   }, [open]);
 
   const fetchData = async () => {
-    const [custRes, empRes] = await Promise.all([
+    const [custRes, empRes, currRes] = await Promise.all([
       supabase.from("customers").select("id, name, credit_limit, balance").order("name"),
       supabase.from("employees").select("id, name, position").eq("is_active", true).order("name"),
+      supabase.from("currencies").select("code, symbol, exchange_rate, is_base").eq("is_active", true).order("code"),
     ]);
     if (custRes.data) setCustomers(custRes.data as Customer[]);
     if (empRes.data) setEmployees(empRes.data as Employee[]);
+    if (currRes.data && currRes.data.length > 0) {
+      setCurrencies(currRes.data as CurrencyConfig[]);
+    } else {
+      // Fallback if no currencies configured
+      setCurrencies([
+        { code: "CUP", symbol: "$", exchange_rate: 1, is_base: true },
+        { code: "USD", symbol: "$", exchange_rate: 300, is_base: false },
+        { code: "EUR", symbol: "€", exchange_rate: 330, is_base: false },
+      ]);
+    }
   };
 
   const totalPaidInBase = payments.reduce((sum, p) => {
