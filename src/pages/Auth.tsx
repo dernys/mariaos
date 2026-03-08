@@ -28,6 +28,24 @@ const Auth = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // Try superadmin registration first (auto-confirms email)
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("register-superadmin", {
+        body: { email, password, full_name: fullName },
+      });
+
+      if (!fnError && data?.success) {
+        toast.success("¡Cuenta de superadmin creada! Puedes iniciar sesión.");
+        setView("login");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      // Not superadmin, continue with normal registration
+    }
+
+    // Normal registration
     const { error } = await supabase.auth.signUp({
       email,
       password,
