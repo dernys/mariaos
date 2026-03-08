@@ -3,6 +3,8 @@ import {
   Monitor,
   Package,
   Store,
+  Users,
+  UserCheck,
   Warehouse,
   Settings,
   Shield,
