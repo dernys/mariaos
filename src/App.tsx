@@ -15,6 +15,7 @@ import RolesPermisos from "./pages/RolesPermisos";
 import Turnos from "./pages/Turnos";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import SuperAdmin from "./pages/SuperAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
