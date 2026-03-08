@@ -341,9 +341,9 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                     <Select value={p.currency} onValueChange={(v) => updatePayment(idx, "currency", v)}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="CUP">CUP</SelectItem>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
+                        {currencies.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>{c.code} ({c.symbol})</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
