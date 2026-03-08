@@ -15,6 +15,7 @@ import Almacenes from "./pages/Almacenes";
 import Configuracion from "./pages/Configuracion";
 import RolesPermisos from "./pages/RolesPermisos";
 import Turnos from "./pages/Turnos";
+import Contabilidad from "./pages/Contabilidad";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import SuperAdmin from "./pages/SuperAdmin";
