@@ -1,0 +1,409 @@
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Banknote, CreditCard, QrCode, Plus, Trash2, Search, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  qty: number;
+  sku?: string;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  credit_limit: number;
+  balance: number;
+}
+
+interface Employee {
+  id: string;
+  name: string;
+  position: string | null;
+}
+
+interface PaymentLine {
+  method: "cash" | "card" | "qr";
+  currency: "CUP" | "USD" | "EUR";
+  amount: string;
+  exchange_rate: string;
+  card_last_four: string;
+  card_holder: string;
+  card_description: string;
+}
+
+const EXCHANGE_RATES: Record<string, number> = { CUP: 1, USD: 300, EUR: 330 };
+
+interface PaymentDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  cart: CartItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  onSaleComplete: () => void;
+}
+
+export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, onSaleComplete }: PaymentDialogProps) {
+  const { toast } = useToast();
+  const [payments, setPayments] = useState<PaymentLine[]>([
+    { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" },
+  ]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [isPartial, setIsPartial] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setPayments([{ method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" }]);
+      setSelectedCustomer("");
+      setSelectedEmployee("");
+      setIsPartial(false);
+      fetchData();
+    }
+  }, [open]);
+
+  const fetchData = async () => {
+    const [custRes, empRes] = await Promise.all([
+      supabase.from("customers").select("id, name, credit_limit, balance").order("name"),
+      supabase.from("employees").select("id, name, position").eq("is_active", true).order("name"),
+    ]);
+    if (custRes.data) setCustomers(custRes.data as Customer[]);
+    if (empRes.data) setEmployees(empRes.data as Employee[]);
+  };
+
+  const totalPaidInBase = payments.reduce((sum, p) => {
+    const amt = parseFloat(p.amount) || 0;
+    const rate = parseFloat(p.exchange_rate) || 1;
+    return sum + amt * rate;
+  }, 0);
+
+  const remaining = total - totalPaidInBase;
+
+  const addPaymentLine = () => {
+    setPayments([...payments, { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" }]);
+  };
+
+  const removePaymentLine = (idx: number) => {
+    setPayments(payments.filter((_, i) => i !== idx));
+  };
+
+  const updatePayment = (idx: number, field: keyof PaymentLine, value: string) => {
+    const updated = [...payments];
+    updated[idx] = { ...updated[idx], [field]: value };
+    if (field === "currency") {
+      updated[idx].exchange_rate = String(EXCHANGE_RATES[value] || 1);
+    }
+    setPayments(updated);
+  };
+
+  const handleSubmit = async () => {
+    if (!isPartial && remaining > 0.01) {
+      toast({ title: "Error", description: "El monto pagado no cubre el total. Activa pago parcial o ajusta los montos.", variant: "destructive" });
+      return;
+    }
+
+    // Validate card payments have required fields
+    for (const p of payments) {
+      if (p.method === "card" && (!p.card_last_four || !p.card_holder)) {
+        toast({ title: "Error", description: "Los pagos con tarjeta requieren titular y últimos 4 dígitos.", variant: "destructive" });
+        return;
+      }
+    }
+
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No autenticado");
+
+      const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single();
+
+      const status = isPartial && remaining > 0.01 ? "partial" : "paid";
+
+      // Create sale
+      const { data: sale, error: saleErr } = await supabase.from("sales").insert({
+        tenant_id: tu?.tenant_id,
+        customer_id: selectedCustomer || null,
+        employee_id: selectedEmployee || null,
+        subtotal,
+        tax,
+        total,
+        amount_paid: totalPaidInBase,
+        status,
+      }).select("id").single();
+
+      if (saleErr || !sale) throw saleErr || new Error("Error creando venta");
+
+      // Insert sale items
+      const items = cart.map((item) => ({
+        sale_id: sale.id,
+        product_name: item.name,
+        sku: item.sku || null,
+        price: item.price,
+        qty: item.qty,
+        total: item.price * item.qty,
+      }));
+      const { error: itemsErr } = await supabase.from("sale_items").insert(items);
+      if (itemsErr) throw itemsErr;
+
+      // Insert payments
+      const paymentRows = payments
+        .filter((p) => parseFloat(p.amount) > 0)
+        .map((p) => ({
+          sale_id: sale.id,
+          method: p.method,
+          currency: p.currency,
+          amount: parseFloat(p.amount),
+          amount_in_base: parseFloat(p.amount) * (parseFloat(p.exchange_rate) || 1),
+          exchange_rate: parseFloat(p.exchange_rate) || 1,
+          card_last_four: p.method === "card" ? p.card_last_four : null,
+          card_holder: p.method === "card" ? p.card_holder : null,
+          card_description: p.method === "card" ? p.card_description : null,
+        }));
+      if (paymentRows.length > 0) {
+        const { error: payErr } = await supabase.from("sale_payments").insert(paymentRows);
+        if (payErr) throw payErr;
+      }
+
+      // If partial, update customer balance
+      if (status === "partial" && selectedCustomer) {
+        const customer = customers.find((c) => c.id === selectedCustomer);
+        if (customer) {
+          await supabase.from("customers").update({
+            balance: customer.balance + remaining,
+          }).eq("id", selectedCustomer);
+        }
+      }
+
+      toast({ title: "Venta registrada", description: status === "partial" ? `Pendiente: $${remaining.toFixed(2)} CUP` : "Pago completo" });
+      onSaleComplete();
+      onOpenChange(false);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const filteredCustomers = customers.filter((c) =>
+    c.name.toLowerCase().includes(customerSearch.toLowerCase())
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-heading">Procesar Cobro</DialogTitle>
+          <DialogDescription>
+            Total a cobrar: <span className="font-bold text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Customer & Employee Selection */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Cliente (opcional)</Label>
+              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input placeholder="Buscar..." value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} className="h-8 text-xs" />
+                  </div>
+                  {filteredCustomers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{c.name}</span>
+                        {c.balance > 0 && <Badge variant="destructive" className="text-[10px] px-1">Deuda: ${c.balance}</Badge>}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Empleado (opcional)</Label>
+              <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
+                <SelectContent>
+                  {employees.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>{e.name} {e.position && `(${e.position})`}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Partial Payment Toggle */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="partial"
+              checked={isPartial}
+              onChange={(e) => setIsPartial(e.target.checked)}
+              className="h-4 w-4 rounded border-input"
+            />
+            <Label htmlFor="partial" className="text-xs cursor-pointer">Permitir pago parcial (fiado)</Label>
+          </div>
+
+          {/* Payment Lines */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-heading font-semibold">Métodos de Pago</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addPaymentLine} className="text-xs gap-1">
+                <Plus className="h-3 w-3" /> Agregar
+              </Button>
+            </div>
+
+            {payments.map((p, idx) => (
+              <div key={idx} className="bg-muted/40 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    {(["cash", "card", "qr"] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => updatePayment(idx, "method", m)}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                          p.method === m ? "gradient-brand text-primary-foreground" : "bg-background border hover:bg-muted"
+                        }`}
+                      >
+                        {m === "cash" && <Banknote className="h-3 w-3" />}
+                        {m === "card" && <CreditCard className="h-3 w-3" />}
+                        {m === "qr" && <QrCode className="h-3 w-3" />}
+                        {m === "cash" ? "Efectivo" : m === "card" ? "Tarjeta" : "QR"}
+                      </button>
+                    ))}
+                  </div>
+                  {payments.length > 1 && (
+                    <button type="button" onClick={() => removePaymentLine(idx)} className="ml-auto p-1 text-destructive hover:bg-destructive/10 rounded">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label className="text-[10px]">Moneda</Label>
+                    <Select value={p.currency} onValueChange={(v) => updatePayment(idx, "currency", v)}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CUP">CUP</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">Monto</Label>
+                    <Input
+                      type="number"
+                      className="h-8 text-xs"
+                      value={p.amount}
+                      onChange={(e) => updatePayment(idx, "amount", e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">Tasa de cambio</Label>
+                    <Input
+                      type="number"
+                      className="h-8 text-xs"
+                      value={p.exchange_rate}
+                      onChange={(e) => updatePayment(idx, "exchange_rate", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {p.currency !== "CUP" && parseFloat(p.amount) > 0 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Equivale a ${((parseFloat(p.amount) || 0) * (parseFloat(p.exchange_rate) || 1)).toLocaleString()} CUP
+                  </p>
+                )}
+
+                {p.method === "card" && (
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/50">
+                    <div>
+                      <Label className="text-[10px]">Últimos 4 dígitos *</Label>
+                      <Input
+                        className="h-8 text-xs"
+                        maxLength={4}
+                        value={p.card_last_four}
+                        onChange={(e) => updatePayment(idx, "card_last_four", e.target.value.replace(/\D/g, ""))}
+                        placeholder="1234"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px]">Titular *</Label>
+                      <Input
+                        className="h-8 text-xs"
+                        value={p.card_holder}
+                        onChange={(e) => updatePayment(idx, "card_holder", e.target.value)}
+                        placeholder="Nombre"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px]">Descripción</Label>
+                      <Input
+                        className="h-8 text-xs"
+                        value={p.card_description}
+                        onChange={(e) => updatePayment(idx, "card_description", e.target.value)}
+                        placeholder="Visa, Mastercard..."
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Summary */}
+          <div className="bg-muted/60 rounded-lg p-3 space-y-1 text-xs">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total venta</span>
+              <span className="font-heading font-semibold">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Pagado</span>
+              <span className="font-heading font-semibold text-primary">${totalPaidInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+            </div>
+            {remaining > 0.01 && (
+              <div className="flex justify-between text-destructive">
+                <span>Pendiente</span>
+                <span className="font-heading font-bold">${remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+              </div>
+            )}
+            {remaining <= 0 && totalPaidInBase > total && (
+              <div className="flex justify-between text-primary">
+                <span>Cambio</span>
+                <span className="font-heading font-bold">${Math.abs(remaining).toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+              </div>
+            )}
+          </div>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={saving || (payments.every((p) => !parseFloat(p.amount)))}
+            className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-11"
+          >
+            {saving ? "Procesando..." : isPartial && remaining > 0.01
+              ? `Cobrar Parcial $${totalPaidInBase.toFixed(2)} CUP`
+              : `Cobrar $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP`}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
