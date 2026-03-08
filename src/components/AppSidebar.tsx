@@ -58,6 +58,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { profile, roles, signOut } = useAuth();
   const { isSuperadmin } = useSuperadmin();
+  const { tenant, allTenants } = useTenantContext();
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
