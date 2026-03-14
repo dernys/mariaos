@@ -17,9 +17,11 @@ interface CartContentProps {
   tax: number;
   total: number;
   onCheckout: () => void;
+  taxLabel?: string;
+  checkoutLabel?: string;
 }
 
-export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total, onCheckout }: CartContentProps) {
+export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total, onCheckout, taxLabel = "IVA (16%)", checkoutLabel }: CartContentProps) {
   return (
     <>
       <div className="flex-1 overflow-auto p-4 space-y-2">
@@ -34,7 +36,7 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
             >
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{item.name}</p>
-                <p className="text-[10px] text-muted-foreground">${item.price} c/u</p>
+                <p className="text-[10px] text-muted-foreground">${item.price.toLocaleString()} c/u</p>
               </div>
               <div className="flex items-center gap-1">
                 <button onClick={() => updateQty(item.id, -1)} className="h-7 w-7 rounded bg-background border flex items-center justify-center hover:bg-muted transition-colors active:scale-95">
@@ -68,7 +70,7 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
             <span className="font-heading font-semibold">${subtotal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">IVA (16%)</span>
+            <span className="text-muted-foreground">{taxLabel}</span>
             <span className="font-heading font-semibold">${tax.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
           </div>
           <div className="flex justify-between text-base pt-2 border-t">
@@ -82,7 +84,7 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
           className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-11"
           disabled={cart.length === 0}
         >
-          Cobrar ${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          {checkoutLabel || `Cobrar $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
         </Button>
       </div>
     </>
