@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, X, Briefcase } from "lucide-react";
+import { Search, ShoppingCart, X, Package, Monitor, Smartphone, HardDrive, Headphones, Printer, Wifi, Tablet } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { CartContent } from "./CartContent";
 import { PaymentDialog } from "./PaymentDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,17 @@ interface CartItem {
   productId: string;
 }
 
+const categoryIcons: Record<string, typeof Package> = {
+  Computadoras: Monitor,
+  Teléfonos: Smartphone,
+  Accesorios: Headphones,
+  Monitores: Monitor,
+  Tablets: Tablet,
+  Almacenamiento: HardDrive,
+  Impresoras: Printer,
+  Redes: Wifi,
+};
+
 export function POSEmpresa() {
   const { tenantId } = useTenantContext();
   const [products, setProducts] = useState<Product[]>([]);
@@ -41,7 +53,7 @@ export function POSEmpresa() {
     });
   }, [tenantId]);
 
-  const categories = ["Todos", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[]];
+  const categories = useMemo(() => ["Todos", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[]], [products]);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -62,11 +74,11 @@ export function POSEmpresa() {
   const total = subtotal + tax;
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
 
-  const filtered = products.filter((p) => {
+  const filtered = useMemo(() => products.filter((p) => {
     const ms = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
     const mc = activeCategory === "Todos" || p.category === activeCategory;
     return ms && mc;
-  });
+  }), [products, search, activeCategory]);
 
   const handleSaleComplete = () => { setCart([]); setCartOpen(false); };
 
@@ -79,24 +91,46 @@ export function POSEmpresa() {
         </div>
 
         <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
-          {categories.map((cat) => (
-            <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${activeCategory === cat ? "gradient-brand text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
-              {cat}
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const Icon = categoryIcons[cat];
+            return (
+              <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${activeCategory === cat ? "gradient-brand text-primary-foreground shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
+                {Icon && <Icon className="h-3 w-3" />}
+                {cat}
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 overflow-auto flex-1 pb-20 lg:pb-0">
-          {filtered.map((product) => (
-            <motion.button key={product.id} whileTap={{ scale: 0.96 }} onClick={() => addToCart(product)} className="bg-card rounded-xl p-3 sm:p-4 shadow-card border text-left hover:shadow-elevated hover:border-primary/30 transition-all active:bg-muted/30">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-2 sm:mb-3">
-                <span className="text-[10px] sm:text-xs font-heading font-bold text-primary">{product.sku.slice(0, 3)}</span>
-              </div>
-              <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
-              <p className="text-[10px] text-muted-foreground">Stock: {product.stock}</p>
-              <p className="text-base sm:text-lg font-heading font-bold mt-1 sm:mt-2 text-primary">${product.price}</p>
-            </motion.button>
-          ))}
+          {filtered.length === 0 && (
+            <div className="col-span-full flex flex-col items-center justify-center h-32 text-muted-foreground">
+              <Package className="h-10 w-10 mb-2 opacity-20" />
+              <p className="text-sm">No hay productos</p>
+            </div>
+          )}
+          {filtered.map((product) => {
+            const Icon = categoryIcons[product.category || ""] || Package;
+            const inCart = cart.find((i) => i.productId === product.id);
+            return (
+              <motion.button key={product.id} whileTap={{ scale: 0.96 }} onClick={() => addToCart(product)} className="relative bg-card rounded-xl p-3 sm:p-4 shadow-card border text-left hover:shadow-elevated hover:border-primary/30 transition-all active:bg-muted/30">
+                {inCart && (
+                  <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>
+                )}
+                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
+                  <Icon className="h-4.5 w-4.5 text-primary" />
+                </div>
+                <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
+                <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-base sm:text-lg font-heading font-bold text-primary">${product.price.toLocaleString()}</p>
+                  <Badge variant={product.stock <= product.price * 0 + 5 ? "destructive" : "secondary"} className="text-[8px] px-1 h-4">
+                    {product.stock} uds
+                  </Badge>
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
@@ -130,7 +164,7 @@ export function POSEmpresa() {
       <div className="hidden lg:flex w-80 xl:w-96 bg-card rounded-xl shadow-card border flex-col shrink-0">
         <div className="p-4 border-b">
           <h2 className="font-heading font-semibold text-sm">Carrito de Venta</h2>
-          <p className="text-[10px] text-muted-foreground">{totalItems} artículos</p>
+          <p className="text-[10px] text-muted-foreground">{totalItems} artículos • ${subtotal.toLocaleString()} CUP</p>
         </div>
         <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} />
       </div>
