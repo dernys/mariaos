@@ -1,0 +1,225 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, ChefHat, Check, AlertTriangle, Play, Timer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { useToast } from "@/hooks/use-toast";
+
+interface KitchenOrder {
+  id: string;
+  table_name: string;
+  status: string;
+  priority: string;
+  notes: string | null;
+  waiter_name: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  items: KitchenOrderItem[];
+}
+
+interface KitchenOrderItem {
+  id: string;
+  product_name: string;
+  quantity: number;
+  notes: string | null;
+  status: string;
+}
+
+const statusTabs = [
+  { key: "pending", label: "Pendientes", icon: Clock, color: "text-amber-400" },
+  { key: "preparing", label: "Preparando", icon: ChefHat, color: "text-blue-400" },
+  { key: "ready", label: "Listos", icon: Check, color: "text-emerald-400" },
+];
+
+export function KitchenDisplay() {
+  const { tenantId } = useTenantContext();
+  const { toast } = useToast();
+  const [orders, setOrders] = useState<KitchenOrder[]>([]);
+  const [activeTab, setActiveTab] = useState("pending");
+
+  const fetchOrders = async () => {
+    if (!tenantId) return;
+    const { data } = await supabase
+      .from("kitchen_orders")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .in("status", ["pending", "preparing", "ready"])
+      .order("created_at", { ascending: true });
+
+    if (!data) return;
+
+    const orderIds = data.map((o) => o.id);
+    const { data: items } = orderIds.length > 0
+      ? await supabase.from("kitchen_order_items").select("*").in("order_id", orderIds)
+      : { data: [] };
+
+    const enriched: KitchenOrder[] = data.map((o) => ({
+      ...o,
+      items: (items || []).filter((i) => i.order_id === o.id) as KitchenOrderItem[],
+    }));
+
+    setOrders(enriched);
+  };
+
+  useEffect(() => {
+    fetchOrders();
+    const channel = supabase
+      .channel("kitchen_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "kitchen_orders" }, fetchOrders)
+      .on("postgres_changes", { event: "*", schema: "public", table: "kitchen_order_items" }, fetchOrders)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tenantId]);
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const updates: Record<string, any> = { status: newStatus, updated_at: new Date().toISOString() };
+    if (newStatus === "preparing") updates.started_at = new Date().toISOString();
+    if (newStatus === "ready") updates.completed_at = new Date().toISOString();
+
+    await supabase.from("kitchen_orders").update(updates).eq("id", orderId);
+    toast({ title: "Orden actualizada", description: `Estado: ${newStatus}` });
+    fetchOrders();
+  };
+
+  const getElapsed = (createdAt: string) => {
+    const diff = Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
+    return diff < 60 ? `${diff}min` : `${Math.floor(diff / 60)}h ${diff % 60}m`;
+  };
+
+  const filteredOrders = orders.filter((o) => o.status === activeTab);
+
+  return (
+    <div className="space-y-4">
+      {/* Tabs */}
+      <div className="flex gap-2">
+        {statusTabs.map((tab) => {
+          const count = orders.filter((o) => o.status === tab.key).length;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+                activeTab === tab.key
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+              {count > 0 && (
+                <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  activeTab === tab.key ? "bg-primary-foreground/20" : "bg-foreground/10"
+                }`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Orders grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <AnimatePresence mode="popLayout">
+          {filteredOrders.map((order) => (
+            <motion.div
+              key={order.id}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className={`bg-card rounded-xl border shadow-card overflow-hidden ${
+                order.priority === "urgent" ? "border-destructive/50 ring-1 ring-destructive/20" : ""
+              }`}
+            >
+              {/* Header */}
+              <div className={`p-3 border-b flex items-center justify-between ${
+                order.priority === "urgent" ? "bg-destructive/10" : "bg-muted/30"
+              }`}>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-heading font-bold text-sm">{order.table_name || "Sin mesa"}</h3>
+                    {order.priority === "urgent" && (
+                      <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                    )}
+                  </div>
+                  {order.waiter_name && (
+                    <p className="text-[10px] text-muted-foreground">Mesero: {order.waiter_name}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <Timer className="h-3 w-3" />
+                  {getElapsed(order.created_at)}
+                </div>
+              </div>
+
+              {/* Items */}
+              <div className="p-3 space-y-1.5">
+                {order.items.map((item) => (
+                  <div key={item.id} className="flex items-start gap-2">
+                    <span className="font-heading font-bold text-sm text-primary w-5 shrink-0">
+                      {item.quantity}×
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium">{item.product_name}</p>
+                      {item.notes && (
+                        <p className="text-[10px] text-amber-400 italic">⚠ {item.notes}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {order.notes && (
+                  <p className="text-[10px] text-muted-foreground italic border-t pt-1.5 mt-1.5">
+                    📝 {order.notes}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="p-3 border-t">
+                {order.status === "pending" && (
+                  <Button
+                    size="sm"
+                    className="w-full text-xs gap-1.5"
+                    onClick={() => updateOrderStatus(order.id, "preparing")}
+                  >
+                    <Play className="h-3 w-3" /> Comenzar preparación
+                  </Button>
+                )}
+                {order.status === "preparing" && (
+                  <Button
+                    size="sm"
+                    className="w-full text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => updateOrderStatus(order.id, "ready")}
+                  >
+                    <Check className="h-3 w-3" /> Marcar como listo
+                  </Button>
+                )}
+                {order.status === "ready" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-xs gap-1.5"
+                    onClick={() => updateOrderStatus(order.id, "delivered")}
+                  >
+                    <Check className="h-3 w-3" /> Entregado
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {filteredOrders.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+          <ChefHat className="h-12 w-12 mb-3 opacity-20" />
+          <p className="text-sm font-medium">No hay órdenes {activeTab === "pending" ? "pendientes" : activeTab === "preparing" ? "en preparación" : "listas"}</p>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -14,6 +14,9 @@ import {
   LogOut,
   ChevronDown,
   Crown,
+  ChefHat,
+  MapPin,
+  BarChart3,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -38,6 +41,8 @@ import {
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Punto de Venta", url: "/pos", icon: Monitor },
+  { title: "Mapa de Mesas", url: "/mesas", icon: MapPin },
+  { title: "Cocina (KDS)", url: "/cocina", icon: ChefHat },
   { title: "Inventario", url: "/inventario", icon: Package },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Empleados", url: "/empleados", icon: UserCheck },
@@ -45,6 +50,7 @@ const mainItems = [
   { title: "Almacenes", url: "/almacenes", icon: Warehouse },
   { title: "Turnos", url: "/turnos", icon: Clock },
   { title: "Contabilidad", url: "/contabilidad", icon: BookOpen },
+  { title: "Analytics", url: "/analytics", icon: BarChart3 },
 ];
 
 const systemItems = [

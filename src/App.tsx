@@ -17,6 +17,9 @@ import Configuracion from "./pages/Configuracion";
 import RolesPermisos from "./pages/RolesPermisos";
 import Turnos from "./pages/Turnos";
 import Contabilidad from "./pages/Contabilidad";
+import Cocina from "./pages/Cocina";
+import Mesas from "./pages/Mesas";
+import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import SuperAdmin from "./pages/SuperAdmin";
@@ -46,6 +49,9 @@ const App = () => (
               <Route path="/roles" element={<ProtectedRoute><RolesPermisos /></ProtectedRoute>} />
               <Route path="/turnos" element={<ProtectedRoute><Turnos /></ProtectedRoute>} />
               <Route path="/contabilidad" element={<ProtectedRoute><Contabilidad /></ProtectedRoute>} />
+              <Route path="/cocina" element={<ProtectedRoute><Cocina /></ProtectedRoute>} />
+              <Route path="/mesas" element={<ProtectedRoute><Mesas /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

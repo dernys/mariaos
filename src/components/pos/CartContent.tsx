@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ReactNode } from "react";
 
 interface CartItem {
   id: number;
@@ -19,9 +20,10 @@ interface CartContentProps {
   onCheckout: () => void;
   taxLabel?: string;
   checkoutLabel?: string;
+  extraActions?: ReactNode;
 }
 
-export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total, onCheckout, taxLabel = "IVA (16%)", checkoutLabel }: CartContentProps) {
+export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total, onCheckout, taxLabel = "IVA (16%)", checkoutLabel, extraActions }: CartContentProps) {
   return (
     <>
       <div className="flex-1 overflow-auto p-4 space-y-2">
@@ -78,6 +80,8 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
             <span className="font-heading font-bold text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
           </div>
         </div>
+
+        {extraActions}
 
         <Button
           onClick={onCheckout}
