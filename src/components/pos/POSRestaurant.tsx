@@ -1,12 +1,17 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, X, UtensilsCrossed, Soup, Fish, Salad, Cake, Wine, ChefHat } from "lucide-react";
+import { Search, ShoppingCart, X, UtensilsCrossed, Soup, Fish, Salad, Cake, Wine, ChefHat, MapPin, SplitSquareVertical, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CartContent } from "./CartContent";
 import { PaymentDialog } from "./PaymentDialog";
+import { FloorMap } from "./FloorMap";
+import { SplitBillDialog } from "./SplitBillDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface Product {
   id: string;
@@ -46,13 +51,17 @@ const categoryColors: Record<string, string> = {
 
 export function POSRestaurant() {
   const { tenantId } = useTenantContext();
+  const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [cartOpen, setCartOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
-  const [tableNumber, setTableNumber] = useState("");
+  const [splitBillOpen, setSplitBillOpen] = useState(false);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const [selectedTableName, setSelectedTableName] = useState("");
+  const [posView, setPosView] = useState<"menu" | "tables">("menu");
 
   useEffect(() => {
     if (!tenantId) return;
@@ -88,9 +97,52 @@ export function POSRestaurant() {
     return ms && mc;
   }), [products, search, activeCategory]);
 
-  const handleSaleComplete = () => { setCart([]); setCartOpen(false); setTableNumber(""); };
+  const handleSaleComplete = () => { setCart([]); setCartOpen(false); setSelectedTableId(null); setSelectedTableName(""); };
 
-  // Group by category for menu-style layout
+  const sendToKitchen = async () => {
+    if (cart.length === 0) return;
+    if (!tenantId) return;
+
+    const { data: order, error } = await supabase.from("kitchen_orders").insert({
+      tenant_id: tenantId,
+      table_id: selectedTableId,
+      table_name: selectedTableName || "Sin mesa",
+      status: "pending",
+      priority: "normal",
+    }).select("id").single();
+
+    if (error || !order) {
+      toast({ title: "Error", description: "No se pudo crear la orden", variant: "destructive" });
+      return;
+    }
+
+    const items = cart.map((item) => ({
+      order_id: order.id,
+      product_name: item.name,
+      quantity: item.qty,
+    }));
+
+    await supabase.from("kitchen_order_items").insert(items);
+
+    // Update table status if selected
+    if (selectedTableId) {
+      await supabase.from("restaurant_tables").update({
+        status: "occupied",
+        current_order_id: order.id,
+        occupied_at: new Date().toISOString(),
+      }).eq("id", selectedTableId);
+    }
+
+    toast({ title: "Comanda enviada", description: `${cart.length} platos enviados a cocina` });
+  };
+
+  const handleTableSelect = (table: any) => {
+    setSelectedTableId(table.id);
+    setSelectedTableName(table.name);
+    setPosView("menu");
+  };
+
+  // Group by category
   const groupedByCategory = useMemo(() => {
     if (activeCategory !== "Todos") return null;
     const groups: Record<string, Product[]> = {};
@@ -115,92 +167,108 @@ export function POSRestaurant() {
                 {products.length} platos
               </Badge>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-[10px] text-muted-foreground">Mesa:</label>
-              <Input value={tableNumber} onChange={(e) => setTableNumber(e.target.value)} placeholder="#" className="w-14 h-7 text-xs text-center font-bold bg-rose-500/10 border-rose-500/20 focus-visible:border-rose-500/50" />
-            </div>
+            {selectedTableName && (
+              <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 text-xs">
+                <MapPin className="h-3 w-3 mr-1" /> {selectedTableName}
+              </Badge>
+            )}
           </div>
         </div>
 
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar plato del menú..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card border-rose-500/10 focus-visible:border-rose-500/40" />
-        </div>
+        {/* View tabs */}
+        <Tabs value={posView} onValueChange={(v) => setPosView(v as "menu" | "tables")} className="mb-3">
+          <TabsList className="w-full">
+            <TabsTrigger value="menu" className="flex-1 text-xs gap-1.5">
+              <UtensilsCrossed className="h-3.5 w-3.5" /> Menú
+            </TabsTrigger>
+            <TabsTrigger value="tables" className="flex-1 text-xs gap-1.5">
+              <MapPin className="h-3.5 w-3.5" /> Mesas
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-        <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
-          {categories.map((cat) => {
-            const Icon = categoryIcons[cat];
-            return (
-              <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${activeCategory === cat ? "bg-rose-500 text-white shadow-md shadow-rose-500/25" : "bg-muted text-muted-foreground hover:bg-rose-500/10 hover:text-rose-400"}`}>
-                {Icon && <Icon className="h-3 w-3" />}
-                {cat}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="overflow-auto flex-1 pb-20 lg:pb-0">
-          {filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-              <UtensilsCrossed className="h-10 w-10 mb-2 opacity-20" />
-              <p className="text-sm">No hay platos disponibles</p>
+        {posView === "tables" ? (
+          <div className="overflow-auto flex-1 pb-20 lg:pb-0">
+            <FloorMap onTableSelect={handleTableSelect} selectedTableId={selectedTableId} />
+          </div>
+        ) : (
+          <>
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar plato del menú..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card border-rose-500/10 focus-visible:border-rose-500/40" />
             </div>
-          )}
 
-          {/* Grouped view when "Todos" */}
-          {groupedByCategory ? (
-            <div className="space-y-4">
-              {Object.entries(groupedByCategory).map(([cat, items]) => {
-                const Icon = categoryIcons[cat] || UtensilsCrossed;
+            <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+              {categories.map((cat) => {
+                const Icon = categoryIcons[cat];
                 return (
-                  <div key={cat}>
-                    <div className="flex items-center gap-2 mb-2 px-1">
-                      <Icon className="h-4 w-4 text-rose-400" />
-                      <h3 className="text-xs font-heading font-bold text-rose-300/80 uppercase tracking-wider">{cat}</h3>
-                      <div className="flex-1 h-px bg-rose-500/10" />
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
-                      {items.map((product) => {
-                        const colors = categoryColors[product.category || ""] || "from-card to-rose-950/5 border-rose-500/10";
-                        const inCart = cart.find((i) => i.productId === product.id);
-                        return (
-                          <motion.button key={product.id} whileTap={{ scale: 0.96 }} onClick={() => addToCart(product)} className={`relative bg-gradient-to-br ${colors} rounded-xl p-3 shadow-card border text-left hover:shadow-elevated transition-all`}>
-                            {inCart && (
-                              <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>
-                            )}
-                            <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
-                            <p className="text-base font-heading font-bold mt-1 text-rose-400">${product.price}</p>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${activeCategory === cat ? "bg-rose-500 text-white shadow-md shadow-rose-500/25" : "bg-muted text-muted-foreground hover:bg-rose-500/10 hover:text-rose-400"}`}>
+                    {Icon && <Icon className="h-3 w-3" />}
+                    {cat}
+                  </button>
                 );
               })}
             </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
-              {filtered.map((product) => {
-                const Icon = categoryIcons[product.category || ""] || UtensilsCrossed;
-                const colors = categoryColors[product.category || ""] || "from-card to-rose-950/5 border-rose-500/10";
-                const inCart = cart.find((i) => i.productId === product.id);
-                return (
-                  <motion.button key={product.id} whileTap={{ scale: 0.96 }} onClick={() => addToCart(product)} className={`relative bg-gradient-to-br ${colors} rounded-xl p-3 sm:p-4 shadow-card border text-left hover:shadow-elevated transition-all`}>
-                    {inCart && (
-                      <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>
-                    )}
-                    <div className="h-9 w-9 rounded-lg bg-rose-500/15 flex items-center justify-center mb-2">
-                      <Icon className="h-4.5 w-4.5 text-rose-400" />
-                    </div>
-                    <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{product.category}</p>
-                    <p className="text-base sm:text-lg font-heading font-bold mt-1 text-rose-400">${product.price}</p>
-                  </motion.button>
-                );
-              })}
+
+            <div className="overflow-auto flex-1 pb-20 lg:pb-0">
+              {filtered.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+                  <UtensilsCrossed className="h-10 w-10 mb-2 opacity-20" />
+                  <p className="text-sm">No hay platos disponibles</p>
+                </div>
+              )}
+
+              {groupedByCategory ? (
+                <div className="space-y-4">
+                  {Object.entries(groupedByCategory).map(([cat, items]) => {
+                    const Icon = categoryIcons[cat] || UtensilsCrossed;
+                    return (
+                      <div key={cat}>
+                        <div className="flex items-center gap-2 mb-2 px-1">
+                          <Icon className="h-4 w-4 text-rose-400" />
+                          <h3 className="text-xs font-heading font-bold text-rose-300/80 uppercase tracking-wider">{cat}</h3>
+                          <div className="flex-1 h-px bg-rose-500/10" />
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
+                          {items.map((product) => {
+                            const colors = categoryColors[product.category || ""] || "from-card to-rose-950/5 border-rose-500/10";
+                            const inCart = cart.find((i) => i.productId === product.id);
+                            return (
+                              <motion.button key={product.id} whileTap={{ scale: 0.96 }} onClick={() => addToCart(product)} className={`relative bg-gradient-to-br ${colors} rounded-xl p-3 shadow-card border text-left hover:shadow-elevated transition-all`}>
+                                {inCart && <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>}
+                                <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
+                                <p className="text-base font-heading font-bold mt-1 text-rose-400">${product.price}</p>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
+                  {filtered.map((product) => {
+                    const Icon = categoryIcons[product.category || ""] || UtensilsCrossed;
+                    const colors = categoryColors[product.category || ""] || "from-card to-rose-950/5 border-rose-500/10";
+                    const inCart = cart.find((i) => i.productId === product.id);
+                    return (
+                      <motion.button key={product.id} whileTap={{ scale: 0.96 }} onClick={() => addToCart(product)} className={`relative bg-gradient-to-br ${colors} rounded-xl p-3 sm:p-4 shadow-card border text-left hover:shadow-elevated transition-all`}>
+                        {inCart && <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>}
+                        <div className="h-9 w-9 rounded-lg bg-rose-500/15 flex items-center justify-center mb-2">
+                          <Icon className="h-4.5 w-4.5 text-rose-400" />
+                        </div>
+                        <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{product.category}</p>
+                        <p className="text-base sm:text-lg font-heading font-bold mt-1 text-rose-400">${product.price}</p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Mobile FAB */}
@@ -221,10 +289,22 @@ export function POSRestaurant() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setCartOpen(false)} className="lg:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40" />
             <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl shadow-elevated border-t max-h-[85vh] flex flex-col">
               <div className="flex items-center justify-between p-4 border-b">
-                <div><h2 className="font-heading font-semibold text-sm">🍽️ Comanda {tableNumber && `Mesa ${tableNumber}`}</h2><p className="text-[10px] text-muted-foreground">{totalItems} platos</p></div>
+                <div>
+                  <h2 className="font-heading font-semibold text-sm">🍽️ Comanda {selectedTableName && `— ${selectedTableName}`}</h2>
+                  <p className="text-[10px] text-muted-foreground">{totalItems} platos</p>
+                </div>
                 <button onClick={() => setCartOpen(false)} className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"><X className="h-4 w-4" /></button>
               </div>
-              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel="Servicio (10%)" checkoutLabel="Enviar a Caja" />
+              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel="Servicio (10%)" checkoutLabel="Enviar a Caja" extraActions={
+                <div className="flex gap-2 mb-2">
+                  <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
+                    <Send className="h-3 w-3" /> Enviar a Cocina
+                  </Button>
+                  <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
+                    <SplitSquareVertical className="h-3 w-3" /> Dividir
+                  </Button>
+                </div>
+              } />
             </motion.div>
           </>
         )}
@@ -233,13 +313,23 @@ export function POSRestaurant() {
       {/* Desktop Cart */}
       <div className="hidden lg:flex w-80 xl:w-96 bg-card rounded-xl shadow-card border flex-col shrink-0">
         <div className="p-4 border-b bg-gradient-to-r from-rose-500/10 to-transparent">
-          <h2 className="font-heading font-semibold text-sm">🍽️ Comanda {tableNumber && `— Mesa ${tableNumber}`}</h2>
+          <h2 className="font-heading font-semibold text-sm">🍽️ Comanda {selectedTableName && `— ${selectedTableName}`}</h2>
           <p className="text-[10px] text-muted-foreground">{totalItems} platos • ${subtotal.toLocaleString()} CUP</p>
         </div>
-        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel="Servicio (10%)" checkoutLabel="Enviar a Caja" />
+        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel="Servicio (10%)" checkoutLabel="Enviar a Caja" extraActions={
+          <div className="flex gap-2 mb-2">
+            <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
+              <Send className="h-3 w-3" /> Cocina
+            </Button>
+            <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
+              <SplitSquareVertical className="h-3 w-3" /> Dividir
+            </Button>
+          </div>
+        } />
       </div>
 
       <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} />
+      <SplitBillDialog open={splitBillOpen} onOpenChange={setSplitBillOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSplitConfirm={(splits) => { toast({ title: "Cuenta dividida", description: `${splits.length} cuentas generadas` }); }} />
     </div>
   );
 }
