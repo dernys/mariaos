@@ -460,6 +460,104 @@ export type Database = {
           },
         ]
       }
+      kitchen_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string
+          product_name: string
+          quantity: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id: string
+          product_name: string
+          quantity?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string
+          product_name?: string
+          quantity?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kitchen_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "kitchen_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kitchen_orders: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          priority: string
+          started_at: string | null
+          status: string
+          table_id: string | null
+          table_name: string
+          tenant_id: string | null
+          updated_at: string
+          waiter_name: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          priority?: string
+          started_at?: string | null
+          status?: string
+          table_id?: string | null
+          table_name?: string
+          tenant_id?: string | null
+          updated_at?: string
+          waiter_name?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          priority?: string
+          started_at?: string | null
+          status?: string
+          table_id?: string | null
+          table_name?: string
+          tenant_id?: string | null
+          updated_at?: string
+          waiter_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kitchen_orders_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kitchen_orders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_methods: {
         Row: {
           created_at: string
@@ -542,6 +640,58 @@ export type Database = {
           },
           {
             foreignKeyName: "product_categories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_recipes: {
+        Row: {
+          created_at: string
+          id: string
+          ingredient_id: string
+          product_id: string
+          quantity: number
+          tenant_id: string | null
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ingredient_id: string
+          product_id: string
+          quantity?: number
+          tenant_id?: string | null
+          unit?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ingredient_id?: string
+          product_id?: string
+          quantity?: number
+          tenant_id?: string | null
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_recipes_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_recipes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_recipes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -641,6 +791,69 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      restaurant_tables: {
+        Row: {
+          capacity: number
+          created_at: string
+          current_order_id: string | null
+          id: string
+          name: string
+          occupied_at: string | null
+          position_x: number
+          position_y: number
+          shape: string
+          status: string
+          tenant_id: string | null
+          updated_at: string
+          waiter_id: string | null
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          current_order_id?: string | null
+          id?: string
+          name: string
+          occupied_at?: string | null
+          position_x?: number
+          position_y?: number
+          shape?: string
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          waiter_id?: string | null
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          current_order_id?: string | null
+          id?: string
+          name?: string
+          occupied_at?: string | null
+          position_x?: number
+          position_y?: number
+          shape?: string
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          waiter_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tables_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_tables_waiter_id_fkey"
+            columns: ["waiter_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_permissions: {
         Row: {
