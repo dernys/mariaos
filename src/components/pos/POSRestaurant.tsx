@@ -29,6 +29,7 @@ interface CartItem {
   qty: number;
   sku?: string;
   productId: string;
+  notes?: string;
 }
 
 const categoryIcons: Record<string, typeof UtensilsCrossed> = {
