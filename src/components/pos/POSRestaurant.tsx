@@ -148,6 +148,7 @@ export function POSRestaurant() {
     }
 
     toast({ title: "Comanda enviada", description: `${cart.length} platos enviados a cocina` });
+    setOrderNotes("");
   };
 
   const handleTableSelect = (table: any) => {
