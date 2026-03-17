@@ -133,6 +133,7 @@ export function POSRestaurant() {
       order_id: order.id,
       product_name: item.name,
       quantity: item.qty,
+      notes: item.notes || null,
     }));
 
     await supabase.from("kitchen_order_items").insert(items);
