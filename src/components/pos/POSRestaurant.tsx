@@ -120,6 +120,8 @@ export function POSRestaurant() {
       table_name: selectedTableName || "Sin mesa",
       status: "pending",
       priority: "normal",
+      waiter_name: waiterName || null,
+      notes: orderNotes || null,
     }).select("id").single();
 
     if (error || !order) {
