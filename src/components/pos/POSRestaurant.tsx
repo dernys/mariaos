@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, X, UtensilsCrossed, Soup, Fish, Salad, Cake, Wine, ChefHat, MapPin, SplitSquareVertical, Send } from "lucide-react";
+import { Search, ShoppingCart, X, UtensilsCrossed, Soup, Fish, Salad, Cake, Wine, ChefHat, MapPin, SplitSquareVertical, Send, UserCheck, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
