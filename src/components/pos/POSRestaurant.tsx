@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, X, UtensilsCrossed, Soup, Fish, Salad, Cake, Wine, ChefHat, MapPin, SplitSquareVertical, Send } from "lucide-react";
+import { Search, ShoppingCart, X, UtensilsCrossed, Soup, Fish, Salad, Cake, Wine, ChefHat, MapPin, SplitSquareVertical, Send, UserCheck, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ interface CartItem {
   qty: number;
   sku?: string;
   productId: string;
+  notes?: string;
 }
 
 const categoryIcons: Record<string, typeof UtensilsCrossed> = {
@@ -62,6 +63,16 @@ export function POSRestaurant() {
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedTableName, setSelectedTableName] = useState("");
   const [posView, setPosView] = useState<"menu" | "tables">("menu");
+  const [waiterName, setWaiterName] = useState("");
+  const [orderNotes, setOrderNotes] = useState("");
+  const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    supabase.from("employees").select("id, name").eq("tenant_id", tenantId).eq("is_active", true).order("name").then(({ data }) => {
+      if (data) setEmployees(data);
+    });
+  }, [tenantId]);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -109,6 +120,8 @@ export function POSRestaurant() {
       table_name: selectedTableName || "Sin mesa",
       status: "pending",
       priority: "normal",
+      waiter_name: waiterName || null,
+      notes: orderNotes || null,
     }).select("id").single();
 
     if (error || !order) {
@@ -120,6 +133,7 @@ export function POSRestaurant() {
       order_id: order.id,
       product_name: item.name,
       quantity: item.qty,
+      notes: item.notes || null,
     }));
 
     await supabase.from("kitchen_order_items").insert(items);
@@ -134,6 +148,7 @@ export function POSRestaurant() {
     }
 
     toast({ title: "Comanda enviada", description: `${cart.length} platos enviados a cocina` });
+    setOrderNotes("");
   };
 
   const handleTableSelect = (table: any) => {
@@ -158,8 +173,8 @@ export function POSRestaurant() {
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
       <div className="flex-1 flex flex-col min-w-0">
         {/* Restaurant header */}
-        <div className="bg-gradient-to-r from-rose-900/25 to-red-900/10 rounded-xl p-3 mb-3 border border-rose-500/20">
-          <div className="flex items-center justify-between">
+         <div className="bg-gradient-to-r from-rose-900/25 to-red-900/10 rounded-xl p-3 mb-3 border border-rose-500/20">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <UtensilsCrossed className="h-5 w-5 text-rose-400" />
               <h2 className="font-heading font-bold text-sm">Comanda</h2>
@@ -172,6 +187,25 @@ export function POSRestaurant() {
                 <MapPin className="h-3 w-3 mr-1" /> {selectedTableName}
               </Badge>
             )}
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <select
+              value={waiterName}
+              onChange={(e) => setWaiterName(e.target.value)}
+              className="h-7 rounded-md bg-background/50 border border-rose-500/20 text-xs px-2 min-w-[120px]"
+            >
+              <option value="">Mesero...</option>
+              {employees.map((e) => (
+                <option key={e.id} value={e.name}>{e.name}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={orderNotes}
+              onChange={(e) => setOrderNotes(e.target.value)}
+              placeholder="Notas de la orden..."
+              className="h-7 rounded-md bg-background/50 border border-rose-500/20 text-xs px-2 flex-1 min-w-[100px]"
+            />
           </div>
         </div>
 
