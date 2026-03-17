@@ -63,6 +63,16 @@ export function POSRestaurant() {
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedTableName, setSelectedTableName] = useState("");
   const [posView, setPosView] = useState<"menu" | "tables">("menu");
+  const [waiterName, setWaiterName] = useState("");
+  const [orderNotes, setOrderNotes] = useState("");
+  const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    supabase.from("employees").select("id, name").eq("tenant_id", tenantId).eq("is_active", true).order("name").then(({ data }) => {
+      if (data) setEmployees(data);
+    });
+  }, [tenantId]);
 
   useEffect(() => {
     if (!tenantId) return;
