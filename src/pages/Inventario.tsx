@@ -357,6 +357,22 @@ const Inventario = () => {
               <div><Label>Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} /></div>
               <div><Label>Mínimo</Label><Input type="number" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
             </div>
+            {/* Online sale section */}
+            <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Venta Online</Label>
+                  <p className="text-[11px] text-muted-foreground">Publicar este producto en el marketplace</p>
+                </div>
+                <Switch checked={form.is_online} onCheckedChange={(v) => setForm({ ...form, is_online: v })} />
+              </div>
+              {form.is_online && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Stock Online</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
+                  <div><Label>URL de Imagen</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." /></div>
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
