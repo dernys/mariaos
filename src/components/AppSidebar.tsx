@@ -17,6 +17,8 @@ import {
   ChefHat,
   MapPin,
   BarChart3,
+  ShoppingBag,
+  Globe,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -61,9 +63,11 @@ const mainItems: MenuItem[] = [
   { title: "Turnos", url: "/turnos", icon: Clock },
   { title: "Contabilidad", url: "/contabilidad", icon: BookOpen },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "Pedidos Online", url: "/pedidos-online", icon: ShoppingBag },
 ];
 
 const systemItems = [
+  { title: "Marketplace", url: "/marketplace", icon: Globe },
   { title: "Roles y Permisos", url: "/roles", icon: Shield },
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];

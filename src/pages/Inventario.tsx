@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { motion } from "framer-motion";
-import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2 } from "lucide-react";
+import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -34,6 +35,9 @@ interface Product {
   min_stock: number;
   warehouse_id: string | null;
   is_active: boolean;
+  is_online?: boolean;
+  online_stock?: number;
+  image_url?: string | null;
 }
 
 interface Warehouse {
@@ -73,7 +77,7 @@ const Inventario = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({
     name: "", sku: "", description: "", category: "", price: "0", cost: "0",
-    stock: "0", min_stock: "0", warehouse_id: "",
+    stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "",
   });
   const [movForm, setMovForm] = useState({ type: "entry", quantity: "0", reason: "" });
 
@@ -93,7 +97,7 @@ const Inventario = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "" });
+    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "" });
     setDialogOpen(true);
   };
 
@@ -102,7 +106,7 @@ const Inventario = () => {
     setForm({
       name: p.name, sku: p.sku, description: p.description || "", category: p.category || "",
       price: String(p.price), cost: String(p.cost), stock: String(p.stock), min_stock: String(p.min_stock),
-      warehouse_id: p.warehouse_id || "",
+      warehouse_id: p.warehouse_id || "", is_online: p.is_online || false, online_stock: String(p.online_stock || 0), image_url: p.image_url || "",
     });
     setDialogOpen(true);
   };
@@ -117,6 +121,8 @@ const Inventario = () => {
       category: form.category || null, price: parseFloat(form.price) || 0, cost: parseFloat(form.cost) || 0,
       stock: parseInt(form.stock) || 0, min_stock: parseInt(form.min_stock) || 0,
       warehouse_id: form.warehouse_id || null, tenant_id: tenantId,
+      is_online: form.is_online, online_stock: form.is_online ? (parseInt(form.online_stock) || 0) : 0,
+      image_url: form.image_url.trim() || null,
     };
 
     if (editing) {
@@ -234,7 +240,10 @@ const Inventario = () => {
                   return (
                     <TableRow key={item.id}>
                       <TableCell className="text-xs font-heading font-semibold">{item.sku}</TableCell>
-                      <TableCell className="text-xs font-medium">{item.name}</TableCell>
+                      <TableCell className="text-xs font-medium">
+                        {item.name}
+                        {item.is_online && <Badge variant="outline" className="ml-1 text-[9px] bg-emerald-50 text-emerald-600 border-emerald-200"><Globe className="h-2.5 w-2.5 mr-0.5" />Online</Badge>}
+                      </TableCell>
                       <TableCell className="text-xs font-heading font-bold">{item.stock}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{item.min_stock}</TableCell>
                       <TableCell className="text-xs font-heading font-semibold hidden sm:table-cell">${item.price}</TableCell>
@@ -347,6 +356,22 @@ const Inventario = () => {
               <div><Label>Costo</Label><Input type="number" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} /></div>
               <div><Label>Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} /></div>
               <div><Label>Mínimo</Label><Input type="number" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
+            </div>
+            {/* Online sale section */}
+            <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Venta Online</Label>
+                  <p className="text-[11px] text-muted-foreground">Publicar este producto en el marketplace</p>
+                </div>
+                <Switch checked={form.is_online} onCheckedChange={(v) => setForm({ ...form, is_online: v })} />
+              </div>
+              {form.is_online && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Stock Online</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
+                  <div><Label>URL de Imagen</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." /></div>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

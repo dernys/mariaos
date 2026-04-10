@@ -23,6 +23,8 @@ import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import SuperAdmin from "./pages/SuperAdmin";
+import PedidosOnline from "./pages/PedidosOnline";
+import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,7 +54,9 @@ const App = () => (
               <Route path="/cocina" element={<ProtectedRoute><Cocina /></ProtectedRoute>} />
               <Route path="/mesas" element={<ProtectedRoute><Mesas /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              <Route path="/pedidos-online" element={<ProtectedRoute><PedidosOnline /></ProtectedRoute>} />
               <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
+              <Route path="/marketplace" element={<Marketplace />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
