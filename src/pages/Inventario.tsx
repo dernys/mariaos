@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { motion } from "framer-motion";
-import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2 } from "lucide-react";
+import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -34,6 +35,9 @@ interface Product {
   min_stock: number;
   warehouse_id: string | null;
   is_active: boolean;
+  is_online?: boolean;
+  online_stock?: number;
+  image_url?: string | null;
 }
 
 interface Warehouse {
@@ -73,7 +77,7 @@ const Inventario = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({
     name: "", sku: "", description: "", category: "", price: "0", cost: "0",
-    stock: "0", min_stock: "0", warehouse_id: "",
+    stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "",
   });
   const [movForm, setMovForm] = useState({ type: "entry", quantity: "0", reason: "" });
 
@@ -93,7 +97,7 @@ const Inventario = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "" });
+    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "" });
     setDialogOpen(true);
   };
 
@@ -102,7 +106,7 @@ const Inventario = () => {
     setForm({
       name: p.name, sku: p.sku, description: p.description || "", category: p.category || "",
       price: String(p.price), cost: String(p.cost), stock: String(p.stock), min_stock: String(p.min_stock),
-      warehouse_id: p.warehouse_id || "",
+      warehouse_id: p.warehouse_id || "", is_online: p.is_online || false, online_stock: String(p.online_stock || 0), image_url: p.image_url || "",
     });
     setDialogOpen(true);
   };
@@ -117,6 +121,8 @@ const Inventario = () => {
       category: form.category || null, price: parseFloat(form.price) || 0, cost: parseFloat(form.cost) || 0,
       stock: parseInt(form.stock) || 0, min_stock: parseInt(form.min_stock) || 0,
       warehouse_id: form.warehouse_id || null, tenant_id: tenantId,
+      is_online: form.is_online, online_stock: form.is_online ? (parseInt(form.online_stock) || 0) : 0,
+      image_url: form.image_url.trim() || null,
     };
 
     if (editing) {
