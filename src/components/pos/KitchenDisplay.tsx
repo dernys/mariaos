@@ -80,7 +80,7 @@ export function KitchenDisplay() {
     if (newStatus === "preparing") updates.started_at = new Date().toISOString();
     if (newStatus === "ready") updates.completed_at = new Date().toISOString();
 
-    await supabase.from("kitchen_orders").update(updates).eq("id", order.id);
+    await supabase.from("kitchen_orders").update(updates as any).eq("id", order.id);
 
     // When order is ready, update table status to "served"
     if (newStatus === "ready" && order.table_id) {

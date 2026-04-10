@@ -38,15 +38,25 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const mainItems = [
+type BizType = "restaurante" | "bar" | "empresa";
+
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  /** If set, only show for these business types. Undefined = show always */
+  types?: BizType[];
+}
+
+const mainItems: MenuItem[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Punto de Venta", url: "/pos", icon: Monitor },
-  { title: "Mapa de Mesas", url: "/mesas", icon: MapPin },
-  { title: "Cocina (KDS)", url: "/cocina", icon: ChefHat },
+  { title: "Mapa de Mesas", url: "/mesas", icon: MapPin, types: ["restaurante", "bar"] },
+  { title: "Cocina (KDS)", url: "/cocina", icon: ChefHat, types: ["restaurante", "bar"] },
   { title: "Inventario", url: "/inventario", icon: Package },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Empleados", url: "/empleados", icon: UserCheck },
-  { title: "Tiendas", url: "/tiendas", icon: Store },
+  { title: "Tiendas", url: "/tiendas", icon: Store, types: ["empresa"] },
   { title: "Almacenes", url: "/almacenes", icon: Warehouse },
   { title: "Turnos", url: "/turnos", icon: Clock },
   { title: "Contabilidad", url: "/contabilidad", icon: BookOpen },
@@ -64,7 +74,12 @@ export function AppSidebar() {
   const location = useLocation();
   const { profile, roles, signOut } = useAuth();
   const { isSuperadmin } = useSuperadmin();
-  const { tenant, allTenants } = useTenantContext();
+  const { tenant, allTenants, businessType } = useTenantContext();
+  const biz = (businessType || "empresa") as BizType;
+
+  const visibleMainItems = mainItems.filter(
+    (item) => !item.types || item.types.includes(biz)
+  );
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -106,7 +121,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {visibleMainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <NavLink

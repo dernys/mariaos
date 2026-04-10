@@ -57,7 +57,7 @@ const Mesas = () => {
       updates.current_order_id = null;
       updates.waiter_id = null;
     }
-    await supabase.from("restaurant_tables").update(updates).eq("id", tableId);
+    await supabase.from("restaurant_tables").update(updates as any).eq("id", tableId);
     toast({ title: "Mesa actualizada", description: `Estado: ${status}` });
     setSelectedTable(null);
     refresh();
