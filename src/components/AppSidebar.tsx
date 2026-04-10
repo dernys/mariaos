@@ -74,7 +74,12 @@ export function AppSidebar() {
   const location = useLocation();
   const { profile, roles, signOut } = useAuth();
   const { isSuperadmin } = useSuperadmin();
-  const { tenant, allTenants } = useTenantContext();
+  const { tenant, allTenants, businessType } = useTenantContext();
+  const biz = (businessType || "empresa") as BizType;
+
+  const visibleMainItems = mainItems.filter(
+    (item) => !item.types || item.types.includes(biz)
+  );
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -116,7 +121,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {visibleMainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <NavLink
