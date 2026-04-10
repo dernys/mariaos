@@ -240,7 +240,10 @@ const Inventario = () => {
                   return (
                     <TableRow key={item.id}>
                       <TableCell className="text-xs font-heading font-semibold">{item.sku}</TableCell>
-                      <TableCell className="text-xs font-medium">{item.name}</TableCell>
+                      <TableCell className="text-xs font-medium">
+                        {item.name}
+                        {item.is_online && <Badge variant="outline" className="ml-1 text-[9px] bg-emerald-50 text-emerald-600 border-emerald-200"><Globe className="h-2.5 w-2.5 mr-0.5" />Online</Badge>}
+                      </TableCell>
                       <TableCell className="text-xs font-heading font-bold">{item.stock}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{item.min_stock}</TableCell>
                       <TableCell className="text-xs font-heading font-semibold hidden sm:table-cell">${item.price}</TableCell>
