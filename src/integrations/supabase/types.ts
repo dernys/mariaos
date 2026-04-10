@@ -558,6 +558,116 @@ export type Database = {
           },
         ]
       }
+      online_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          price: number
+          product_id: string | null
+          product_name: string
+          qty: number
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          price?: number
+          product_id?: string | null
+          product_name: string
+          qty?: number
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          price?: number
+          product_id?: string | null
+          product_name?: string
+          qty?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "online_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      online_orders: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string
+          delivery_address: string | null
+          delivery_type: string
+          id: string
+          notes: string | null
+          status: string
+          subtotal: number
+          tax: number
+          tenant_id: string | null
+          total: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone: string
+          delivery_address?: string | null
+          delivery_type?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          tenant_id?: string | null
+          total?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string
+          delivery_address?: string | null
+          delivery_type?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          tenant_id?: string | null
+          total?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_orders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_methods: {
         Row: {
           created_at: string
@@ -706,9 +816,12 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           is_active: boolean
+          is_online: boolean
           min_stock: number
           name: string
+          online_stock: number
           price: number
           sku: string
           stock: number
@@ -722,9 +835,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
+          is_online?: boolean
           min_stock?: number
           name: string
+          online_stock?: number
           price?: number
           sku: string
           stock?: number
@@ -738,9 +854,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
+          is_online?: boolean
           min_stock?: number
           name?: string
+          online_stock?: number
           price?: number
           sku?: string
           stock?: number
