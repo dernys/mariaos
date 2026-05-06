@@ -62,6 +62,7 @@ export default function Compras() {
   const [destId, setDestId] = useState("");
   const [tax, setTax] = useState("0");
   const [notes, setNotes] = useState("");
+  const [amountPaid, setAmountPaid] = useState("0");
   const [items, setItems] = useState<{ product_id: string; qty: string; cost: string }[]>([
     { product_id: "", qty: "1", cost: "0" },
   ]);
