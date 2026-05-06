@@ -279,15 +279,36 @@ const Inventario = () => {
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar producto o SKU..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-            </div>
-            <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground">
-              <Plus className="h-3.5 w-3.5" /> Nuevo Producto
-            </Button>
-          </div>
+          <StatRow>
+            <MiniStatCard label="Productos" value={stats.total} icon={Package} tone="primary" />
+            <MiniStatCard label="Sin stock" value={stats.out} icon={AlertTriangle} tone={stats.out > 0 ? "destructive" : "default"} />
+            <MiniStatCard label="Stock bajo" value={stats.low} icon={Layers} tone={stats.low > 0 ? "warning" : "default"} />
+            <MiniStatCard label="Valor inventario" value={`$${stats.value.toLocaleString()}`} icon={DollarSign} tone="success" />
+          </StatRow>
+
+          <TableToolbar
+            search={productTable.search}
+            onSearchChange={productTable.setSearch}
+            searchPlaceholder="Buscar producto o SKU..."
+            filters={[
+              { key: "status", label: "Estado", value: productTable.filters.status || "__all__",
+                onChange: (v) => productTable.setFilter("status", v),
+                options: [
+                  { value: "ok", label: "En stock" },
+                  { value: "low", label: "Stock bajo" },
+                  { value: "out", label: "Sin stock" },
+                  { value: "online", label: "Online" },
+                ]},
+              { key: "category", label: "Categoría", value: productTable.filters.category || "__all__",
+                onChange: (v) => productTable.setFilter("category", v),
+                options: categoryOptions },
+            ]}
+            rightSlot={
+              <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground h-9">
+                <Plus className="h-3.5 w-3.5" /> Nuevo Producto
+              </Button>
+            }
+          />
 
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
@@ -305,7 +326,7 @@ const Inventario = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((item) => {
+                {productTable.paged.map((item) => {
                   const status = statusConfig(item.stock, item.min_stock);
                   return (
                     <TableRow key={item.id}>
@@ -338,7 +359,7 @@ const Inventario = () => {
                     </TableRow>
                   );
                 })}
-                {filtered.length === 0 && (
+                {productTable.total === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
@@ -348,6 +369,8 @@ const Inventario = () => {
                 )}
               </TableBody>
             </Table>
+            <TablePagination page={productTable.page} pageSize={productTable.pageSize} total={productTable.total}
+              onPageChange={productTable.setPage} onPageSizeChange={productTable.setPageSize} />
           </div>
         </TabsContent>
 
