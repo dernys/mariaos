@@ -140,64 +140,81 @@ export default function Cuentas() {
             <TabsTrigger value="employee" className="gap-1"><Wallet className="h-3.5 w-3.5" />Empleados</TabsTrigger>
             <TabsTrigger value="supplier" className="gap-1"><DollarSign className="h-3.5 w-3.5" />Proveedores</TabsTrigger>
           </TabsList>
-          <div className="text-xs text-muted-foreground">
-            {isPayable ? "Total por pagar" : "Total por cobrar"}:{" "}
-            <span className="font-heading font-bold text-foreground">${totalDebt.toFixed(2)}</span>
-          </div>
         </div>
 
-        {(["customer", "employee", "supplier"] as PartyType[]).map((t) => (
-          <TabsContent key={t} value={t}>
-            <div className="bg-card rounded-xl shadow-card border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Nombre</TableHead>
-                    <TableHead className="text-xs">Contacto</TableHead>
-                    <TableHead className="text-xs text-right">Saldo</TableHead>
-                    <TableHead className="text-xs w-44 text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {list.map((p) => {
-                    const debt = Number(p.balance || 0);
-                    return (
-                      <TableRow key={p.id}>
-                        <TableCell className="text-xs font-medium">{p.name}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {p.phone || p.email || "—"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant="outline" className={`text-[10px] ${
-                            debt > 0 ? (t === "supplier" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive") :
-                            debt < 0 ? "bg-success/10 text-success" : "bg-muted"
-                          }`}>
-                            ${debt.toFixed(2)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => openHistory(p)}>
-                              <History className="h-3 w-3 mr-1" /> Historial
-                            </Button>
-                            <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => openPay(p)} disabled={debt <= 0}>
-                              {t === "supplier" ? <ArrowUpFromLine className="h-3 w-3 mr-1" /> : <ArrowDownToLine className="h-3 w-3 mr-1" />}
-                              {t === "supplier" ? "Pagar" : "Cobrar"}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {list.length === 0 && (
-                    <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-8">Sin registros</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-        ))}
+        <StatRow>
+          <MiniStatCard label="Total" value={list.length} icon={Users} tone="primary" />
+          <MiniStatCard label="Con saldo" value={withDebt} icon={AlertTriangle} tone={withDebt > 0 ? "warning" : "default"} />
+          <MiniStatCard
+            label={isPayable ? "Por pagar" : "Por cobrar"}
+            value={`$${totalDebt.toLocaleString()}`}
+            icon={DollarSign}
+            tone={totalDebt > 0 ? (isPayable ? "warning" : "destructive") : "success"}
+          />
+        </StatRow>
+
+        <TableToolbar
+          search={table.search}
+          onSearchChange={table.setSearch}
+          searchPlaceholder="Buscar por nombre, teléfono, email..."
+          filters={[{
+            key: "balance", label: "Saldo", value: table.filters.balance || "__all__",
+            onChange: (v) => table.setFilter("balance", v),
+            options: [{ value: "with", label: "Con saldo" }, { value: "without", label: "Sin saldo" }],
+          }]}
+        />
+
+        <TabsContent value={tab}>
+          <div className="bg-card rounded-xl shadow-card border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Nombre</TableHead>
+                  <TableHead className="text-xs">Contacto</TableHead>
+                  <TableHead className="text-xs text-right">Saldo</TableHead>
+                  <TableHead className="text-xs w-44 text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {table.paged.map((p) => {
+                  const debt = Number(p.balance || 0);
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell className="text-xs font-medium">{p.name}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{p.phone || p.email || "—"}</TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant="outline" className={`text-[10px] ${
+                          debt > 0 ? (isPayable ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive") :
+                          debt < 0 ? "bg-success/10 text-success" : "bg-muted"
+                        }`}>
+                          ${debt.toFixed(2)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => openHistory(p)}>
+                            <History className="h-3 w-3 mr-1" /> Historial
+                          </Button>
+                          <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => openPay(p)} disabled={debt <= 0}>
+                            {isPayable ? <ArrowUpFromLine className="h-3 w-3 mr-1" /> : <ArrowDownToLine className="h-3 w-3 mr-1" />}
+                            {isPayable ? "Pagar" : "Cobrar"}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {table.total === 0 && (
+                  <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-8">Sin registros</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+            <TablePagination page={table.page} pageSize={table.pageSize} total={table.total}
+              onPageChange={table.setPage} onPageSizeChange={table.setPageSize} />
+          </div>
+        </TabsContent>
       </Tabs>
+
 
       {/* Payment dialog */}
       <Dialog open={payOpen} onOpenChange={setPayOpen}>
