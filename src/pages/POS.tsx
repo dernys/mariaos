@@ -10,6 +10,7 @@ const POS = () => {
   const titles: Record<string, string> = {
     bar: "Barra — Punto de Venta",
     restaurant: "Restaurante — Punto de Venta",
+    restaurante: "Restaurante — Punto de Venta",
     empresa: "Punto de Venta",
   };
 
@@ -26,9 +27,9 @@ const POS = () => {
   return (
     <AppLayout title={titles[businessType] || "Punto de Venta"}>
       {businessType === "bar" && <POSBar />}
-      {businessType === "restaurant" && <POSRestaurant />}
+      {(businessType === "restaurant" || businessType === "restaurante") && <POSRestaurant />}
       {businessType === "empresa" && <POSEmpresa />}
-      {!["bar", "restaurant", "empresa"].includes(businessType) && <POSEmpresa />}
+      {!["bar", "restaurant", "restaurante", "empresa"].includes(businessType) && <POSEmpresa />}
     </AppLayout>
   );
 };
