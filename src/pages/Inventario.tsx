@@ -1,11 +1,11 @@
 import { AppLayout } from "@/components/AppLayout";
 import { motion } from "framer-motion";
-import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2, Globe } from "lucide-react";
+import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2, Globe, AlertTriangle, DollarSign, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/hooks/useTenant";
@@ -22,6 +22,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useTableState } from "@/hooks/useTableState";
+import { TableToolbar } from "@/components/data/TableToolbar";
+import { TablePagination } from "@/components/data/TablePagination";
+import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
 interface Product {
   id: string;
@@ -215,9 +219,33 @@ const Inventario = () => {
     fetchData();
   };
 
-  const filtered = products.filter(
-    (p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase())
-  );
+  const productTable = useTableState({
+    data: products,
+    searchKeys: ["name", "sku", "category"],
+    filterFns: {
+      status: (p, v) => {
+        if (v === "out") return p.stock <= 0;
+        if (v === "low") return p.stock > 0 && p.stock <= p.min_stock;
+        if (v === "ok") return p.stock > p.min_stock;
+        if (v === "online") return !!p.is_online;
+        return true;
+      },
+      category: (p, v) => (p.category || "") === v,
+    },
+  });
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set(products.map((p) => p.category).filter(Boolean) as string[]);
+    return Array.from(set).map((c) => ({ value: c, label: c }));
+  }, [products]);
+
+  const stats = useMemo(() => {
+    const total = products.length;
+    const out = products.filter((p) => p.stock <= 0).length;
+    const low = products.filter((p) => p.stock > 0 && p.stock <= p.min_stock).length;
+    const value = products.reduce((a, p) => a + (p.stock || 0) * (p.cost || 0), 0);
+    return { total, out, low, value };
+  }, [products]);
 
   const getProductName = (id: string) => products.find((p) => p.id === id)?.name || "—";
   const getWarehouseName = (id: string | null) => warehouses.find((w) => w.id === id)?.name || "—";
