@@ -9,6 +9,7 @@ import { Banknote, CreditCard, QrCode, Plus, Trash2, Search, User, Copy, Check }
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
+import { printThermalReceipt } from "@/lib/printReceipt";
 
 interface CartItem {
   id: number;
@@ -264,6 +265,27 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           toast({ title: "Aviso", description: "Venta registrada pero el descuento de stock falló: " + stockErr.message });
         }
       }
+
+      // Imprimir ticket térmico 80mm
+      try {
+        const { data: tenantInfo } = await supabase.from("tenants").select("name").eq("id", tu?.tenant_id).maybeSingle();
+        const customerName = customers.find((c) => c.id === selectedCustomer)?.name;
+        printThermalReceipt({
+          ticketNumber: (sale as any).ticket_number || sale.id.slice(0, 8),
+          tenantName: tenantInfo?.name,
+          storeName: openShift.store_name || undefined,
+          customer: customerName,
+          date: new Date(),
+          items: cart.map((c) => ({ name: c.name, qty: c.qty, price: c.price, total: c.price * c.qty })),
+          subtotal, tax, total,
+          paid: totalPaidInBase,
+          change: totalPaidInBase > total ? totalPaidInBase - total : 0,
+          payments: paymentRows.map((p) => ({
+            method: p.method === "cash" ? "Efectivo" : p.method === "card" ? "Tarjeta" : "QR",
+            currency: p.currency, amount: p.amount,
+          })),
+        });
+      } catch (e) { console.warn("No se pudo imprimir el recibo:", e); }
 
       toast({
         title: `Ticket ${(sale as any).ticket_number || ""}`.trim(),
