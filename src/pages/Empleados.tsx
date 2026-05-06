@@ -165,7 +165,7 @@ const Empleados = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((e) => (
+              {table.paged.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => openDetail(e)}>{e.name}</TableCell>
                   <TableCell>{e.position || "—"}</TableCell>
@@ -182,7 +182,7 @@ const Empleados = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {table.total === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
@@ -192,6 +192,8 @@ const Empleados = () => {
               )}
             </TableBody>
           </Table>
+          <TablePagination page={table.page} pageSize={table.pageSize} total={table.total}
+            onPageChange={table.setPage} onPageSizeChange={table.setPageSize} />
         </div>
       </div>
 
