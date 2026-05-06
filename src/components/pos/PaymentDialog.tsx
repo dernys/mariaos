@@ -252,7 +252,23 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         }
       }
 
-      toast({ title: "Venta registrada", description: status === "partial" ? `Pendiente: $${remaining.toFixed(2)} CUP` : "Pago completo" });
+      // Descontar stock de la tienda del turno (si hay store_id y productos vinculados)
+      if (openShift.store_id && cart.some((c) => c.productId)) {
+        const { error: stockErr } = await supabase.rpc("process_sale_stock", {
+          p_sale_id: sale.id,
+          p_location_type: "store",
+          p_location_id: openShift.store_id,
+        });
+        if (stockErr) {
+          console.error("Stock RPC error:", stockErr);
+          toast({ title: "Aviso", description: "Venta registrada pero el descuento de stock falló: " + stockErr.message });
+        }
+      }
+
+      toast({
+        title: `Ticket ${(sale as any).ticket_number || ""}`.trim(),
+        description: status === "partial" ? `Pendiente: $${remaining.toFixed(2)} CUP` : "Pago completo registrado",
+      });
       onSaleComplete();
       onOpenChange(false);
     } catch (err: any) {
