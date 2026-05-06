@@ -250,15 +250,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         if (payErr) throw payErr;
       }
 
-      // If partial, update customer balance
-      if (status === "partial" && selectedCustomer) {
-        const customer = customers.find((c) => c.id === selectedCustomer);
-        if (customer) {
-          await supabase.from("customers").update({
-            balance: customer.balance + remaining,
-          }).eq("id", selectedCustomer);
-        }
-      }
+      // El saldo de cliente/empleado lo actualiza el trigger trg_apply_sale_credit_balance automáticamente.
 
       // Descontar stock de la tienda del turno (si hay store_id y productos vinculados)
       if (openShift.store_id && cart.some((c) => c.productId)) {
