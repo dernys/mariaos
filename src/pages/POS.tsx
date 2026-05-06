@@ -26,9 +26,9 @@ const POS = () => {
   return (
     <AppLayout title={titles[businessType] || "Punto de Venta"}>
       {businessType === "bar" && <POSBar />}
-      {businessType === "restaurant" && <POSRestaurant />}
+      {(businessType === "restaurant" || businessType === "restaurante") && <POSRestaurant />}
       {businessType === "empresa" && <POSEmpresa />}
-      {!["bar", "restaurant", "empresa"].includes(businessType) && <POSEmpresa />}
+      {!["bar", "restaurant", "restaurante", "empresa"].includes(businessType) && <POSEmpresa />}
     </AppLayout>
   );
 };
