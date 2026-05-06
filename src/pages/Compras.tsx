@@ -89,7 +89,7 @@ export default function Compras() {
 
   const resetForm = () => {
     setSupplierId(""); setDestType("warehouse"); setDestId("");
-    setTax("0"); setNotes("");
+    setTax("0"); setNotes(""); setAmountPaid("0");
     setItems([{ product_id: "", qty: "1", cost: "0" }]);
   };
 
