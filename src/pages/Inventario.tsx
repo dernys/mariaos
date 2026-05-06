@@ -221,6 +221,24 @@ const Inventario = () => {
 
   const getProductName = (id: string) => products.find((p) => p.id === id)?.name || "—";
   const getWarehouseName = (id: string | null) => warehouses.find((w) => w.id === id)?.name || "—";
+  const getLocationName = (type?: string | null, id?: string | null) => {
+    if (!id) return "—";
+    if (type === "warehouse") return warehouses.find((w) => w.id === id)?.name || "Almacén";
+    if (type === "store") return stores.find((s) => s.id === id)?.name || "Tienda";
+    return "—";
+  };
+
+  // Stock por ubicación: agrupa product_stock con producto y ubicación
+  const stockRows = locationStocks
+    .map((ls) => ({
+      ...ls,
+      productName: products.find((p) => p.id === ls.product_id)?.name || "—",
+      sku: products.find((p) => p.id === ls.product_id)?.sku || "—",
+      locationName: getLocationName(ls.location_type, ls.location_id),
+    }))
+    .filter((r) => r.productName.toLowerCase().includes(search.toLowerCase()) || r.sku.toLowerCase().includes(search.toLowerCase()));
+
+  const kardexMovements = kardexProductId ? movements.filter((m) => m.product_id === kardexProductId) : [];
 
   return (
     <AppLayout title="Inventario">
