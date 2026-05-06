@@ -27,6 +27,7 @@ import PedidosOnline from "./pages/PedidosOnline";
 import Transferencias from "./pages/Transferencias";
 import Compras from "./pages/Compras";
 import Devoluciones from "./pages/Devoluciones";
+import Cuentas from "./pages/Cuentas";
 import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/transferencias" element={<ProtectedRoute><Transferencias /></ProtectedRoute>} />
               <Route path="/compras" element={<ProtectedRoute><Compras /></ProtectedRoute>} />
               <Route path="/devoluciones" element={<ProtectedRoute><Devoluciones /></ProtectedRoute>} />
+              <Route path="/cuentas" element={<ProtectedRoute><Cuentas /></ProtectedRoute>} />
               <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="*" element={<NotFound />} />

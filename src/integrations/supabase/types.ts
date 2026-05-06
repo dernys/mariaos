@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_payments: {
+        Row: {
+          amount: number
+          amount_in_base: number
+          created_at: string
+          currency: string
+          direction: string
+          exchange_rate: number
+          id: string
+          method: string
+          notes: string | null
+          party_id: string
+          party_type: string
+          performed_by: string | null
+          reference_id: string | null
+          reference_type: string | null
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          amount_in_base: number
+          created_at?: string
+          currency?: string
+          direction: string
+          exchange_rate?: number
+          id?: string
+          method?: string
+          notes?: string | null
+          party_id: string
+          party_type: string
+          performed_by?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          amount_in_base?: number
+          created_at?: string
+          currency?: string
+          direction?: string
+          exchange_rate?: number
+          id?: string
+          method?: string
+          notes?: string | null
+          party_id?: string
+          party_type?: string
+          performed_by?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       accounting_accounts: {
         Row: {
           balance: number
@@ -241,6 +295,7 @@ export type Database = {
       }
       employees: {
         Row: {
+          balance: number
           created_at: string
           email: string | null
           hire_date: string | null
@@ -256,6 +311,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          balance?: number
           created_at?: string
           email?: string | null
           hire_date?: string | null
@@ -271,6 +327,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          balance?: number
           created_at?: string
           email?: string | null
           hire_date?: string | null
@@ -2106,6 +2163,20 @@ export type Database = {
       receive_stock_transfer: {
         Args: { p_transfer_id: string }
         Returns: undefined
+      }
+      register_account_payment: {
+        Args: {
+          p_amount: number
+          p_currency?: string
+          p_exchange_rate?: number
+          p_method?: string
+          p_notes?: string
+          p_party_id: string
+          p_party_type: string
+          p_reference_id?: string
+          p_reference_type?: string
+        }
+        Returns: string
       }
       revert_sale_stock: { Args: { p_sale_id: string }; Returns: undefined }
     }

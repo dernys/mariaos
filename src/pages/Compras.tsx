@@ -62,6 +62,7 @@ export default function Compras() {
   const [destId, setDestId] = useState("");
   const [tax, setTax] = useState("0");
   const [notes, setNotes] = useState("");
+  const [amountPaid, setAmountPaid] = useState("0");
   const [items, setItems] = useState<{ product_id: string; qty: string; cost: string }[]>([
     { product_id: "", qty: "1", cost: "0" },
   ]);
@@ -88,7 +89,7 @@ export default function Compras() {
 
   const resetForm = () => {
     setSupplierId(""); setDestType("warehouse"); setDestId("");
-    setTax("0"); setNotes("");
+    setTax("0"); setNotes(""); setAmountPaid("0");
     setItems([{ product_id: "", qty: "1", cost: "0" }]);
   };
 
@@ -107,6 +108,14 @@ export default function Compras() {
     if (!destId) { toast({ title: "Selecciona un destino", variant: "destructive" }); return; }
     const valid = items.filter((it) => it.product_id && Number(it.qty) > 0);
     if (!valid.length) { toast({ title: "Agrega al menos un producto", variant: "destructive" }); return; }
+    const paid = Math.max(0, Number(amountPaid) || 0);
+    if (paid > 0 && !supplierId) {
+      toast({ title: "Proveedor requerido", description: "El pago a crédito requiere proveedor.", variant: "destructive" }); return;
+    }
+    const isPartial = paid < total - 0.01;
+    if (isPartial && !supplierId) {
+      toast({ title: "Proveedor requerido", description: "El saldo pendiente requiere proveedor.", variant: "destructive" }); return;
+    }
 
     const code = "PC-" + Date.now().toString(36).toUpperCase();
     const { data: pch, error } = await (supabase.from as any)("purchases").insert({
@@ -116,6 +125,7 @@ export default function Compras() {
       destination_type: destType,
       destination_id: destId,
       subtotal, tax: Number(tax) || 0, total,
+      amount_paid: paid,
       notes: notes || null,
       created_by: user?.id,
       status: "draft",
@@ -362,7 +372,16 @@ export default function Compras() {
               <div><Label className="text-xs">Total</Label><Input value={total.toFixed(2)} disabled className="font-bold" /></div>
             </div>
 
-            <div><Label className="text-xs">Notas</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs">Pagado al proveedor</Label>
+                <Input type="number" min="0" value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Saldo pendiente: <span className="font-bold">${Math.max(0, total - (Number(amountPaid)||0)).toFixed(2)}</span>
+                  {Number(amountPaid) < total - 0.01 && supplierId ? " — Se sumará a la deuda del proveedor" : ""}
+                </p>
+              </div>
+              <div><Label className="text-xs">Notas</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>

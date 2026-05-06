@@ -193,6 +193,13 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         return;
       }
 
+      // Validación: pago parcial requiere cliente o empleado para registrar la deuda
+      if (isPartial && remaining > 0.01 && !selectedCustomer && !selectedEmployee) {
+        toast({ title: "Cliente o empleado requerido", description: "Para dejar saldo pendiente debes asociar un cliente o empleado.", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+
       const status = isPartial && remaining > 0.01 ? "partial" : "paid";
 
       // Create sale (con shift, store y ticket auto)
@@ -243,15 +250,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         if (payErr) throw payErr;
       }
 
-      // If partial, update customer balance
-      if (status === "partial" && selectedCustomer) {
-        const customer = customers.find((c) => c.id === selectedCustomer);
-        if (customer) {
-          await supabase.from("customers").update({
-            balance: customer.balance + remaining,
-          }).eq("id", selectedCustomer);
-        }
-      }
+      // El saldo de cliente/empleado lo actualiza el trigger trg_apply_sale_credit_balance automáticamente.
 
       // Descontar stock de la tienda del turno (si hay store_id y productos vinculados)
       if (openShift.store_id && cart.some((c) => c.productId)) {
