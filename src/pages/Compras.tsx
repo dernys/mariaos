@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, CheckCircle2, XCircle, Truck, ShoppingCart } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, XCircle, Truck, ShoppingCart, FileText, DollarSign, Wallet } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -16,6 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
+import { useTableState } from "@/hooks/useTableState";
+import { TableToolbar } from "@/components/data/TableToolbar";
+import { TablePagination } from "@/components/data/TablePagination";
+import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
 interface Supplier { id: string; name: string; balance: number; phone?: string | null; email?: string | null; }
 interface Product { id: string; name: string; sku: string; cost: number; }
