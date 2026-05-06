@@ -204,7 +204,7 @@ export default function Transferencias() {
               const its = items[t.id] || [];
               return (
                 <TableRow key={t.id}>
-                  <TableCell className="text-xs font-heading font-semibold">{t.code}</TableCell>
+                  <TableCell className="text-xs font-heading font-semibold">{t.transfer_number}</TableCell>
                   <TableCell className="text-xs">
                     <div className="flex items-center gap-1">
                       <span>{locName(t.origin_type, t.origin_id)}</span>
