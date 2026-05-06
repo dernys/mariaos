@@ -46,12 +46,25 @@ const Turnos = () => {
   const [loading, setLoading] = useState(true);
   const [showOpen, setShowOpen] = useState(false);
   const [showClose, setShowClose] = useState(false);
+  const [showCash, setShowCash] = useState(false);
 
   const [openStoreId, setOpenStoreId] = useState("");
   const [openEmployeeId, setOpenEmployeeId] = useState("");
   const [openCash, setOpenCash] = useState("");
   const [closeCash, setCloseCash] = useState("");
   const [closeNotes, setCloseNotes] = useState("");
+
+  // Cash movement
+  const [cashType, setCashType] = useState<"cash_in" | "cash_out">("cash_out");
+  const [cashAmount, setCashAmount] = useState("");
+  const [cashReason, setCashReason] = useState("");
+
+  // Summary preview at close
+  const [summary, setSummary] = useState<{
+    opening_cash: number; total_sales: number; total_transactions: number;
+    cash_sales: number; card_sales: number; qr_sales: number;
+    cash_in: number; cash_out: number; returns_cash: number; expected_cash: number;
+  } | null>(null);
 
   useEffect(() => { if (user) fetchAll(); }, [user]);
 
