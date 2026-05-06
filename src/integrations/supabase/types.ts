@@ -956,6 +956,124 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_items: {
+        Row: {
+          cost: number
+          created_at: string
+          id: string
+          product_id: string | null
+          product_name: string
+          purchase_id: string
+          qty: number
+          qty_received: number
+          sku: string | null
+          total: number
+        }
+        Insert: {
+          cost?: number
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          product_name: string
+          purchase_id: string
+          qty?: number
+          qty_received?: number
+          sku?: string | null
+          total?: number
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          purchase_id?: string
+          qty?: number
+          qty_received?: number
+          sku?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchases: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          created_by: string | null
+          destination_id: string | null
+          destination_type: string
+          id: string
+          invoice_number: string | null
+          notes: string | null
+          purchase_number: string | null
+          received_at: string | null
+          received_by: string | null
+          status: string
+          subtotal: number
+          supplier_id: string | null
+          tax: number
+          tenant_id: string | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number
+          created_at?: string
+          created_by?: string | null
+          destination_id?: string | null
+          destination_type?: string
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          purchase_number?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          status?: string
+          subtotal?: number
+          supplier_id?: string | null
+          tax?: number
+          tenant_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          created_by?: string | null
+          destination_id?: string | null
+          destination_type?: string
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          purchase_number?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          status?: string
+          subtotal?: number
+          supplier_id?: string | null
+          tax?: number
+          tenant_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_tables: {
         Row: {
           capacity: number
@@ -1160,6 +1278,100 @@ export type Database = {
           },
         ]
       }
+      sale_return_items: {
+        Row: {
+          created_at: string
+          id: string
+          price: number
+          product_id: string | null
+          product_name: string
+          qty: number
+          return_id: string
+          sale_item_id: string | null
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price?: number
+          product_id?: string | null
+          product_name: string
+          qty: number
+          return_id: string
+          sale_item_id?: string | null
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price?: number
+          product_id?: string | null
+          product_name?: string
+          qty?: number
+          return_id?: string
+          sale_item_id?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_items_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "sale_returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_returns: {
+        Row: {
+          created_at: string
+          id: string
+          performed_by: string | null
+          reason: string | null
+          refund_method: string
+          restock: boolean
+          return_number: string | null
+          sale_id: string | null
+          status: string
+          tenant_id: string | null
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          performed_by?: string | null
+          reason?: string | null
+          refund_method?: string
+          restock?: boolean
+          return_number?: string | null
+          sale_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          performed_by?: string | null
+          reason?: string | null
+          refund_method?: string
+          restock?: boolean
+          return_number?: string | null
+          sale_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales: {
         Row: {
           amount_paid: number
@@ -1248,14 +1460,20 @@ export type Database = {
       }
       sales_shifts: {
         Row: {
+          cash_difference: number | null
+          cash_in_total: number | null
+          cash_out_total: number | null
           closed_at: string | null
           closing_cash: number | null
           created_at: string
+          declared_cash: number | null
           employee_id: string | null
+          expected_cash: number | null
           id: string
           notes: string | null
           opened_at: string
           opening_cash: number
+          returns_total: number | null
           status: string
           store_id: string | null
           store_name: string
@@ -1266,14 +1484,20 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cash_difference?: number | null
+          cash_in_total?: number | null
+          cash_out_total?: number | null
           closed_at?: string | null
           closing_cash?: number | null
           created_at?: string
+          declared_cash?: number | null
           employee_id?: string | null
+          expected_cash?: number | null
           id?: string
           notes?: string | null
           opened_at?: string
           opening_cash?: number
+          returns_total?: number | null
           status?: string
           store_id?: string | null
           store_name: string
@@ -1284,14 +1508,20 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cash_difference?: number | null
+          cash_in_total?: number | null
+          cash_out_total?: number | null
           closed_at?: string | null
           closing_cash?: number | null
           created_at?: string
+          declared_cash?: number | null
           employee_id?: string | null
+          expected_cash?: number | null
           id?: string
           notes?: string | null
           opened_at?: string
           opening_cash?: number
+          returns_total?: number | null
           status?: string
           store_id?: string | null
           store_name?: string
@@ -1321,6 +1551,50 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_cash_movements: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          movement_type: string
+          performed_by: string | null
+          reason: string | null
+          shift_id: string
+          tenant_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          movement_type: string
+          performed_by?: string | null
+          reason?: string | null
+          shift_id: string
+          tenant_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          movement_type?: string
+          performed_by?: string | null
+          reason?: string | null
+          shift_id?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_cash_movements_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "sales_shifts"
             referencedColumns: ["id"]
           },
         ]
@@ -1510,6 +1784,54 @@ export type Database = {
           created_at?: string
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          balance: number
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          rfc: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          balance?: number
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          rfc?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          balance?: number
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          rfc?: string | null
+          tenant_id?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1751,6 +2073,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_shift_summary: { Args: { p_shift_id: string }; Returns: Json }
+      close_shift_with_summary: {
+        Args: { p_declared_cash: number; p_notes?: string; p_shift_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1759,6 +2086,14 @@ export type Database = {
         Returns: boolean
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      process_sale_return: {
+        Args: {
+          p_location_id: string
+          p_location_type: string
+          p_return_id: string
+        }
+        Returns: undefined
+      }
       process_sale_stock: {
         Args: {
           p_location_id: string
@@ -1767,6 +2102,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      receive_purchase: { Args: { p_purchase_id: string }; Returns: undefined }
       receive_stock_transfer: {
         Args: { p_transfer_id: string }
         Returns: undefined
