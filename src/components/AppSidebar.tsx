@@ -70,8 +70,8 @@ const menuGroups: MenuGroup[] = [
     label: "Operaciones",
     items: [
       { title: "Punto de Venta", url: "/pos", icon: Monitor },
-      { title: "Mapa de Mesas", url: "/mesas", icon: MapPin, types: ["restaurante", "bar"] },
-      { title: "Cocina (KDS)", url: "/cocina", icon: ChefHat, types: ["restaurante", "bar"] },
+      { title: "Mapa de Mesas", url: "/mesas", icon: MapPin, types: ["restaurante", "restaurant", "bar"] },
+      { title: "Cocina (KDS)", url: "/cocina", icon: ChefHat, types: ["restaurante", "restaurant", "bar"] },
       { title: "Turnos", url: "/turnos", icon: Clock },
     ],
   },
