@@ -261,17 +261,21 @@ export default function Compras() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {purchases.map((p) => {
+                {purchasesTable.paged.map((p) => {
                   const st = statusBadge(p.status);
+                  const pending = Number(p.total || 0) - Number(p.amount_paid || 0);
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="text-xs font-heading font-semibold">{p.purchase_number}</TableCell>
-                      <TableCell className="text-xs">{supName2(p.supplier_id)}</TableCell>
+                      <TableCell className="text-xs">{p.supplier_name}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         <Badge variant="outline" className="text-[10px] mr-1">{p.destination_type === "warehouse" ? "Alm." : "Tnd."}</Badge>
-                        {locName(p.destination_type, p.destination_id)}
+                        {p.location_name}
                       </TableCell>
-                      <TableCell className="text-xs font-heading font-bold">${Number(p.total).toFixed(2)}</TableCell>
+                      <TableCell className="text-xs font-heading font-bold">
+                        ${Number(p.total).toFixed(2)}
+                        {pending > 0.01 && <span className="block text-[9px] text-destructive font-normal">Debe ${pending.toFixed(2)}</span>}
+                      </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{format(new Date(p.created_at), "dd/MM/yy HH:mm")}</TableCell>
                       <TableCell><Badge variant="outline" className={`text-[10px] ${st.c}`}>{st.l}</Badge></TableCell>
                       <TableCell>
@@ -289,23 +293,41 @@ export default function Compras() {
                     </TableRow>
                   );
                 })}
-                {purchases.length === 0 && (
+                {purchasesTable.total === 0 && (
                   <TableRow><TableCell colSpan={7} className="text-center py-8 text-xs text-muted-foreground">
-                    <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-30" /> Sin compras registradas
+                    <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-30" /> Sin compras
                   </TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
+            <TablePagination page={purchasesTable.page} pageSize={purchasesTable.pageSize} total={purchasesTable.total}
+              onPageChange={purchasesTable.setPage} onPageSizeChange={purchasesTable.setPageSize} />
           </div>
         </TabsContent>
 
         <TabsContent value="suppliers" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-muted-foreground">Catálogo de proveedores</p>
-            <Button size="sm" className="gap-1 gradient-brand text-primary-foreground" onClick={() => setOpenSup(true)}>
-              <Plus className="h-3.5 w-3.5" /> Nuevo Proveedor
-            </Button>
-          </div>
+          <StatRow>
+            <MiniStatCard label="Proveedores" value={suppliers.length} icon={Truck} tone="primary" />
+            <MiniStatCard label="Con saldo" value={suppliers.filter((s) => Number(s.balance || 0) > 0).length} icon={Wallet} tone="warning" />
+            <MiniStatCard label="Total por pagar" value={`$${suppliers.reduce((a, s) => a + Math.max(0, Number(s.balance) || 0), 0).toLocaleString()}`} icon={DollarSign} tone="destructive" />
+          </StatRow>
+
+          <TableToolbar
+            search={suppliersTable.search}
+            onSearchChange={suppliersTable.setSearch}
+            searchPlaceholder="Buscar proveedor..."
+            filters={[{
+              key: "debt", label: "Saldo", value: suppliersTable.filters.debt || "__all__",
+              onChange: (v) => suppliersTable.setFilter("debt", v),
+              options: [{ value: "with", label: "Con saldo" }, { value: "without", label: "Sin saldo" }],
+            }]}
+            rightSlot={
+              <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpenSup(true)}>
+                <Plus className="h-3.5 w-3.5" /> Nuevo Proveedor
+              </Button>
+            }
+          />
+
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
               <TableHeader>
@@ -317,7 +339,7 @@ export default function Compras() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {suppliers.map((s) => (
+                {suppliersTable.paged.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="text-xs font-medium">{s.name}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{s.phone || "—"}</TableCell>
@@ -325,11 +347,13 @@ export default function Compras() {
                     <TableCell className="text-xs font-heading font-bold">${Number(s.balance || 0).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
-                {suppliers.length === 0 && (
+                {suppliersTable.total === 0 && (
                   <TableRow><TableCell colSpan={4} className="text-center py-8 text-xs text-muted-foreground">Sin proveedores</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
+            <TablePagination page={suppliersTable.page} pageSize={suppliersTable.pageSize} total={suppliersTable.total}
+              onPageChange={suppliersTable.setPage} onPageSizeChange={suppliersTable.setPageSize} />
           </div>
         </TabsContent>
       </Tabs>
