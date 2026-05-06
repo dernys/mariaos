@@ -29,7 +29,7 @@ interface TransferItem {
 }
 interface Transfer {
   id: string;
-  code: string;
+  transfer_number: string;
   status: string;
   origin_type: string;
   origin_id: string;
@@ -91,7 +91,7 @@ export default function Transferencias() {
     setWarehouses((whR.data || []).map((w) => ({ ...w, type: "warehouse" as LocType })));
     setStores((stR.data || []).map((s) => ({ ...s, type: "store" as LocType })));
     setProducts(prR.data || []);
-    const ts = (trR.data || []) as Transfer[];
+    const ts = (trR.data || []) as unknown as Transfer[];
     setTransfers(ts);
     if (ts.length) {
       const { data: its } = await supabase
@@ -129,15 +129,22 @@ export default function Transferencias() {
 
     const code = "TR-" + Date.now().toString(36).toUpperCase();
     const { data: tr, error } = await supabase.from("stock_transfers").insert({
-      tenant_id: tenantId, code, origin_type: originType, origin_id: originId,
+      tenant_id: tenantId!, transfer_number: code, origin_type: originType, origin_id: originId,
       destination_type: destType, destination_id: destId, notes: notes || null,
-      status: "requested", created_by: user?.id,
+      status: "requested", requested_by: user?.id,
     }).select("id").single();
     if (error || !tr) { toast({ title: "Error", description: error?.message, variant: "destructive" }); return; }
 
-    const rows = validItems.map((d) => ({
-      transfer_id: tr.id, product_id: d.product_id, quantity_requested: Number(d.quantity),
-    }));
+    const rows = validItems.map((d) => {
+      const prod = products.find((p) => p.id === d.product_id);
+      return {
+        transfer_id: tr.id,
+        product_id: d.product_id,
+        product_name: prod?.name || "",
+        sku: prod?.sku || null,
+        quantity_requested: Number(d.quantity),
+      };
+    });
     const { error: e2 } = await supabase.from("stock_transfer_items").insert(rows);
     if (e2) { toast({ title: "Error items", description: e2.message, variant: "destructive" }); return; }
 
