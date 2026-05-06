@@ -299,6 +299,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          location_id: string | null
+          location_type: string | null
           movement_type: string
           new_stock: number
           performed_by: string | null
@@ -314,6 +316,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          location_id?: string | null
+          location_type?: string | null
           movement_type?: string
           new_stock?: number
           performed_by?: string | null
@@ -329,6 +333,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          location_id?: string | null
+          location_type?: string | null
           movement_type?: string
           new_stock?: number
           performed_by?: string | null
@@ -809,6 +815,45 @@ export type Database = {
           },
         ]
       }
+      product_stock: {
+        Row: {
+          created_at: string
+          id: string
+          location_id: string
+          location_type: string
+          min_stock: number
+          product_id: string
+          reserved: number
+          stock: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_id: string
+          location_type: string
+          min_stock?: number
+          product_id: string
+          reserved?: number
+          stock?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_id?: string
+          location_type?: string
+          min_stock?: number
+          product_id?: string
+          reserved?: number
+          stock?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null
@@ -1022,7 +1067,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          notes: string | null
           price: number
+          product_id: string | null
           product_name: string
           qty: number
           sale_id: string
@@ -1032,7 +1079,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          notes?: string | null
           price: number
+          product_id?: string | null
           product_name: string
           qty?: number
           sale_id: string
@@ -1042,7 +1091,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          notes?: string | null
           price?: number
+          product_id?: string | null
           product_name?: string
           qty?: number
           sale_id?: string
@@ -1119,9 +1170,12 @@ export type Database = {
           notes: string | null
           shift_id: string | null
           status: string
+          store_id: string | null
           subtotal: number
           tax: number
           tenant_id: string | null
+          ticket_number: string | null
+          ticket_series: string | null
           total: number
           updated_at: string
         }
@@ -1134,9 +1188,12 @@ export type Database = {
           notes?: string | null
           shift_id?: string | null
           status?: string
+          store_id?: string | null
           subtotal?: number
           tax?: number
           tenant_id?: string | null
+          ticket_number?: string | null
+          ticket_series?: string | null
           total?: number
           updated_at?: string
         }
@@ -1149,9 +1206,12 @@ export type Database = {
           notes?: string | null
           shift_id?: string | null
           status?: string
+          store_id?: string | null
           subtotal?: number
           tax?: number
           tenant_id?: string | null
+          ticket_number?: string | null
+          ticket_series?: string | null
           total?: number
           updated_at?: string
         }
@@ -1264,6 +1324,122 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stock_transfer_items: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          product_id: string
+          product_name: string
+          quantity_received: number
+          quantity_requested: number
+          quantity_shipped: number
+          sku: string | null
+          transfer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          product_name: string
+          quantity_received?: number
+          quantity_requested?: number
+          quantity_shipped?: number
+          sku?: string | null
+          transfer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          product_name?: string
+          quantity_received?: number
+          quantity_requested?: number
+          quantity_shipped?: number
+          sku?: string | null
+          transfer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_items_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "stock_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_transfers: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          cancelled_at: string | null
+          created_at: string
+          destination_id: string
+          destination_type: string
+          id: string
+          notes: string | null
+          origin_id: string
+          origin_type: string
+          received_at: string | null
+          received_by: string | null
+          requested_at: string
+          requested_by: string | null
+          shipped_at: string | null
+          shipped_by: string | null
+          status: string
+          tenant_id: string
+          transfer_number: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          destination_id: string
+          destination_type: string
+          id?: string
+          notes?: string | null
+          origin_id: string
+          origin_type: string
+          received_at?: string | null
+          received_by?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          shipped_at?: string | null
+          shipped_by?: string | null
+          status?: string
+          tenant_id: string
+          transfer_number: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          destination_id?: string
+          destination_type?: string
+          id?: string
+          notes?: string | null
+          origin_id?: string
+          origin_type?: string
+          received_at?: string | null
+          received_by?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          shipped_at?: string | null
+          shipped_by?: string | null
+          status?: string
+          tenant_id?: string
+          transfer_number?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       stores: {
         Row: {
@@ -1487,6 +1663,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_counters: {
+        Row: {
+          last_number: number
+          series: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          last_number?: number
+          series?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          last_number?: number
+          series?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1562,6 +1759,19 @@ export type Database = {
         Returns: boolean
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      process_sale_stock: {
+        Args: {
+          p_location_id: string
+          p_location_type: string
+          p_sale_id: string
+        }
+        Returns: undefined
+      }
+      receive_stock_transfer: {
+        Args: { p_transfer_id: string }
+        Returns: undefined
+      }
+      revert_sale_stock: { Args: { p_sale_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "gerente" | "supervisor" | "cajero" | "inventarista"
