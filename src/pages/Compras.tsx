@@ -172,6 +172,42 @@ export default function Compras() {
     return list.find((l) => l.id === id)?.name || "—";
   };
 
+  const purchasesEnriched = useMemo(() => purchases.map((p) => ({
+    ...p,
+    supplier_name: supName2(p.supplier_id),
+    location_name: locName(p.destination_type, p.destination_id),
+  })), [purchases, suppliers, warehouses, stores]);
+
+  const purchasesTable = useTableState({
+    data: purchasesEnriched,
+    searchKeys: ["purchase_number", "supplier_name", "location_name", "notes"],
+    filterFns: {
+      status: (p, v) => p.status === v,
+      payment: (p, v) => {
+        const pending = (p.total || 0) - (p.amount_paid || 0);
+        if (v === "paid") return pending <= 0.01;
+        if (v === "pending") return pending > 0.01;
+        return true;
+      },
+    },
+  });
+
+  const suppliersTable = useTableState({
+    data: suppliers,
+    searchKeys: ["name", "email", "phone"],
+    filterFns: {
+      debt: (s, v) => v === "with" ? (Number(s.balance) || 0) > 0 : v === "without" ? (Number(s.balance) || 0) <= 0 : true,
+    },
+  });
+
+  const stats = useMemo(() => {
+    const totalPurchases = purchases.length;
+    const pendingDraft = purchases.filter((p) => p.status === "draft").length;
+    const totalAmount = purchases.reduce((a, p) => a + Number(p.total || 0), 0);
+    const totalDebt = purchases.reduce((a, p) => a + Math.max(0, Number(p.total || 0) - Number(p.amount_paid || 0)), 0);
+    return { totalPurchases, pendingDraft, totalAmount, totalDebt };
+  }, [purchases]);
+
   return (
     <AppLayout title="Compras">
       <Tabs defaultValue="purchases" className="space-y-4">
@@ -181,12 +217,35 @@ export default function Compras() {
         </TabsList>
 
         <TabsContent value="purchases" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-muted-foreground">Gestiona compras a proveedores</p>
-            <Button size="sm" className="gap-1 gradient-brand text-primary-foreground" onClick={() => setOpen(true)}>
-              <Plus className="h-3.5 w-3.5" /> Nueva Compra
-            </Button>
-          </div>
+          <StatRow>
+            <MiniStatCard label="Compras" value={stats.totalPurchases} icon={ShoppingCart} tone="primary" />
+            <MiniStatCard label="Borradores" value={stats.pendingDraft} icon={FileText} tone={stats.pendingDraft > 0 ? "warning" : "default"} />
+            <MiniStatCard label="Monto total" value={`$${stats.totalAmount.toLocaleString()}`} icon={DollarSign} />
+            <MiniStatCard label="Por pagar" value={`$${stats.totalDebt.toLocaleString()}`} icon={Wallet} tone={stats.totalDebt > 0 ? "destructive" : "success"} />
+          </StatRow>
+
+          <TableToolbar
+            search={purchasesTable.search}
+            onSearchChange={purchasesTable.setSearch}
+            searchPlaceholder="Buscar nº, proveedor, destino..."
+            filters={[
+              { key: "status", label: "Estado", value: purchasesTable.filters.status || "__all__",
+                onChange: (v) => purchasesTable.setFilter("status", v),
+                options: [
+                  { value: "draft", label: "Borrador" },
+                  { value: "received", label: "Recibida" },
+                  { value: "cancelled", label: "Cancelada" },
+                ]},
+              { key: "payment", label: "Pago", value: purchasesTable.filters.payment || "__all__",
+                onChange: (v) => purchasesTable.setFilter("payment", v),
+                options: [{ value: "paid", label: "Pagado" }, { value: "pending", label: "Pendiente" }] },
+            ]}
+            rightSlot={
+              <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpen(true)}>
+                <Plus className="h-3.5 w-3.5" /> Nueva Compra
+              </Button>
+            }
+          />
 
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
