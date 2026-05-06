@@ -164,7 +164,7 @@ const Clientes = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((c) => (
+              {table.paged.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => openDetail(c)}>{c.name}</TableCell>
                   <TableCell className="hidden sm:table-cell">{c.phone || "—"}</TableCell>
@@ -185,7 +185,7 @@ const Clientes = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {table.total === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     <User className="h-8 w-8 mx-auto mb-2 opacity-30" />
@@ -195,6 +195,8 @@ const Clientes = () => {
               )}
             </TableBody>
           </Table>
+          <TablePagination page={table.page} pageSize={table.pageSize} total={table.total}
+            onPageChange={table.setPage} onPageSizeChange={table.setPageSize} />
         </div>
       </div>
 
