@@ -12,7 +12,6 @@ import {
   BookOpen,
   Zap,
   LogOut,
-  ChevronDown,
   Crown,
   ChefHat,
   MapPin,
@@ -22,6 +21,7 @@ import {
   Globe,
   ShoppingCart,
   Undo2,
+  Wallet,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -53,27 +53,68 @@ interface MenuItem {
   types?: BizType[];
 }
 
-const mainItems: MenuItem[] = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Punto de Venta", url: "/pos", icon: Monitor },
-  { title: "Mapa de Mesas", url: "/mesas", icon: MapPin, types: ["restaurante", "bar"] },
-  { title: "Cocina (KDS)", url: "/cocina", icon: ChefHat, types: ["restaurante", "bar"] },
-  { title: "Inventario", url: "/inventario", icon: Package },
-  { title: "Clientes", url: "/clientes", icon: Users },
-  { title: "Empleados", url: "/empleados", icon: UserCheck },
-  { title: "Tiendas", url: "/tiendas", icon: Store, types: ["empresa"] },
-  { title: "Almacenes", url: "/almacenes", icon: Warehouse },
-  { title: "Transferencias", url: "/transferencias", icon: ArrowRightLeft },
-  { title: "Compras", url: "/compras", icon: ShoppingCart },
-  { title: "Devoluciones", url: "/devoluciones", icon: Undo2 },
-  { title: "Turnos", url: "/turnos", icon: Clock },
-  { title: "Contabilidad", url: "/contabilidad", icon: BookOpen },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Pedidos Online", url: "/pedidos-online", icon: ShoppingBag },
+interface MenuGroup {
+  label: string;
+  items: MenuItem[];
+}
+
+const menuGroups: MenuGroup[] = [
+  {
+    label: "General",
+    items: [
+      { title: "Dashboard", url: "/", icon: LayoutDashboard },
+      { title: "Analytics", url: "/analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Operaciones",
+    items: [
+      { title: "Punto de Venta", url: "/pos", icon: Monitor },
+      { title: "Mapa de Mesas", url: "/mesas", icon: MapPin, types: ["restaurante", "bar"] },
+      { title: "Cocina (KDS)", url: "/cocina", icon: ChefHat, types: ["restaurante", "bar"] },
+      { title: "Turnos", url: "/turnos", icon: Clock },
+    ],
+  },
+  {
+    label: "Inventario",
+    items: [
+      { title: "Productos", url: "/inventario", icon: Package },
+      { title: "Almacenes", url: "/almacenes", icon: Warehouse },
+      { title: "Tiendas", url: "/tiendas", icon: Store, types: ["empresa"] },
+      { title: "Transferencias", url: "/transferencias", icon: ArrowRightLeft },
+    ],
+  },
+  {
+    label: "Compras y Ventas",
+    items: [
+      { title: "Compras", url: "/compras", icon: ShoppingCart },
+      { title: "Devoluciones", url: "/devoluciones", icon: Undo2 },
+      { title: "Cuentas (CxC/CxP)", url: "/cuentas", icon: Wallet },
+    ],
+  },
+  {
+    label: "Personas",
+    items: [
+      { title: "Clientes", url: "/clientes", icon: Users },
+      { title: "Empleados", url: "/empleados", icon: UserCheck },
+    ],
+  },
+  {
+    label: "Finanzas",
+    items: [
+      { title: "Contabilidad", url: "/contabilidad", icon: BookOpen },
+    ],
+  },
+  {
+    label: "Online",
+    items: [
+      { title: "Pedidos Online", url: "/pedidos-online", icon: ShoppingBag },
+      { title: "Marketplace", url: "/marketplace", icon: Globe },
+    ],
+  },
 ];
 
-const systemItems = [
-  { title: "Marketplace", url: "/marketplace", icon: Globe },
+const systemItems: MenuItem[] = [
   { title: "Roles y Permisos", url: "/roles", icon: Shield },
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
@@ -87,10 +128,6 @@ export function AppSidebar() {
   const { tenant, allTenants, businessType } = useTenantContext();
   const biz = (businessType || "empresa") as BizType;
 
-  const visibleMainItems = mainItems.filter(
-    (item) => !item.types || item.types.includes(biz)
-  );
-
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
@@ -102,6 +139,22 @@ export function AppSidebar() {
         .slice(0, 2)
         .toUpperCase()
     : "??";
+
+  const renderItem = (item: MenuItem) => (
+    <SidebarMenuItem key={item.title}>
+      <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+        <NavLink
+          to={item.url}
+          end={item.url === "/"}
+          className="transition-colors"
+          activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+        >
+          <item.icon className="h-4 w-4" />
+          {!collapsed && <span>{item.title}</span>}
+        </NavLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -125,52 +178,27 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
-            Principal
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {visibleMainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className="transition-colors"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {menuGroups.map((group) => {
+          const visible = group.items.filter((it) => !it.types || it.types.includes(biz));
+          if (visible.length === 0) return null;
+          return (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
+                {group.label}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>{visible.map(renderItem)}</SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
             Sistema
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {systemItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <NavLink
-                      to={item.url}
-                      className="transition-colors"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <SidebarMenu>{systemItems.map(renderItem)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
