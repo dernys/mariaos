@@ -10,6 +10,7 @@ const POS = () => {
   const titles: Record<string, string> = {
     bar: "Barra — Punto de Venta",
     restaurant: "Restaurante — Punto de Venta",
+    restaurante: "Restaurante — Punto de Venta",
     empresa: "Punto de Venta",
   };
 
