@@ -366,6 +366,83 @@ const Inventario = () => {
             </Table>
           </div>
         </TabsContent>
+
+        <TabsContent value="stock" className="space-y-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar producto..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          </div>
+          <div className="bg-card rounded-xl shadow-card border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">SKU</TableHead>
+                  <TableHead className="text-xs">Producto</TableHead>
+                  <TableHead className="text-xs">Tipo</TableHead>
+                  <TableHead className="text-xs">Ubicación</TableHead>
+                  <TableHead className="text-xs">Stock</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stockRows.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-xs font-heading font-semibold">{r.sku}</TableCell>
+                    <TableCell className="text-xs">{r.productName}</TableCell>
+                    <TableCell><Badge variant="outline" className="text-[10px]">{r.location_type === "warehouse" ? "Almacén" : "Tienda"}</Badge></TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{r.locationName}</TableCell>
+                    <TableCell className="text-xs font-heading font-bold">{r.stock}</TableCell>
+                  </TableRow>
+                ))}
+                {stockRows.length === 0 && (
+                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-xs text-muted-foreground">Sin stock registrado por ubicación</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="kardex" className="space-y-4">
+          <div className="max-w-md">
+            <Label className="text-xs">Producto</Label>
+            <Select value={kardexProductId} onValueChange={setKardexProductId}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un producto" /></SelectTrigger>
+              <SelectContent>
+                {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="bg-card rounded-xl shadow-card border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Fecha</TableHead>
+                  <TableHead className="text-xs">Tipo</TableHead>
+                  <TableHead className="text-xs">Ubicación</TableHead>
+                  <TableHead className="text-xs">Cantidad</TableHead>
+                  <TableHead className="text-xs">Anterior</TableHead>
+                  <TableHead className="text-xs">Nuevo</TableHead>
+                  <TableHead className="text-xs">Razón</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {kardexMovements.map((m) => (
+                  <TableRow key={m.id}>
+                    <TableCell className="text-xs text-muted-foreground">{format(new Date(m.created_at), "dd/MM/yy HH:mm")}</TableCell>
+                    <TableCell><Badge variant="outline" className="text-[10px]">{m.movement_type}</Badge></TableCell>
+                    <TableCell className="text-xs">{getLocationName(m.location_type, m.location_id)}</TableCell>
+                    <TableCell className="text-xs font-heading font-bold">{m.quantity}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{m.previous_stock}</TableCell>
+                    <TableCell className="text-xs font-heading font-semibold">{m.new_stock}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{m.reason || "—"}</TableCell>
+                  </TableRow>
+                ))}
+                {(!kardexProductId || kardexMovements.length === 0) && (
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-xs text-muted-foreground">{kardexProductId ? "Sin movimientos para este producto" : "Selecciona un producto para ver su historial"}</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Product Dialog */}
