@@ -108,6 +108,14 @@ export default function Compras() {
     if (!destId) { toast({ title: "Selecciona un destino", variant: "destructive" }); return; }
     const valid = items.filter((it) => it.product_id && Number(it.qty) > 0);
     if (!valid.length) { toast({ title: "Agrega al menos un producto", variant: "destructive" }); return; }
+    const paid = Math.max(0, Number(amountPaid) || 0);
+    if (paid > 0 && !supplierId) {
+      toast({ title: "Proveedor requerido", description: "El pago a crédito requiere proveedor.", variant: "destructive" }); return;
+    }
+    const isPartial = paid < total - 0.01;
+    if (isPartial && !supplierId) {
+      toast({ title: "Proveedor requerido", description: "El saldo pendiente requiere proveedor.", variant: "destructive" }); return;
+    }
 
     const code = "PC-" + Date.now().toString(36).toUpperCase();
     const { data: pch, error } = await (supabase.from as any)("purchases").insert({
@@ -117,6 +125,7 @@ export default function Compras() {
       destination_type: destType,
       destination_id: destId,
       subtotal, tax: Number(tax) || 0, total,
+      amount_paid: paid,
       notes: notes || null,
       created_by: user?.id,
       status: "draft",
