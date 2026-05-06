@@ -193,6 +193,13 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         return;
       }
 
+      // Validación: pago parcial requiere cliente o empleado para registrar la deuda
+      if (isPartial && remaining > 0.01 && !selectedCustomer && !selectedEmployee) {
+        toast({ title: "Cliente o empleado requerido", description: "Para dejar saldo pendiente debes asociar un cliente o empleado.", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+
       const status = isPartial && remaining > 0.01 ? "partial" : "paid";
 
       // Create sale (con shift, store y ticket auto)
