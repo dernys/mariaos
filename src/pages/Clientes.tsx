@@ -15,10 +15,14 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Edit2, Trash2, User, History, DollarSign } from "lucide-react";
+import { Plus, Edit2, Trash2, User, History, Wallet, AlertTriangle, Users as UsersIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
+import { useTableState } from "@/hooks/useTableState";
+import { TableToolbar } from "@/components/data/TableToolbar";
+import { TablePagination } from "@/components/data/TablePagination";
+import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
 interface Customer {
   id: string;
@@ -45,7 +49,6 @@ const Clientes = () => {
   const tenantId = useTenant();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
   const [customerSales, setCustomerSales] = useState<Sale[]>([]);
@@ -109,22 +112,43 @@ const Clientes = () => {
     fetchCustomers();
   };
 
-  const filtered = customers.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) || (c.email || "").toLowerCase().includes(search.toLowerCase()) || (c.phone || "").includes(search)
-  );
+  const totalDebt = customers.reduce((a, c) => a + Math.max(0, Number(c.balance) || 0), 0);
+  const totalCredit = customers.reduce((a, c) => a + (Number(c.credit_limit) || 0), 0);
+  const withDebt = customers.filter((c) => (c.balance || 0) > 0).length;
+
+  const table = useTableState({
+    data: customers,
+    searchKeys: ["name", "email", "phone", "rfc"],
+    filterFns: {
+      status: (c, v) => v === "debt" ? (c.balance || 0) > 0 : v === "ok" ? (c.balance || 0) <= 0 : true,
+    },
+  });
 
   return (
     <AppLayout title="Clientes">
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3 justify-between">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar cliente..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
-          <Button onClick={openNew} className="gradient-brand text-primary-foreground gap-2">
-            <Plus className="h-4 w-4" /> Nuevo Cliente
-          </Button>
-        </div>
+        <StatRow>
+          <MiniStatCard label="Clientes" value={customers.length} icon={UsersIcon} tone="primary" />
+          <MiniStatCard label="Con deuda" value={withDebt} icon={AlertTriangle} tone={withDebt > 0 ? "warning" : "default"} />
+          <MiniStatCard label="Saldo por cobrar" value={`$${totalDebt.toLocaleString()}`} icon={Wallet} tone={totalDebt > 0 ? "destructive" : "success"} />
+          <MiniStatCard label="Crédito otorgado" value={`$${totalCredit.toLocaleString()}`} tone="default" />
+        </StatRow>
+
+        <TableToolbar
+          search={table.search}
+          onSearchChange={table.setSearch}
+          searchPlaceholder="Buscar cliente, email, teléfono..."
+          filters={[{
+            key: "status", label: "Estado", value: table.filters.status || "__all__",
+            onChange: (v) => table.setFilter("status", v),
+            options: [{ value: "debt", label: "Con deuda" }, { value: "ok", label: "Sin deuda" }],
+          }]}
+          rightSlot={
+            <Button onClick={openNew} size="sm" className="gradient-brand text-primary-foreground gap-2 h-9">
+              <Plus className="h-4 w-4" /> Nuevo
+            </Button>
+          }
+        />
 
         <div className="bg-card rounded-xl border shadow-card overflow-hidden">
           <Table>
