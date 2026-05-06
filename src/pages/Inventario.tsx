@@ -245,6 +245,8 @@ const Inventario = () => {
       <Tabs defaultValue="products" className="space-y-4">
         <TabsList>
           <TabsTrigger value="products">Productos</TabsTrigger>
+          <TabsTrigger value="stock">Stock por ubicación</TabsTrigger>
+          <TabsTrigger value="kardex">Kardex</TabsTrigger>
           <TabsTrigger value="movements">Movimientos</TabsTrigger>
         </TabsList>
 
