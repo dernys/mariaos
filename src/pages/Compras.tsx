@@ -372,7 +372,16 @@ export default function Compras() {
               <div><Label className="text-xs">Total</Label><Input value={total.toFixed(2)} disabled className="font-bold" /></div>
             </div>
 
-            <div><Label className="text-xs">Notas</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs">Pagado al proveedor</Label>
+                <Input type="number" min="0" value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Saldo pendiente: <span className="font-bold">${Math.max(0, total - (Number(amountPaid)||0)).toFixed(2)}</span>
+                  {Number(amountPaid) < total - 0.01 && supplierId ? " — Se sumará a la deuda del proveedor" : ""}
+                </p>
+              </div>
+              <div><Label className="text-xs">Notas</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
