@@ -45,6 +45,19 @@ interface Warehouse {
   name: string;
 }
 
+interface Store {
+  id: string;
+  name: string;
+}
+
+interface LocationStock {
+  id: string;
+  product_id: string;
+  location_type: string;
+  location_id: string;
+  stock: number;
+}
+
 interface Movement {
   id: string;
   movement_type: string;
@@ -54,6 +67,8 @@ interface Movement {
   reason: string | null;
   created_at: string;
   product_id: string;
+  location_type?: string | null;
+  location_id?: string | null;
 }
 
 const statusConfig = (stock: number, min: number) => {
@@ -68,9 +83,12 @@ const Inventario = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [locationStocks, setLocationStocks] = useState<LocationStock[]>([]);
   const [movements, setMovements] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [kardexProductId, setKardexProductId] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [movementDialogOpen, setMovementDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -82,13 +100,17 @@ const Inventario = () => {
   const [movForm, setMovForm] = useState({ type: "entry", quantity: "0", reason: "" });
 
   const fetchData = async () => {
-    const [prodRes, whRes, movRes] = await Promise.all([
+    const [prodRes, whRes, stRes, psRes, movRes] = await Promise.all([
       supabase.from("products").select("*").order("name"),
       supabase.from("warehouses").select("id, name").order("name"),
-      supabase.from("inventory_movements").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("stores").select("id, name").order("name"),
+      supabase.from("product_stock").select("*"),
+      supabase.from("inventory_movements").select("*").order("created_at", { ascending: false }).limit(200),
     ]);
     if (prodRes.data) setProducts(prodRes.data as Product[]);
     if (whRes.data) setWarehouses(whRes.data);
+    if (stRes.data) setStores(stRes.data);
+    if (psRes.data) setLocationStocks(psRes.data as LocationStock[]);
     if (movRes.data) setMovements(movRes.data as Movement[]);
     setLoading(false);
   };
@@ -199,12 +221,32 @@ const Inventario = () => {
 
   const getProductName = (id: string) => products.find((p) => p.id === id)?.name || "—";
   const getWarehouseName = (id: string | null) => warehouses.find((w) => w.id === id)?.name || "—";
+  const getLocationName = (type?: string | null, id?: string | null) => {
+    if (!id) return "—";
+    if (type === "warehouse") return warehouses.find((w) => w.id === id)?.name || "Almacén";
+    if (type === "store") return stores.find((s) => s.id === id)?.name || "Tienda";
+    return "—";
+  };
+
+  // Stock por ubicación: agrupa product_stock con producto y ubicación
+  const stockRows = locationStocks
+    .map((ls) => ({
+      ...ls,
+      productName: products.find((p) => p.id === ls.product_id)?.name || "—",
+      sku: products.find((p) => p.id === ls.product_id)?.sku || "—",
+      locationName: getLocationName(ls.location_type, ls.location_id),
+    }))
+    .filter((r) => r.productName.toLowerCase().includes(search.toLowerCase()) || r.sku.toLowerCase().includes(search.toLowerCase()));
+
+  const kardexMovements = kardexProductId ? movements.filter((m) => m.product_id === kardexProductId) : [];
 
   return (
     <AppLayout title="Inventario">
       <Tabs defaultValue="products" className="space-y-4">
         <TabsList>
           <TabsTrigger value="products">Productos</TabsTrigger>
+          <TabsTrigger value="stock">Stock por ubicación</TabsTrigger>
+          <TabsTrigger value="kardex">Kardex</TabsTrigger>
           <TabsTrigger value="movements">Movimientos</TabsTrigger>
         </TabsList>
 
@@ -319,6 +361,83 @@ const Inventario = () => {
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-xs">Sin movimientos</TableCell>
                   </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="stock" className="space-y-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar producto..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          </div>
+          <div className="bg-card rounded-xl shadow-card border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">SKU</TableHead>
+                  <TableHead className="text-xs">Producto</TableHead>
+                  <TableHead className="text-xs">Tipo</TableHead>
+                  <TableHead className="text-xs">Ubicación</TableHead>
+                  <TableHead className="text-xs">Stock</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stockRows.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-xs font-heading font-semibold">{r.sku}</TableCell>
+                    <TableCell className="text-xs">{r.productName}</TableCell>
+                    <TableCell><Badge variant="outline" className="text-[10px]">{r.location_type === "warehouse" ? "Almacén" : "Tienda"}</Badge></TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{r.locationName}</TableCell>
+                    <TableCell className="text-xs font-heading font-bold">{r.stock}</TableCell>
+                  </TableRow>
+                ))}
+                {stockRows.length === 0 && (
+                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-xs text-muted-foreground">Sin stock registrado por ubicación</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="kardex" className="space-y-4">
+          <div className="max-w-md">
+            <Label className="text-xs">Producto</Label>
+            <Select value={kardexProductId} onValueChange={setKardexProductId}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un producto" /></SelectTrigger>
+              <SelectContent>
+                {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="bg-card rounded-xl shadow-card border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Fecha</TableHead>
+                  <TableHead className="text-xs">Tipo</TableHead>
+                  <TableHead className="text-xs">Ubicación</TableHead>
+                  <TableHead className="text-xs">Cantidad</TableHead>
+                  <TableHead className="text-xs">Anterior</TableHead>
+                  <TableHead className="text-xs">Nuevo</TableHead>
+                  <TableHead className="text-xs">Razón</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {kardexMovements.map((m) => (
+                  <TableRow key={m.id}>
+                    <TableCell className="text-xs text-muted-foreground">{format(new Date(m.created_at), "dd/MM/yy HH:mm")}</TableCell>
+                    <TableCell><Badge variant="outline" className="text-[10px]">{m.movement_type}</Badge></TableCell>
+                    <TableCell className="text-xs">{getLocationName(m.location_type, m.location_id)}</TableCell>
+                    <TableCell className="text-xs font-heading font-bold">{m.quantity}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{m.previous_stock}</TableCell>
+                    <TableCell className="text-xs font-heading font-semibold">{m.new_stock}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{m.reason || "—"}</TableCell>
+                  </TableRow>
+                ))}
+                {(!kardexProductId || kardexMovements.length === 0) && (
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-xs text-muted-foreground">{kardexProductId ? "Sin movimientos para este producto" : "Selecciona un producto para ver su historial"}</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
