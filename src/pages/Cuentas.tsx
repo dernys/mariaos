@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,8 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, Wallet, ArrowDownToLine, ArrowUpFromLine, History } from "lucide-react";
+import { DollarSign, Wallet, ArrowDownToLine, ArrowUpFromLine, History, Users, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
+import { useTableState } from "@/hooks/useTableState";
+import { TableToolbar } from "@/components/data/TableToolbar";
+import { TablePagination } from "@/components/data/TablePagination";
+import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
 type PartyType = "customer" | "employee" | "supplier";
 
@@ -73,7 +77,16 @@ export default function Cuentas() {
 
   const list = tab === "customer" ? customers : tab === "employee" ? employees : suppliers;
   const isPayable = tab === "supplier";
-  const totalDebt = list.reduce((a, b) => a + Number(b.balance || 0), 0);
+  const totalDebt = list.reduce((a, b) => a + Math.max(0, Number(b.balance || 0)), 0);
+  const withDebt = list.filter((p) => Number(p.balance || 0) > 0).length;
+
+  const table = useTableState({
+    data: list,
+    searchKeys: ["name", "phone", "email"],
+    filterFns: {
+      balance: (p, v) => v === "with" ? Number(p.balance || 0) > 0 : v === "without" ? Number(p.balance || 0) <= 0 : true,
+    },
+  });
 
   const openPay = (p: Party) => {
     setActiveParty(p);
