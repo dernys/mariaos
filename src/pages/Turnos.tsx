@@ -118,20 +118,43 @@ const Turnos = () => {
     fetchAll();
   };
 
+  const loadSummary = async () => {
+    if (!activeShift) return;
+    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: activeShift.id });
+    if (error) { toast.error(error.message); return; }
+    if (data && (data as any[]).length) setSummary((data as any[])[0]);
+  };
+
+  const openCloseDialog = async () => {
+    setShowClose(true);
+    await loadSummary();
+  };
+
   const closeShift = async () => {
     if (!activeShift || !closeCash) return toast.error("Ingresa el monto de cierre");
-    const { error } = await supabase.from("sales_shifts").update({
-      status: "closed", closed_at: new Date().toISOString(),
-      closing_cash: parseFloat(closeCash), notes: closeNotes || null,
-    }).eq("id", activeShift.id);
-
+    const { error } = await supabase.rpc("close_shift_with_summary" as any, {
+      p_shift_id: activeShift.id,
+      p_declared_cash: parseFloat(closeCash),
+      p_notes: closeNotes || null,
+    });
     if (error) return toast.error(error.message);
-    await logActivity({ entity_type: "shift", entity_id: activeShift.id, action: "Turno cerrado", description: `Caja cierre: $${closeCash}`, tenant_id: tenantId, performed_by: user?.id });
-    toast.success("Turno cerrado correctamente");
-    setShowClose(false);
-    setCloseCash("");
-    setCloseNotes("");
+    const diff = parseFloat(closeCash) - (summary?.expected_cash || 0);
+    await logActivity({ entity_type: "shift", entity_id: activeShift.id, action: "Turno cerrado", description: `Cierre $${closeCash}, esperado $${summary?.expected_cash?.toFixed(2)}, diferencia $${diff.toFixed(2)}`, tenant_id: tenantId, performed_by: user?.id });
+    toast.success(`Turno cerrado · Diferencia: $${diff.toFixed(2)}`);
+    setShowClose(false); setCloseCash(""); setCloseNotes(""); setSummary(null);
     fetchAll();
+  };
+
+  const submitCashMovement = async () => {
+    if (!activeShift || !cashAmount || Number(cashAmount) <= 0) return toast.error("Monto inválido");
+    const { error } = await (supabase.from as any)("shift_cash_movements").insert({
+      tenant_id: tenantId, shift_id: activeShift.id,
+      movement_type: cashType, amount: parseFloat(cashAmount),
+      reason: cashReason || null, performed_by: user?.id,
+    });
+    if (error) return toast.error(error.message);
+    toast.success(cashType === "cash_in" ? "Ingreso registrado" : "Egreso registrado");
+    setShowCash(false); setCashAmount(""); setCashReason(""); setCashType("cash_out");
   };
 
   if (loading) {
