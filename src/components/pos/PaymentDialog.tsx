@@ -16,6 +16,7 @@ interface CartItem {
   price: number;
   qty: number;
   sku?: string;
+  productId?: string;
 }
 
 interface Customer {
