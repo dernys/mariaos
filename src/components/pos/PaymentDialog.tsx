@@ -16,6 +16,7 @@ interface CartItem {
   price: number;
   qty: number;
   sku?: string;
+  productId?: string;
 }
 
 interface Customer {
@@ -171,25 +172,48 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
       const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single();
 
+      // Validar turno abierto del usuario
+      const { data: openShift } = await supabase
+        .from("sales_shifts")
+        .select("id, store_id, store_name")
+        .eq("user_id", user.id)
+        .eq("status", "open")
+        .order("opened_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!openShift) {
+        toast({
+          title: "Sin turno abierto",
+          description: "Debes abrir un turno en /turnos antes de cobrar.",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+
       const status = isPartial && remaining > 0.01 ? "partial" : "paid";
 
-      // Create sale
+      // Create sale (con shift, store y ticket auto)
       const { data: sale, error: saleErr } = await supabase.from("sales").insert({
         tenant_id: tu?.tenant_id,
         customer_id: selectedCustomer || null,
         employee_id: selectedEmployee || null,
+        shift_id: openShift.id,
+        store_id: openShift.store_id || null,
         subtotal,
         tax,
         total,
         amount_paid: totalPaidInBase,
         status,
-      }).select("id").single();
+      }).select("id, ticket_number").single();
 
       if (saleErr || !sale) throw saleErr || new Error("Error creando venta");
 
-      // Insert sale items
+      // Insert sale items (con product_id)
       const items = cart.map((item) => ({
         sale_id: sale.id,
+        product_id: item.productId || null,
         product_name: item.name,
         sku: item.sku || null,
         price: item.price,
@@ -228,7 +252,23 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         }
       }
 
-      toast({ title: "Venta registrada", description: status === "partial" ? `Pendiente: $${remaining.toFixed(2)} CUP` : "Pago completo" });
+      // Descontar stock de la tienda del turno (si hay store_id y productos vinculados)
+      if (openShift.store_id && cart.some((c) => c.productId)) {
+        const { error: stockErr } = await supabase.rpc("process_sale_stock", {
+          p_sale_id: sale.id,
+          p_location_type: "store",
+          p_location_id: openShift.store_id,
+        });
+        if (stockErr) {
+          console.error("Stock RPC error:", stockErr);
+          toast({ title: "Aviso", description: "Venta registrada pero el descuento de stock falló: " + stockErr.message });
+        }
+      }
+
+      toast({
+        title: `Ticket ${(sale as any).ticket_number || ""}`.trim(),
+        description: status === "partial" ? `Pendiente: $${remaining.toFixed(2)} CUP` : "Pago completo registrado",
+      });
       onSaleComplete();
       onOpenChange(false);
     } catch (err: any) {
