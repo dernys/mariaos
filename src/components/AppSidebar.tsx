@@ -20,6 +20,8 @@ import {
   BarChart3,
   ShoppingBag,
   Globe,
+  ShoppingCart,
+  Undo2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -62,6 +64,8 @@ const mainItems: MenuItem[] = [
   { title: "Tiendas", url: "/tiendas", icon: Store, types: ["empresa"] },
   { title: "Almacenes", url: "/almacenes", icon: Warehouse },
   { title: "Transferencias", url: "/transferencias", icon: ArrowRightLeft },
+  { title: "Compras", url: "/compras", icon: ShoppingCart },
+  { title: "Devoluciones", url: "/devoluciones", icon: Undo2 },
   { title: "Turnos", url: "/turnos", icon: Clock },
   { title: "Contabilidad", url: "/contabilidad", icon: BookOpen },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },

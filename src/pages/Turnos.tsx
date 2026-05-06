@@ -1,12 +1,13 @@
 import { AppLayout } from "@/components/AppLayout";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Play, Square, DollarSign, Plus, Store } from "lucide-react";
+import { Clock, Play, Square, DollarSign, Plus, Store, ArrowDownCircle, ArrowUpCircle, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,12 +46,25 @@ const Turnos = () => {
   const [loading, setLoading] = useState(true);
   const [showOpen, setShowOpen] = useState(false);
   const [showClose, setShowClose] = useState(false);
+  const [showCash, setShowCash] = useState(false);
 
   const [openStoreId, setOpenStoreId] = useState("");
   const [openEmployeeId, setOpenEmployeeId] = useState("");
   const [openCash, setOpenCash] = useState("");
   const [closeCash, setCloseCash] = useState("");
   const [closeNotes, setCloseNotes] = useState("");
+
+  // Cash movement
+  const [cashType, setCashType] = useState<"cash_in" | "cash_out">("cash_out");
+  const [cashAmount, setCashAmount] = useState("");
+  const [cashReason, setCashReason] = useState("");
+
+  // Summary preview at close
+  const [summary, setSummary] = useState<{
+    opening_cash: number; total_sales: number; total_transactions: number;
+    cash_sales: number; card_sales: number; qr_sales: number;
+    cash_in: number; cash_out: number; returns_cash: number; expected_cash: number;
+  } | null>(null);
 
   useEffect(() => { if (user) fetchAll(); }, [user]);
 
@@ -104,20 +118,43 @@ const Turnos = () => {
     fetchAll();
   };
 
+  const loadSummary = async () => {
+    if (!activeShift) return;
+    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: activeShift.id });
+    if (error) { toast.error(error.message); return; }
+    if (data && (data as any[]).length) setSummary((data as any[])[0]);
+  };
+
+  const openCloseDialog = async () => {
+    setShowClose(true);
+    await loadSummary();
+  };
+
   const closeShift = async () => {
     if (!activeShift || !closeCash) return toast.error("Ingresa el monto de cierre");
-    const { error } = await supabase.from("sales_shifts").update({
-      status: "closed", closed_at: new Date().toISOString(),
-      closing_cash: parseFloat(closeCash), notes: closeNotes || null,
-    }).eq("id", activeShift.id);
-
+    const { error } = await supabase.rpc("close_shift_with_summary" as any, {
+      p_shift_id: activeShift.id,
+      p_declared_cash: parseFloat(closeCash),
+      p_notes: closeNotes || null,
+    });
     if (error) return toast.error(error.message);
-    await logActivity({ entity_type: "shift", entity_id: activeShift.id, action: "Turno cerrado", description: `Caja cierre: $${closeCash}`, tenant_id: tenantId, performed_by: user?.id });
-    toast.success("Turno cerrado correctamente");
-    setShowClose(false);
-    setCloseCash("");
-    setCloseNotes("");
+    const diff = parseFloat(closeCash) - (summary?.expected_cash || 0);
+    await logActivity({ entity_type: "shift", entity_id: activeShift.id, action: "Turno cerrado", description: `Cierre $${closeCash}, esperado $${summary?.expected_cash?.toFixed(2)}, diferencia $${diff.toFixed(2)}`, tenant_id: tenantId, performed_by: user?.id });
+    toast.success(`Turno cerrado · Diferencia: $${diff.toFixed(2)}`);
+    setShowClose(false); setCloseCash(""); setCloseNotes(""); setSummary(null);
     fetchAll();
+  };
+
+  const submitCashMovement = async () => {
+    if (!activeShift || !cashAmount || Number(cashAmount) <= 0) return toast.error("Monto inválido");
+    const { error } = await (supabase.from as any)("shift_cash_movements").insert({
+      tenant_id: tenantId, shift_id: activeShift.id,
+      movement_type: cashType, amount: parseFloat(cashAmount),
+      reason: cashReason || null, performed_by: user?.id,
+    });
+    if (error) return toast.error(error.message);
+    toast.success(cashType === "cash_in" ? "Ingreso registrado" : "Egreso registrado");
+    setShowCash(false); setCashAmount(""); setCashReason(""); setCashType("cash_out");
   };
 
   if (loading) {
@@ -161,7 +198,10 @@ const Turnos = () => {
                   <p className="text-[10px] text-muted-foreground">Transacciones</p>
                   <p className="font-heading font-bold text-sm">{activeShift.total_transactions ?? 0}</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setShowClose(true)} className="gap-1 text-xs border-destructive/30 text-destructive hover:bg-destructive/10">
+                <Button variant="outline" size="sm" onClick={() => setShowCash(true)} className="gap-1 text-xs">
+                  <DollarSign className="h-3.5 w-3.5" /> Movimiento
+                </Button>
+                <Button variant="outline" size="sm" onClick={openCloseDialog} className="gap-1 text-xs border-destructive/30 text-destructive hover:bg-destructive/10">
                   <Square className="h-3.5 w-3.5" /> Cerrar Turno
                 </Button>
               </div>
@@ -169,34 +209,91 @@ const Turnos = () => {
           </motion.div>
         )}
 
-        {/* Close Shift Dialog */}
-        <AnimatePresence>
-          {showClose && activeShift && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm p-4">
-              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-card rounded-2xl shadow-elevated border p-6 w-full max-w-sm">
-                <h2 className="font-heading font-semibold text-lg mb-1">Cerrar Turno</h2>
-                <p className="text-xs text-muted-foreground mb-4">{getStoreName(activeShift)} · Cajero: {getEmployeeName(activeShift.employee_id)}</p>
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs">Efectivo en Caja</Label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input type="number" placeholder="0.00" value={closeCash} onChange={(e) => setCloseCash(e.target.value)} className="pl-9" />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Notas (opcional)</Label>
-                    <Textarea placeholder="Observaciones..." value={closeNotes} onChange={(e) => setCloseNotes(e.target.value)} rows={3} />
+        {/* Cash Movement Dialog */}
+        <Dialog open={showCash} onOpenChange={setShowCash}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Movimiento de Caja</DialogTitle>
+              <DialogDescription>Registra ingresos o egresos manuales del turno</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant={cashType === "cash_in" ? "default" : "outline"} onClick={() => setCashType("cash_in")} className="gap-1">
+                  <ArrowDownCircle className="h-4 w-4" /> Ingreso
+                </Button>
+                <Button variant={cashType === "cash_out" ? "default" : "outline"} onClick={() => setCashType("cash_out")} className="gap-1">
+                  <ArrowUpCircle className="h-4 w-4" /> Egreso
+                </Button>
+              </div>
+              <div>
+                <Label className="text-xs">Monto</Label>
+                <Input type="number" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0.00" />
+              </div>
+              <div>
+                <Label className="text-xs">Motivo</Label>
+                <Input value={cashReason} onChange={(e) => setCashReason(e.target.value)} placeholder="Pago proveedor, retiro..." />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCash(false)}>Cancelar</Button>
+              <Button onClick={submitCashMovement} className="gradient-brand text-primary-foreground">Registrar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Close Shift Dialog with Cuadre */}
+        <Dialog open={showClose} onOpenChange={setShowClose}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Calculator className="h-5 w-5" /> Cierre y Arqueo</DialogTitle>
+              <DialogDescription>{activeShift && `${getStoreName(activeShift)} · ${getEmployeeName(activeShift.employee_id)}`}</DialogDescription>
+            </DialogHeader>
+            {summary ? (
+              <div className="space-y-3">
+                <div className="bg-muted/40 rounded-lg p-3 space-y-1 text-xs">
+                  <div className="flex justify-between"><span>Caja inicial</span><span className="font-heading font-semibold">${Number(summary.opening_cash).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Ventas en efectivo</span><span className="font-heading font-semibold text-success">+${Number(summary.cash_sales).toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>Ventas tarjeta</span><span>${Number(summary.card_sales).toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>Ventas QR</span><span>${Number(summary.qr_sales).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Ingresos manuales</span><span className="font-heading font-semibold text-success">+${Number(summary.cash_in).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Egresos manuales</span><span className="font-heading font-semibold text-destructive">-${Number(summary.cash_out).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Devoluciones efectivo</span><span className="font-heading font-semibold text-destructive">-${Number(summary.returns_cash).toFixed(2)}</span></div>
+                  <div className="border-t pt-1 mt-1 flex justify-between text-sm">
+                    <span className="font-heading font-bold">Esperado en caja</span>
+                    <span className="font-heading font-bold text-primary">${Number(summary.expected_cash).toFixed(2)}</span>
                   </div>
                 </div>
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" className="flex-1" onClick={() => setShowClose(false)}>Cancelar</Button>
-                  <Button onClick={closeShift} className="flex-1 gradient-brand text-primary-foreground font-heading font-semibold">Confirmar Cierre</Button>
+                <div>
+                  <Label className="text-xs">Efectivo declarado *</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input type="number" placeholder="0.00" value={closeCash} onChange={(e) => setCloseCash(e.target.value)} className="pl-9 text-lg font-bold" />
+                  </div>
                 </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                {closeCash && (
+                  <div className={`text-center p-2 rounded-lg text-sm font-heading font-bold ${
+                    Math.abs(parseFloat(closeCash) - summary.expected_cash) < 0.01 ? "bg-success/10 text-success"
+                      : parseFloat(closeCash) > summary.expected_cash ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"
+                  }`}>
+                    Diferencia: ${(parseFloat(closeCash) - summary.expected_cash).toFixed(2)}
+                  </div>
+                )}
+                <div>
+                  <Label className="text-xs">Notas</Label>
+                  <Textarea value={closeNotes} onChange={(e) => setCloseNotes(e.target.value)} rows={2} />
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-xs text-muted-foreground">Calculando...</div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowClose(false)}>Cancelar</Button>
+              <Button onClick={closeShift} disabled={!closeCash || !summary} className="gradient-brand text-primary-foreground">
+                Confirmar Cierre
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Header */}
         <div className="flex items-center justify-between">
