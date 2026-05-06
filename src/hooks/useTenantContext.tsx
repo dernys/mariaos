@@ -88,7 +88,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <TenantContext.Provider value={{ tenantId, tenant, allTenants, setActiveTenantId, loading, businessType: tenant?.business_type ?? "empresa" }}>
+    <TenantContext.Provider value={{ tenantId, tenant, allTenants, setActiveTenantId, loading, businessType: (tenant?.business_type === "restaurant" ? "restaurante" : tenant?.business_type) ?? "empresa" }}>
       {children}
     </TenantContext.Provider>
   );
