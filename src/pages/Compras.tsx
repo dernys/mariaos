@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, CheckCircle2, XCircle, Truck, ShoppingCart } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, XCircle, Truck, ShoppingCart, FileText, DollarSign, Wallet } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -16,6 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
+import { useTableState } from "@/hooks/useTableState";
+import { TableToolbar } from "@/components/data/TableToolbar";
+import { TablePagination } from "@/components/data/TablePagination";
+import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
 interface Supplier { id: string; name: string; balance: number; phone?: string | null; email?: string | null; }
 interface Product { id: string; name: string; sku: string; cost: number; }
@@ -168,6 +172,42 @@ export default function Compras() {
     return list.find((l) => l.id === id)?.name || "—";
   };
 
+  const purchasesEnriched = useMemo(() => purchases.map((p) => ({
+    ...p,
+    supplier_name: supName2(p.supplier_id),
+    location_name: locName(p.destination_type, p.destination_id),
+  })), [purchases, suppliers, warehouses, stores]);
+
+  const purchasesTable = useTableState({
+    data: purchasesEnriched,
+    searchKeys: ["purchase_number", "supplier_name", "location_name", "notes"],
+    filterFns: {
+      status: (p, v) => p.status === v,
+      payment: (p, v) => {
+        const pending = (p.total || 0) - (p.amount_paid || 0);
+        if (v === "paid") return pending <= 0.01;
+        if (v === "pending") return pending > 0.01;
+        return true;
+      },
+    },
+  });
+
+  const suppliersTable = useTableState({
+    data: suppliers,
+    searchKeys: ["name", "email", "phone"],
+    filterFns: {
+      debt: (s, v) => v === "with" ? (Number(s.balance) || 0) > 0 : v === "without" ? (Number(s.balance) || 0) <= 0 : true,
+    },
+  });
+
+  const stats = useMemo(() => {
+    const totalPurchases = purchases.length;
+    const pendingDraft = purchases.filter((p) => p.status === "draft").length;
+    const totalAmount = purchases.reduce((a, p) => a + Number(p.total || 0), 0);
+    const totalDebt = purchases.reduce((a, p) => a + Math.max(0, Number(p.total || 0) - Number(p.amount_paid || 0)), 0);
+    return { totalPurchases, pendingDraft, totalAmount, totalDebt };
+  }, [purchases]);
+
   return (
     <AppLayout title="Compras">
       <Tabs defaultValue="purchases" className="space-y-4">
@@ -177,12 +217,35 @@ export default function Compras() {
         </TabsList>
 
         <TabsContent value="purchases" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-muted-foreground">Gestiona compras a proveedores</p>
-            <Button size="sm" className="gap-1 gradient-brand text-primary-foreground" onClick={() => setOpen(true)}>
-              <Plus className="h-3.5 w-3.5" /> Nueva Compra
-            </Button>
-          </div>
+          <StatRow>
+            <MiniStatCard label="Compras" value={stats.totalPurchases} icon={ShoppingCart} tone="primary" />
+            <MiniStatCard label="Borradores" value={stats.pendingDraft} icon={FileText} tone={stats.pendingDraft > 0 ? "warning" : "default"} />
+            <MiniStatCard label="Monto total" value={`$${stats.totalAmount.toLocaleString()}`} icon={DollarSign} />
+            <MiniStatCard label="Por pagar" value={`$${stats.totalDebt.toLocaleString()}`} icon={Wallet} tone={stats.totalDebt > 0 ? "destructive" : "success"} />
+          </StatRow>
+
+          <TableToolbar
+            search={purchasesTable.search}
+            onSearchChange={purchasesTable.setSearch}
+            searchPlaceholder="Buscar nº, proveedor, destino..."
+            filters={[
+              { key: "status", label: "Estado", value: purchasesTable.filters.status || "__all__",
+                onChange: (v) => purchasesTable.setFilter("status", v),
+                options: [
+                  { value: "draft", label: "Borrador" },
+                  { value: "received", label: "Recibida" },
+                  { value: "cancelled", label: "Cancelada" },
+                ]},
+              { key: "payment", label: "Pago", value: purchasesTable.filters.payment || "__all__",
+                onChange: (v) => purchasesTable.setFilter("payment", v),
+                options: [{ value: "paid", label: "Pagado" }, { value: "pending", label: "Pendiente" }] },
+            ]}
+            rightSlot={
+              <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpen(true)}>
+                <Plus className="h-3.5 w-3.5" /> Nueva Compra
+              </Button>
+            }
+          />
 
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
@@ -198,17 +261,21 @@ export default function Compras() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {purchases.map((p) => {
+                {purchasesTable.paged.map((p) => {
                   const st = statusBadge(p.status);
+                  const pending = Number(p.total || 0) - Number(p.amount_paid || 0);
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="text-xs font-heading font-semibold">{p.purchase_number}</TableCell>
-                      <TableCell className="text-xs">{supName2(p.supplier_id)}</TableCell>
+                      <TableCell className="text-xs">{p.supplier_name}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         <Badge variant="outline" className="text-[10px] mr-1">{p.destination_type === "warehouse" ? "Alm." : "Tnd."}</Badge>
-                        {locName(p.destination_type, p.destination_id)}
+                        {p.location_name}
                       </TableCell>
-                      <TableCell className="text-xs font-heading font-bold">${Number(p.total).toFixed(2)}</TableCell>
+                      <TableCell className="text-xs font-heading font-bold">
+                        ${Number(p.total).toFixed(2)}
+                        {pending > 0.01 && <span className="block text-[9px] text-destructive font-normal">Debe ${pending.toFixed(2)}</span>}
+                      </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{format(new Date(p.created_at), "dd/MM/yy HH:mm")}</TableCell>
                       <TableCell><Badge variant="outline" className={`text-[10px] ${st.c}`}>{st.l}</Badge></TableCell>
                       <TableCell>
@@ -226,23 +293,41 @@ export default function Compras() {
                     </TableRow>
                   );
                 })}
-                {purchases.length === 0 && (
+                {purchasesTable.total === 0 && (
                   <TableRow><TableCell colSpan={7} className="text-center py-8 text-xs text-muted-foreground">
-                    <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-30" /> Sin compras registradas
+                    <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-30" /> Sin compras
                   </TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
+            <TablePagination page={purchasesTable.page} pageSize={purchasesTable.pageSize} total={purchasesTable.total}
+              onPageChange={purchasesTable.setPage} onPageSizeChange={purchasesTable.setPageSize} />
           </div>
         </TabsContent>
 
         <TabsContent value="suppliers" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-muted-foreground">Catálogo de proveedores</p>
-            <Button size="sm" className="gap-1 gradient-brand text-primary-foreground" onClick={() => setOpenSup(true)}>
-              <Plus className="h-3.5 w-3.5" /> Nuevo Proveedor
-            </Button>
-          </div>
+          <StatRow>
+            <MiniStatCard label="Proveedores" value={suppliers.length} icon={Truck} tone="primary" />
+            <MiniStatCard label="Con saldo" value={suppliers.filter((s) => Number(s.balance || 0) > 0).length} icon={Wallet} tone="warning" />
+            <MiniStatCard label="Total por pagar" value={`$${suppliers.reduce((a, s) => a + Math.max(0, Number(s.balance) || 0), 0).toLocaleString()}`} icon={DollarSign} tone="destructive" />
+          </StatRow>
+
+          <TableToolbar
+            search={suppliersTable.search}
+            onSearchChange={suppliersTable.setSearch}
+            searchPlaceholder="Buscar proveedor..."
+            filters={[{
+              key: "debt", label: "Saldo", value: suppliersTable.filters.debt || "__all__",
+              onChange: (v) => suppliersTable.setFilter("debt", v),
+              options: [{ value: "with", label: "Con saldo" }, { value: "without", label: "Sin saldo" }],
+            }]}
+            rightSlot={
+              <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpenSup(true)}>
+                <Plus className="h-3.5 w-3.5" /> Nuevo Proveedor
+              </Button>
+            }
+          />
+
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
               <TableHeader>
@@ -254,7 +339,7 @@ export default function Compras() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {suppliers.map((s) => (
+                {suppliersTable.paged.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="text-xs font-medium">{s.name}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{s.phone || "—"}</TableCell>
@@ -262,11 +347,13 @@ export default function Compras() {
                     <TableCell className="text-xs font-heading font-bold">${Number(s.balance || 0).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
-                {suppliers.length === 0 && (
+                {suppliersTable.total === 0 && (
                   <TableRow><TableCell colSpan={4} className="text-center py-8 text-xs text-muted-foreground">Sin proveedores</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
+            <TablePagination page={suppliersTable.page} pageSize={suppliersTable.pageSize} total={suppliersTable.total}
+              onPageChange={suppliersTable.setPage} onPageSizeChange={suppliersTable.setPageSize} />
           </div>
         </TabsContent>
       </Tabs>

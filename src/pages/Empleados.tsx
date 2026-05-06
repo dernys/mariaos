@@ -15,10 +15,14 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Edit2, Trash2, Users, History } from "lucide-react";
+import { Plus, Edit2, Trash2, Users, History, UserCheck, Wallet, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
+import { useTableState } from "@/hooks/useTableState";
+import { TableToolbar } from "@/components/data/TableToolbar";
+import { TablePagination } from "@/components/data/TablePagination";
+import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
 interface Employee {
   id: string;
@@ -46,7 +50,6 @@ const Empleados = () => {
   const tenantId = useTenant();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailEmployee, setDetailEmployee] = useState<Employee | null>(null);
   const [employeeShifts, setEmployeeShifts] = useState<Shift[]>([]);
@@ -110,22 +113,43 @@ const Empleados = () => {
     fetchEmployees();
   };
 
-  const filtered = employees.filter((e) =>
-    e.name.toLowerCase().includes(search.toLowerCase()) || (e.position || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const active = employees.filter((e) => e.is_active).length;
+  const totalSalary = employees.filter((e) => e.is_active).reduce((a, e) => a + (Number(e.salary) || 0), 0);
+  const totalAdvances = employees.reduce((a, e) => a + Math.max(0, Number((e as any).balance) || 0), 0);
+
+  const table = useTableState({
+    data: employees,
+    searchKeys: ["name", "position", "email", "phone"],
+    filterFns: {
+      status: (e, v) => v === "active" ? e.is_active : v === "inactive" ? !e.is_active : true,
+    },
+  });
 
   return (
     <AppLayout title="Empleados">
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3 justify-between">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar empleado..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
-          <Button onClick={openNew} className="gradient-brand text-primary-foreground gap-2">
-            <Plus className="h-4 w-4" /> Nuevo Empleado
-          </Button>
-        </div>
+        <StatRow>
+          <MiniStatCard label="Total" value={employees.length} icon={Users} tone="primary" />
+          <MiniStatCard label="Activos" value={active} icon={UserCheck} tone="success" />
+          <MiniStatCard label="Nómina mensual" value={`$${totalSalary.toLocaleString()}`} icon={Briefcase} />
+          <MiniStatCard label="Adelantos pendientes" value={`$${totalAdvances.toLocaleString()}`} icon={Wallet} tone={totalAdvances > 0 ? "warning" : "default"} />
+        </StatRow>
+
+        <TableToolbar
+          search={table.search}
+          onSearchChange={table.setSearch}
+          searchPlaceholder="Buscar empleado, puesto..."
+          filters={[{
+            key: "status", label: "Estado", value: table.filters.status || "__all__",
+            onChange: (v) => table.setFilter("status", v),
+            options: [{ value: "active", label: "Activos" }, { value: "inactive", label: "Inactivos" }],
+          }]}
+          rightSlot={
+            <Button onClick={openNew} size="sm" className="gradient-brand text-primary-foreground gap-2 h-9">
+              <Plus className="h-4 w-4" /> Nuevo
+            </Button>
+          }
+        />
 
         <div className="bg-card rounded-xl border shadow-card overflow-hidden">
           <Table>
@@ -141,7 +165,7 @@ const Empleados = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((e) => (
+              {table.paged.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => openDetail(e)}>{e.name}</TableCell>
                   <TableCell>{e.position || "—"}</TableCell>
@@ -158,7 +182,7 @@ const Empleados = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {table.total === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
@@ -168,6 +192,8 @@ const Empleados = () => {
               )}
             </TableBody>
           </Table>
+          <TablePagination page={table.page} pageSize={table.pageSize} total={table.total}
+            onPageChange={table.setPage} onPageSizeChange={table.setPageSize} />
         </div>
       </div>
 
