@@ -43,7 +43,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-type BizType = "restaurante" | "bar" | "empresa";
+type BizType = "restaurante" | "restaurant" | "bar" | "empresa";
 
 interface MenuItem {
   title: string;
