@@ -158,10 +158,11 @@ export default function Compras() {
     setOpen(false); resetForm(); fetchAll();
   };
 
-  const receive = async (id: string) => {
-    const { error } = await supabase.rpc("receive_purchase" as any, { p_purchase_id: id });
+  const receive = async (id: string, isConsignment: boolean) => {
+    const fn = isConsignment ? "receive_purchase_consignment" : "receive_purchase";
+    const { error } = await supabase.rpc(fn as any, { p_purchase_id: id });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Compra recibida y stock actualizado" });
+    toast({ title: isConsignment ? "Consignación recibida" : "Compra recibida y stock actualizado" });
     fetchAll();
   };
 
