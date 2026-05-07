@@ -34,6 +34,7 @@ import Reportes from "./pages/Reportes";
 import Fidelizacion from "./pages/Fidelizacion";
 import RRHH from "./pages/RRHH";
 import Delivery from "./pages/Delivery";
+import Proveedores from "./pages/Proveedores";
 import ClienteDetalle from "./pages/ClienteDetalle";
 import EmpleadoDetalle from "./pages/EmpleadoDetalle";
 import ProveedorDetalle from "./pages/ProveedorDetalle";
