@@ -131,9 +131,12 @@ const Facturas = () => {
   const totalBilled = issued.reduce((s, i) => s + Number(i.total), 0);
   const totalPaid = issued.reduce((s, i) => s + Number(i.amount_paid), 0);
 
-  const { paged, page, setPage, pageSize, setPageSize, total, search, setSearch, filters, setFilter } = useTableState({
+  const { paged, page, setPage, pageSize, setPageSize, total, search, setSearch, filters, setFilter, filtered } = useTableState({
     data: invoices,
     searchKeys: ["invoice_number", "customer_name", "series_code"],
+    filterFns: {
+      status: (i: any, v) => v === "all" ? true : i.status === v,
+    },
   });
 
   return (
@@ -170,6 +173,24 @@ const Facturas = () => {
               ],
             },
           ]}
+          rightSlot={
+            <ExportButton
+              rows={filtered}
+              filename="facturas"
+              title="Facturas"
+              columns={[
+                { key: "invoice_number", label: "Número" },
+                { key: "created_at", label: "Fecha" },
+                { key: "customer_name", label: "Cliente" },
+                { key: "customer_tax_id", label: "RFC/NIF" },
+                { key: "subtotal", label: "Subtotal" },
+                { key: "tax", label: "Impuesto" },
+                { key: "total", label: "Total" },
+                { key: "amount_paid", label: "Pagado" },
+                { key: "status", label: "Estado" },
+              ]}
+            />
+          }
         />
 
         <div className="overflow-x-auto">
