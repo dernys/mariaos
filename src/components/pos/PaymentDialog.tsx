@@ -79,6 +79,11 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const exchangeRates: Record<string, number> = {};
   currencies.forEach((c) => { exchangeRates[c.code] = c.exchange_rate; });
 
+  // Auto-enable partial when client/employee selected (allow leaving credit)
+  useEffect(() => {
+    if (selectedCustomer || selectedEmployee) setIsPartial(true);
+  }, [selectedCustomer, selectedEmployee]);
+
   useEffect(() => {
     if (open) {
       setPayments([{ method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" }]);
