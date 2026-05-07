@@ -8,8 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CartContent } from "./CartContent";
 import { PaymentDialog } from "./PaymentDialog";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
-import { supabase as _sb } from "@/integrations/supabase/client";
-import { useEffect as _useEffect, useState as _useState } from "react";
 import { FloorMap } from "./FloorMap";
 import { SplitBillDialog } from "./SplitBillDialog";
 import { supabase } from "@/integrations/supabase/client";
