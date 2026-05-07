@@ -36,6 +36,8 @@ const routes: { label: string; path: string; icon: any; group: string }[] = [
   { label: "Facturas", path: "/facturas", icon: FileText, group: "Finanzas" },
   { label: "Contabilidad", path: "/contabilidad", icon: BookOpen, group: "Finanzas" },
   { label: "Analítica", path: "/analytics", icon: BarChart3, group: "Finanzas" },
+  { label: "Reportes & BI", path: "/reportes", icon: BarChart3, group: "Finanzas" },
+  { label: "Fidelización", path: "/fidelizacion", icon: Users, group: "Personas" },
   { label: "Configuración", path: "/configuracion", icon: Settings, group: "Sistema" },
 ];
 
