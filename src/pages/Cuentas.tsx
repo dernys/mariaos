@@ -18,6 +18,7 @@ import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
+import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 type PartyType = "customer" | "employee" | "supplier";
 
