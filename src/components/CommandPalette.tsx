@@ -37,7 +37,9 @@ const routes: { label: string; path: string; icon: any; group: string }[] = [
   { label: "Contabilidad", path: "/contabilidad", icon: BookOpen, group: "Finanzas" },
   { label: "Analítica", path: "/analytics", icon: BarChart3, group: "Finanzas" },
   { label: "Reportes & BI", path: "/reportes", icon: BarChart3, group: "Finanzas" },
-  { label: "Fidelización", path: "/fidelizacion", icon: Users, group: "Personas" },
+ { label: "Fidelización", path: "/fidelizacion", icon: Users, group: "Personas" },
+ { label: "RRHH (Asistencia/Nóminas)", path: "/rrhh", icon: Users, group: "Personas" },
+ { label: "Delivery", path: "/delivery", icon: Users, group: "Online" },
   { label: "Configuración", path: "/configuracion", icon: Settings, group: "Sistema" },
 ];
 
