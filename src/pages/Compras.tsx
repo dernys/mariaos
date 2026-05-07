@@ -57,9 +57,6 @@ export default function Compras() {
   const [openSup, setOpenSup] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [payTarget, setPayTarget] = useState<Purchase | null>(null);
-  const [payAmount, setPayAmount] = useState("");
-  const [payMethod, setPayMethod] = useState("cash");
-  const [payNotes, setPayNotes] = useState("");
 
   // Supplier form
   const [supName, setSupName] = useState("");
