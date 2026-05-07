@@ -46,6 +46,7 @@ interface Movement {
 
 export default function Cuentas() {
   const { toast } = useToast();
+  const nav = useNavigate();
   const [tab, setTab] = useState<PartyType>("customer");
   const [customers, setCustomers] = useState<Party[]>([]);
   const [employees, setEmployees] = useState<Party[]>([]);
