@@ -311,6 +311,16 @@ const Inventario = () => {
               { key: "category", label: "Categoría", value: productTable.filters.category || "__all__",
                 onChange: (v) => productTable.setFilter("category", v),
                 options: categoryOptions },
+              { key: "warehouse", label: "Almacén", value: productTable.filters.warehouse || "__all__",
+                onChange: (v) => productTable.setFilter("warehouse", v),
+                options: warehouseOptions },
+              { key: "price_range", label: "Precio", value: productTable.filters.price_range || "__all__",
+                onChange: (v) => productTable.setFilter("price_range", v),
+                options: [
+                  { value: "lt100", label: "< $100" },
+                  { value: "100_500", label: "$100 - $500" },
+                  { value: "gt500", label: "> $500" },
+                ]},
             ]}
             rightSlot={
               <>
