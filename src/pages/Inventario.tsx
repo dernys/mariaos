@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useTableState } from "@/hooks/useTableState";
 import { TableToolbar } from "@/components/data/TableToolbar";
+import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
@@ -304,9 +305,25 @@ const Inventario = () => {
                 options: categoryOptions },
             ]}
             rightSlot={
-              <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground h-9">
-                <Plus className="h-3.5 w-3.5" /> Nuevo Producto
-              </Button>
+              <>
+                <ExportButton
+                  rows={productTable.filtered}
+                  filename="inventario"
+                  title="Inventario de productos"
+                  columns={[
+                    { key: "sku", label: "SKU" },
+                    { key: "name", label: "Producto" },
+                    { key: "category", label: "Categoría" },
+                    { key: "stock", label: "Stock" },
+                    { key: "min_stock", label: "Mínimo" },
+                    { key: "price", label: "Precio" },
+                    { key: "cost", label: "Costo" },
+                  ]}
+                />
+                <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground h-9">
+                  <Plus className="h-3.5 w-3.5" /> Nuevo Producto
+                </Button>
+              </>
             }
           />
 

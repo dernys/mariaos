@@ -801,6 +801,56 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          category: string
+          created_at: string
+          id: string
+          message: string | null
+          metadata: Json | null
+          read_at: string | null
+          severity: string
+          tenant_id: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          action_url?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          read_at?: string | null
+          severity?: string
+          tenant_id: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          action_url?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          read_at?: string | null
+          severity?: string
+          tenant_id?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       online_order_items: {
         Row: {
           created_at: string
@@ -2314,6 +2364,19 @@ export type Database = {
       close_shift_with_summary: {
         Args: { p_declared_cash: number; p_notes?: string; p_shift_id: string }
         Returns: Json
+      }
+      create_notification: {
+        Args: {
+          p_action_url?: string
+          p_category: string
+          p_message?: string
+          p_metadata?: Json
+          p_severity?: string
+          p_tenant_id: string
+          p_title: string
+          p_user_id?: string
+        }
+        Returns: string
       }
       has_role: {
         Args: {

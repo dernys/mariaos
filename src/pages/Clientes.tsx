@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { useTableState } from "@/hooks/useTableState";
 import { TableToolbar } from "@/components/data/TableToolbar";
+import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
@@ -144,9 +145,23 @@ const Clientes = () => {
             options: [{ value: "debt", label: "Con deuda" }, { value: "ok", label: "Sin deuda" }],
           }]}
           rightSlot={
-            <Button onClick={openNew} size="sm" className="gradient-brand text-primary-foreground gap-2 h-9">
-              <Plus className="h-4 w-4" /> Nuevo
-            </Button>
+            <>
+              <ExportButton
+                rows={table.filtered}
+                filename="clientes"
+                title="Clientes"
+                columns={[
+                  { key: "name", label: "Nombre" },
+                  { key: "phone", label: "Teléfono" },
+                  { key: "email", label: "Email" },
+                  { key: "rfc", label: "RFC" },
+                  { key: "balance", label: "Saldo" },
+                ]}
+              />
+              <Button onClick={openNew} size="sm" className="gradient-brand text-primary-foreground gap-2 h-9">
+                <Plus className="h-4 w-4" /> Nuevo
+              </Button>
+            </>
           }
         />
 

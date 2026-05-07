@@ -14,6 +14,7 @@ import { DollarSign, Wallet, ArrowDownToLine, ArrowUpFromLine, History, Users, A
 import { format } from "date-fns";
 import { useTableState } from "@/hooks/useTableState";
 import { TableToolbar } from "@/components/data/TableToolbar";
+import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
@@ -162,6 +163,19 @@ export default function Cuentas() {
             onChange: (v) => table.setFilter("balance", v),
             options: [{ value: "with", label: "Con saldo" }, { value: "without", label: "Sin saldo" }],
           }]}
+          rightSlot={
+            <ExportButton
+              rows={table.filtered}
+              filename={`cuentas-${tab}`}
+              title="Cuentas"
+              columns={[
+                { key: "name", label: "Nombre" },
+                { key: "phone", label: "Teléfono" },
+                { key: "email", label: "Email" },
+                { key: "balance", label: "Saldo" },
+              ]}
+            />
+          }
         />
 
         <TabsContent value={tab}>
