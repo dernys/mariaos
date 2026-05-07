@@ -1,11 +1,13 @@
 import { AppLayout } from "@/components/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Tag, Percent, Coins, CreditCard, Settings2 } from "lucide-react";
+import { Building2, Tag, Percent, Coins, CreditCard, ShoppingCart, Settings2 } from "lucide-react";
 import { ConfigGeneral } from "@/components/config/ConfigGeneral";
 import { ConfigCategories } from "@/components/config/ConfigCategories";
 import { ConfigTaxRates } from "@/components/config/ConfigTaxRates";
 import { ConfigCurrencies } from "@/components/config/ConfigCurrencies";
 import { ConfigPaymentMethods } from "@/components/config/ConfigPaymentMethods";
+import { ConfigPOS } from "@/components/config/ConfigPOS";
+import { ConfigModules } from "@/components/config/ConfigModules";
 
 const Configuracion = () => {
   return (
@@ -13,6 +15,8 @@ const Configuracion = () => {
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Building2 className="h-3.5 w-3.5" />General</TabsTrigger>
+          <TabsTrigger value="pos" className="gap-1.5 text-xs"><ShoppingCart className="h-3.5 w-3.5" />POS</TabsTrigger>
+          <TabsTrigger value="modules" className="gap-1.5 text-xs"><Settings2 className="h-3.5 w-3.5" />Módulos</TabsTrigger>
           <TabsTrigger value="categories" className="gap-1.5 text-xs"><Tag className="h-3.5 w-3.5" />Categorías</TabsTrigger>
           <TabsTrigger value="taxes" className="gap-1.5 text-xs"><Percent className="h-3.5 w-3.5" />Impuestos</TabsTrigger>
           <TabsTrigger value="currencies" className="gap-1.5 text-xs"><Coins className="h-3.5 w-3.5" />Monedas</TabsTrigger>
@@ -20,6 +24,8 @@ const Configuracion = () => {
         </TabsList>
 
         <TabsContent value="general"><ConfigGeneral /></TabsContent>
+        <TabsContent value="pos"><ConfigPOS /></TabsContent>
+        <TabsContent value="modules"><ConfigModules /></TabsContent>
         <TabsContent value="categories"><ConfigCategories /></TabsContent>
         <TabsContent value="taxes"><ConfigTaxRates /></TabsContent>
         <TabsContent value="currencies"><ConfigCurrencies /></TabsContent>
