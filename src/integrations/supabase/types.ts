@@ -428,6 +428,186 @@ export type Database = {
           },
         ]
       }
+      invoice_series: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          next_number: number
+          prefix: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          next_number?: number
+          prefix?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          next_number?: number
+          prefix?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_series_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount_paid: number
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cancelled_reason: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_address: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string | null
+          customer_tax_id: string | null
+          email_sent_at: string | null
+          email_sent_to: string | null
+          id: string
+          invoice_number: string
+          issue_date: string
+          issuer_address: string | null
+          issuer_email: string | null
+          issuer_name: string
+          issuer_phone: string | null
+          issuer_tax_id: string | null
+          items: Json
+          notes: string | null
+          pdf_url: string | null
+          sale_id: string | null
+          series_code: string
+          status: string
+          subtotal: number
+          tax: number
+          tenant_id: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          customer_tax_id?: string | null
+          email_sent_at?: string | null
+          email_sent_to?: string | null
+          id?: string
+          invoice_number: string
+          issue_date?: string
+          issuer_address?: string | null
+          issuer_email?: string | null
+          issuer_name: string
+          issuer_phone?: string | null
+          issuer_tax_id?: string | null
+          items?: Json
+          notes?: string | null
+          pdf_url?: string | null
+          sale_id?: string | null
+          series_code: string
+          status?: string
+          subtotal?: number
+          tax?: number
+          tenant_id: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          customer_tax_id?: string | null
+          email_sent_at?: string | null
+          email_sent_to?: string | null
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          issuer_address?: string | null
+          issuer_email?: string | null
+          issuer_name?: string
+          issuer_phone?: string | null
+          issuer_tax_id?: string | null
+          items?: Json
+          notes?: string | null
+          pdf_url?: string | null
+          sale_id?: string | null
+          series_code?: string
+          status?: string
+          subtotal?: number
+          tax?: number
+          tenant_id?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           created_at: string
@@ -2143,6 +2323,10 @@ export type Database = {
         Returns: boolean
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      issue_invoice: {
+        Args: { p_sale_id: string; p_series_code?: string }
+        Returns: string
+      }
       process_sale_return: {
         Args: {
           p_location_id: string
