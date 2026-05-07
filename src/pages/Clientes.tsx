@@ -45,14 +45,15 @@ interface Sale {
   created_at: string;
 }
 
+import { useNavigate } from "react-router-dom";
+
 const Clientes = () => {
   const { user } = useAuth();
   const tenantId = useTenant();
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
-  const [customerSales, setCustomerSales] = useState<Sale[]>([]);
   const [editing, setEditing] = useState<Customer | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", rfc: "", credit_limit: "0", notes: "" });
   const { toast } = useToast();
