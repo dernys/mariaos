@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CartContent } from "./CartContent";
 import { PaymentDialog } from "./PaymentDialog";
+import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { FloorMap } from "./FloorMap";
 import { SplitBillDialog } from "./SplitBillDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,7 +99,10 @@ export function POSRestaurant() {
   const removeItem = (id: number) => setCart((prev) => prev.filter((i) => i.id !== id));
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const tax = subtotal * 0.1;
+  const { settings: posSettings } = usePOSSettings();
+  const [taxRatePct, setTaxRatePct] = useState<number>(10);
+  useEffect(() => { (async () => { if (!posSettings.default_tax_rate_id) return; const { data } = await supabase.from("tax_rates").select("rate").eq("id", posSettings.default_tax_rate_id).maybeSingle(); if (data) setTaxRatePct(Number((data as any).rate) || 0); })(); }, [posSettings.default_tax_rate_id]);
+  const tax = subtotal * (taxRatePct / 100);
   const total = subtotal + tax;
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
 

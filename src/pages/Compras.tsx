@@ -21,6 +21,7 @@ import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
+import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 interface Supplier { id: string; name: string; balance: number; phone?: string | null; email?: string | null; }
 interface Product { id: string; name: string; sku: string; cost: number; }
@@ -56,9 +57,6 @@ export default function Compras() {
   const [openSup, setOpenSup] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [payTarget, setPayTarget] = useState<Purchase | null>(null);
-  const [payAmount, setPayAmount] = useState("");
-  const [payMethod, setPayMethod] = useState("cash");
-  const [payNotes, setPayNotes] = useState("");
 
   // Supplier form
   const [supName, setSupName] = useState("");
@@ -175,23 +173,7 @@ export default function Compras() {
 
   const openPay = (p: Purchase) => {
     setPayTarget(p);
-    setPayAmount(String(Math.max(0, Number(p.total) - Number(p.amount_paid)).toFixed(2)));
-    setPayMethod("cash"); setPayNotes("");
     setPayOpen(true);
-  };
-
-  const submitPay = async () => {
-    if (!payTarget || !payTarget.supplier_id) { toast({ title: "Compra sin proveedor", variant: "destructive" }); return; }
-    const amt = Number(payAmount);
-    if (!amt || amt <= 0) { toast({ title: "Monto inválido", variant: "destructive" }); return; }
-    const { error } = await (supabase.rpc as any)("register_account_payment", {
-      p_party_type: "supplier", p_party_id: payTarget.supplier_id,
-      p_amount: amt, p_method: payMethod, p_currency: "CUP", p_exchange_rate: 1,
-      p_reference_type: "purchase", p_reference_id: payTarget.id, p_notes: payNotes || null,
-    });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Pago registrado" });
-    setPayOpen(false); fetchAll();
   };
 
   const supName2 = (id: string | null) => suppliers.find((s) => s.id === id)?.name || "—";
@@ -528,43 +510,21 @@ export default function Compras() {
         </DialogContent>
       </Dialog>
 
-      {/* Pay purchase dialog */}
-      <Dialog open={payOpen} onOpenChange={setPayOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Pagar compra {payTarget?.purchase_number}</DialogTitle>
-            <DialogDescription>
-              Saldo pendiente: <strong>${payTarget ? Math.max(0, Number(payTarget.total) - Number(payTarget.amount_paid)).toFixed(2) : "0.00"}</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-3">
-            <div>
-              <Label className="text-xs">Monto a pagar</Label>
-              <Input type="number" min="0" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Forma de pago</Label>
-              <Select value={payMethod} onValueChange={setPayMethod}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Efectivo</SelectItem>
-                  <SelectItem value="card">Tarjeta</SelectItem>
-                  <SelectItem value="transfer">Transferencia</SelectItem>
-                  <SelectItem value="qr">QR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Notas</Label>
-              <Input value={payNotes} onChange={(e) => setPayNotes(e.target.value)} placeholder="Opcional" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPayOpen(false)}>Cancelar</Button>
-            <Button className="gradient-brand text-primary-foreground" onClick={submitPay}>Confirmar pago</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Pay purchase dialog (multi-currency, multi-method) */}
+      {payTarget && payTarget.supplier_id && (
+        <MultiPaymentDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          partyType="supplier"
+          partyId={payTarget.supplier_id}
+          partyName={supName2(payTarget.supplier_id)}
+          amountDue={Math.max(0, Number(payTarget.total) - Number(payTarget.amount_paid))}
+          referenceType="purchase"
+          referenceId={payTarget.id}
+          title={`Pagar compra ${payTarget.purchase_number}`}
+          onPaid={fetchAll}
+        />
+      )}
     </AppLayout>
   );
 }

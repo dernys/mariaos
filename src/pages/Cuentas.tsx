@@ -18,6 +18,7 @@ import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
+import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 type PartyType = "customer" | "employee" | "supplier";
 
@@ -57,11 +58,6 @@ export default function Cuentas() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [activeParty, setActiveParty] = useState<Party | null>(null);
 
-  // Pay form
-  const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("cash");
-  const [notes, setNotes] = useState("");
-  const [saving, setSaving] = useState(false);
 
   const fetchAll = async () => {
     const [c, e, s, m] = await Promise.all([
@@ -93,41 +89,12 @@ export default function Cuentas() {
 
   const openPay = (p: Party) => {
     setActiveParty(p);
-    setAmount(String(Math.max(0, Number(p.balance || 0))));
-    setMethod("cash");
-    setNotes("");
     setPayOpen(true);
   };
 
   const openHistory = (p: Party) => {
     const path = tab === "customer" ? `/clientes/${p.id}` : tab === "employee" ? `/empleados/${p.id}` : `/proveedores/${p.id}`;
     nav(path);
-  };
-
-  const submitPayment = async () => {
-    if (!activeParty) return;
-    const amt = Number(amount);
-    if (!amt || amt <= 0) { toast({ title: "Monto inválido", variant: "destructive" }); return; }
-    setSaving(true);
-    const { error } = await supabase.rpc("register_account_payment" as any, {
-      p_party_type: tab,
-      p_party_id: activeParty.id,
-      p_amount: amt,
-      p_method: method,
-      p_currency: "CUP",
-      p_exchange_rate: 1,
-      p_reference_type: "adjustment",
-      p_reference_id: null,
-      p_notes: notes || null,
-    });
-    setSaving(false);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({
-      title: isPayable ? "Pago registrado al proveedor" : "Cobro registrado",
-      description: `$${amt.toFixed(2)} — ${activeParty.name}`,
-    });
-    setPayOpen(false);
-    fetchAll();
   };
 
 
@@ -229,45 +196,20 @@ export default function Cuentas() {
       </Tabs>
 
 
-      {/* Payment dialog */}
-      <Dialog open={payOpen} onOpenChange={setPayOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{isPayable ? "Pagar a proveedor" : "Registrar cobro"}</DialogTitle>
-            <DialogDescription>
-              {activeParty?.name} — saldo actual: <strong>${Number(activeParty?.balance || 0).toFixed(2)}</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-3">
-            <div>
-              <Label className="text-xs">Monto</Label>
-              <Input type="number" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Método</Label>
-              <Select value={method} onValueChange={setMethod}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Efectivo</SelectItem>
-                  <SelectItem value="card">Tarjeta</SelectItem>
-                  <SelectItem value="transfer">Transferencia</SelectItem>
-                  <SelectItem value="qr">QR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Notas</Label>
-              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Opcional" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPayOpen(false)}>Cancelar</Button>
-            <Button className="gradient-brand text-primary-foreground" onClick={submitPayment} disabled={saving}>
-              {saving ? "Guardando..." : "Confirmar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Payment dialog (multi-currency, multi-method) */}
+      {activeParty && (
+        <MultiPaymentDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          partyType={tab}
+          partyId={activeParty.id}
+          partyName={activeParty.name}
+          amountDue={Math.max(0, Number(activeParty.balance || 0))}
+          referenceType={null}
+          title={isPayable ? "Pagar a proveedor" : "Registrar cobro"}
+          onPaid={fetchAll}
+        />
+      )}
 
     </AppLayout>
   );
