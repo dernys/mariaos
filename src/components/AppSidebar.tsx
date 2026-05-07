@@ -25,6 +25,8 @@ import {
   FileText,
   PieChart,
   Award,
+  Briefcase,
+  Bike,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -102,6 +104,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { title: "Clientes", url: "/clientes", icon: Users },
       { title: "Empleados", url: "/empleados", icon: UserCheck },
+      { title: "RRHH", url: "/rrhh", icon: Briefcase },
       { title: "Fidelización", url: "/fidelizacion", icon: Award },
     ],
   },
@@ -115,6 +118,7 @@ const menuGroups: MenuGroup[] = [
     label: "Online",
     items: [
       { title: "Pedidos Online", url: "/pedidos-online", icon: ShoppingBag },
+      { title: "Delivery", url: "/delivery", icon: Bike },
       { title: "Marketplace", url: "/marketplace", icon: Globe },
     ],
   },

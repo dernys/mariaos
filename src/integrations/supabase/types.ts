@@ -412,6 +412,211 @@ export type Database = {
           },
         ]
       }
+      delivery_assignments: {
+        Row: {
+          assigned_at: string
+          delivered_at: string | null
+          id: string
+          notes: string | null
+          online_order_id: string
+          picked_up_at: string | null
+          rider_id: string | null
+          status: string
+          tenant_id: string
+          zone_id: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          delivered_at?: string | null
+          id?: string
+          notes?: string | null
+          online_order_id: string
+          picked_up_at?: string | null
+          rider_id?: string | null
+          status?: string
+          tenant_id: string
+          zone_id?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          delivered_at?: string | null
+          id?: string
+          notes?: string | null
+          online_order_id?: string
+          picked_up_at?: string | null
+          rider_id?: string | null
+          status?: string
+          tenant_id?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_assignments_online_order_id_fkey"
+            columns: ["online_order_id"]
+            isOneToOne: false
+            referencedRelation: "online_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_assignments_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_riders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_assignments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_assignments_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_riders: {
+        Row: {
+          created_at: string
+          employee_id: string | null
+          id: string
+          is_active: boolean
+          is_available: boolean
+          name: string
+          phone: string | null
+          tenant_id: string
+          vehicle: string | null
+        }
+        Insert: {
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_available?: boolean
+          name: string
+          phone?: string | null
+          tenant_id: string
+          vehicle?: string | null
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_available?: boolean
+          name?: string
+          phone?: string | null
+          tenant_id?: string
+          vehicle?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_riders_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_riders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_zones: {
+        Row: {
+          created_at: string
+          estimated_minutes: number
+          fee: number
+          id: string
+          is_active: boolean
+          name: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_minutes?: number
+          fee?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          estimated_minutes?: number
+          fee?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_zones_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_attendance: {
+        Row: {
+          check_in: string
+          check_out: string | null
+          created_at: string
+          employee_id: string
+          hours_worked: number | null
+          id: string
+          notes: string | null
+          tenant_id: string
+        }
+        Insert: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          employee_id: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          tenant_id: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          employee_id?: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_attendance_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           balance: number
@@ -1205,6 +1410,72 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "payment_methods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_runs: {
+        Row: {
+          base_salary: number
+          bonus: number
+          created_at: string
+          deductions: number
+          employee_id: string
+          hours_worked: number
+          id: string
+          net_pay: number
+          notes: string | null
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          base_salary?: number
+          bonus?: number
+          created_at?: string
+          deductions?: number
+          employee_id: string
+          hours_worked?: number
+          id?: string
+          net_pay?: number
+          notes?: string | null
+          paid_at?: string | null
+          period_end: string
+          period_start: string
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          base_salary?: number
+          bonus?: number
+          created_at?: string
+          deductions?: number
+          employee_id?: string
+          hours_worked?: number
+          id?: string
+          net_pay?: number
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_runs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_runs_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2630,6 +2901,54 @@ export type Database = {
           },
         ]
       }
+      work_schedules: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          employee_id: string
+          end_time: string
+          id: string
+          is_active: boolean
+          start_time: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          employee_id: string
+          end_time: string
+          id?: string
+          is_active?: boolean
+          start_time: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          employee_id?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          start_time?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_schedules_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_schedules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2644,6 +2963,13 @@ export type Database = {
       close_shift_with_summary: {
         Args: { p_declared_cash: number; p_notes?: string; p_shift_id: string }
         Returns: Json
+      }
+      compute_payroll: {
+        Args: { _employee_id: string; _end: string; _start: string }
+        Returns: {
+          base: number
+          hours_worked: number
+        }[]
       }
       create_notification: {
         Args: {
