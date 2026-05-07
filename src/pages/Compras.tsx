@@ -513,43 +513,21 @@ export default function Compras() {
         </DialogContent>
       </Dialog>
 
-      {/* Pay purchase dialog */}
-      <Dialog open={payOpen} onOpenChange={setPayOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Pagar compra {payTarget?.purchase_number}</DialogTitle>
-            <DialogDescription>
-              Saldo pendiente: <strong>${payTarget ? Math.max(0, Number(payTarget.total) - Number(payTarget.amount_paid)).toFixed(2) : "0.00"}</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-3">
-            <div>
-              <Label className="text-xs">Monto a pagar</Label>
-              <Input type="number" min="0" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Forma de pago</Label>
-              <Select value={payMethod} onValueChange={setPayMethod}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Efectivo</SelectItem>
-                  <SelectItem value="card">Tarjeta</SelectItem>
-                  <SelectItem value="transfer">Transferencia</SelectItem>
-                  <SelectItem value="qr">QR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Notas</Label>
-              <Input value={payNotes} onChange={(e) => setPayNotes(e.target.value)} placeholder="Opcional" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPayOpen(false)}>Cancelar</Button>
-            <Button className="gradient-brand text-primary-foreground" onClick={submitPay}>Confirmar pago</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Pay purchase dialog (multi-currency, multi-method) */}
+      {payTarget && payTarget.supplier_id && (
+        <MultiPaymentDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          partyType="supplier"
+          partyId={payTarget.supplier_id}
+          partyName={supName2(payTarget.supplier_id)}
+          amountDue={Math.max(0, Number(payTarget.total) - Number(payTarget.amount_paid))}
+          referenceType="purchase"
+          referenceId={payTarget.id}
+          title={`Pagar compra ${payTarget.purchase_number}`}
+          onPaid={fetchAll}
+        />
+      )}
     </AppLayout>
   );
 }
