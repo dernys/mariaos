@@ -94,9 +94,11 @@ const menuGroups: MenuGroup[] = [
     label: "Compras y Ventas",
     items: [
       { title: "Compras", url: "/compras", icon: ShoppingCart },
+      { title: "Proveedores", url: "/proveedores", icon: Truck },
       { title: "Devoluciones", url: "/devoluciones", icon: Undo2 },
       { title: "Facturas", url: "/facturas", icon: FileText },
       { title: "Cuentas (CxC/CxP)", url: "/cuentas", icon: Wallet },
+      { title: "Consignaciones", url: "/consignaciones", icon: Package },
     ],
   },
   {
