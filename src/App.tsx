@@ -30,6 +30,8 @@ import Devoluciones from "./pages/Devoluciones";
 import Cuentas from "./pages/Cuentas";
 import Facturas from "./pages/Facturas";
 import Marketplace from "./pages/Marketplace";
+import Reportes from "./pages/Reportes";
+import Fidelizacion from "./pages/Fidelizacion";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +67,8 @@ const App = () => (
               <Route path="/devoluciones" element={<ProtectedRoute><Devoluciones /></ProtectedRoute>} />
               <Route path="/cuentas" element={<ProtectedRoute><Cuentas /></ProtectedRoute>} />
               <Route path="/facturas" element={<ProtectedRoute><Facturas /></ProtectedRoute>} />
+              <Route path="/reportes" element={<ProtectedRoute><Reportes /></ProtectedRoute>} />
+              <Route path="/fidelizacion" element={<ProtectedRoute><Fidelizacion /></ProtectedRoute>} />
               <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="*" element={<NotFound />} />
