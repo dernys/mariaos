@@ -354,15 +354,26 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           </div>
 
           {/* Partial Payment Toggle */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="partial"
-              checked={isPartial}
-              onChange={(e) => setIsPartial(e.target.checked)}
-              className="h-4 w-4 rounded border-input"
-            />
-            <Label htmlFor="partial" className="text-xs cursor-pointer">Permitir pago parcial (fiado)</Label>
+          <div className="flex items-center justify-between gap-2 bg-muted/30 rounded-lg p-2.5">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="partial"
+                checked={isPartial}
+                onChange={(e) => setIsPartial(e.target.checked)}
+                disabled={!!(selectedCustomer || selectedEmployee)}
+                className="h-4 w-4 rounded border-input"
+              />
+              <Label htmlFor="partial" className="text-xs cursor-pointer">
+                Permitir pago parcial / fiado
+                {(selectedCustomer || selectedEmployee) && <span className="ml-1 text-primary">(activo automáticamente)</span>}
+              </Label>
+            </div>
+            {isPartial && remaining > 0.01 && (
+              <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning">
+                Saldo: ${remaining.toFixed(2)}
+              </Badge>
+            )}
           </div>
 
           {/* Payment Lines */}
