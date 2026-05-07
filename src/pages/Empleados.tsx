@@ -237,48 +237,6 @@ const Empleados = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Detail Dialog with History */}
-      <Dialog open={!!detailEmployee} onOpenChange={() => setDetailEmployee(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{detailEmployee?.name}</DialogTitle>
-            <DialogDescription>{detailEmployee?.position || "Sin puesto"} · {detailEmployee?.is_active ? "Activo" : "Inactivo"}</DialogDescription>
-          </DialogHeader>
-          {detailEmployee && (
-            <Tabs defaultValue="shifts">
-              <TabsList className="w-full">
-                <TabsTrigger value="shifts" className="flex-1">Turnos</TabsTrigger>
-                <TabsTrigger value="activity" className="flex-1">Actividad</TabsTrigger>
-              </TabsList>
-              <TabsContent value="shifts" className="max-h-64 overflow-y-auto">
-                {employeeShifts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">Sin turnos registrados</p>
-                ) : (
-                  <div className="space-y-2">
-                    {employeeShifts.map((s) => (
-                      <div key={s.id} className="flex items-center justify-between bg-muted/40 rounded-lg p-3">
-                        <div>
-                          <p className="text-xs font-medium">{s.store_name}</p>
-                          <p className="text-[10px] text-muted-foreground">{format(new Date(s.opened_at), "dd/MM/yyyy HH:mm")}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-heading font-semibold text-primary">${s.total_sales || 0}</span>
-                          <Badge variant={s.status === "open" ? "default" : "secondary"} className="text-[10px]">
-                            {s.status === "open" ? "Abierto" : "Cerrado"}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="activity">
-                <ActivityTimeline entityType="employee" entityId={detailEmployee.id} />
-              </TabsContent>
-            </Tabs>
-          )}
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 };
