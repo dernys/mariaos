@@ -1,78 +1,136 @@
-# Plan de Implementación: Mejoras Operativas Integrales
+## Objetivo
 
-## 1. POS - Pagos Parciales/Completos + Asientos Contables
+Unificar cobros y pagos en toda la app con soporte multi-moneda y múltiples métodos, y centralizar los ajustes operativos (POS, impuestos, propinas, etc.) en Configuración, vinculándolos a cada módulo.
 
-**Objetivo:** Habilitar pago parcial/total siempre que se seleccione cliente o empleado, y generar asientos contables automáticos.
+---
 
-- Modificar `PaymentDialog.tsx`:
-  - Forzar habilitación del modo "Pago Parcial" cuando hay `customer_id` o `employee_id` seleccionado.
-  - Permitir capturar monto pagado < total → registra venta con `status = 'partial'` y agrega saldo pendiente al balance del cliente/empleado (ya cubierto por trigger `apply_sale_credit_balance`).
-  - Soportar múltiples métodos de pago (split) en una misma venta.
-- Crear función SQL `post_sale_journal_entry(p_sale_id)` que genere asiento contable doble:
-  - Débito: Caja/Bancos/Cuentas por cobrar (según método)
-  - Crédito: Ventas + Impuestos
-  - Insertar en `accounting_entries` y `accounting_entry_lines`
-- Trigger `AFTER INSERT` en `sales` para invocar automáticamente.
-- Análogamente para compras: `post_purchase_journal_entry(p_purchase_id)`.
+## 1. Configuración centralizada
 
-## 2. Historial de Turnos + Vista Detallada
+### Nueva pestaña "POS y Operaciones" en `/configuracion`
+Componente: `src/components/config/ConfigPOS.tsx`
 
-- Refactorizar `Turnos.tsx`:
-  - Tabla con todos los turnos (abierto/cerrado), filtros por fecha, cajero, tienda, estado.
-  - KPIs globales: ventas totales, diferencias de caja promedio, turnos del día.
-- Nueva ruta `/turnos/:id` → `TurnoDetalle.tsx`:
-  - Header con datos del turno (apertura, cierre, cajero, tienda).
-  - Tabs: Resumen (usa `calculate_shift_summary`), Ventas del turno, Movimientos de efectivo (in/out), Devoluciones, Pagos por método.
-  - Gráficos de ventas por hora.
-- Optimizar apertura/cierre:
-  - Apertura: validar que no haya turno activo del mismo cajero/tienda.
-  - Cierre: usar `close_shift_with_summary` con confirmación visual de diferencia, exigir nota si difiere > umbral.
+Ajustes (tabla nueva `pos_settings` por tenant):
+- **Impuesto por defecto** (selector de `tax_rates`)
+- **Impuesto incluido en precio** (sí/no)
+- **Propina**: habilitada, porcentaje sugerido (10/15/20), obligatoria
+- **Redondeo** (none / nearest / up)
+- **Permitir descuentos** (% máximo por rol)
+- **Permitir venta sin stock**
+- **Imprimir ticket automático**
+- **Moneda base de cobro POS** (selector de `currencies`)
+- **Mostrar precios en moneda secundaria** (selector adicional)
+- **Días de crédito por defecto** (clientes/empleados)
 
-## 3. Inventario - Filtros Optimizados
+### Nueva pestaña "Operaciones por módulo"
+- **Inventario**: alerta stock bajo (umbral global), método de costeo (FIFO/promedio)
+- **Compras**: requerir aprobación, días pago proveedor por defecto
+- **Facturación**: serie por defecto, prefijo, IVA por defecto
+- **Turnos**: requerir conteo de apertura, requerir motivo en diferencias
 
-- En `Inventario.tsx`: añadir filtros combinados por almacén/tienda, categoría, estado de stock (normal/bajo/agotado), rango de stock, búsqueda por SKU/nombre/código.
-- Usar `useTableState` con `filterFns` personalizados.
-- Persistir filtros en URL params para compartir vistas.
+Tabla `module_settings` con `(tenant_id, module, settings jsonb)`.
 
-## 4. Almacenes - Datos Reales
+---
 
-- En `Almacenes.tsx`:
-  - Reemplazar conteo de productos por suma real desde `product_stock` (no desde `products.warehouse_id`).
-  - Mostrar valor de inventario (stock × cost), productos con stock bajo, últimos movimientos.
-  - Tarjeta con link al detalle por almacén → filtra inventario y movimientos.
+## 2. Pagos multi-moneda y multi-método universales
 
-## 5. Compras - Acciones y Pagos
+### Nuevo componente reusable
+`src/components/payments/MultiPaymentDialog.tsx`
 
-- En `Compras.tsx`:
-  - Acciones por compra: Recibir (RPC `receive_purchase`), Recibir consignación, Marcar pagada, **Pago parcial/total** (RPC `register_account_payment` con `reference_type='purchase'`), Cancelar, Editar.
-  - Cambio de estado detallado: `draft → pending → received → paid` con validaciones.
-  - Diálogo de pago multi-método (efectivo, transferencia, tarjeta, divisa) con conversión.
-- Asiento contable automático al recibir compra (Inventario / Cuentas por pagar) y al pagarla.
+Acepta props: `partyType` (customer/employee/supplier), `partyId`, `referenceType` (sale/purchase/invoice/null), `referenceId`, `amountDue`, `currencyDefault`, `onPaid`.
 
-## 6. Proveedores - Historial y Trazabilidad de Productos
+Características:
+- **Lista dinámica de métodos** desde `payment_methods` (tabla)
+- **Lista de monedas** desde `currencies` con tasa de cambio editable
+- **Pagos divididos**: agregar varias líneas (método + moneda + monto)
+- **Total convertido a moneda base** mostrado en tiempo real
+- **Validación**: total ≥ monto requerido (o permitir parcial)
+- Llama RPC `register_account_payment` por cada línea
 
-- En `ProveedorDetalle.tsx`, completar tabs:
-  - **Productos**: catálogo `supplier_products` con estado, costo, lead time, último ingreso.
-  - **Trazabilidad**: por cada producto del proveedor, mostrar lotes ingresados (purchases + consignment_lots), cantidades vendidas, cantidades pagadas vs pendientes (consignment_settlements).
-  - **Pagos pendientes**: lista de purchases con saldo + settlements pendientes; botón "Liquidar" usa `settle_consignment_lots` o `register_account_payment`.
-  - **Historial completo**: timeline ya existente + log de compras, pagos y liquidaciones.
+### Sustituye dialogs ad-hoc en:
+- `src/pages/Compras.tsx` → reemplaza el dialog "Pagar compra"
+- `src/pages/Cuentas.tsx` → reemplaza dialogs de pago a clientes/proveedores/empleados
+- `src/components/pos/PaymentDialog.tsx` → reusa la lógica de líneas multi-método
+- `src/pages/Facturas.tsx` → permitir cobrar factura
+- `src/pages/Consignacion.tsx` → liquidación con multi-método
 
-## Aspectos Técnicos
+---
 
-- **Migración SQL** (un solo archivo):
-  - Tablas `accounting_entries`, `accounting_entry_lines` (si no existen, verificar).
-  - Funciones `post_sale_journal_entry`, `post_purchase_journal_entry`.
-  - Triggers para auto-generación.
-- **Rutas nuevas**: `/turnos/:id` registrada en `App.tsx`.
-- **Componentes nuevos**: `TurnoDetalle.tsx`, `PurchasePaymentDialog.tsx`, `SupplierProductsTab.tsx` (extraído de ProveedorDetalle).
-- **Componentes modificados**: `PaymentDialog.tsx`, `Turnos.tsx`, `Inventario.tsx`, `Almacenes.tsx`, `Compras.tsx`, `Proveedores.tsx`, `ProveedorDetalle.tsx`.
+## 3. Vinculación módulo por módulo
 
-## Orden de Ejecución
+### POS (`POSBar`, `POSRestaurant`, `POSEmpresa`, `PaymentDialog`)
+- Lee `pos_settings`: aplica impuesto configurado, sugiere propina, respeta redondeo
+- Bloquea ventas sin stock si está configurado
+- Auto-imprime ticket si configurado
+- Cobro permite N líneas en N monedas/métodos
 
-1. Migración SQL (asientos contables + helpers).
-2. POS pagos parciales + asientos.
-3. Turnos: lista mejorada + vista detalle + apertura/cierre.
-4. Inventario filtros.
-5. Almacenes datos reales.
-6. Compras acciones + pagos.
-7. Proveedores trazabilidad y liquidaciones.
+### Inventario / Almacenes
+- Usa `module_settings.inventory.low_stock_threshold` para alertas
+- `notify_low_stock` ya respeta `min_stock` por producto; añadir fallback global
+
+### Compras
+- Estado por defecto desde settings
+- Pago al recibir usando `MultiPaymentDialog`
+
+### Cuentas (CxC/CxP)
+- Pago en cualquier moneda con conversión automática
+- Selector de método dinámico
+
+### Facturas
+- Serie + prefijo desde `module_settings.invoicing`
+- Botón "Registrar pago" usando `MultiPaymentDialog`
+
+### Turnos
+- Apertura/cierre respetan `require_opening_count` y `require_difference_reason`
+
+---
+
+## 4. Migración SQL
+
+```sql
+-- pos_settings
+CREATE TABLE pos_settings (
+  id uuid PK, tenant_id uuid UNIQUE,
+  default_tax_rate_id uuid, tax_included boolean,
+  tip_enabled boolean, tip_percentages numeric[], tip_required boolean,
+  rounding_mode text, allow_discounts boolean, max_discount_pct numeric,
+  allow_negative_stock boolean, auto_print_receipt boolean,
+  default_currency text, secondary_currency text,
+  default_credit_days int
+);
+
+-- module_settings
+CREATE TABLE module_settings (
+  id uuid PK, tenant_id uuid, module text,
+  settings jsonb DEFAULT '{}',
+  UNIQUE(tenant_id, module)
+);
+
+-- RLS por tenant en ambas
+-- Seed defaults vía función ensure_pos_settings(tenant_id)
+```
+
+---
+
+## 5. Archivos a crear/editar
+
+**Crear:**
+- `supabase/migrations/<ts>_pos_module_settings.sql`
+- `src/components/config/ConfigPOS.tsx`
+- `src/components/config/ConfigModules.tsx`
+- `src/components/payments/MultiPaymentDialog.tsx`
+- `src/hooks/usePOSSettings.tsx`
+- `src/hooks/useModuleSettings.tsx`
+
+**Editar:**
+- `src/pages/Configuracion.tsx` (añadir 2 tabs)
+- `src/components/pos/PaymentDialog.tsx` (usar settings + multi-líneas)
+- `src/components/pos/POSBar.tsx`, `POSRestaurant.tsx`, `POSEmpresa.tsx` (impuesto, propina, validaciones)
+- `src/pages/Compras.tsx`, `Cuentas.tsx`, `Facturas.tsx`, `Consignacion.tsx` (usar `MultiPaymentDialog`)
+- `src/pages/Turnos.tsx`, `TurnoDetalle.tsx` (validaciones de settings)
+
+---
+
+## Notas técnicas
+- `register_account_payment` ya soporta `currency` y `exchange_rate` → la lógica multi-moneda se apoya en él.
+- Los asientos contables se generan automáticamente vía triggers existentes.
+- No se borran datos existentes; las settings tienen defaults seguros.

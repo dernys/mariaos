@@ -1338,6 +1338,33 @@ export type Database = {
           },
         ]
       }
+      module_settings: {
+        Row: {
+          created_at: string
+          id: string
+          module: string
+          settings: Json
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module: string
+          settings?: Json
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module?: string
+          settings?: Json
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -1601,6 +1628,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pos_settings: {
+        Row: {
+          allow_discounts: boolean
+          allow_negative_stock: boolean
+          auto_print_receipt: boolean
+          created_at: string
+          default_credit_days: number
+          default_currency: string
+          default_tax_rate_id: string | null
+          id: string
+          max_discount_pct: number
+          rounding_mode: string
+          secondary_currency: string | null
+          tax_included: boolean
+          tenant_id: string
+          tip_enabled: boolean
+          tip_percentages: number[]
+          tip_required: boolean
+          updated_at: string
+        }
+        Insert: {
+          allow_discounts?: boolean
+          allow_negative_stock?: boolean
+          auto_print_receipt?: boolean
+          created_at?: string
+          default_credit_days?: number
+          default_currency?: string
+          default_tax_rate_id?: string | null
+          id?: string
+          max_discount_pct?: number
+          rounding_mode?: string
+          secondary_currency?: string | null
+          tax_included?: boolean
+          tenant_id: string
+          tip_enabled?: boolean
+          tip_percentages?: number[]
+          tip_required?: boolean
+          updated_at?: string
+        }
+        Update: {
+          allow_discounts?: boolean
+          allow_negative_stock?: boolean
+          auto_print_receipt?: boolean
+          created_at?: string
+          default_credit_days?: number
+          default_currency?: string
+          default_tax_rate_id?: string | null
+          id?: string
+          max_discount_pct?: number
+          rounding_mode?: string
+          secondary_currency?: string | null
+          tax_included?: boolean
+          tenant_id?: string
+          tip_enabled?: boolean
+          tip_percentages?: number[]
+          tip_required?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       product_categories: {
         Row: {
@@ -3191,6 +3278,34 @@ export type Database = {
       ensure_default_accounts: {
         Args: { p_tenant_id: string }
         Returns: undefined
+      }
+      ensure_pos_settings: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          allow_discounts: boolean
+          allow_negative_stock: boolean
+          auto_print_receipt: boolean
+          created_at: string
+          default_credit_days: number
+          default_currency: string
+          default_tax_rate_id: string | null
+          id: string
+          max_discount_pct: number
+          rounding_mode: string
+          secondary_currency: string | null
+          tax_included: boolean
+          tenant_id: string
+          tip_enabled: boolean
+          tip_percentages: number[]
+          tip_required: boolean
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pos_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       has_role: {
         Args: {
