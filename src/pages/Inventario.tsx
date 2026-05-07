@@ -222,7 +222,7 @@ const Inventario = () => {
 
   const productTable = useTableState({
     data: products,
-    searchKeys: ["name", "sku", "category"],
+    searchKeys: ["name", "sku", "category", "description"],
     filterFns: {
       status: (p, v) => {
         if (v === "out") return p.stock <= 0;
@@ -232,9 +232,17 @@ const Inventario = () => {
         return true;
       },
       category: (p, v) => (p.category || "") === v,
+      warehouse: (p, v) => (p.warehouse_id || "") === v,
+      price_range: (p, v) => {
+        if (v === "lt100") return p.price < 100;
+        if (v === "100_500") return p.price >= 100 && p.price <= 500;
+        if (v === "gt500") return p.price > 500;
+        return true;
+      },
     },
   });
 
+  const warehouseOptions = useMemo(() => warehouses.map((w) => ({ value: w.id, label: w.name })), [warehouses]);
   const categoryOptions = useMemo(() => {
     const set = new Set(products.map((p) => p.category).filter(Boolean) as string[]);
     return Array.from(set).map((c) => ({ value: c, label: c }));
@@ -303,6 +311,16 @@ const Inventario = () => {
               { key: "category", label: "Categoría", value: productTable.filters.category || "__all__",
                 onChange: (v) => productTable.setFilter("category", v),
                 options: categoryOptions },
+              { key: "warehouse", label: "Almacén", value: productTable.filters.warehouse || "__all__",
+                onChange: (v) => productTable.setFilter("warehouse", v),
+                options: warehouseOptions },
+              { key: "price_range", label: "Precio", value: productTable.filters.price_range || "__all__",
+                onChange: (v) => productTable.setFilter("price_range", v),
+                options: [
+                  { value: "lt100", label: "< $100" },
+                  { value: "100_500", label: "$100 - $500" },
+                  { value: "gt500", label: "> $500" },
+                ]},
             ]}
             rightSlot={
               <>

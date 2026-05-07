@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { logActivity } from "@/hooks/useActivityLog";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Warehouse, Package, Plus, Edit2, Trash2, MapPin } from "lucide-react";
+import { Warehouse, Package, Plus, Edit2, Trash2, MapPin, DollarSign, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,9 @@ const Almacenes = () => {
   const { toast } = useToast();
   const [warehouses, setWarehouses] = useState<WarehouseItem[]>([]);
   const [productCounts, setProductCounts] = useState<Record<string, number>>({});
+  const [stockTotals, setStockTotals] = useState<Record<string, number>>({});
+  const [stockValue, setStockValue] = useState<Record<string, number>>({});
+  const [lowStock, setLowStock] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailWh, setDetailWh] = useState<WarehouseItem | null>(null);
@@ -37,16 +40,34 @@ const Almacenes = () => {
   const [form, setForm] = useState({ name: "", location: "", capacity: "0" });
 
   const fetchData = async () => {
-    const [whRes, prodRes] = await Promise.all([
+    const [whRes, prodRes, psRes] = await Promise.all([
       supabase.from("warehouses").select("*").order("name"),
-      supabase.from("products").select("warehouse_id"),
+      supabase.from("products").select("id, cost, min_stock, warehouse_id"),
+      supabase.from("product_stock").select("location_type, location_id, product_id, stock").eq("location_type", "warehouse"),
     ]);
     if (whRes.data) setWarehouses(whRes.data as WarehouseItem[]);
-    if (prodRes.data) {
-      const counts: Record<string, number> = {};
-      prodRes.data.forEach((p: any) => { if (p.warehouse_id) counts[p.warehouse_id] = (counts[p.warehouse_id] || 0) + 1; });
-      setProductCounts(counts);
-    }
+    const productMap: Record<string, { cost: number; min: number }> = {};
+    (prodRes.data || []).forEach((p: any) => { productMap[p.id] = { cost: Number(p.cost) || 0, min: Number(p.min_stock) || 0 }; });
+
+    const counts: Record<string, number> = {};
+    const totals: Record<string, number> = {};
+    const values: Record<string, number> = {};
+    const lows: Record<string, number> = {};
+    (psRes.data || []).forEach((s: any) => {
+      counts[s.location_id] = (counts[s.location_id] || 0) + 1;
+      totals[s.location_id] = (totals[s.location_id] || 0) + Number(s.stock || 0);
+      const pm = productMap[s.product_id];
+      if (pm) {
+        values[s.location_id] = (values[s.location_id] || 0) + Number(s.stock || 0) * pm.cost;
+        if (pm.min > 0 && Number(s.stock) <= pm.min) {
+          lows[s.location_id] = (lows[s.location_id] || 0) + 1;
+        }
+      }
+    });
+    setProductCounts(counts);
+    setStockTotals(totals);
+    setStockValue(values);
+    setLowStock(lows);
     setLoading(false);
   };
 
@@ -94,6 +115,9 @@ const Almacenes = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {warehouses.map((wh, i) => {
             const count = productCounts[wh.id] || 0;
+            const totalUnits = stockTotals[wh.id] || 0;
+            const value = stockValue[wh.id] || 0;
+            const low = lowStock[wh.id] || 0;
             return (
               <motion.div
                 key={wh.id}
@@ -123,12 +147,24 @@ const Almacenes = () => {
                   </div>
                 )}
 
-                <div className="mt-4 pt-4 border-t space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Package className="h-3.5 w-3.5" /> Productos
-                    </span>
-                    <span className="font-heading font-semibold">{count}</span>
+                <div className="mt-4 pt-4 border-t space-y-2.5">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-muted/40 rounded-lg p-2">
+                      <div className="flex items-center gap-1 text-muted-foreground"><Package className="h-3 w-3" /> SKUs</div>
+                      <p className="font-heading font-bold text-sm mt-0.5">{count}</p>
+                    </div>
+                    <div className="bg-muted/40 rounded-lg p-2">
+                      <div className="flex items-center gap-1 text-muted-foreground">Unidades</div>
+                      <p className="font-heading font-bold text-sm mt-0.5">{totalUnits.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-muted/40 rounded-lg p-2">
+                      <div className="flex items-center gap-1 text-muted-foreground"><DollarSign className="h-3 w-3" /> Valor</div>
+                      <p className="font-heading font-bold text-sm mt-0.5 text-success">${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                    </div>
+                    <div className="bg-muted/40 rounded-lg p-2">
+                      <div className="flex items-center gap-1 text-muted-foreground"><AlertTriangle className="h-3 w-3" /> Bajo</div>
+                      <p className={`font-heading font-bold text-sm mt-0.5 ${low > 0 ? "text-warning" : ""}`}>{low}</p>
+                    </div>
                   </div>
                   {wh.capacity && wh.capacity > 0 && (
                     <div>

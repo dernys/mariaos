@@ -16,6 +16,7 @@ import { logActivity } from "@/hooks/useActivityLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 interface SalesShift {
   id: string;
@@ -39,6 +40,7 @@ interface Employee { id: string; name: string; position: string | null; }
 const Turnos = () => {
   const { user } = useAuth();
   const tenantId = useTenant();
+  const nav = useNavigate();
   const [shifts, setShifts] = useState<SalesShift[]>([]);
   const [activeShift, setActiveShift] = useState<SalesShift | null>(null);
   const [stores, setStores] = useState<StoreItem[]>([]);
@@ -368,7 +370,7 @@ const Turnos = () => {
                   <tr><td colSpan={8} className="p-8 text-center text-muted-foreground text-xs">No hay turnos registrados</td></tr>
                 ) : (
                   shifts.map((shift) => (
-                    <tr key={shift.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                    <tr key={shift.id} onClick={() => nav(`/turnos/${shift.id}`)} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors">
                       <td className="p-3 text-xs font-medium flex items-center gap-2">
                         <Store className="h-3.5 w-3.5 text-muted-foreground" />
                         {getStoreName(shift)}
