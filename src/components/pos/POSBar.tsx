@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CartContent } from "./CartContent";
 import { PaymentDialog } from "./PaymentDialog";
+import { usePOSSettings } from "@/hooks/usePOSSettings";
+import { supabase as _sb } from "@/integrations/supabase/client";
+import { useEffect as _useEffect, useState as _useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
 
