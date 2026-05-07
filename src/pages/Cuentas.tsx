@@ -98,8 +98,8 @@ export default function Cuentas() {
   };
 
   const openHistory = (p: Party) => {
-    setActiveParty(p);
-    setHistoryOpen(true);
+    const path = tab === "customer" ? `/clientes/${p.id}` : tab === "employee" ? `/empleados/${p.id}` : `/proveedores/${p.id}`;
+    nav(path);
   };
 
   const submitPayment = async () => {
