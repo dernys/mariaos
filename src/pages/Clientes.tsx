@@ -239,56 +239,6 @@ const Clientes = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Detail Dialog with History */}
-      <Dialog open={!!detailCustomer} onOpenChange={() => setDetailCustomer(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{detailCustomer?.name}</DialogTitle>
-            <DialogDescription>
-              Saldo: <Badge variant={detailCustomer?.balance && detailCustomer.balance > 0 ? "destructive" : "secondary"}>${detailCustomer?.balance?.toLocaleString() || 0}</Badge>
-              {" "}Límite: ${detailCustomer?.credit_limit?.toLocaleString() || 0}
-            </DialogDescription>
-          </DialogHeader>
-          {detailCustomer && (
-            <Tabs defaultValue="sales">
-              <TabsList className="w-full">
-                <TabsTrigger value="sales" className="flex-1">Compras</TabsTrigger>
-                <TabsTrigger value="activity" className="flex-1">Actividad</TabsTrigger>
-              </TabsList>
-              <TabsContent value="sales" className="max-h-64 overflow-y-auto">
-                {customerSales.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">Sin compras registradas</p>
-                ) : (
-                  <div className="space-y-2">
-                    {customerSales.map((s) => (
-                      <div key={s.id} className="flex items-center justify-between bg-muted/40 rounded-lg p-3">
-                        <div>
-                          <p className="text-xs font-medium">${s.total.toLocaleString()}</p>
-                          <p className="text-[10px] text-muted-foreground">{format(new Date(s.created_at), "dd/MM/yyyy HH:mm")}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={s.status === "paid" ? "default" : s.status === "partial" ? "outline" : "secondary"} className="text-[10px]">
-                            {s.status === "paid" ? "Pagado" : s.status === "partial" ? "Parcial" : s.status}
-                          </Badge>
-                          {s.amount_paid < s.total && (
-                            <span className="text-[10px] text-destructive font-heading font-semibold">
-                              Deuda: ${(s.total - s.amount_paid).toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="activity">
-                <ActivityTimeline entityType="customer" entityId={detailCustomer.id} />
-              </TabsContent>
-            </Tabs>
-          )}
-        </DialogContent>
-      </Dialog>
-    </AppLayout>
   );
 };
 
