@@ -54,6 +54,11 @@ export default function Compras() {
 
   const [open, setOpen] = useState(false);
   const [openSup, setOpenSup] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
+  const [payTarget, setPayTarget] = useState<Purchase | null>(null);
+  const [payAmount, setPayAmount] = useState("");
+  const [payMethod, setPayMethod] = useState("cash");
+  const [payNotes, setPayNotes] = useState("");
 
   // Supplier form
   const [supName, setSupName] = useState("");
@@ -165,6 +170,27 @@ export default function Compras() {
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Compra cancelada" });
     fetchAll();
+  };
+
+  const openPay = (p: Purchase) => {
+    setPayTarget(p);
+    setPayAmount(String(Math.max(0, Number(p.total) - Number(p.amount_paid)).toFixed(2)));
+    setPayMethod("cash"); setPayNotes("");
+    setPayOpen(true);
+  };
+
+  const submitPay = async () => {
+    if (!payTarget || !payTarget.supplier_id) { toast({ title: "Compra sin proveedor", variant: "destructive" }); return; }
+    const amt = Number(payAmount);
+    if (!amt || amt <= 0) { toast({ title: "Monto inválido", variant: "destructive" }); return; }
+    const { error } = await (supabase.rpc as any)("register_account_payment", {
+      p_party_type: "supplier", p_party_id: payTarget.supplier_id,
+      p_amount: amt, p_method: payMethod, p_currency: "CUP", p_exchange_rate: 1,
+      p_reference_type: "purchase", p_reference_id: payTarget.id, p_notes: payNotes || null,
+    });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Pago registrado" });
+    setPayOpen(false); fetchAll();
   };
 
   const supName2 = (id: string | null) => suppliers.find((s) => s.id === id)?.name || "—";
@@ -296,16 +322,23 @@ export default function Compras() {
                       <TableCell className="text-xs text-muted-foreground">{format(new Date(p.created_at), "dd/MM/yy HH:mm")}</TableCell>
                       <TableCell><Badge variant="outline" className={`text-[10px] ${st.c}`}>{st.l}</Badge></TableCell>
                       <TableCell>
-                        {p.status === "draft" && (
-                          <div className="flex gap-1">
-                            <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => receive(p.id)}>
-                              <CheckCircle2 className="h-3 w-3 mr-1" /> Recibir
+                        <div className="flex gap-1 flex-wrap">
+                          {p.status === "draft" && (
+                            <>
+                              <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => receive(p.id)}>
+                                <CheckCircle2 className="h-3 w-3 mr-1" /> Recibir
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-7 text-[10px] text-destructive" onClick={() => cancel(p.id)}>
+                                <XCircle className="h-3 w-3 mr-1" /> Cancelar
+                              </Button>
+                            </>
+                          )}
+                          {pending > 0.01 && p.supplier_id && (
+                            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => openPay(p)}>
+                              <Wallet className="h-3 w-3 mr-1" /> Pagar
                             </Button>
-                            <Button size="sm" variant="ghost" className="h-7 text-[10px] text-destructive" onClick={() => cancel(p.id)}>
-                              <XCircle className="h-3 w-3 mr-1" /> Cancelar
-                            </Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
