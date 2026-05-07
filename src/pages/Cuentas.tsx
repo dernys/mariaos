@@ -272,45 +272,6 @@ export default function Cuentas() {
         </DialogContent>
       </Dialog>
 
-      {/* History dialog */}
-      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Historial de operaciones — {activeParty?.name}</DialogTitle>
-            <DialogDescription>Saldo actual: ${Number(activeParty?.balance || 0).toFixed(2)}</DialogDescription>
-          </DialogHeader>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Fecha</TableHead>
-                <TableHead className="text-xs">Tipo</TableHead>
-                <TableHead className="text-xs">Método</TableHead>
-                <TableHead className="text-xs">Notas</TableHead>
-                <TableHead className="text-xs text-right">Monto</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {partyMovements.map((m) => (
-                <TableRow key={m.id}>
-                  <TableCell className="text-xs">{format(new Date(m.created_at), "dd/MM/yy HH:mm")}</TableCell>
-                  <TableCell className="text-xs">
-                    <Badge variant="outline" className={`text-[10px] ${m.direction === "in" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
-                      {m.direction === "in" ? "Cobro" : "Pago"}
-                    </Badge>
-                    {m.reference_type && <span className="ml-1 text-muted-foreground text-[10px]">({m.reference_type})</span>}
-                  </TableCell>
-                  <TableCell className="text-xs capitalize">{m.method}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{m.notes || "—"}</TableCell>
-                  <TableCell className="text-xs text-right font-heading font-bold">${Number(m.amount_in_base).toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-              {partyMovements.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin movimientos registrados</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }
