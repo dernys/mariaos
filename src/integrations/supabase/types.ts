@@ -193,6 +193,125 @@ export type Database = {
         }
         Relationships: []
       }
+      consignment_lots: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          location_id: string
+          location_type: string
+          notes: string | null
+          product_id: string
+          purchase_id: string | null
+          quantity_received: number
+          quantity_remaining: number | null
+          quantity_returned: number
+          quantity_sold: number
+          received_at: string
+          status: string
+          supplier_id: string
+          tenant_id: string
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          location_id: string
+          location_type: string
+          notes?: string | null
+          product_id: string
+          purchase_id?: string | null
+          quantity_received?: number
+          quantity_remaining?: number | null
+          quantity_returned?: number
+          quantity_sold?: number
+          received_at?: string
+          status?: string
+          supplier_id: string
+          tenant_id: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          location_id?: string
+          location_type?: string
+          notes?: string | null
+          product_id?: string
+          purchase_id?: string | null
+          quantity_received?: number
+          quantity_remaining?: number | null
+          quantity_returned?: number
+          quantity_sold?: number
+          received_at?: string
+          status?: string
+          supplier_id?: string
+          tenant_id?: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consignment_settlements: {
+        Row: {
+          created_at: string
+          id: string
+          lot_id: string
+          payment_id: string | null
+          performed_by: string | null
+          quantity: number
+          sale_id: string | null
+          settled_at: string | null
+          status: string
+          supplier_id: string
+          tenant_id: string
+          total: number
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lot_id: string
+          payment_id?: string | null
+          performed_by?: string | null
+          quantity: number
+          sale_id?: string | null
+          settled_at?: string | null
+          status?: string
+          supplier_id: string
+          tenant_id: string
+          total: number
+          unit_cost: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lot_id?: string
+          payment_id?: string | null
+          performed_by?: string | null
+          quantity?: number
+          sale_id?: string | null
+          settled_at?: string | null
+          status?: string
+          supplier_id?: string
+          tenant_id?: string
+          total?: number
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_settlements_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_lots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupon_redemptions: {
         Row: {
           coupon_id: string
@@ -1845,6 +1964,7 @@ export type Database = {
           destination_type: string
           id: string
           invoice_number: string | null
+          is_consignment: boolean
           notes: string | null
           purchase_number: string | null
           received_at: string | null
@@ -1865,6 +1985,7 @@ export type Database = {
           destination_type?: string
           id?: string
           invoice_number?: string | null
+          is_consignment?: boolean
           notes?: string | null
           purchase_number?: string | null
           received_at?: string | null
@@ -1885,6 +2006,7 @@ export type Database = {
           destination_type?: string
           id?: string
           invoice_number?: string | null
+          is_consignment?: boolean
           notes?: string | null
           purchase_number?: string | null
           received_at?: string | null
@@ -2954,6 +3076,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      allocate_consignment_for_sale: {
+        Args: { p_sale_id: string }
+        Returns: undefined
+      }
       apply_coupon_to_sale: {
         Args: { p_coupon_id: string; p_discount: number; p_sale_id: string }
         Returns: undefined
@@ -3013,6 +3139,10 @@ export type Database = {
         Returns: undefined
       }
       receive_purchase: { Args: { p_purchase_id: string }; Returns: undefined }
+      receive_purchase_consignment: {
+        Args: { p_purchase_id: string }
+        Returns: undefined
+      }
       receive_stock_transfer: {
         Args: { p_transfer_id: string }
         Returns: undefined
@@ -3036,6 +3166,14 @@ export type Database = {
         Returns: string
       }
       revert_sale_stock: { Args: { p_sale_id: string }; Returns: undefined }
+      settle_consignment_lots: {
+        Args: {
+          p_method?: string
+          p_notes?: string
+          p_settlement_ids: string[]
+        }
+        Returns: string
+      }
       validate_coupon: {
         Args: {
           p_amount: number
