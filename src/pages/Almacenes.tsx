@@ -30,6 +30,9 @@ const Almacenes = () => {
   const { toast } = useToast();
   const [warehouses, setWarehouses] = useState<WarehouseItem[]>([]);
   const [productCounts, setProductCounts] = useState<Record<string, number>>({});
+  const [stockTotals, setStockTotals] = useState<Record<string, number>>({});
+  const [stockValue, setStockValue] = useState<Record<string, number>>({});
+  const [lowStock, setLowStock] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailWh, setDetailWh] = useState<WarehouseItem | null>(null);
@@ -37,16 +40,34 @@ const Almacenes = () => {
   const [form, setForm] = useState({ name: "", location: "", capacity: "0" });
 
   const fetchData = async () => {
-    const [whRes, prodRes] = await Promise.all([
+    const [whRes, prodRes, psRes] = await Promise.all([
       supabase.from("warehouses").select("*").order("name"),
-      supabase.from("products").select("warehouse_id"),
+      supabase.from("products").select("id, cost, min_stock, warehouse_id"),
+      supabase.from("product_stock").select("location_type, location_id, product_id, stock").eq("location_type", "warehouse"),
     ]);
     if (whRes.data) setWarehouses(whRes.data as WarehouseItem[]);
-    if (prodRes.data) {
-      const counts: Record<string, number> = {};
-      prodRes.data.forEach((p: any) => { if (p.warehouse_id) counts[p.warehouse_id] = (counts[p.warehouse_id] || 0) + 1; });
-      setProductCounts(counts);
-    }
+    const productMap: Record<string, { cost: number; min: number }> = {};
+    (prodRes.data || []).forEach((p: any) => { productMap[p.id] = { cost: Number(p.cost) || 0, min: Number(p.min_stock) || 0 }; });
+
+    const counts: Record<string, number> = {};
+    const totals: Record<string, number> = {};
+    const values: Record<string, number> = {};
+    const lows: Record<string, number> = {};
+    (psRes.data || []).forEach((s: any) => {
+      counts[s.location_id] = (counts[s.location_id] || 0) + 1;
+      totals[s.location_id] = (totals[s.location_id] || 0) + Number(s.stock || 0);
+      const pm = productMap[s.product_id];
+      if (pm) {
+        values[s.location_id] = (values[s.location_id] || 0) + Number(s.stock || 0) * pm.cost;
+        if (pm.min > 0 && Number(s.stock) <= pm.min) {
+          lows[s.location_id] = (lows[s.location_id] || 0) + 1;
+        }
+      }
+    });
+    setProductCounts(counts);
+    setStockTotals(totals);
+    setStockValue(values);
+    setLowStock(lows);
     setLoading(false);
   };
 
