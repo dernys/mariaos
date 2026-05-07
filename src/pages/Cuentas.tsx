@@ -94,41 +94,12 @@ export default function Cuentas() {
 
   const openPay = (p: Party) => {
     setActiveParty(p);
-    setAmount(String(Math.max(0, Number(p.balance || 0))));
-    setMethod("cash");
-    setNotes("");
     setPayOpen(true);
   };
 
   const openHistory = (p: Party) => {
     const path = tab === "customer" ? `/clientes/${p.id}` : tab === "employee" ? `/empleados/${p.id}` : `/proveedores/${p.id}`;
     nav(path);
-  };
-
-  const submitPayment = async () => {
-    if (!activeParty) return;
-    const amt = Number(amount);
-    if (!amt || amt <= 0) { toast({ title: "Monto inválido", variant: "destructive" }); return; }
-    setSaving(true);
-    const { error } = await supabase.rpc("register_account_payment" as any, {
-      p_party_type: tab,
-      p_party_id: activeParty.id,
-      p_amount: amt,
-      p_method: method,
-      p_currency: "CUP",
-      p_exchange_rate: 1,
-      p_reference_type: "adjustment",
-      p_reference_id: null,
-      p_notes: notes || null,
-    });
-    setSaving(false);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({
-      title: isPayable ? "Pago registrado al proveedor" : "Cobro registrado",
-      description: `$${amt.toFixed(2)} — ${activeParty.name}`,
-    });
-    setPayOpen(false);
-    fetchAll();
   };
 
 
