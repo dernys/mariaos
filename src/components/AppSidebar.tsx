@@ -22,6 +22,7 @@ import {
   ShoppingCart,
   Undo2,
   Wallet,
+  FileText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -89,6 +90,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { title: "Compras", url: "/compras", icon: ShoppingCart },
       { title: "Devoluciones", url: "/devoluciones", icon: Undo2 },
+      { title: "Facturas", url: "/facturas", icon: FileText },
       { title: "Cuentas (CxC/CxP)", url: "/cuentas", icon: Wallet },
     ],
   },
