@@ -15,6 +15,7 @@ import { FileText, Download, Mail, Plus, Ban } from "lucide-react";
 import { downloadInvoicePdf, InvoiceData } from "@/lib/invoicePdf";
 import { MiniStatCard } from "@/components/data/MiniStatCard";
 import { TableToolbar } from "@/components/data/TableToolbar";
+import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { useTableState } from "@/hooks/useTableState";
 

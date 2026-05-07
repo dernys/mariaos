@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { useTableState } from "@/hooks/useTableState";
 import { TableToolbar } from "@/components/data/TableToolbar";
+import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
@@ -145,9 +146,25 @@ const Empleados = () => {
             options: [{ value: "active", label: "Activos" }, { value: "inactive", label: "Inactivos" }],
           }]}
           rightSlot={
-            <Button onClick={openNew} size="sm" className="gradient-brand text-primary-foreground gap-2 h-9">
-              <Plus className="h-4 w-4" /> Nuevo
-            </Button>
+            <>
+              <ExportButton
+                rows={table.filtered}
+                filename="empleados"
+                title="Empleados"
+                columns={[
+                  { key: "name", label: "Nombre" },
+                  { key: "position", label: "Puesto" },
+                  { key: "phone", label: "Teléfono" },
+                  { key: "email", label: "Email" },
+                  { key: "salary", label: "Salario" },
+                  { key: "balance", label: "Adelantos" },
+                  { key: "is_active", label: "Activo" },
+                ]}
+              />
+              <Button onClick={openNew} size="sm" className="gradient-brand text-primary-foreground gap-2 h-9">
+                <Plus className="h-4 w-4" /> Nuevo
+              </Button>
+            </>
           }
         />
 

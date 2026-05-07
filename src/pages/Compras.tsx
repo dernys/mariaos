@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { useTableState } from "@/hooks/useTableState";
 import { TableToolbar } from "@/components/data/TableToolbar";
+import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 
@@ -241,9 +242,25 @@ export default function Compras() {
                 options: [{ value: "paid", label: "Pagado" }, { value: "pending", label: "Pendiente" }] },
             ]}
             rightSlot={
-              <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpen(true)}>
-                <Plus className="h-3.5 w-3.5" /> Nueva Compra
-              </Button>
+              <>
+                <ExportButton
+                  rows={purchasesTable.filtered}
+                  filename="compras"
+                  title="Órdenes de compra"
+                  columns={[
+                    { key: "purchase_number", label: "Nº" },
+                    { key: "supplier_name", label: "Proveedor" },
+                    { key: "location_name", label: "Destino" },
+                    { key: "total", label: "Total" },
+                    { key: "amount_paid", label: "Pagado" },
+                    { key: "status", label: "Estado" },
+                    { key: "created_at", label: "Fecha" },
+                  ]}
+                />
+                <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpen(true)}>
+                  <Plus className="h-3.5 w-3.5" /> Nueva Compra
+                </Button>
+              </>
             }
           />
 
