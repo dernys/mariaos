@@ -22,18 +22,26 @@ export default function ProveedorDetalle() {
   const [payments, setPayments] = useState<any[]>([]);
   const [lots, setLots] = useState<any[]>([]);
   const [settlements, setSettlements] = useState<any[]>([]);
+  const [catalog, setCatalog] = useState<any[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const fetchAll = async () => {
     if (!id) return;
-    const [sR, pR, payR, lR, stR] = await Promise.all([
+    const [sR, pR, payR, lR, stR, cR] = await Promise.all([
       (supabase.from as any)("suppliers").select("*").eq("id", id).maybeSingle(),
       (supabase.from as any)("purchases").select("id, purchase_number, total, amount_paid, status, created_at, is_consignment").eq("supplier_id", id).order("created_at", { ascending: false }).limit(100),
       (supabase.from as any)("account_payments").select("*").eq("party_type", "supplier").eq("party_id", id).order("created_at", { ascending: false }).limit(100),
       (supabase.from as any)("consignment_lots").select("*, products(name, sku)").eq("supplier_id", id).order("received_at", { ascending: false }).limit(100),
       (supabase.from as any)("consignment_settlements").select("*, consignment_lots(product_id, products(name))").eq("supplier_id", id).order("created_at", { ascending: false }).limit(200),
+      (supabase.from as any)("supplier_products").select("*").eq("supplier_id", id).order("product_name"),
     ]);
-    setS(sR.data); setPurchases(pR.data || []); setPayments(payR.data || []); setLots(lR.data || []); setSettlements(stR.data || []);
+    setS(sR.data); setPurchases(pR.data || []); setPayments(payR.data || []); setLots(lR.data || []); setSettlements(stR.data || []); setCatalog(cR.data || []);
+  };
+
+  const updateStatus = async (rowId: string, status: string) => {
+    const { error } = await (supabase.from as any)("supplier_products").update({ status }).eq("id", rowId);
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: "Estado actualizado" }); fetchAll();
   };
   useEffect(() => { fetchAll(); }, [id]);
 
