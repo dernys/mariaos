@@ -21,6 +21,7 @@ import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
+import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 interface Supplier { id: string; name: string; balance: number; phone?: string | null; email?: string | null; }
 interface Product { id: string; name: string; sku: string; cost: number; }
