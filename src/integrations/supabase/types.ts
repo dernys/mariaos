@@ -3188,6 +3188,10 @@ export type Database = {
         }
         Returns: string
       }
+      ensure_default_accounts: {
+        Args: { p_tenant_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3200,6 +3204,11 @@ export type Database = {
         Args: { p_sale_id: string; p_series_code?: string }
         Returns: string
       }
+      post_purchase_journal_entry: {
+        Args: { p_purchase_id: string }
+        Returns: string
+      }
+      post_sale_journal_entry: { Args: { p_sale_id: string }; Returns: string }
       process_sale_return: {
         Args: {
           p_location_id: string
