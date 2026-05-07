@@ -21,8 +21,8 @@ export default defineConfig(({ mode }) => ({
       devOptions: { enabled: false },
       includeAssets: ["favicon.ico", "robots.txt"],
       manifest: {
-        name: "VentaPro - Sistema de Ventas",
-        short_name: "VentaPro",
+        name: "GaIA ERP - Sistema de Ventas",
+        short_name: "GaIA ERP",
         description: "Sistema POS multi-tenant para restaurantes, bares y empresas",
         theme_color: "#0f172a",
         background_color: "#0f172a",
