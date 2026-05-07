@@ -76,7 +76,10 @@ export function POSBar() {
   const removeItem = (id: number) => setCart((prev) => prev.filter((i) => i.id !== id));
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const tax = subtotal * 0.1;
+  const { settings: posSettings } = usePOSSettings();
+  const [taxRatePct, setTaxRatePct] = useState<number>(10);
+  useEffect(() => { (async () => { if (!posSettings.default_tax_rate_id) return; const { data } = await supabase.from("tax_rates").select("rate").eq("id", posSettings.default_tax_rate_id).maybeSingle(); if (data) setTaxRatePct(Number((data as any).rate) || 0); })(); }, [posSettings.default_tax_rate_id]);
+  const tax = subtotal * (taxRatePct / 100);
   const total = subtotal + tax;
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
 
