@@ -130,9 +130,6 @@ export default function Cuentas() {
     fetchAll();
   };
 
-  const partyMovements = activeParty
-    ? movements.filter((m) => m.party_id === activeParty.id && m.party_type === tab)
-    : [];
 
   return (
     <AppLayout title="Cuentas por Cobrar y Pagar">
