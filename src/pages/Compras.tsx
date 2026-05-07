@@ -326,7 +326,7 @@ export default function Compras() {
                         <div className="flex gap-1 flex-wrap">
                           {p.status === "draft" && (
                             <>
-                              <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => receive(p.id)}>
+                              <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => receive(p.id, (p as any).is_consignment)}>
                                 <CheckCircle2 className="h-3 w-3 mr-1" /> Recibir
                               </Button>
                               <Button size="sm" variant="ghost" className="h-7 text-[10px] text-destructive" onClick={() => cancel(p.id)}>
