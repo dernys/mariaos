@@ -58,11 +58,6 @@ export default function Cuentas() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [activeParty, setActiveParty] = useState<Party | null>(null);
 
-  // Pay form
-  const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("cash");
-  const [notes, setNotes] = useState("");
-  const [saving, setSaving] = useState(false);
 
   const fetchAll = async () => {
     const [c, e, s, m] = await Promise.all([
