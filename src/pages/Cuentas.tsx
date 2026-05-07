@@ -201,45 +201,20 @@ export default function Cuentas() {
       </Tabs>
 
 
-      {/* Payment dialog */}
-      <Dialog open={payOpen} onOpenChange={setPayOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{isPayable ? "Pagar a proveedor" : "Registrar cobro"}</DialogTitle>
-            <DialogDescription>
-              {activeParty?.name} — saldo actual: <strong>${Number(activeParty?.balance || 0).toFixed(2)}</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-3">
-            <div>
-              <Label className="text-xs">Monto</Label>
-              <Input type="number" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Método</Label>
-              <Select value={method} onValueChange={setMethod}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Efectivo</SelectItem>
-                  <SelectItem value="card">Tarjeta</SelectItem>
-                  <SelectItem value="transfer">Transferencia</SelectItem>
-                  <SelectItem value="qr">QR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Notas</Label>
-              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Opcional" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPayOpen(false)}>Cancelar</Button>
-            <Button className="gradient-brand text-primary-foreground" onClick={submitPayment} disabled={saving}>
-              {saving ? "Guardando..." : "Confirmar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Payment dialog (multi-currency, multi-method) */}
+      {activeParty && (
+        <MultiPaymentDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          partyType={tab}
+          partyId={activeParty.id}
+          partyName={activeParty.name}
+          amountDue={Math.max(0, Number(activeParty.balance || 0))}
+          referenceType={null}
+          title={isPayable ? "Pagar a proveedor" : "Registrar cobro"}
+          onPaid={fetchAll}
+        />
+      )}
 
     </AppLayout>
   );
