@@ -238,7 +238,7 @@ const Clientes = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
+    </AppLayout>
   );
 };
 
