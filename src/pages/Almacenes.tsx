@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { logActivity } from "@/hooks/useActivityLog";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Warehouse, Package, Plus, Edit2, Trash2, MapPin } from "lucide-react";
+import { Warehouse, Package, Plus, Edit2, Trash2, MapPin, DollarSign, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
