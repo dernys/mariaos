@@ -115,6 +115,9 @@ const Almacenes = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {warehouses.map((wh, i) => {
             const count = productCounts[wh.id] || 0;
+            const totalUnits = stockTotals[wh.id] || 0;
+            const value = stockValue[wh.id] || 0;
+            const low = lowStock[wh.id] || 0;
             return (
               <motion.div
                 key={wh.id}
@@ -144,12 +147,24 @@ const Almacenes = () => {
                   </div>
                 )}
 
-                <div className="mt-4 pt-4 border-t space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Package className="h-3.5 w-3.5" /> Productos
-                    </span>
-                    <span className="font-heading font-semibold">{count}</span>
+                <div className="mt-4 pt-4 border-t space-y-2.5">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-muted/40 rounded-lg p-2">
+                      <div className="flex items-center gap-1 text-muted-foreground"><Package className="h-3 w-3" /> SKUs</div>
+                      <p className="font-heading font-bold text-sm mt-0.5">{count}</p>
+                    </div>
+                    <div className="bg-muted/40 rounded-lg p-2">
+                      <div className="flex items-center gap-1 text-muted-foreground">Unidades</div>
+                      <p className="font-heading font-bold text-sm mt-0.5">{totalUnits.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-muted/40 rounded-lg p-2">
+                      <div className="flex items-center gap-1 text-muted-foreground"><DollarSign className="h-3 w-3" /> Valor</div>
+                      <p className="font-heading font-bold text-sm mt-0.5 text-success">${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                    </div>
+                    <div className="bg-muted/40 rounded-lg p-2">
+                      <div className="flex items-center gap-1 text-muted-foreground"><AlertTriangle className="h-3 w-3" /> Bajo</div>
+                      <p className={`font-heading font-bold text-sm mt-0.5 ${low > 0 ? "text-warning" : ""}`}>{low}</p>
+                    </div>
                   </div>
                   {wh.capacity && wh.capacity > 0 && (
                     <div>
