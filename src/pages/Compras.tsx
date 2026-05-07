@@ -176,23 +176,7 @@ export default function Compras() {
 
   const openPay = (p: Purchase) => {
     setPayTarget(p);
-    setPayAmount(String(Math.max(0, Number(p.total) - Number(p.amount_paid)).toFixed(2)));
-    setPayMethod("cash"); setPayNotes("");
     setPayOpen(true);
-  };
-
-  const submitPay = async () => {
-    if (!payTarget || !payTarget.supplier_id) { toast({ title: "Compra sin proveedor", variant: "destructive" }); return; }
-    const amt = Number(payAmount);
-    if (!amt || amt <= 0) { toast({ title: "Monto inválido", variant: "destructive" }); return; }
-    const { error } = await (supabase.rpc as any)("register_account_payment", {
-      p_party_type: "supplier", p_party_id: payTarget.supplier_id,
-      p_amount: amt, p_method: payMethod, p_currency: "CUP", p_exchange_rate: 1,
-      p_reference_type: "purchase", p_reference_id: payTarget.id, p_notes: payNotes || null,
-    });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Pago registrado" });
-    setPayOpen(false); fetchAll();
   };
 
   const supName2 = (id: string | null) => suppliers.find((s) => s.id === id)?.name || "—";
