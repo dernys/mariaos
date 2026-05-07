@@ -87,7 +87,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { title: "Productos", url: "/inventario", icon: Package },
       { title: "Almacenes", url: "/almacenes", icon: Warehouse },
-      { title: "Tiendas", url: "/tiendas", icon: Store, types: ["empresa"] },
+      { title: "Tiendas", url: "/tiendas", icon: Store },
       { title: "Transferencias", url: "/transferencias", icon: ArrowRightLeft },
     ],
   },

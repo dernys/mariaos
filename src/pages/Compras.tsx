@@ -158,10 +158,11 @@ export default function Compras() {
     setOpen(false); resetForm(); fetchAll();
   };
 
-  const receive = async (id: string) => {
-    const { error } = await supabase.rpc("receive_purchase" as any, { p_purchase_id: id });
+  const receive = async (id: string, isConsignment: boolean) => {
+    const fn = isConsignment ? "receive_purchase_consignment" : "receive_purchase";
+    const { error } = await supabase.rpc(fn as any, { p_purchase_id: id });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Compra recibida y stock actualizado" });
+    toast({ title: isConsignment ? "Consignación recibida" : "Compra recibida y stock actualizado" });
     fetchAll();
   };
 
@@ -325,7 +326,7 @@ export default function Compras() {
                         <div className="flex gap-1 flex-wrap">
                           {p.status === "draft" && (
                             <>
-                              <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => receive(p.id)}>
+                              <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => receive(p.id, (p as any).is_consignment)}>
                                 <CheckCircle2 className="h-3 w-3 mr-1" /> Recibir
                               </Button>
                               <Button size="sm" variant="ghost" className="h-7 text-[10px] text-destructive" onClick={() => cancel(p.id)}>
@@ -523,6 +524,44 @@ export default function Compras() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
             <Button className="gradient-brand text-primary-foreground" onClick={handleCreate}>Crear Compra</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pay purchase dialog */}
+      <Dialog open={payOpen} onOpenChange={setPayOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pagar compra {payTarget?.purchase_number}</DialogTitle>
+            <DialogDescription>
+              Saldo pendiente: <strong>${payTarget ? Math.max(0, Number(payTarget.total) - Number(payTarget.amount_paid)).toFixed(2) : "0.00"}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div>
+              <Label className="text-xs">Monto a pagar</Label>
+              <Input type="number" min="0" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Forma de pago</Label>
+              <Select value={payMethod} onValueChange={setPayMethod}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Efectivo</SelectItem>
+                  <SelectItem value="card">Tarjeta</SelectItem>
+                  <SelectItem value="transfer">Transferencia</SelectItem>
+                  <SelectItem value="qr">QR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Notas</Label>
+              <Input value={payNotes} onChange={(e) => setPayNotes(e.target.value)} placeholder="Opcional" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPayOpen(false)}>Cancelar</Button>
+            <Button className="gradient-brand text-primary-foreground" onClick={submitPay}>Confirmar pago</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -177,6 +177,9 @@ export default function Proveedores() {
                     <TableCell>
                       <div className="flex gap-1">
                         <button onClick={() => nav(`/proveedores/${s.id}`)} className="p-1.5 rounded hover:bg-primary/10 text-primary" title="Detalle e historial"><History className="h-3.5 w-3.5" /></button>
+                        {debt > 0 && (
+                          <button onClick={() => nav(`/cuentas`)} className="p-1.5 rounded hover:bg-warning/10 text-warning" title="Pagar saldo"><Wallet className="h-3.5 w-3.5" /></button>
+                        )}
                         <button onClick={() => openEdit(s)} className="p-1.5 rounded hover:bg-muted"><Edit2 className="h-3.5 w-3.5" /></button>
                         <button onClick={() => remove(s)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                       </div>
