@@ -1,1 +1,101 @@
-\n# Blueprint ERP/POS — Análisis y plan de implementación\n\n## 1. Estado actual detectado\n\n### Tablas existentes\n`tenants`, `tenant_users`, `superadmins`, `user_roles`, `role_permissions`, `app_modules`, `profiles`, `activity_log`, `stores`, `warehouses`, `products`, `product_categories`, `product_recipes`, `inventory_movements`, `customers`, `employees`, `sales`, `sale_items`, `sale_payments`, `sales_shifts`, `restaurant_tables`, `kitchen_orders`, `kitchen_order_items`, `online_orders`, `online_order_items`, `currencies`, `payment_methods`, `tax_rates`, `system_settings`, `accounting_accounts`, `journal_entries`, `journal_entry_lines`.\n\n### Lo que ya funciona\n- Multitenancy + RLS + superadmin con selector global de contexto.\n- POS adaptativo (bar / restaurante / empresa) con mesas, KDS, recetas, multi-moneda, pagos divididos, fiado parcial.\n- Sidebar dinámico, RBAC modular, marketplace + pedidos online.\n- Turnos básicos (apertura/cierre con caja inicial y final).\n- `inventory_movements` registra entry/exit/adjustment/transfer pero **no hay flujo de transferencia con estados**.\n- `sales` con `amount_paid` y status `paid/partial`; `sale_payments` multi-método.\n- Contabilidad con plan de cuentas y asientos manuales.\n\n### Huecos críticos detectados\n| Área | Hueco | Riesgo |\n|---|---|---|\n| Inventario | No hay tabla `stock_transfers` con estados (solicitada→aprobada→preparada→en tránsito→recibida). Movimientos sí existen pero sin documento padre. | Sin trazabilidad entre tiendas/almacenes |\n| Inventario | No existe stock por almacén (la columna `stock` es global por producto). | Imposible saber cuánto hay en cada ubicación |\n| Inventario | No hay reserva de stock por documento (venta pendiente, transferencia en tránsito). | Sobreventa |\n| Inventario | No hay lote/serie ni fecha de caducidad. | Sin FEFO ni trazabilidad |\n| Inventario | No hay kardex consultable (solo lista cruda de movimientos). | Difícil auditar costo y saldo |\n| POS | El cobro NO descuenta stock (PaymentDialog inserta venta + items pero no movimientos). | Inventario desincronizado |\n| POS | Venta no se asocia al `sales_shift` activo (`shift_id` no existe en `sales`). | Cierres de caja no cuadran |\n| POS | No hay devoluciones (parcial/total/monto), ni anulaciones, ni reversión de inventario. | Imposible operar errores |\n| POS | No hay numeración correlativa por serie de ticket. | Sin control fiscal |\n| Compras | No existe módulo de compras: ni `purchase_orders`, ni `suppliers`, ni recepción. | Sin ciclo de abastecimiento |\n| Pagos | `sale_payments` ok, pero no hay tabla de **abonos posteriores** a ventas a crédito. | El balance del cliente no se puede saldar |\n| Turnos | No agrega ventas/devoluciones por método de pago al cierre, no detecta diferencia esperado vs declarado, no permite no-sale ni movimientos de caja (retiros/depósitos). | Cierres inexactos |\n| Auditoría | `activity_log` es mutable (sin restricción de UPDATE/DELETE). | No es inmutable |\n| Superadmin/permisos | RLS ya estricto; falta auditoría específica de acciones administrativas globales. | Trazabilidad cross-tenant |\n\n---\n\n## 2. Blueprint por fases\n\n### FASE 1 — Inventario profesional + integridad POS (foundation)\n**Objetivo:** stock por ubicación, transferencias con estados, kardex y descuento automático en venta.\n\nModelos nuevos / cambios:\n- `stock_locations` (vista lógica unificando stores + warehouses con tipo)\n- `product_stock` (product_id, location_id, quantity, reserved_quantity) — stock por ubicación\n- `stock_transfers` (number, origin_location_id, destination_location_id, status, requested_by, approved_by, prepared_by, shipped_at, received_by, received_at, notes)\n- `stock_transfer_items` (transfer_id, product_id, quantity_requested, quantity_shipped, quantity_received)\n- Extender `inventory_movements`: añadir `location_id`, `reference_type` (sale/purchase/transfer/adjustment/return), `reference_id`, `unit_cost`\n- `sales`: añadir `shift_id`, `store_id`, `ticket_number`, `ticket_series`, `status` extender con `voided`, `returned`\n- Trigger `assign_ticket_number` por serie/tienda\n- RPC `process_sale_stock(sale_id)` — descuenta stock + crea movements\n- RPC `revert_sale_stock(sale_id)` — para devoluciones/anulaciones\n\nUI:\n- `Inventario`: nueva pestaña **Stock por ubicación** y **Kardex** (filtro por producto+ubicación con saldo corrido)\n- Nueva página `Transferencias` con wizard de estados\n- POS: validar turno abierto, asociar `shift_id` y `store_id`, llamar RPC al confirmar venta\n\nPruebas de regresión:\n- Crear producto → stock se inicializa en location seleccionada\n- Vender → stock baja en la location del turno; movimiento creado con reference=sale\n- Transferir A→B en estado \
+## Objetivo
+1. Convertir el "historial" de Clientes, Ventas, Empleados y Proveedores en **vistas dedicadas a página completa** (no diálogos), con todos los datos relacionados.
+2. Implementar **gestión completa de deudas por pagar a proveedores** (cuentas por pagar).
+3. Implementar **consignación de productos**: rastrear lotes recibidos de proveedores cuyo pago se difiere hasta que el producto se venda, con liquidación automática.
+
+---
+
+## 1. Vistas de detalle dedicadas
+
+Crear 4 nuevas rutas con layout consistente (header con datos clave, tabs por sección, timeline de actividad, KPIs):
+
+| Ruta | Página | Tabs incluidos |
+|---|---|---|
+| `/clientes/:id` | `ClienteDetalle.tsx` | Resumen · Compras · Pagos · Fidelización · Actividad |
+| `/empleados/:id` | `EmpleadoDetalle.tsx` | Resumen · Turnos · Asistencia · Nómina · Adelantos · Actividad |
+| `/proveedores/:id` | `ProveedorDetalle.tsx` | Resumen · Compras · Pagos · **Consignaciones** · Actividad |
+| `/ventas/:id` | `VentaDetalle.tsx` | Items · Pagos · Devoluciones · Factura · Actividad |
+
+Cambios en páginas existentes (`Clientes.tsx`, `Empleados.tsx`, `Cuentas.tsx`/lista de ventas, `Compras.tsx` para proveedores): el botón "Historial" ahora navega a la ruta de detalle en lugar de abrir Dialog. Los Dialogs de detalle existentes se eliminan.
+
+Componente compartido nuevo: `src/components/detail/DetailHeader.tsx` (avatar/icon, nombre, badges de estado, KPIs y acciones).
+
+---
+
+## 2. Cuentas por pagar a proveedores
+
+Ya existe `suppliers.balance` y `account_payments` con `party_type='supplier'`. Se añade una **vista consolidada** dentro de `/proveedores/:id` (tab Pagos) y un **panel global** en `/cuentas` (sección "Por pagar"):
+
+- Lista de compras con `total > amount_paid` (deuda).
+- Antigüedad de saldo (0-30, 30-60, 60-90, +90 días).
+- Botón rápido **"Registrar pago"** que invoca `register_account_payment(...)` con `direction='out'`.
+- Total adeudado por proveedor + total global.
+- Alerta de notificación cuando una compra pasa los 30 días sin pago completo.
+
+---
+
+## 3. Consignación de productos (pago al vender)
+
+### Modelo de datos (migración nueva)
+
+**Tabla `consignment_lots`** — lote recibido en consignación:
+- `supplier_id`, `product_id`, `tenant_id`
+- `received_at`, `quantity_received`, `quantity_sold`, `quantity_returned`, `quantity_remaining` (generada)
+- `unit_cost` (precio acordado a pagar al proveedor por unidad vendida)
+- `location_type`, `location_id`
+- `status`: `active` | `settled` | `closed`
+- `notes`, `expires_at`
+
+**Tabla `consignment_settlements`** — liquidaciones (pagos al proveedor por las unidades vendidas):
+- `lot_id`, `supplier_id`, `tenant_id`
+- `quantity`, `unit_cost`, `total`
+- `payment_id` (FK a `account_payments`, opcional)
+- `settled_at`, `performed_by`
+
+**Extensión a `purchases`**: añadir columna `is_consignment boolean default false`. Al marcarla, `receive_purchase` crea `consignment_lots` en lugar de generar deuda inmediata.
+
+**Trigger sobre `sale_items`** (después de venta `paid`): asigna FIFO el `qty` vendido a lotes activos del producto, incrementa `quantity_sold` y crea `consignment_settlements` pendientes con el `unit_cost` del lote.
+
+**RPC `settle_consignment(lot_ids[], method, currency)`**: agrupa settlements pendientes y registra un `account_payment` outbound al proveedor.
+
+RLS: políticas por `tenant_id` igual que el resto.
+
+### UI
+
+- Nueva página `/consignaciones` (`Consignacion.tsx`): lista de lotes activos, filtros por proveedor/producto, KPIs (unidades en consignación, valor pendiente de liquidar, vendido sin liquidar).
+- En `Compras.tsx` (form de compra): checkbox "Compra en consignación".
+- En `ProveedorDetalle.tsx` tab Consignaciones: lotes y botón "Liquidar seleccionados".
+- Sidebar: nueva entrada "Consignaciones" bajo Inventario.
+
+---
+
+## Archivos a crear
+- `src/pages/ClienteDetalle.tsx`
+- `src/pages/EmpleadoDetalle.tsx`
+- `src/pages/ProveedorDetalle.tsx`
+- `src/pages/VentaDetalle.tsx`
+- `src/pages/Consignacion.tsx`
+- `src/components/detail/DetailHeader.tsx`
+- `src/components/detail/PayablesPanel.tsx`
+- `src/components/consignment/ConsignmentLotsTable.tsx`
+- `src/components/consignment/SettleDialog.tsx`
+- `supabase/migrations/<timestamp>_consignment.sql`
+
+## Archivos a editar
+- `src/App.tsx` (rutas nuevas)
+- `src/components/AppSidebar.tsx` (entrada Consignaciones)
+- `src/components/CommandPalette.tsx`
+- `src/pages/Clientes.tsx` (link al detalle, quitar dialog)
+- `src/pages/Empleados.tsx` (link al detalle, quitar dialog)
+- `src/pages/Compras.tsx` (link a proveedor, checkbox consignación)
+- `src/pages/Cuentas.tsx` (panel cuentas por pagar)
+
+---
+
+## Notas técnicas
+- FIFO de consignación: orden por `received_at ASC`, `id ASC`.
+- `quantity_remaining` como columna generada `quantity_received - quantity_sold - quantity_returned`.
+- Las páginas detalle leen `id` con `useParams` y usan los mismos hooks de datos ya existentes.
+- Mantener semántica de tokens (sin colores hardcoded).
+
+¿Procedo con la implementación completa?

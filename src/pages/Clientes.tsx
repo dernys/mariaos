@@ -45,14 +45,15 @@ interface Sale {
   created_at: string;
 }
 
+import { useNavigate } from "react-router-dom";
+
 const Clientes = () => {
   const { user } = useAuth();
   const tenantId = useTenant();
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
-  const [customerSales, setCustomerSales] = useState<Sale[]>([]);
   const [editing, setEditing] = useState<Customer | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", rfc: "", credit_limit: "0", notes: "" });
   const { toast } = useToast();
@@ -77,11 +78,7 @@ const Clientes = () => {
     setDialogOpen(true);
   };
 
-  const openDetail = async (c: Customer) => {
-    setDetailCustomer(c);
-    const { data } = await supabase.from("sales").select("id, total, amount_paid, status, created_at").eq("customer_id", c.id).order("created_at", { ascending: false }).limit(50);
-    setCustomerSales((data as Sale[]) || []);
-  };
+  const openDetail = (c: Customer) => navigate(`/clientes/${c.id}`);
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
