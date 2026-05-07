@@ -133,7 +133,6 @@ const Facturas = () => {
   const { paged, page, setPage, pageSize, setPageSize, total, search, setSearch, filters, setFilter } = useTableState({
     data: invoices,
     searchKeys: ["invoice_number", "customer_name", "series_code"],
-    filterKeys: { status: (i) => i.status },
   });
 
   return (
