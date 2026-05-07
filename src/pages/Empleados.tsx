@@ -50,11 +50,10 @@ interface Shift {
 const Empleados = () => {
   const { user } = useAuth();
   const tenantId = useTenant();
+  const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [detailEmployee, setDetailEmployee] = useState<Employee | null>(null);
-  const [employeeShifts, setEmployeeShifts] = useState<Shift[]>([]);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [form, setForm] = useState({ name: "", position: "", salary: "0", phone: "", email: "", hire_date: "", notes: "" });
   const { toast } = useToast();
@@ -79,11 +78,7 @@ const Empleados = () => {
     setDialogOpen(true);
   };
 
-  const openDetail = async (e: Employee) => {
-    setDetailEmployee(e);
-    const { data } = await supabase.from("sales_shifts").select("id, store_name, opened_at, closed_at, total_sales, status").eq("employee_id", e.id).order("opened_at", { ascending: false }).limit(50);
-    setEmployeeShifts((data as Shift[]) || []);
-  };
+  const openDetail = (e: Employee) => navigate(`/empleados/${e.id}`);
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
