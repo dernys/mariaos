@@ -122,7 +122,7 @@ const Auth = () => {
           <div className="h-12 w-12 rounded-xl gradient-brand flex items-center justify-center mb-3">
             <Zap className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="font-heading text-xl font-bold tracking-tight">VentaPro</h1>
+          <h1 className="font-heading text-xl font-bold tracking-tight">GaIA ERP</h1>
           <p className="text-xs text-muted-foreground mt-1">Sistema de Ventas Multitienda</p>
         </div>
 
