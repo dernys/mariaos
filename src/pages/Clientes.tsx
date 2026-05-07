@@ -78,11 +78,7 @@ const Clientes = () => {
     setDialogOpen(true);
   };
 
-  const openDetail = async (c: Customer) => {
-    setDetailCustomer(c);
-    const { data } = await supabase.from("sales").select("id, total, amount_paid, status, created_at").eq("customer_id", c.id).order("created_at", { ascending: false }).limit(50);
-    setCustomerSales((data as Sale[]) || []);
-  };
+  const openDetail = (c: Customer) => navigate(`/clientes/${c.id}`);
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
