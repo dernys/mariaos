@@ -193,6 +193,113 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          created_at: string
+          customer_id: string | null
+          discount_applied: number
+          id: string
+          sale_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          coupon_id: string
+          created_at?: string
+          customer_id?: string | null
+          discount_applied?: number
+          id?: string
+          sale_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          coupon_id?: string
+          created_at?: string
+          customer_id?: string | null
+          discount_applied?: number
+          id?: string
+          sale_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          max_uses_per_customer: number | null
+          min_amount: number
+          tenant_id: string
+          updated_at: string
+          uses_count: number
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          max_uses_per_customer?: number | null
+          min_amount?: number
+          tenant_id: string
+          updated_at?: string
+          uses_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          max_uses_per_customer?: number | null
+          min_amount?: number
+          tenant_id?: string
+          updated_at?: string
+          uses_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       currencies: {
         Row: {
           code: string
@@ -248,12 +355,16 @@ export type Database = {
           credit_limit: number
           email: string | null
           id: string
+          loyalty_points: number
+          loyalty_tier: string
           name: string
           notes: string | null
           phone: string | null
           rfc: string | null
           tenant_id: string | null
+          total_spent: number
           updated_at: string
+          visits_count: number
         }
         Insert: {
           address?: string | null
@@ -262,12 +373,16 @@ export type Database = {
           credit_limit?: number
           email?: string | null
           id?: string
+          loyalty_points?: number
+          loyalty_tier?: string
           name: string
           notes?: string | null
           phone?: string | null
           rfc?: string | null
           tenant_id?: string | null
+          total_spent?: number
           updated_at?: string
+          visits_count?: number
         }
         Update: {
           address?: string | null
@@ -276,12 +391,16 @@ export type Database = {
           credit_limit?: number
           email?: string | null
           id?: string
+          loyalty_points?: number
+          loyalty_tier?: string
           name?: string
           notes?: string | null
           phone?: string | null
           rfc?: string | null
           tenant_id?: string | null
+          total_spent?: number
           updated_at?: string
+          visits_count?: number
         }
         Relationships: [
           {
@@ -801,6 +920,100 @@ export type Database = {
           },
         ]
       }
+      loyalty_movements: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          movement_type: string
+          notes: string | null
+          performed_by: string | null
+          points: number
+          reference_id: string | null
+          reference_type: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          movement_type: string
+          notes?: string | null
+          performed_by?: string | null
+          points: number
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          movement_type?: string
+          notes?: string | null
+          performed_by?: string | null
+          points?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_movements_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          gold_threshold: number
+          id: string
+          platinum_threshold: number
+          points_per_unit: number
+          silver_threshold: number
+          tenant_id: string
+          updated_at: string
+          value_per_point: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          gold_threshold?: number
+          id?: string
+          platinum_threshold?: number
+          points_per_unit?: number
+          silver_threshold?: number
+          tenant_id: string
+          updated_at?: string
+          value_per_point?: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          gold_threshold?: number
+          id?: string
+          platinum_threshold?: number
+          points_per_unit?: number
+          silver_threshold?: number
+          tenant_id?: string
+          updated_at?: string
+          value_per_point?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -1242,6 +1455,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      promotions: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_value: number
+          id: string
+          is_active: boolean
+          min_qty: number
+          name: string
+          promo_type: string
+          scope: string
+          scope_id: string | null
+          scope_value: string | null
+          tenant_id: string
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          min_qty?: number
+          name: string
+          promo_type?: string
+          scope?: string
+          scope_id?: string | null
+          scope_value?: string | null
+          tenant_id: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          min_qty?: number
+          name?: string
+          promo_type?: string
+          scope?: string
+          scope_id?: string | null
+          scope_value?: string | null
+          tenant_id?: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchase_items: {
         Row: {
@@ -2360,6 +2635,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_coupon_to_sale: {
+        Args: { p_coupon_id: string; p_discount: number; p_sale_id: string }
+        Returns: undefined
+      }
+      award_loyalty_points: { Args: { p_sale_id: string }; Returns: number }
       calculate_shift_summary: { Args: { p_shift_id: string }; Returns: Json }
       close_shift_with_summary: {
         Args: { p_declared_cash: number; p_notes?: string; p_shift_id: string }
@@ -2411,6 +2691,10 @@ export type Database = {
         Args: { p_transfer_id: string }
         Returns: undefined
       }
+      redeem_loyalty_points: {
+        Args: { p_customer_id: string; p_points: number; p_sale_id?: string }
+        Returns: number
+      }
       register_account_payment: {
         Args: {
           p_amount: number
@@ -2426,6 +2710,15 @@ export type Database = {
         Returns: string
       }
       revert_sale_stock: { Args: { p_sale_id: string }; Returns: undefined }
+      validate_coupon: {
+        Args: {
+          p_amount: number
+          p_code: string
+          p_customer_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "gerente" | "supervisor" | "cajero" | "inventarista"

@@ -23,6 +23,8 @@ import {
   Undo2,
   Wallet,
   FileText,
+  PieChart,
+  Award,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -65,6 +67,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { title: "Dashboard", url: "/", icon: LayoutDashboard },
       { title: "Analytics", url: "/analytics", icon: BarChart3 },
+      { title: "Reportes & BI", url: "/reportes", icon: PieChart },
     ],
   },
   {
@@ -99,6 +102,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { title: "Clientes", url: "/clientes", icon: Users },
       { title: "Empleados", url: "/empleados", icon: UserCheck },
+      { title: "Fidelización", url: "/fidelizacion", icon: Award },
     ],
   },
   {
