@@ -91,25 +91,63 @@ export default function ProveedorDetalle() {
           icon={Truck}
           title={s.name}
           subtitle={s.email || s.phone || "Proveedor"}
-          backTo="/compras"
+          backTo="/proveedores"
           badges={[{ label: debt > 0 ? `Debemos $${debt.toFixed(2)}` : "Sin deuda", variant: debt > 0 ? "destructive" : "secondary" }]}
           kpis={[
             { label: "Compras", value: purchases.length, tone: "primary" },
             { label: "Por pagar", value: `$${debt.toLocaleString()}`, tone: debt > 0 ? "warning" : "success" },
-            { label: "Consignación activa", value: `$${consignmentValuePending.toLocaleString()}` },
-            { label: "Liquidación pendiente", value: `$${pendingTotal.toLocaleString()}`, tone: pendingTotal > 0 ? "warning" : "default" },
+            { label: "Productos", value: catalog.length },
+            { label: "Liquidación pend.", value: `$${pendingTotal.toLocaleString()}`, tone: pendingTotal > 0 ? "warning" : "default" },
           ]}
         />
 
         <Tabs defaultValue="resumen">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="resumen">Resumen</TabsTrigger>
+            <TabsTrigger value="catalog">Productos ({catalog.length})</TabsTrigger>
             <TabsTrigger value="purchases">Compras ({purchases.length})</TabsTrigger>
             <TabsTrigger value="payables">Por pagar</TabsTrigger>
             <TabsTrigger value="payments">Pagos</TabsTrigger>
             <TabsTrigger value="consignment">Consignación ({activeLots.length})</TabsTrigger>
             <TabsTrigger value="activity">Actividad</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="catalog">
+            <div className="bg-card rounded-xl border overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Producto</TableHead>
+                  <TableHead className="text-xs">SKU</TableHead>
+                  <TableHead className="text-xs text-right">Costo</TableHead>
+                  <TableHead className="text-xs text-right">Mín. orden</TableHead>
+                  <TableHead className="text-xs">Lead</TableHead>
+                  <TableHead className="text-xs">Última compra</TableHead>
+                  <TableHead className="text-xs">Estado</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {catalog.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="text-xs font-medium">{c.product_name}{c.is_consignment && <Badge variant="outline" className="ml-2 text-[10px]">Consig.</Badge>}{c.is_preferred && <Badge className="ml-1 text-[10px]">Preferido</Badge>}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{c.supplier_sku || c.sku || "—"}</TableCell>
+                      <TableCell className="text-xs text-right">${Number(c.unit_cost).toFixed(2)} {c.currency}</TableCell>
+                      <TableCell className="text-xs text-right">{c.min_order_qty}</TableCell>
+                      <TableCell className="text-xs">{c.lead_time_days}d</TableCell>
+                      <TableCell className="text-xs">{c.last_purchase_at ? format(new Date(c.last_purchase_at), "dd/MM/yy") : "—"}</TableCell>
+                      <TableCell>
+                        <select className="text-[10px] bg-background border rounded px-1.5 py-0.5" value={c.status} onChange={(e) => updateStatus(c.id, e.target.value)}>
+                          <option value="available">Disponible</option>
+                          <option value="low_stock">Bajo stock</option>
+                          <option value="out_of_stock">Agotado</option>
+                          <option value="discontinued">Descontinuado</option>
+                        </select>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {catalog.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin productos catalogados — se agregan automáticamente al registrar compras</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
 
           <TabsContent value="resumen">
             <div className="bg-card rounded-xl border p-4 space-y-2 text-sm">
