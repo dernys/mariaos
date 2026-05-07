@@ -34,6 +34,7 @@ import Reportes from "./pages/Reportes";
 import Fidelizacion from "./pages/Fidelizacion";
 import RRHH from "./pages/RRHH";
 import Delivery from "./pages/Delivery";
+import Proveedores from "./pages/Proveedores";
 import ClienteDetalle from "./pages/ClienteDetalle";
 import EmpleadoDetalle from "./pages/EmpleadoDetalle";
 import ProveedorDetalle from "./pages/ProveedorDetalle";
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/clientes/:id" element={<ProtectedRoute><ClienteDetalle /></ProtectedRoute>} />
               <Route path="/empleados" element={<ProtectedRoute><Empleados /></ProtectedRoute>} />
               <Route path="/empleados/:id" element={<ProtectedRoute><EmpleadoDetalle /></ProtectedRoute>} />
+              <Route path="/proveedores" element={<ProtectedRoute><Proveedores /></ProtectedRoute>} />
               <Route path="/proveedores/:id" element={<ProtectedRoute><ProveedorDetalle /></ProtectedRoute>} />
               <Route path="/ventas/:id" element={<ProtectedRoute><VentaDetalle /></ProtectedRoute>} />
               <Route path="/consignaciones" element={<ProtectedRoute><Consignacion /></ProtectedRoute>} />

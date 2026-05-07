@@ -2742,6 +2742,84 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_products: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          is_consignment: boolean
+          is_preferred: boolean
+          last_purchase_at: string | null
+          lead_time_days: number
+          min_order_qty: number
+          notes: string | null
+          product_id: string | null
+          product_name: string
+          sku: string | null
+          status: string
+          supplier_id: string
+          supplier_sku: string | null
+          tenant_id: string
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_consignment?: boolean
+          is_preferred?: boolean
+          last_purchase_at?: string | null
+          lead_time_days?: number
+          min_order_qty?: number
+          notes?: string | null
+          product_id?: string | null
+          product_name: string
+          sku?: string | null
+          status?: string
+          supplier_id: string
+          supplier_sku?: string | null
+          tenant_id: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_consignment?: boolean
+          is_preferred?: boolean
+          last_purchase_at?: string | null
+          lead_time_days?: number
+          min_order_qty?: number
+          notes?: string | null
+          product_id?: string | null
+          product_name?: string
+          sku?: string | null
+          status?: string
+          supplier_id?: string
+          supplier_sku?: string | null
+          tenant_id?: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null

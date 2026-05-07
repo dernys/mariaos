@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
@@ -49,11 +50,10 @@ interface Shift {
 const Empleados = () => {
   const { user } = useAuth();
   const tenantId = useTenant();
+  const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [detailEmployee, setDetailEmployee] = useState<Employee | null>(null);
-  const [employeeShifts, setEmployeeShifts] = useState<Shift[]>([]);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [form, setForm] = useState({ name: "", position: "", salary: "0", phone: "", email: "", hire_date: "", notes: "" });
   const { toast } = useToast();
@@ -78,11 +78,7 @@ const Empleados = () => {
     setDialogOpen(true);
   };
 
-  const openDetail = async (e: Employee) => {
-    setDetailEmployee(e);
-    const { data } = await supabase.from("sales_shifts").select("id, store_name, opened_at, closed_at, total_sales, status").eq("employee_id", e.id).order("opened_at", { ascending: false }).limit(50);
-    setEmployeeShifts((data as Shift[]) || []);
-  };
+  const openDetail = (e: Employee) => navigate(`/empleados/${e.id}`);
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
@@ -241,48 +237,6 @@ const Empleados = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Detail Dialog with History */}
-      <Dialog open={!!detailEmployee} onOpenChange={() => setDetailEmployee(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{detailEmployee?.name}</DialogTitle>
-            <DialogDescription>{detailEmployee?.position || "Sin puesto"} · {detailEmployee?.is_active ? "Activo" : "Inactivo"}</DialogDescription>
-          </DialogHeader>
-          {detailEmployee && (
-            <Tabs defaultValue="shifts">
-              <TabsList className="w-full">
-                <TabsTrigger value="shifts" className="flex-1">Turnos</TabsTrigger>
-                <TabsTrigger value="activity" className="flex-1">Actividad</TabsTrigger>
-              </TabsList>
-              <TabsContent value="shifts" className="max-h-64 overflow-y-auto">
-                {employeeShifts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">Sin turnos registrados</p>
-                ) : (
-                  <div className="space-y-2">
-                    {employeeShifts.map((s) => (
-                      <div key={s.id} className="flex items-center justify-between bg-muted/40 rounded-lg p-3">
-                        <div>
-                          <p className="text-xs font-medium">{s.store_name}</p>
-                          <p className="text-[10px] text-muted-foreground">{format(new Date(s.opened_at), "dd/MM/yyyy HH:mm")}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-heading font-semibold text-primary">${s.total_sales || 0}</span>
-                          <Badge variant={s.status === "open" ? "default" : "secondary"} className="text-[10px]">
-                            {s.status === "open" ? "Abierto" : "Cerrado"}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="activity">
-                <ActivityTimeline entityType="employee" entityId={detailEmployee.id} />
-              </TabsContent>
-            </Tabs>
-          )}
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 };
