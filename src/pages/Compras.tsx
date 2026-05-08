@@ -162,13 +162,15 @@ export default function Compras() {
     if (!destId) { toast({ title: "Selecciona un destino", variant: "destructive" }); return; }
     const valid = items.filter((it) => it.product_id && Number(it.qty) > 0);
     if (!valid.length) { toast({ title: "Agrega al menos un producto", variant: "destructive" }); return; }
-    const paid = Math.max(0, Number(amountPaid) || 0);
-    if (paid > 0 && !supplierId) {
-      toast({ title: "Proveedor requerido", description: "El pago a crédito requiere proveedor.", variant: "destructive" }); return;
+    const paid = totalPaidLines;
+    if (paid > total + 0.01) {
+      toast({ title: "Pago excede el total", variant: "destructive" }); return;
     }
-    const isPartial = paid < total - 0.01;
-    if (isPartial && !supplierId) {
+    if (paid < total - 0.01 && !supplierId) {
       toast({ title: "Proveedor requerido", description: "El saldo pendiente requiere proveedor.", variant: "destructive" }); return;
+    }
+    if (paid > 0 && !supplierId) {
+      toast({ title: "Proveedor requerido", description: "Para registrar pagos selecciona un proveedor.", variant: "destructive" }); return;
     }
 
     const code = "PC-" + Date.now().toString(36).toUpperCase();
@@ -178,8 +180,9 @@ export default function Compras() {
       supplier_id: supplierId || null,
       destination_type: destType,
       destination_id: destId,
-      subtotal, tax: Number(tax) || 0, total,
-      amount_paid: paid,
+      subtotal, tax: computedTax, total,
+      tax_rate_id: taxRateId !== "none" ? taxRateId : null,
+      amount_paid: 0,
       notes: notes || null,
       created_by: user?.id,
       status: "draft",
@@ -197,6 +200,25 @@ export default function Compras() {
     });
     const { error: e2 } = await (supabase.from as any)("purchase_items").insert(rows);
     if (e2) { toast({ title: "Error items", description: e2.message, variant: "destructive" }); return; }
+
+    if (supplierId && payLines.length > 0) {
+      for (const l of payLines) {
+        const amt = parseFloat(l.amount) || 0;
+        if (amt <= 0) continue;
+        const { error: pe } = await (supabase as any).rpc("register_account_payment", {
+          p_party_type: "supplier",
+          p_party_id: supplierId,
+          p_amount: amt,
+          p_method: l.method,
+          p_currency: l.currency,
+          p_exchange_rate: parseFloat(l.rate) || 1,
+          p_reference_type: "purchase",
+          p_reference_id: pch.id,
+          p_notes: `Pago al crear compra ${code}`,
+        });
+        if (pe) { toast({ title: "Error registrando pago", description: pe.message, variant: "destructive" }); }
+      }
+    }
 
     toast({ title: "Compra creada", description: code });
     setOpen(false); resetForm(); fetchAll();
