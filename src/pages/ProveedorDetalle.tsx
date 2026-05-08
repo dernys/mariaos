@@ -40,6 +40,15 @@ export default function ProveedorDetalle() {
       (supabase.from as any)("supplier_products").select("*").eq("supplier_id", id).order("product_name"),
     ]);
     setS(sR.data); setPurchases(pR.data || []); setPayments(payR.data || []); setLots(lR.data || []); setSettlements(stR.data || []); setCatalog(cR.data || []);
+
+    // Aggregate purchase items for product traceability
+    const purchaseIds = (pR.data || []).map((x: any) => x.id);
+    if (purchaseIds.length > 0) {
+      const { data: items } = await (supabase.from as any)("purchase_items")
+        .select("product_id, product_name, sku, qty, qty_received, cost, purchase_id")
+        .in("purchase_id", purchaseIds);
+      setPurchaseItems(items || []);
+    } else setPurchaseItems([]);
   };
 
   const updateStatus = async (rowId: string, status: string) => {
