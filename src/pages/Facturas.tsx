@@ -57,7 +57,7 @@ const Facturas = () => {
     setLoading(true);
     const { data } = await supabase
       .from("invoices")
-      .select("id, series_code, invoice_number, issue_date, status, customer_name, total, amount_paid, currency, email_sent_at, customer_email, pdf_url")
+      .select("id, series_code, invoice_number, issue_date, status, customer_name, total, amount_paid, currency, email_sent_at, customer_email, pdf_url, transmission_status, cufe, xml_content")
       .eq("tenant_id", tenantId)
       .order("issue_date", { ascending: false })
       .limit(500);
