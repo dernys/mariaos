@@ -275,6 +275,9 @@ export function POSRestaurant() {
                             return (
                               <motion.button key={product.id} whileTap={{ scale: 0.96 }} onClick={() => addToCart(product)} className={`relative bg-gradient-to-br ${colors} rounded-xl p-3 shadow-card border text-left hover:shadow-elevated transition-all`}>
                                 {inCart && <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>}
+                                {product.image_url && (
+                                  <img src={product.image_url} alt={product.name} loading="lazy" className="h-16 w-full rounded-lg object-cover mb-2 bg-rose-500/10" />
+                                )}
                                 <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
                                 <p className="text-base font-heading font-bold mt-1 text-rose-400">${product.price}</p>
                               </motion.button>
