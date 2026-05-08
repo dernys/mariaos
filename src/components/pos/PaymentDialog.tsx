@@ -104,7 +104,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const fetchData = async () => {
     const [custRes, empRes, currRes] = await Promise.all([
       supabase.from("customers").select("id, name, credit_limit, balance").order("name"),
-      supabase.from("employees").select("id, name, position").eq("is_active", true).order("name"),
+      supabase.from("employees").select("id, name, position, credit_limit, balance").eq("is_active", true).order("name"),
       supabase.from("currencies").select("code, symbol, exchange_rate, is_base").eq("is_active", true).order("code"),
     ]);
     if (custRes.data) setCustomers(custRes.data as Customer[]);
