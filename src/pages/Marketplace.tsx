@@ -552,8 +552,11 @@ const Marketplace = () => {
                     </div>
                     <div className="p-3 space-y-1.5">
                       {tenant && (
-                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide truncate">
-                          {bizIcon(tenant.business_type)} {tenant.name}
+                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide truncate flex items-center gap-1">
+                          <span className="truncate">{bizIcon(tenant.business_type)} {tenant.name}</span>
+                          {userPos && tenantDistances[p.tenant_id] && (
+                            <span className="text-emerald-600 font-semibold whitespace-nowrap">· {tenantDistances[p.tenant_id]!.dist.toFixed(1)} km</span>
+                          )}
                         </p>
                       )}
                       <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-tight">{p.name}</h3>
@@ -568,7 +571,12 @@ const Marketplace = () => {
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                      <p className="text-[10px] text-gray-400">{p.online_stock} disponibles</p>
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="text-[10px] text-gray-400">{p.online_stock} disponibles</p>
+                        {p.is_deliverable === false && (
+                          <span className="text-[9px] text-amber-600 font-medium">Solo recogida</span>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 );
