@@ -31,6 +31,8 @@ interface Employee {
   id: string;
   name: string;
   position: string | null;
+  credit_limit: number;
+  balance: number;
 }
 
 interface PaymentLine {
