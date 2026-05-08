@@ -751,6 +751,60 @@ export type Database = {
           },
         ]
       }
+      einvoice_settings: {
+        Row: {
+          auto_transmit: boolean
+          certificate_url: string | null
+          created_at: string
+          id: string
+          legal_name: string | null
+          legal_tax_id: string | null
+          mode: string
+          provider: string | null
+          signature_key: string | null
+          tax_regime: string | null
+          tenant_id: string
+          test_mode: boolean
+          updated_at: string
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          auto_transmit?: boolean
+          certificate_url?: string | null
+          created_at?: string
+          id?: string
+          legal_name?: string | null
+          legal_tax_id?: string | null
+          mode?: string
+          provider?: string | null
+          signature_key?: string | null
+          tax_regime?: string | null
+          tenant_id: string
+          test_mode?: boolean
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          auto_transmit?: boolean
+          certificate_url?: string | null
+          created_at?: string
+          id?: string
+          legal_name?: string | null
+          legal_tax_id?: string | null
+          mode?: string
+          provider?: string | null
+          signature_key?: string | null
+          tax_regime?: string | null
+          tenant_id?: string
+          test_mode?: boolean
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       employee_attendance: {
         Row: {
           check_in: string
@@ -1020,6 +1074,7 @@ export type Database = {
           cancelled_reason: string | null
           created_at: string
           created_by: string | null
+          cufe: string | null
           currency: string
           customer_address: string | null
           customer_email: string | null
@@ -1040,6 +1095,8 @@ export type Database = {
           items: Json
           notes: string | null
           pdf_url: string | null
+          provider: string | null
+          provider_response: Json | null
           sale_id: string | null
           series_code: string
           status: string
@@ -1048,7 +1105,11 @@ export type Database = {
           tax_rate_id: string | null
           tenant_id: string
           total: number
+          transmission_status: string
+          transmitted_at: string | null
           updated_at: string
+          xml_content: string | null
+          xml_url: string | null
         }
         Insert: {
           amount_paid?: number
@@ -1057,6 +1118,7 @@ export type Database = {
           cancelled_reason?: string | null
           created_at?: string
           created_by?: string | null
+          cufe?: string | null
           currency?: string
           customer_address?: string | null
           customer_email?: string | null
@@ -1077,6 +1139,8 @@ export type Database = {
           items?: Json
           notes?: string | null
           pdf_url?: string | null
+          provider?: string | null
+          provider_response?: Json | null
           sale_id?: string | null
           series_code: string
           status?: string
@@ -1085,7 +1149,11 @@ export type Database = {
           tax_rate_id?: string | null
           tenant_id: string
           total?: number
+          transmission_status?: string
+          transmitted_at?: string | null
           updated_at?: string
+          xml_content?: string | null
+          xml_url?: string | null
         }
         Update: {
           amount_paid?: number
@@ -1094,6 +1162,7 @@ export type Database = {
           cancelled_reason?: string | null
           created_at?: string
           created_by?: string | null
+          cufe?: string | null
           currency?: string
           customer_address?: string | null
           customer_email?: string | null
@@ -1114,6 +1183,8 @@ export type Database = {
           items?: Json
           notes?: string | null
           pdf_url?: string | null
+          provider?: string | null
+          provider_response?: Json | null
           sale_id?: string | null
           series_code?: string
           status?: string
@@ -1122,7 +1193,11 @@ export type Database = {
           tax_rate_id?: string | null
           tenant_id?: string
           total?: number
+          transmission_status?: string
+          transmitted_at?: string | null
           updated_at?: string
+          xml_content?: string | null
+          xml_url?: string | null
         }
         Relationships: [
           {
@@ -3689,6 +3764,18 @@ export type Database = {
         }
         Returns: string
       }
+      create_quick_sale: {
+        Args: {
+          p_customer_id: string
+          p_employee_id: string
+          p_items: Json
+          p_notes?: string
+          p_payments?: Json
+          p_tax_rate?: number
+          p_tenant_id: string
+        }
+        Returns: string
+      }
       distance_km: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
@@ -3737,6 +3824,18 @@ export type Database = {
       issue_invoice: {
         Args: { p_sale_id: string; p_series_code?: string }
         Returns: string
+      }
+      mark_invoice_transmitted: {
+        Args: {
+          p_cufe?: string
+          p_invoice_id: string
+          p_provider?: string
+          p_response?: Json
+          p_status: string
+          p_xml?: string
+          p_xml_url?: string
+        }
+        Returns: undefined
       }
       post_purchase_journal_entry: {
         Args: { p_purchase_id: string }
