@@ -47,6 +47,10 @@ const Facturas = () => {
   const [issueOpen, setIssueOpen] = useState(false);
   const [pendingSales, setPendingSales] = useState<any[]>([]);
   const [selectedSale, setSelectedSale] = useState<string>("");
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [transmittingId, setTransmittingId] = useState<string | null>(null);
+  const nav = useNavigate();
 
   const load = async () => {
     if (!tenantId) return;
