@@ -554,22 +554,89 @@ export default function Compras() {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Tasa de impuesto</Label>
+                <Select value={taxRateId} onValueChange={(v) => { setTaxRateId(v); setTaxOverride(""); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin impuesto</SelectItem>
+                    {taxes.map((t) => <SelectItem key={t.id} value={t.id}>{t.name} ({t.rate}%)</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Impuesto (override)</Label>
+                <Input type="number" placeholder={computedTax.toFixed(2)} value={taxOverride} onChange={(e) => setTaxOverride(e.target.value)} />
+              </div>
+            </div>
+
             <div className="grid grid-cols-3 gap-3">
               <div><Label className="text-xs">Subtotal</Label><Input value={subtotal.toFixed(2)} disabled /></div>
-              <div><Label className="text-xs">Impuesto</Label><Input type="number" value={tax} onChange={(e) => setTax(e.target.value)} /></div>
+              <div><Label className="text-xs">Impuesto</Label><Input value={computedTax.toFixed(2)} disabled /></div>
               <div><Label className="text-xs">Total</Label><Input value={total.toFixed(2)} disabled className="font-bold" /></div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-xs">Pagado al proveedor</Label>
-                <Input type="number" min="0" value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} />
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Saldo pendiente: <span className="font-bold">${Math.max(0, total - (Number(amountPaid)||0)).toFixed(2)}</span>
-                  {Number(amountPaid) < total - 0.01 && supplierId ? " — Se sumará a la deuda del proveedor" : ""}
-                </p>
+            <div className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold">Pagos al proveedor</Label>
+                <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={addPayLine} disabled={!supplierId}>
+                  <Plus className="h-3 w-3 mr-1" /> Agregar pago
+                </Button>
               </div>
-              <div><Label className="text-xs">Notas</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+              {!supplierId && <p className="text-[10px] text-muted-foreground">Selecciona un proveedor para registrar pagos.</p>}
+              {payLines.map((l, idx) => (
+                <div key={l.id} className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-4">
+                    {idx === 0 && <Label className="text-[10px]">Método</Label>}
+                    <Select value={l.method} onValueChange={(v) => updatePayLine(l.id, { method: v })}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {paymentMethods.length > 0 ? paymentMethods.map((m) => <SelectItem key={m.id} value={m.type}>{m.name}</SelectItem>) : (
+                          <>
+                            <SelectItem value="cash">Efectivo</SelectItem>
+                            <SelectItem value="card">Tarjeta</SelectItem>
+                            <SelectItem value="transfer">Transferencia</SelectItem>
+                            <SelectItem value="qr">QR</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-3">
+                    {idx === 0 && <Label className="text-[10px]">Moneda</Label>}
+                    <Select value={l.currency} onValueChange={(v) => updatePayLine(l.id, { currency: v })}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {currenciesList.length > 0 ? currenciesList.map((c) => <SelectItem key={c.id} value={c.code}>{c.code}</SelectItem>) : <SelectItem value="CUP">CUP</SelectItem>}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-2">
+                    {idx === 0 && <Label className="text-[10px]">Monto</Label>}
+                    <Input type="number" className="h-8 text-xs" value={l.amount} onChange={(e) => updatePayLine(l.id, { amount: e.target.value })} />
+                  </div>
+                  <div className="col-span-2">
+                    {idx === 0 && <Label className="text-[10px]">Tasa</Label>}
+                    <Input type="number" className="h-8 text-xs" value={l.rate} onChange={(e) => updatePayLine(l.id, { rate: e.target.value })} />
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <button onClick={() => removePayLine(l.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center justify-between pt-2 border-t text-xs">
+                <span>Pagado: <b>${totalPaidLines.toFixed(2)}</b></span>
+                <span className={pendingAfterPay > 0.01 ? "text-warning" : "text-emerald-600"}>
+                  Pendiente: <b>${pendingAfterPay.toFixed(2)}</b>
+                </span>
+              </div>
             </div>
+
+            <div><Label className="text-xs">Notas</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
