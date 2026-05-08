@@ -251,17 +251,27 @@ export default function ProveedorDetalle() {
                   <TableHead className="text-xs">Estado</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {purchases.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="text-xs font-medium">{p.purchase_number}</TableCell>
-                      <TableCell className="text-xs">{format(new Date(p.created_at), "dd/MM/yy")}</TableCell>
-                      <TableCell className="text-xs text-right font-bold">${Number(p.total).toFixed(2)}</TableCell>
-                      <TableCell className="text-xs text-right">${Number(p.amount_paid).toFixed(2)}</TableCell>
-                      <TableCell><Badge variant={p.is_consignment ? "default" : "outline"} className="text-[10px]">{p.is_consignment ? "Consignación" : "Compra"}</Badge></TableCell>
-                      <TableCell><Badge variant="outline" className="text-[10px]">{p.status}</Badge></TableCell>
-                    </TableRow>
-                  ))}
-                  {purchases.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Sin compras</TableCell></TableRow>}
+                  {purchases.map((p) => {
+                    const remaining = Number(p.total) - Number(p.amount_paid);
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell className="text-xs font-medium">{p.purchase_number}</TableCell>
+                        <TableCell className="text-xs">{format(new Date(p.created_at), "dd/MM/yy")}</TableCell>
+                        <TableCell className="text-xs text-right font-bold">${Number(p.total).toFixed(2)}</TableCell>
+                        <TableCell className="text-xs text-right">${Number(p.amount_paid).toFixed(2)}</TableCell>
+                        <TableCell><Badge variant={p.is_consignment ? "default" : "outline"} className="text-[10px]">{p.is_consignment ? "Consignación" : "Compra"}</Badge></TableCell>
+                        <TableCell><Badge variant="outline" className="text-[10px]">{p.status}</Badge></TableCell>
+                        <TableCell className="text-right">
+                          {remaining > 0.01 && (
+                            <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => openPay(remaining, "purchase", p.id, `Pagar compra ${p.purchase_number}`)}>
+                              <ArrowUpFromLine className="h-3 w-3" />Pagar
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {purchases.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin compras</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
