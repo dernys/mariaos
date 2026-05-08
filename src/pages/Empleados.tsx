@@ -74,7 +74,7 @@ const Empleados = () => {
 
   const openEdit = (e: Employee) => {
     setEditing(e);
-    setForm({ name: e.name, position: e.position || "", salary: String(e.salary), phone: e.phone || "", email: e.email || "", hire_date: e.hire_date || "", notes: e.notes || "" });
+    setForm({ name: e.name, position: e.position || "", salary: String(e.salary), credit_limit: String((e as any).credit_limit ?? 0), phone: e.phone || "", email: e.email || "", hire_date: e.hire_date || "", notes: e.notes || "" });
     setDialogOpen(true);
   };
 
