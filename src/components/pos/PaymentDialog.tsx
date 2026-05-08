@@ -68,12 +68,15 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [currencies, setCurrencies] = useState<CurrencyConfig[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
-  const [customerSearch, setCustomerSearch] = useState("");
+  const [partyType, setPartyType] = useState<"none" | "customer" | "employee">("none");
+  const [selectedParty, setSelectedParty] = useState<string>("");
+  const [partySearch, setPartySearch] = useState("");
   const [isPartial, setIsPartial] = useState(false);
   const [saving, setSaving] = useState(false);
   const [qrCopied, setQrCopied] = useState<number | null>(null);
+
+  const selectedCustomer = partyType === "customer" ? selectedParty : "";
+  const selectedEmployee = partyType === "employee" ? selectedParty : "";
 
   // Build exchange rates map from DB currencies
   const exchangeRates: Record<string, number> = {};
@@ -81,14 +84,15 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
   // Auto-enable partial when client/employee selected (allow leaving credit)
   useEffect(() => {
-    if (selectedCustomer || selectedEmployee) setIsPartial(true);
-  }, [selectedCustomer, selectedEmployee]);
+    if (partyType !== "none" && selectedParty) setIsPartial(true);
+  }, [partyType, selectedParty]);
 
   useEffect(() => {
     if (open) {
       setPayments([{ method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" }]);
-      setSelectedCustomer("");
-      setSelectedEmployee("");
+      setPartyType("none");
+      setSelectedParty("");
+      setPartySearch("");
       setIsPartial(false);
       setQrCopied(null);
       fetchData();
