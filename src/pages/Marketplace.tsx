@@ -313,9 +313,14 @@ const Marketplace = () => {
 
           <div className="flex items-center gap-2">
             {!user && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/auth")} className="rounded-full text-xs">
-                Iniciar sesión
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="rounded-full text-xs hidden sm:inline-flex">
+                  Iniciar sesión
+                </Button>
+                <Button size="sm" onClick={() => navigate("/auth?view=register")} className="rounded-full text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                  Crear cuenta
+                </Button>
+              </>
             )}
             <Sheet open={cartOpen} onOpenChange={setCartOpen}>
               <SheetTrigger asChild>
