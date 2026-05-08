@@ -28,6 +28,7 @@ interface MarketProduct {
   image_url: string | null;
   online_stock: number;
   tenant_id: string;
+  is_deliverable: boolean | null;
 }
 
 interface Tenant {
@@ -35,6 +36,18 @@ interface Tenant {
   name: string;
   business_type: string;
   address: string | null;
+}
+
+interface StorePublic {
+  id: string;
+  tenant_id: string;
+  name: string;
+  address: string | null;
+  latitude: number;
+  longitude: number;
+  delivery_radius_km: number;
+  accepts_delivery: boolean;
+  accepts_pickup: boolean;
 }
 
 interface CartItem extends MarketProduct {
