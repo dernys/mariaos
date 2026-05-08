@@ -25,6 +25,11 @@ interface StoreItem {
   email: string | null;
   manager_id: string | null;
   is_active: boolean;
+  latitude: number | null;
+  longitude: number | null;
+  delivery_radius_km: number | null;
+  accepts_delivery: boolean | null;
+  accepts_pickup: boolean | null;
 }
 
 interface Employee {
