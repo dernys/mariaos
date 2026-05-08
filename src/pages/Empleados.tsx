@@ -55,7 +55,7 @@ const Empleados = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
-  const [form, setForm] = useState({ name: "", position: "", salary: "0", phone: "", email: "", hire_date: "", notes: "" });
+  const [form, setForm] = useState({ name: "", position: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: "", notes: "" });
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
