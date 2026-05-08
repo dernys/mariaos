@@ -277,8 +277,8 @@ export default function ProveedorDetalle() {
             <div className="bg-card rounded-xl border overflow-hidden">
               <div className="flex items-center justify-between p-3 border-b">
                 <p className="text-xs font-heading font-semibold">Compras pendientes de pago</p>
-                <Button size="sm" className="h-8 text-xs gap-1 gradient-brand text-primary-foreground" onClick={() => nav("/cuentas")}>
-                  <ArrowUpFromLine className="h-3 w-3" />Registrar pago
+                <Button size="sm" className="h-8 text-xs gap-1 gradient-brand text-primary-foreground" disabled={debt <= 0} onClick={() => openPay(debt, null, null, "Pagar saldo total")}>
+                  <ArrowUpFromLine className="h-3 w-3" />Pagar todo
                 </Button>
               </div>
               <Table>
@@ -289,6 +289,7 @@ export default function ProveedorDetalle() {
                   <TableHead className="text-xs text-right">Total</TableHead>
                   <TableHead className="text-xs text-right">Pagado</TableHead>
                   <TableHead className="text-xs text-right">Saldo</TableHead>
+                  <TableHead className="text-xs w-24"></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {pendingPurchases.map((p) => {
@@ -302,10 +303,15 @@ export default function ProveedorDetalle() {
                         <TableCell className="text-xs text-right">${Number(p.total).toFixed(2)}</TableCell>
                         <TableCell className="text-xs text-right">${Number(p.amount_paid).toFixed(2)}</TableCell>
                         <TableCell className="text-xs text-right font-bold text-destructive">${remaining.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => openPay(remaining, "purchase", p.id, `Pagar compra ${p.purchase_number}`)}>
+                            <ArrowUpFromLine className="h-3 w-3" />Pagar
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
-                  {pendingPurchases.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Sin saldos pendientes</TableCell></TableRow>}
+                  {pendingPurchases.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin saldos pendientes</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
