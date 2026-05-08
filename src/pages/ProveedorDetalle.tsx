@@ -24,7 +24,10 @@ export default function ProveedorDetalle() {
   const [lots, setLots] = useState<any[]>([]);
   const [settlements, setSettlements] = useState<any[]>([]);
   const [catalog, setCatalog] = useState<any[]>([]);
+  const [purchaseItems, setPurchaseItems] = useState<any[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [payOpen, setPayOpen] = useState(false);
+  const [payCtx, setPayCtx] = useState<{ amount: number; refType: any; refId: string | null; title: string } | null>(null);
 
   const fetchAll = async () => {
     if (!id) return;
