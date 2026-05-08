@@ -21,6 +21,7 @@ interface Product {
   sku: string;
   stock: number;
   category: string | null;
+  image_url?: string | null;
 }
 
 interface CartItem {
