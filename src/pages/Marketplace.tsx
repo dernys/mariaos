@@ -61,10 +61,14 @@ const Marketplace = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<MarketProduct[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [stores, setStores] = useState<StorePublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedTenant, setSelectedTenant] = useState("all");
+  const [deliveryOnly, setDeliveryOnly] = useState(false);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [maxDistance, setMaxDistance] = useState<number | null>(null); // km filter
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState(false);
@@ -76,21 +80,55 @@ const Marketplace = () => {
 
   useEffect(() => {
     const load = async () => {
-      const [pRes, tRes] = await Promise.all([
-        supabase.from("products").select("id, name, description, price, category, image_url, online_stock, tenant_id").eq("is_online", true).eq("is_active", true).gt("online_stock", 0),
-        supabase.from("tenants").select("id, name, business_type, address").eq("is_active", true),
+      const [pRes, tRes, sRes] = await Promise.all([
+        supabase.from("products").select("id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable").eq("is_online", true).eq("is_active", true).gt("online_stock", 0),
+        supabase.from("tenants_public" as any).select("id, name, business_type"),
+        supabase.from("stores_public" as any).select("*"),
       ]);
       if (pRes.data) setProducts(pRes.data as MarketProduct[]);
-      if (tRes.data) setTenants(tRes.data as Tenant[]);
+      if (tRes.data) setTenants(tRes.data as any);
+      if (sRes.data) setStores(sRes.data as StorePublic[]);
       setLoading(false);
     };
     load();
+    // Try silent geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (p) => setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => {},
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+      );
+    }
   }, []);
 
-  const categories = useMemo(() => {
-    const cats = new Set(products.map(p => p.category).filter(Boolean));
-    return Array.from(cats) as string[];
-  }, [products]);
+  const requestLocation = () => {
+    if (!navigator.geolocation) { toast({ title: "Geolocalización no disponible", variant: "destructive" }); return; }
+    navigator.geolocation.getCurrentPosition(
+      (p) => { setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }); toast({ title: "Ubicación detectada" }); },
+      (err) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const distanceKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+    const R = 6371;
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLng = (b.lng - a.lng) * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.asin(Math.sqrt(x));
+  };
+
+  // Compute nearest store distance per tenant
+  const tenantDistances = useMemo(() => {
+    const out: Record<string, { dist: number; store: StorePublic } | null> = {};
+    if (!userPos) return out;
+    for (const s of stores) {
+      const d = distanceKm(userPos, { lat: s.latitude, lng: s.longitude });
+      const cur = out[s.tenant_id];
+      if (!cur || d < cur.dist) out[s.tenant_id] = { dist: d, store: s };
+    }
+    return out;
+  }, [stores, userPos]);
 
   const tenantMap = useMemo(() => {
     const m: Record<string, Tenant> = {};
@@ -103,9 +141,20 @@ const Marketplace = () => {
       const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.description || "").toLowerCase().includes(search.toLowerCase());
       const matchCat = selectedCategory === "all" || p.category === selectedCategory;
       const matchTenant = selectedTenant === "all" || p.tenant_id === selectedTenant;
-      return matchSearch && matchCat && matchTenant;
+      const matchDeliv = !deliveryOnly || (p.is_deliverable !== false);
+      let matchDist = true;
+      if (maxDistance && userPos) {
+        const td = tenantDistances[p.tenant_id];
+        matchDist = !!td && td.dist <= maxDistance;
+      }
+      return matchSearch && matchCat && matchTenant && matchDeliv && matchDist;
+    }).sort((a, b) => {
+      if (!userPos) return 0;
+      const da = tenantDistances[a.tenant_id]?.dist ?? 9999;
+      const db = tenantDistances[b.tenant_id]?.dist ?? 9999;
+      return da - db;
     });
-  }, [products, search, selectedCategory, selectedTenant]);
+  }, [products, search, selectedCategory, selectedTenant, deliveryOnly, maxDistance, userPos, tenantDistances]);
 
   const addToCart = (p: MarketProduct) => {
     if (!user) {
