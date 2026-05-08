@@ -35,6 +35,9 @@ interface Invoice {
   email_sent_at: string | null;
   customer_email: string | null;
   pdf_url: string | null;
+  transmission_status?: string | null;
+  cufe?: string | null;
+  xml_content?: string | null;
 }
 
 const Facturas = () => {
