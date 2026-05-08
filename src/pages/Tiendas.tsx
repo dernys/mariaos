@@ -47,7 +47,22 @@ const Tiendas = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailStore, setDetailStore] = useState<StoreItem | null>(null);
   const [editing, setEditing] = useState<StoreItem | null>(null);
-  const [form, setForm] = useState({ name: "", address: "", phone: "", email: "", manager_id: "" });
+  const [form, setForm] = useState({ name: "", address: "", phone: "", email: "", manager_id: "", latitude: "", longitude: "", delivery_radius_km: "5", accepts_delivery: true, accepts_pickup: true });
+  const [locating, setLocating] = useState(false);
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) { toast({ title: "Geolocalización no disponible", variant: "destructive" }); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((f) => ({ ...f, latitude: pos.coords.latitude.toFixed(6), longitude: pos.coords.longitude.toFixed(6) }));
+        setLocating(false);
+        toast({ title: "Ubicación capturada" });
+      },
+      (err) => { setLocating(false); toast({ title: "Error", description: err.message, variant: "destructive" }); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const fetchData = async () => {
     const [stRes, empRes] = await Promise.all([
