@@ -68,7 +68,7 @@ const Empleados = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", position: "", salary: "0", phone: "", email: "", hire_date: new Date().toISOString().slice(0, 10), notes: "" });
+    setForm({ name: "", position: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: new Date().toISOString().slice(0, 10), notes: "" });
     setDialogOpen(true);
   };
 
