@@ -244,16 +244,19 @@ const Facturas = () => {
                 <TableHead>Cliente</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead>Estado</TableHead>
+                <TableHead>Transmisión</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Cargando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">Cargando...</TableCell></TableRow>
               ) : paged.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin facturas</TableCell></TableRow>
-              ) : paged.map((inv) => (
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Sin facturas</TableCell></TableRow>
+              ) : paged.map((inv) => {
+                const tStatus = inv.transmission_status || "local";
+                return (
                 <TableRow key={inv.id}>
                   <TableCell className="font-mono font-medium">{inv.invoice_number}</TableCell>
                   <TableCell>{inv.issue_date}</TableCell>
@@ -262,6 +265,15 @@ const Facturas = () => {
                   <TableCell>
                     <Badge variant={inv.status === "issued" ? "default" : "destructive"}>
                       {inv.status === "issued" ? "Emitida" : "Anulada"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={`text-[10px] ${
+                      tStatus === "transmitted" ? "bg-success/10 text-success" :
+                      tStatus === "failed" ? "bg-destructive/10 text-destructive" :
+                      tStatus === "pending" ? "bg-warning/10 text-warning" : "bg-muted"
+                    }`} title={inv.cufe ? `CUFE: ${inv.cufe}` : ""}>
+                      {tStatus === "transmitted" ? "Transmitida" : tStatus === "failed" ? "Fallida" : tStatus === "pending" ? "Pendiente" : "Local"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -276,6 +288,17 @@ const Facturas = () => {
                       <Button size="icon" variant="ghost" title="Descargar PDF" onClick={() => downloadPdf(inv.id)}>
                         <Download className="h-4 w-4" />
                       </Button>
+                      {inv.xml_content && (
+                        <Button size="icon" variant="ghost" title="Descargar XML" onClick={() => downloadXml(inv)}>
+                          <Code2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {inv.status === "issued" && tStatus !== "transmitted" && (
+                        <Button size="icon" variant="ghost" title="Transmitir electrónicamente"
+                          disabled={transmittingId === inv.id} onClick={() => transmit(inv.id)}>
+                          <Send className={`h-4 w-4 ${transmittingId === inv.id ? "animate-pulse" : ""}`} />
+                        </Button>
+                      )}
                       {inv.customer_email && inv.status === "issued" && (
                         <Button size="icon" variant="ghost" title="Enviar por email" onClick={() => sendEmail(inv.id)}>
                           <Mail className="h-4 w-4" />
@@ -289,7 +312,7 @@ const Facturas = () => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              );})}
             </TableBody>
           </Table>
         </div>
