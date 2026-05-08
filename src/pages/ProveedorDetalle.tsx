@@ -8,10 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Truck, Phone, Mail, FileText, ArrowUpFromLine, Package, Wallet, Check } from "lucide-react";
+import { Truck, Phone, Mail, FileText, ArrowUpFromLine, Package, Wallet, Check, TrendingUp } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 export default function ProveedorDetalle() {
   const { id } = useParams();
