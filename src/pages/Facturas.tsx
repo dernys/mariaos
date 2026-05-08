@@ -11,8 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { toast } from "sonner";
-import { FileText, Download, Mail, Plus, Ban } from "lucide-react";
+import { FileText, Download, Mail, Plus, Ban, Send, Settings, Code2, ShoppingCart } from "lucide-react";
 import { downloadInvoicePdf, InvoiceData } from "@/lib/invoicePdf";
+import { useNavigate } from "react-router-dom";
+import { QuickSaleDialog } from "@/components/invoices/QuickSaleDialog";
+import { EInvoiceSettingsDialog } from "@/components/invoices/EInvoiceSettingsDialog";
 import { MiniStatCard } from "@/components/data/MiniStatCard";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
