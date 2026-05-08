@@ -12,12 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit2, Trash2, Truck, Wallet, DollarSign, Package, History } from "lucide-react";
+import { Plus, Edit2, Trash2, Truck, Wallet, DollarSign, Package, History, ArrowUpFromLine } from "lucide-react";
 import { useTableState } from "@/hooks/useTableState";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
+import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 interface Supplier {
   id: string;
@@ -41,6 +42,8 @@ export default function Proveedores() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [form, setForm] = useState({ name: "", contact_name: "", phone: "", email: "", rfc: "", address: "" });
+  const [payOpen, setPayOpen] = useState(false);
+  const [paying, setPaying] = useState<Supplier | null>(null);
 
   const fetchAll = async () => {
     const [sR, spR] = await Promise.all([
@@ -178,7 +181,7 @@ export default function Proveedores() {
                       <div className="flex gap-1">
                         <button onClick={() => nav(`/proveedores/${s.id}`)} className="p-1.5 rounded hover:bg-primary/10 text-primary" title="Detalle e historial"><History className="h-3.5 w-3.5" /></button>
                         {debt > 0 && (
-                          <button onClick={() => nav(`/cuentas`)} className="p-1.5 rounded hover:bg-warning/10 text-warning" title="Pagar saldo"><Wallet className="h-3.5 w-3.5" /></button>
+                          <button onClick={() => { setPaying(s); setPayOpen(true); }} className="p-1.5 rounded hover:bg-warning/10 text-warning" title="Pagar saldo"><ArrowUpFromLine className="h-3.5 w-3.5" /></button>
                         )}
                         <button onClick={() => openEdit(s)} className="p-1.5 rounded hover:bg-muted"><Edit2 className="h-3.5 w-3.5" /></button>
                         <button onClick={() => remove(s)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -221,6 +224,20 @@ export default function Proveedores() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {paying && (
+        <MultiPaymentDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          partyType="supplier"
+          partyId={paying.id}
+          partyName={paying.name}
+          amountDue={Math.max(0, Number(paying.balance || 0))}
+          referenceType={null}
+          title="Pagar a proveedor"
+          onPaid={fetchAll}
+        />
+      )}
     </AppLayout>
   );
 }

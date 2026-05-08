@@ -8,10 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Truck, Phone, Mail, FileText, ArrowUpFromLine, Package, Wallet, Check } from "lucide-react";
+import { Truck, Phone, Mail, FileText, ArrowUpFromLine, Package, Wallet, Check, TrendingUp } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 export default function ProveedorDetalle() {
   const { id } = useParams();
@@ -23,7 +24,10 @@ export default function ProveedorDetalle() {
   const [lots, setLots] = useState<any[]>([]);
   const [settlements, setSettlements] = useState<any[]>([]);
   const [catalog, setCatalog] = useState<any[]>([]);
+  const [purchaseItems, setPurchaseItems] = useState<any[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [payOpen, setPayOpen] = useState(false);
+  const [payCtx, setPayCtx] = useState<{ amount: number; refType: any; refId: string | null; title: string } | null>(null);
 
   const fetchAll = async () => {
     if (!id) return;
@@ -36,6 +40,15 @@ export default function ProveedorDetalle() {
       (supabase.from as any)("supplier_products").select("*").eq("supplier_id", id).order("product_name"),
     ]);
     setS(sR.data); setPurchases(pR.data || []); setPayments(payR.data || []); setLots(lR.data || []); setSettlements(stR.data || []); setCatalog(cR.data || []);
+
+    // Aggregate purchase items for product traceability
+    const purchaseIds = (pR.data || []).map((x: any) => x.id);
+    if (purchaseIds.length > 0) {
+      const { data: items } = await (supabase.from as any)("purchase_items")
+        .select("product_id, product_name, sku, qty, qty_received, cost, purchase_id")
+        .in("purchase_id", purchaseIds);
+      setPurchaseItems(items || []);
+    } else setPurchaseItems([]);
   };
 
   const updateStatus = async (rowId: string, status: string) => {
@@ -84,6 +97,34 @@ export default function ProveedorDetalle() {
     setSelected(new Set()); fetchAll();
   };
 
+  const openPay = (amount: number, refType: any = null, refId: string | null = null, title = "Pagar a proveedor") => {
+    if (amount <= 0) { toast({ title: "Sin saldo a pagar" }); return; }
+    setPayCtx({ amount, refType, refId, title });
+    setPayOpen(true);
+  };
+
+  // Aggregate product traceability from purchase_items + lots + settlements
+  const trace = (() => {
+    const map = new Map<string, { name: string; sku: string; purchased: number; received: number; consigned: number; sold: number; spent: number }>();
+    purchaseItems.forEach((it) => {
+      const k = it.product_id || it.product_name;
+      if (!k) return;
+      const cur = map.get(k) || { name: it.product_name || "—", sku: it.sku || "", purchased: 0, received: 0, consigned: 0, sold: 0, spent: 0 };
+      cur.purchased += Number(it.qty || 0);
+      cur.received += Number(it.qty_received || 0);
+      cur.spent += Number(it.qty || 0) * Number(it.cost || 0);
+      map.set(k, cur);
+    });
+    lots.forEach((l) => {
+      const k = l.product_id;
+      const cur = map.get(k) || { name: l.products?.name || "—", sku: l.products?.sku || "", purchased: 0, received: 0, consigned: 0, sold: 0, spent: 0 };
+      cur.consigned += Number(l.quantity_remaining || 0);
+      cur.sold += Number(l.quantity_sold || 0);
+      map.set(k, cur);
+    });
+    return Array.from(map.values()).sort((a, b) => b.purchased - a.purchased);
+  })();
+
   return (
     <AppLayout title={s.name}>
       <div className="space-y-6">
@@ -101,16 +142,56 @@ export default function ProveedorDetalle() {
           ]}
         />
 
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" className="gap-1 gradient-brand text-primary-foreground" disabled={debt <= 0} onClick={() => openPay(debt, null, null, "Pagar saldo total")}>
+            <ArrowUpFromLine className="h-3.5 w-3.5" /> Pagar saldo (${debt.toFixed(2)})
+          </Button>
+          <Button size="sm" variant="outline" className="gap-1" onClick={() => nav(`/compras?supplier=${s.id}`)}>
+            <Package className="h-3.5 w-3.5" /> Nueva compra
+          </Button>
+        </div>
+
         <Tabs defaultValue="resumen">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="resumen">Resumen</TabsTrigger>
             <TabsTrigger value="catalog">Productos ({catalog.length})</TabsTrigger>
+            <TabsTrigger value="trace">Rastreo ({trace.length})</TabsTrigger>
             <TabsTrigger value="purchases">Compras ({purchases.length})</TabsTrigger>
             <TabsTrigger value="payables">Por pagar</TabsTrigger>
             <TabsTrigger value="payments">Pagos</TabsTrigger>
             <TabsTrigger value="consignment">Consignación ({activeLots.length})</TabsTrigger>
             <TabsTrigger value="activity">Actividad</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="trace">
+            <div className="bg-card rounded-xl border overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Producto</TableHead>
+                  <TableHead className="text-xs">SKU</TableHead>
+                  <TableHead className="text-xs text-right">Comprado</TableHead>
+                  <TableHead className="text-xs text-right">Recibido</TableHead>
+                  <TableHead className="text-xs text-right">En consig.</TableHead>
+                  <TableHead className="text-xs text-right">Vendido</TableHead>
+                  <TableHead className="text-xs text-right">Total invertido</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {trace.map((t, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="text-xs font-medium flex items-center gap-1.5"><TrendingUp className="h-3 w-3 text-primary" />{t.name}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{t.sku || "—"}</TableCell>
+                      <TableCell className="text-xs text-right">{t.purchased}</TableCell>
+                      <TableCell className="text-xs text-right">{t.received}</TableCell>
+                      <TableCell className="text-xs text-right">{t.consigned}</TableCell>
+                      <TableCell className="text-xs text-right font-bold text-success">{t.sold}</TableCell>
+                      <TableCell className="text-xs text-right font-bold">${t.spent.toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {trace.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin movimientos</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
 
           <TabsContent value="catalog">
             <div className="bg-card rounded-xl border overflow-hidden">
@@ -168,19 +249,30 @@ export default function ProveedorDetalle() {
                   <TableHead className="text-xs text-right">Pagado</TableHead>
                   <TableHead className="text-xs">Tipo</TableHead>
                   <TableHead className="text-xs">Estado</TableHead>
+                  <TableHead className="text-xs w-24"></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {purchases.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="text-xs font-medium">{p.purchase_number}</TableCell>
-                      <TableCell className="text-xs">{format(new Date(p.created_at), "dd/MM/yy")}</TableCell>
-                      <TableCell className="text-xs text-right font-bold">${Number(p.total).toFixed(2)}</TableCell>
-                      <TableCell className="text-xs text-right">${Number(p.amount_paid).toFixed(2)}</TableCell>
-                      <TableCell><Badge variant={p.is_consignment ? "default" : "outline"} className="text-[10px]">{p.is_consignment ? "Consignación" : "Compra"}</Badge></TableCell>
-                      <TableCell><Badge variant="outline" className="text-[10px]">{p.status}</Badge></TableCell>
-                    </TableRow>
-                  ))}
-                  {purchases.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Sin compras</TableCell></TableRow>}
+                  {purchases.map((p) => {
+                    const remaining = Number(p.total) - Number(p.amount_paid);
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell className="text-xs font-medium">{p.purchase_number}</TableCell>
+                        <TableCell className="text-xs">{format(new Date(p.created_at), "dd/MM/yy")}</TableCell>
+                        <TableCell className="text-xs text-right font-bold">${Number(p.total).toFixed(2)}</TableCell>
+                        <TableCell className="text-xs text-right">${Number(p.amount_paid).toFixed(2)}</TableCell>
+                        <TableCell><Badge variant={p.is_consignment ? "default" : "outline"} className="text-[10px]">{p.is_consignment ? "Consignación" : "Compra"}</Badge></TableCell>
+                        <TableCell><Badge variant="outline" className="text-[10px]">{p.status}</Badge></TableCell>
+                        <TableCell className="text-right">
+                          {remaining > 0.01 && (
+                            <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => openPay(remaining, "purchase", p.id, `Pagar compra ${p.purchase_number}`)}>
+                              <ArrowUpFromLine className="h-3 w-3" />Pagar
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {purchases.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin compras</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -196,8 +288,8 @@ export default function ProveedorDetalle() {
             <div className="bg-card rounded-xl border overflow-hidden">
               <div className="flex items-center justify-between p-3 border-b">
                 <p className="text-xs font-heading font-semibold">Compras pendientes de pago</p>
-                <Button size="sm" className="h-8 text-xs gap-1 gradient-brand text-primary-foreground" onClick={() => nav("/cuentas")}>
-                  <ArrowUpFromLine className="h-3 w-3" />Registrar pago
+                <Button size="sm" className="h-8 text-xs gap-1 gradient-brand text-primary-foreground" disabled={debt <= 0} onClick={() => openPay(debt, null, null, "Pagar saldo total")}>
+                  <ArrowUpFromLine className="h-3 w-3" />Pagar todo
                 </Button>
               </div>
               <Table>
@@ -208,6 +300,7 @@ export default function ProveedorDetalle() {
                   <TableHead className="text-xs text-right">Total</TableHead>
                   <TableHead className="text-xs text-right">Pagado</TableHead>
                   <TableHead className="text-xs text-right">Saldo</TableHead>
+                  <TableHead className="text-xs w-24"></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {pendingPurchases.map((p) => {
@@ -221,10 +314,15 @@ export default function ProveedorDetalle() {
                         <TableCell className="text-xs text-right">${Number(p.total).toFixed(2)}</TableCell>
                         <TableCell className="text-xs text-right">${Number(p.amount_paid).toFixed(2)}</TableCell>
                         <TableCell className="text-xs text-right font-bold text-destructive">${remaining.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => openPay(remaining, "purchase", p.id, `Pagar compra ${p.purchase_number}`)}>
+                            <ArrowUpFromLine className="h-3 w-3" />Pagar
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
-                  {pendingPurchases.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Sin saldos pendientes</TableCell></TableRow>}
+                  {pendingPurchases.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin saldos pendientes</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -334,6 +432,21 @@ export default function ProveedorDetalle() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {payCtx && (
+        <MultiPaymentDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          partyType="supplier"
+          partyId={s.id}
+          partyName={s.name}
+          amountDue={payCtx.amount}
+          referenceType={payCtx.refType}
+          referenceId={payCtx.refId}
+          title={payCtx.title}
+          onPaid={fetchAll}
+        />
+      )}
     </AppLayout>
   );
 }
