@@ -136,6 +136,11 @@ const Marketplace = () => {
     return m;
   }, [tenants]);
 
+  const categories = useMemo(() => {
+    const cats = new Set(products.map(p => p.category).filter(Boolean));
+    return Array.from(cats) as string[];
+  }, [products]);
+
   const filtered = useMemo(() => {
     return products.filter(p => {
       const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.description || "").toLowerCase().includes(search.toLowerCase());
