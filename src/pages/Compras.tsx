@@ -51,12 +51,15 @@ export default function Compras() {
   const tenantId = useTenant();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { taxes, defaultTax } = useTaxRates();
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Loc[]>([]);
   const [stores, setStores] = useState<Loc[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodRow[]>([]);
+  const [currenciesList, setCurrenciesList] = useState<CurrencyRow[]>([]);
 
   const [open, setOpen] = useState(false);
   const [openSup, setOpenSup] = useState(false);
@@ -73,38 +76,76 @@ export default function Compras() {
   const [supplierId, setSupplierId] = useState("");
   const [destType, setDestType] = useState<"warehouse" | "store">("warehouse");
   const [destId, setDestId] = useState("");
-  const [tax, setTax] = useState("0");
+  const [taxRateId, setTaxRateId] = useState<string>("none");
+  const [taxOverride, setTaxOverride] = useState<string>("");
   const [notes, setNotes] = useState("");
-  const [amountPaid, setAmountPaid] = useState("0");
   const [items, setItems] = useState<{ product_id: string; qty: string; cost: string }[]>([
     { product_id: "", qty: "1", cost: "0" },
   ]);
+  const [payLines, setPayLines] = useState<PayLine[]>([]);
 
   const fetchAll = async () => {
-    const [supR, prR, whR, stR, pchR] = await Promise.all([
+    const [supR, prR, whR, stR, pchR, pmR, curR] = await Promise.all([
       (supabase.from as any)("suppliers").select("*").order("name"),
       supabase.from("products").select("id, name, sku, cost").order("name"),
       supabase.from("warehouses").select("id, name").order("name"),
       supabase.from("stores").select("id, name").order("name"),
       (supabase.from as any)("purchases").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("payment_methods").select("id, name, type").eq("is_active", true).order("name"),
+      supabase.from("currencies").select("id, code, exchange_rate, is_base").eq("is_active", true).order("is_base", { ascending: false }),
     ]);
     setSuppliers(supR.data || []);
     setProducts(prR.data || []);
     setWarehouses((whR.data || []).map((w: any) => ({ ...w, type: "warehouse" })));
     setStores((stR.data || []).map((s: any) => ({ ...s, type: "store" })));
     setPurchases(pchR.data || []);
+    setPaymentMethods((pmR.data as any) || []);
+    setCurrenciesList((curR.data as any) || []);
   };
 
   useEffect(() => { fetchAll(); }, []);
 
   const subtotal = items.reduce((a, b) => a + (Number(b.qty) || 0) * (Number(b.cost) || 0), 0);
-  const total = subtotal + (Number(tax) || 0);
+  const selectedTax = taxes.find((t) => t.id === taxRateId);
+  const computedTax = taxOverride !== "" ? Number(taxOverride) || 0 : (selectedTax ? subtotal * (selectedTax.rate / 100) : 0);
+  const total = subtotal + computedTax;
+  const totalPaidLines = payLines.reduce((s, l) => s + (parseFloat(l.amount) || 0) * (parseFloat(l.rate) || 1), 0);
+  const pendingAfterPay = Math.max(0, total - totalPaidLines);
 
   const resetForm = () => {
     setSupplierId(""); setDestType("warehouse"); setDestId("");
-    setTax("0"); setNotes(""); setAmountPaid("0");
+    setTaxRateId(defaultTax?.id || "none"); setTaxOverride("");
+    setNotes("");
     setItems([{ product_id: "", qty: "1", cost: "0" }]);
+    setPayLines([]);
   };
+
+  // Set default tax when taxes load
+  useEffect(() => {
+    if (defaultTax && taxRateId === "none") setTaxRateId(defaultTax.id);
+  }, [defaultTax]);
+
+  const addPayLine = () => {
+    const baseC = currenciesList.find((c) => c.is_base) || currenciesList[0];
+    const defM = paymentMethods.find((m) => m.type === "cash") || paymentMethods[0];
+    setPayLines((p) => [...p, {
+      id: crypto.randomUUID(),
+      method: defM?.type || "cash",
+      currency: baseC?.code || "CUP",
+      amount: pendingAfterPay > 0 ? pendingAfterPay.toFixed(2) : "0",
+      rate: String(baseC?.exchange_rate || 1),
+    }]);
+  };
+  const removePayLine = (id: string) => setPayLines((p) => p.filter((l) => l.id !== id));
+  const updatePayLine = (id: string, patch: Partial<PayLine>) => setPayLines((prev) => prev.map((l) => {
+    if (l.id !== id) return l;
+    const next = { ...l, ...patch };
+    if (patch.currency) {
+      const cur = currenciesList.find((c) => c.code === patch.currency);
+      if (cur) next.rate = String(cur.exchange_rate);
+    }
+    return next;
+  }));
 
   const handleCreateSupplier = async () => {
     if (!supName.trim()) { toast({ title: "Nombre requerido", variant: "destructive" }); return; }
