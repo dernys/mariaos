@@ -78,21 +78,31 @@ const Tiendas = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", address: "", phone: "", email: "", manager_id: "" });
+    setForm({ name: "", address: "", phone: "", email: "", manager_id: "", latitude: "", longitude: "", delivery_radius_km: "5", accepts_delivery: true, accepts_pickup: true });
     setDialogOpen(true);
   };
 
   const openEdit = (s: StoreItem) => {
     setEditing(s);
-    setForm({ name: s.name, address: s.address || "", phone: s.phone || "", email: s.email || "", manager_id: s.manager_id || "" });
+    setForm({
+      name: s.name, address: s.address || "", phone: s.phone || "", email: s.email || "", manager_id: s.manager_id || "",
+      latitude: s.latitude?.toString() || "", longitude: s.longitude?.toString() || "",
+      delivery_radius_km: (s.delivery_radius_km ?? 5).toString(),
+      accepts_delivery: s.accepts_delivery ?? true, accepts_pickup: s.accepts_pickup ?? true,
+    });
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
-    const payload = {
+    const payload: any = {
       name: form.name.trim(), address: form.address || null, phone: form.phone || null,
       email: form.email || null, manager_id: form.manager_id || null, tenant_id: tenantId,
+      latitude: form.latitude ? parseFloat(form.latitude) : null,
+      longitude: form.longitude ? parseFloat(form.longitude) : null,
+      delivery_radius_km: form.delivery_radius_km ? parseFloat(form.delivery_radius_km) : 5,
+      accepts_delivery: form.accepts_delivery,
+      accepts_pickup: form.accepts_pickup,
     };
     if (editing) {
       const { error } = await supabase.from("stores").update(payload).eq("id", editing.id);
