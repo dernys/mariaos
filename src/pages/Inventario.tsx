@@ -628,7 +628,16 @@ const Inventario = () => {
                 <Switch checked={form.is_online} onCheckedChange={(v) => setForm({ ...form, is_online: v })} />
               </div>
               {form.is_online && (
-                <div><Label>Stock Online</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
+                <>
+                  <div><Label>Stock Online</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <Label className="text-xs">Disponible para delivery</Label>
+                      <p className="text-[10px] text-muted-foreground">Si está desactivado, solo se ofrece para recogida</p>
+                    </div>
+                    <Switch checked={form.is_deliverable} onCheckedChange={(v) => setForm({ ...form, is_deliverable: v })} />
+                  </div>
+                </>
               )}
             </div>
           </div>
