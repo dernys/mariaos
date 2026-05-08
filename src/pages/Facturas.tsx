@@ -140,6 +140,26 @@ const Facturas = () => {
   const issued = invoices.filter((i) => i.status === "issued");
   const totalBilled = issued.reduce((s, i) => s + Number(i.total), 0);
   const totalPaid = issued.reduce((s, i) => s + Number(i.amount_paid), 0);
+  const transmitted = issued.filter((i) => i.transmission_status === "transmitted").length;
+
+  const downloadXml = (inv: Invoice) => {
+    if (!inv.xml_content) { toast.error("Esta factura aún no tiene XML. Transmítela primero."); return; }
+    const blob = new Blob([inv.xml_content], { type: "application/xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `Factura_${inv.invoice_number}.xml`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const transmit = async (id: string) => {
+    setTransmittingId(id);
+    const { data, error } = await supabase.functions.invoke("transmit-invoice", { body: { invoice_id: id } });
+    setTransmittingId(null);
+    if (error) { toast.error("Error al transmitir: " + error.message); return; }
+    if ((data as any)?.status === "failed") toast.error("Transmisión fallida. Revisa la configuración del proveedor.");
+    else toast.success("Factura transmitida (CUFE: " + ((data as any)?.cufe || "").slice(0, 12) + "…)");
+    await load();
+  };
 
   const { paged, page, setPage, pageSize, setPageSize, total, search, setSearch, filters, setFilter, filtered } = useTableState({
     data: invoices,
