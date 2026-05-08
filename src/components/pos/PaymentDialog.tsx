@@ -211,6 +211,22 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         return;
       }
 
+      // Validación de límite de crédito
+      if (isPartial && remaining > 0.01) {
+        const party: any = selectedCustomer
+          ? customers.find((c) => c.id === selectedCustomer)
+          : employees.find((e) => e.id === selectedEmployee);
+        if (party) {
+          const newBalance = Number(party.balance || 0) + remaining;
+          const limit = Number(party.credit_limit || 0);
+          if (limit > 0 && newBalance > limit) {
+            toast({ title: "Límite de crédito excedido", description: `Deuda resultante $${newBalance.toFixed(2)} supera el límite $${limit.toFixed(2)}.`, variant: "destructive" });
+            setSaving(false);
+            return;
+          }
+        }
+      }
+
       const status = isPartial && remaining > 0.01 ? "partial" : "paid";
 
       // Create sale (con shift, store y ticket auto)
