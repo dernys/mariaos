@@ -11,8 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { toast } from "sonner";
-import { FileText, Download, Mail, Plus, Ban } from "lucide-react";
+import { FileText, Download, Mail, Plus, Ban, Send, Settings, Code2, ShoppingCart } from "lucide-react";
 import { downloadInvoicePdf, InvoiceData } from "@/lib/invoicePdf";
+import { useNavigate } from "react-router-dom";
+import { QuickSaleDialog } from "@/components/invoices/QuickSaleDialog";
+import { EInvoiceSettingsDialog } from "@/components/invoices/EInvoiceSettingsDialog";
 import { MiniStatCard } from "@/components/data/MiniStatCard";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
@@ -32,6 +35,9 @@ interface Invoice {
   email_sent_at: string | null;
   customer_email: string | null;
   pdf_url: string | null;
+  transmission_status?: string | null;
+  cufe?: string | null;
+  xml_content?: string | null;
 }
 
 const Facturas = () => {
@@ -41,13 +47,17 @@ const Facturas = () => {
   const [issueOpen, setIssueOpen] = useState(false);
   const [pendingSales, setPendingSales] = useState<any[]>([]);
   const [selectedSale, setSelectedSale] = useState<string>("");
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [transmittingId, setTransmittingId] = useState<string | null>(null);
+  const nav = useNavigate();
 
   const load = async () => {
     if (!tenantId) return;
     setLoading(true);
     const { data } = await supabase
       .from("invoices")
-      .select("id, series_code, invoice_number, issue_date, status, customer_name, total, amount_paid, currency, email_sent_at, customer_email, pdf_url")
+      .select("id, series_code, invoice_number, issue_date, status, customer_name, total, amount_paid, currency, email_sent_at, customer_email, pdf_url, transmission_status, cufe, xml_content")
       .eq("tenant_id", tenantId)
       .order("issue_date", { ascending: false })
       .limit(500);
@@ -130,6 +140,26 @@ const Facturas = () => {
   const issued = invoices.filter((i) => i.status === "issued");
   const totalBilled = issued.reduce((s, i) => s + Number(i.total), 0);
   const totalPaid = issued.reduce((s, i) => s + Number(i.amount_paid), 0);
+  const transmitted = issued.filter((i) => i.transmission_status === "transmitted").length;
+
+  const downloadXml = (inv: Invoice) => {
+    if (!inv.xml_content) { toast.error("Esta factura aún no tiene XML. Transmítela primero."); return; }
+    const blob = new Blob([inv.xml_content], { type: "application/xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `Factura_${inv.invoice_number}.xml`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const transmit = async (id: string) => {
+    setTransmittingId(id);
+    const { data, error } = await supabase.functions.invoke("transmit-invoice", { body: { invoice_id: id } });
+    setTransmittingId(null);
+    if (error) { toast.error("Error al transmitir: " + error.message); return; }
+    if ((data as any)?.status === "failed") toast.error("Transmisión fallida. Revisa la configuración del proveedor.");
+    else toast.success("Factura transmitida (CUFE: " + ((data as any)?.cufe || "").slice(0, 12) + "…)");
+    await load();
+  };
 
   const { paged, page, setPage, pageSize, setPageSize, total, search, setSearch, filters, setFilter, filtered } = useTableState({
     data: invoices,
@@ -141,19 +171,31 @@ const Facturas = () => {
 
   return (
     <AppLayout title="Facturas">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
         <MiniStatCard label="Facturas" value={invoices.length} icon={FileText} />
         <MiniStatCard label="Emitidas" value={issued.length} tone="success" />
+        <MiniStatCard label="Transmitidas" value={transmitted} tone="primary" />
         <MiniStatCard label="Total facturado" value={totalBilled.toFixed(2)} tone="primary" />
         <MiniStatCard label="Cobrado" value={totalPaid.toFixed(2)} tone="success" />
       </div>
 
       <Card className="p-4">
-        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h2 className="text-lg font-semibold">Facturas emitidas</h2>
-          <Button onClick={openIssue} size="sm" className="gap-2">
-            <Plus className="h-4 w-4" /> Emitir factura
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={() => setSettingsOpen(true)} size="sm" variant="outline" className="gap-1">
+              <Settings className="h-4 w-4" /> Facturación electrónica
+            </Button>
+            <Button onClick={() => nav("/pos")} size="sm" variant="outline" className="gap-1">
+              <ShoppingCart className="h-4 w-4" /> Ir al POS
+            </Button>
+            <Button onClick={() => setQuickOpen(true)} size="sm" variant="outline" className="gap-1">
+              <Plus className="h-4 w-4" /> Venta rápida
+            </Button>
+            <Button onClick={openIssue} size="sm" className="gap-1">
+              <Plus className="h-4 w-4" /> Emitir factura
+            </Button>
+          </div>
         </div>
 
         <TableToolbar
@@ -202,16 +244,19 @@ const Facturas = () => {
                 <TableHead>Cliente</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead>Estado</TableHead>
+                <TableHead>Transmisión</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Cargando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">Cargando...</TableCell></TableRow>
               ) : paged.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin facturas</TableCell></TableRow>
-              ) : paged.map((inv) => (
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Sin facturas</TableCell></TableRow>
+              ) : paged.map((inv) => {
+                const tStatus = inv.transmission_status || "local";
+                return (
                 <TableRow key={inv.id}>
                   <TableCell className="font-mono font-medium">{inv.invoice_number}</TableCell>
                   <TableCell>{inv.issue_date}</TableCell>
@@ -220,6 +265,15 @@ const Facturas = () => {
                   <TableCell>
                     <Badge variant={inv.status === "issued" ? "default" : "destructive"}>
                       {inv.status === "issued" ? "Emitida" : "Anulada"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={`text-[10px] ${
+                      tStatus === "transmitted" ? "bg-success/10 text-success" :
+                      tStatus === "failed" ? "bg-destructive/10 text-destructive" :
+                      tStatus === "pending" ? "bg-warning/10 text-warning" : "bg-muted"
+                    }`} title={inv.cufe ? `CUFE: ${inv.cufe}` : ""}>
+                      {tStatus === "transmitted" ? "Transmitida" : tStatus === "failed" ? "Fallida" : tStatus === "pending" ? "Pendiente" : "Local"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -234,6 +288,17 @@ const Facturas = () => {
                       <Button size="icon" variant="ghost" title="Descargar PDF" onClick={() => downloadPdf(inv.id)}>
                         <Download className="h-4 w-4" />
                       </Button>
+                      {inv.xml_content && (
+                        <Button size="icon" variant="ghost" title="Descargar XML" onClick={() => downloadXml(inv)}>
+                          <Code2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {inv.status === "issued" && tStatus !== "transmitted" && (
+                        <Button size="icon" variant="ghost" title="Transmitir electrónicamente"
+                          disabled={transmittingId === inv.id} onClick={() => transmit(inv.id)}>
+                          <Send className={`h-4 w-4 ${transmittingId === inv.id ? "animate-pulse" : ""}`} />
+                        </Button>
+                      )}
                       {inv.customer_email && inv.status === "issued" && (
                         <Button size="icon" variant="ghost" title="Enviar por email" onClick={() => sendEmail(inv.id)}>
                           <Mail className="h-4 w-4" />
@@ -247,7 +312,7 @@ const Facturas = () => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              );})}
             </TableBody>
           </Table>
         </div>
@@ -280,6 +345,9 @@ const Facturas = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <QuickSaleDialog open={quickOpen} onOpenChange={setQuickOpen} onCreated={() => load()} />
+      <EInvoiceSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </AppLayout>
   );
 };

@@ -145,9 +145,20 @@ export default function VentaDetalle() {
               <div className="bg-card rounded-xl border p-4 space-y-2 text-sm">
                 <p className="text-lg font-heading font-bold">{invoice.invoice_number}</p>
                 <p className="text-xs text-muted-foreground">Emitida: {format(new Date(invoice.created_at), "dd/MM/yyyy")}</p>
-                <Badge variant="outline" className="text-[10px]">{invoice.status}</Badge>
+                <div className="flex gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-[10px]">{invoice.status}</Badge>
+                  <Badge variant="outline" className={`text-[10px] ${
+                    invoice.transmission_status === "transmitted" ? "bg-success/10 text-success" :
+                    invoice.transmission_status === "failed" ? "bg-destructive/10 text-destructive" : "bg-muted"
+                  }`}>
+                    {invoice.transmission_status === "transmitted" ? "Transmitida" :
+                     invoice.transmission_status === "failed" ? "Fallida" :
+                     invoice.transmission_status === "pending" ? "Pendiente" : "Local"}
+                  </Badge>
+                </div>
                 <div className="text-xs">Cliente: <strong>{invoice.customer_name}</strong></div>
                 <div className="text-xs">Total: <strong>${Number(invoice.total).toFixed(2)}</strong></div>
+                {invoice.cufe && <div className="text-[10px] font-mono text-muted-foreground break-all">CUFE: {invoice.cufe}</div>}
               </div>
             ) : (
               <p className="text-xs text-muted-foreground text-center py-6">Sin factura emitida</p>
