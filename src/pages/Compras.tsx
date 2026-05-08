@@ -22,6 +22,7 @@ import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
+import { useTaxRates } from "@/hooks/useTaxRates";
 
 interface Supplier { id: string; name: string; balance: number; phone?: string | null; email?: string | null; }
 interface Product { id: string; name: string; sku: string; cost: number; }
@@ -31,7 +32,11 @@ interface Purchase {
   destination_type: string; destination_id: string;
   subtotal: number; tax: number; total: number; amount_paid: number; payment_status: string;
   notes: string | null; created_at: string; received_at: string | null;
+  tax_rate_id?: string | null;
 }
+interface PayLine { id: string; method: string; currency: string; amount: string; rate: string; }
+interface PaymentMethodRow { id: string; name: string; type: string; }
+interface CurrencyRow { id: string; code: string; exchange_rate: number; is_base: boolean; }
 
 const statusBadge = (s: string) => {
   const m: Record<string, { c: string; l: string }> = {
@@ -46,12 +51,15 @@ export default function Compras() {
   const tenantId = useTenant();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { taxes, defaultTax } = useTaxRates();
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Loc[]>([]);
   const [stores, setStores] = useState<Loc[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodRow[]>([]);
+  const [currenciesList, setCurrenciesList] = useState<CurrencyRow[]>([]);
 
   const [open, setOpen] = useState(false);
   const [openSup, setOpenSup] = useState(false);
@@ -68,38 +76,76 @@ export default function Compras() {
   const [supplierId, setSupplierId] = useState("");
   const [destType, setDestType] = useState<"warehouse" | "store">("warehouse");
   const [destId, setDestId] = useState("");
-  const [tax, setTax] = useState("0");
+  const [taxRateId, setTaxRateId] = useState<string>("none");
+  const [taxOverride, setTaxOverride] = useState<string>("");
   const [notes, setNotes] = useState("");
-  const [amountPaid, setAmountPaid] = useState("0");
   const [items, setItems] = useState<{ product_id: string; qty: string; cost: string }[]>([
     { product_id: "", qty: "1", cost: "0" },
   ]);
+  const [payLines, setPayLines] = useState<PayLine[]>([]);
 
   const fetchAll = async () => {
-    const [supR, prR, whR, stR, pchR] = await Promise.all([
+    const [supR, prR, whR, stR, pchR, pmR, curR] = await Promise.all([
       (supabase.from as any)("suppliers").select("*").order("name"),
       supabase.from("products").select("id, name, sku, cost").order("name"),
       supabase.from("warehouses").select("id, name").order("name"),
       supabase.from("stores").select("id, name").order("name"),
       (supabase.from as any)("purchases").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("payment_methods").select("id, name, type").eq("is_active", true).order("name"),
+      supabase.from("currencies").select("id, code, exchange_rate, is_base").eq("is_active", true).order("is_base", { ascending: false }),
     ]);
     setSuppliers(supR.data || []);
     setProducts(prR.data || []);
     setWarehouses((whR.data || []).map((w: any) => ({ ...w, type: "warehouse" })));
     setStores((stR.data || []).map((s: any) => ({ ...s, type: "store" })));
     setPurchases(pchR.data || []);
+    setPaymentMethods((pmR.data as any) || []);
+    setCurrenciesList((curR.data as any) || []);
   };
 
   useEffect(() => { fetchAll(); }, []);
 
   const subtotal = items.reduce((a, b) => a + (Number(b.qty) || 0) * (Number(b.cost) || 0), 0);
-  const total = subtotal + (Number(tax) || 0);
+  const selectedTax = taxes.find((t) => t.id === taxRateId);
+  const computedTax = taxOverride !== "" ? Number(taxOverride) || 0 : (selectedTax ? subtotal * (selectedTax.rate / 100) : 0);
+  const total = subtotal + computedTax;
+  const totalPaidLines = payLines.reduce((s, l) => s + (parseFloat(l.amount) || 0) * (parseFloat(l.rate) || 1), 0);
+  const pendingAfterPay = Math.max(0, total - totalPaidLines);
 
   const resetForm = () => {
     setSupplierId(""); setDestType("warehouse"); setDestId("");
-    setTax("0"); setNotes(""); setAmountPaid("0");
+    setTaxRateId(defaultTax?.id || "none"); setTaxOverride("");
+    setNotes("");
     setItems([{ product_id: "", qty: "1", cost: "0" }]);
+    setPayLines([]);
   };
+
+  // Set default tax when taxes load
+  useEffect(() => {
+    if (defaultTax && taxRateId === "none") setTaxRateId(defaultTax.id);
+  }, [defaultTax]);
+
+  const addPayLine = () => {
+    const baseC = currenciesList.find((c) => c.is_base) || currenciesList[0];
+    const defM = paymentMethods.find((m) => m.type === "cash") || paymentMethods[0];
+    setPayLines((p) => [...p, {
+      id: crypto.randomUUID(),
+      method: defM?.type || "cash",
+      currency: baseC?.code || "CUP",
+      amount: pendingAfterPay > 0 ? pendingAfterPay.toFixed(2) : "0",
+      rate: String(baseC?.exchange_rate || 1),
+    }]);
+  };
+  const removePayLine = (id: string) => setPayLines((p) => p.filter((l) => l.id !== id));
+  const updatePayLine = (id: string, patch: Partial<PayLine>) => setPayLines((prev) => prev.map((l) => {
+    if (l.id !== id) return l;
+    const next = { ...l, ...patch };
+    if (patch.currency) {
+      const cur = currenciesList.find((c) => c.code === patch.currency);
+      if (cur) next.rate = String(cur.exchange_rate);
+    }
+    return next;
+  }));
 
   const handleCreateSupplier = async () => {
     if (!supName.trim()) { toast({ title: "Nombre requerido", variant: "destructive" }); return; }
@@ -116,13 +162,15 @@ export default function Compras() {
     if (!destId) { toast({ title: "Selecciona un destino", variant: "destructive" }); return; }
     const valid = items.filter((it) => it.product_id && Number(it.qty) > 0);
     if (!valid.length) { toast({ title: "Agrega al menos un producto", variant: "destructive" }); return; }
-    const paid = Math.max(0, Number(amountPaid) || 0);
-    if (paid > 0 && !supplierId) {
-      toast({ title: "Proveedor requerido", description: "El pago a crédito requiere proveedor.", variant: "destructive" }); return;
+    const paid = totalPaidLines;
+    if (paid > total + 0.01) {
+      toast({ title: "Pago excede el total", variant: "destructive" }); return;
     }
-    const isPartial = paid < total - 0.01;
-    if (isPartial && !supplierId) {
+    if (paid < total - 0.01 && !supplierId) {
       toast({ title: "Proveedor requerido", description: "El saldo pendiente requiere proveedor.", variant: "destructive" }); return;
+    }
+    if (paid > 0 && !supplierId) {
+      toast({ title: "Proveedor requerido", description: "Para registrar pagos selecciona un proveedor.", variant: "destructive" }); return;
     }
 
     const code = "PC-" + Date.now().toString(36).toUpperCase();
@@ -132,8 +180,9 @@ export default function Compras() {
       supplier_id: supplierId || null,
       destination_type: destType,
       destination_id: destId,
-      subtotal, tax: Number(tax) || 0, total,
-      amount_paid: paid,
+      subtotal, tax: computedTax, total,
+      tax_rate_id: taxRateId !== "none" ? taxRateId : null,
+      amount_paid: 0,
       notes: notes || null,
       created_by: user?.id,
       status: "draft",
@@ -151,6 +200,25 @@ export default function Compras() {
     });
     const { error: e2 } = await (supabase.from as any)("purchase_items").insert(rows);
     if (e2) { toast({ title: "Error items", description: e2.message, variant: "destructive" }); return; }
+
+    if (supplierId && payLines.length > 0) {
+      for (const l of payLines) {
+        const amt = parseFloat(l.amount) || 0;
+        if (amt <= 0) continue;
+        const { error: pe } = await (supabase as any).rpc("register_account_payment", {
+          p_party_type: "supplier",
+          p_party_id: supplierId,
+          p_amount: amt,
+          p_method: l.method,
+          p_currency: l.currency,
+          p_exchange_rate: parseFloat(l.rate) || 1,
+          p_reference_type: "purchase",
+          p_reference_id: pch.id,
+          p_notes: `Pago al crear compra ${code}`,
+        });
+        if (pe) { toast({ title: "Error registrando pago", description: pe.message, variant: "destructive" }); }
+      }
+    }
 
     toast({ title: "Compra creada", description: code });
     setOpen(false); resetForm(); fetchAll();
@@ -486,22 +554,89 @@ export default function Compras() {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Tasa de impuesto</Label>
+                <Select value={taxRateId} onValueChange={(v) => { setTaxRateId(v); setTaxOverride(""); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin impuesto</SelectItem>
+                    {taxes.map((t) => <SelectItem key={t.id} value={t.id}>{t.name} ({t.rate}%)</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Impuesto (override)</Label>
+                <Input type="number" placeholder={computedTax.toFixed(2)} value={taxOverride} onChange={(e) => setTaxOverride(e.target.value)} />
+              </div>
+            </div>
+
             <div className="grid grid-cols-3 gap-3">
               <div><Label className="text-xs">Subtotal</Label><Input value={subtotal.toFixed(2)} disabled /></div>
-              <div><Label className="text-xs">Impuesto</Label><Input type="number" value={tax} onChange={(e) => setTax(e.target.value)} /></div>
+              <div><Label className="text-xs">Impuesto</Label><Input value={computedTax.toFixed(2)} disabled /></div>
               <div><Label className="text-xs">Total</Label><Input value={total.toFixed(2)} disabled className="font-bold" /></div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-xs">Pagado al proveedor</Label>
-                <Input type="number" min="0" value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} />
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Saldo pendiente: <span className="font-bold">${Math.max(0, total - (Number(amountPaid)||0)).toFixed(2)}</span>
-                  {Number(amountPaid) < total - 0.01 && supplierId ? " — Se sumará a la deuda del proveedor" : ""}
-                </p>
+            <div className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold">Pagos al proveedor</Label>
+                <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={addPayLine} disabled={!supplierId}>
+                  <Plus className="h-3 w-3 mr-1" /> Agregar pago
+                </Button>
               </div>
-              <div><Label className="text-xs">Notas</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+              {!supplierId && <p className="text-[10px] text-muted-foreground">Selecciona un proveedor para registrar pagos.</p>}
+              {payLines.map((l, idx) => (
+                <div key={l.id} className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-4">
+                    {idx === 0 && <Label className="text-[10px]">Método</Label>}
+                    <Select value={l.method} onValueChange={(v) => updatePayLine(l.id, { method: v })}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {paymentMethods.length > 0 ? paymentMethods.map((m) => <SelectItem key={m.id} value={m.type}>{m.name}</SelectItem>) : (
+                          <>
+                            <SelectItem value="cash">Efectivo</SelectItem>
+                            <SelectItem value="card">Tarjeta</SelectItem>
+                            <SelectItem value="transfer">Transferencia</SelectItem>
+                            <SelectItem value="qr">QR</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-3">
+                    {idx === 0 && <Label className="text-[10px]">Moneda</Label>}
+                    <Select value={l.currency} onValueChange={(v) => updatePayLine(l.id, { currency: v })}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {currenciesList.length > 0 ? currenciesList.map((c) => <SelectItem key={c.id} value={c.code}>{c.code}</SelectItem>) : <SelectItem value="CUP">CUP</SelectItem>}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-2">
+                    {idx === 0 && <Label className="text-[10px]">Monto</Label>}
+                    <Input type="number" className="h-8 text-xs" value={l.amount} onChange={(e) => updatePayLine(l.id, { amount: e.target.value })} />
+                  </div>
+                  <div className="col-span-2">
+                    {idx === 0 && <Label className="text-[10px]">Tasa</Label>}
+                    <Input type="number" className="h-8 text-xs" value={l.rate} onChange={(e) => updatePayLine(l.id, { rate: e.target.value })} />
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <button onClick={() => removePayLine(l.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center justify-between pt-2 border-t text-xs">
+                <span>Pagado: <b>${totalPaidLines.toFixed(2)}</b></span>
+                <span className={pendingAfterPay > 0.01 ? "text-warning" : "text-emerald-600"}>
+                  Pendiente: <b>${pendingAfterPay.toFixed(2)}</b>
+                </span>
+              </div>
             </div>
+
+            <div><Label className="text-xs">Notas</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>

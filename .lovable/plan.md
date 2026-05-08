@@ -1,136 +1,97 @@
-## Objetivo
+## Plan de acción: Impuestos configurables, pagos en compras y mejoras transversales
 
-Unificar cobros y pagos en toda la app con soporte multi-moneda y múltiples métodos, y centralizar los ajustes operativos (POS, impuestos, propinas, etc.) en Configuración, vinculándolos a cada módulo.
+### 1. Sistema de impuestos unificado y configurable
 
----
+**Estado actual:** existe `tax_rates` y `ConfigTaxRates`, pero los módulos usan tasas hardcoded o sólo el % global de POS. Compras guarda un total `tax` plano sin elegir tasa.
 
-## 1. Configuración centralizada
+**Cambios:**
+- Añadir columna `tax_rate_id uuid` (nullable) a `purchases`, `sales`, `invoices`, `products` (impuesto por defecto del producto).
+- Hook nuevo `useTaxRates()` que lista las tasas activas del tenant y expone la default.
+- `ConfigTaxRates`: ya permite CRUD; añadir badge "en uso" y prevenir eliminar tasas referenciadas (soft-deactivate).
+- Vincular selector de impuesto en:
+  - **POS** (`POSBar`, `POSRestaurant`, `POSEmpresa`): selector de tasa por venta (override del default).
+  - **Productos**: campo "Impuesto por defecto" en alta/edición.
+  - **Facturas**: usa tasa de la venta o la default de facturación (`module_settings.invoicing.default_tax_rate_id`).
+  - **Compras**: ver sección 2.
 
-### Nueva pestaña "POS y Operaciones" en `/configuracion`
-Componente: `src/components/config/ConfigPOS.tsx`
+### 2. Compras — pagos parciales/totales y múltiples métodos al crear/editar
 
-Ajustes (tabla nueva `pos_settings` por tenant):
-- **Impuesto por defecto** (selector de `tax_rates`)
-- **Impuesto incluido en precio** (sí/no)
-- **Propina**: habilitada, porcentaje sugerido (10/15/20), obligatoria
-- **Redondeo** (none / nearest / up)
-- **Permitir descuentos** (% máximo por rol)
-- **Permitir venta sin stock**
-- **Imprimir ticket automático**
-- **Moneda base de cobro POS** (selector de `currencies`)
-- **Mostrar precios en moneda secundaria** (selector adicional)
-- **Días de crédito por defecto** (clientes/empleados)
+**Estado actual:** se paga sólo desde la lista (botón "Pagar compra") con `MultiPaymentDialog`. El form de creación pide un único `amountPaid` numérico sin método ni moneda.
 
-### Nueva pestaña "Operaciones por módulo"
-- **Inventario**: alerta stock bajo (umbral global), método de costeo (FIFO/promedio)
-- **Compras**: requerir aprobación, días pago proveedor por defecto
-- **Facturación**: serie por defecto, prefijo, IVA por defecto
-- **Turnos**: requerir conteo de apertura, requerir motivo en diferencias
+**Cambios en `src/pages/Compras.tsx`:**
+- Reemplazar el input "Monto pagado" por una **lista de líneas de pago** (método + moneda + monto + tasa de cambio) reusando la lógica de `MultiPaymentDialog`.
+- Añadir **selector de tasa de impuesto** (`tax_rate_id`) que recalcula `tax = subtotal * rate` automáticamente; mantener input manual como override.
+- Al guardar la compra:
+  1. `INSERT purchases` con `tax_rate_id`, `tax` calculado, `amount_paid = 0`.
+  2. Por cada línea de pago, llamar `register_account_payment(party='supplier', reference_type='purchase', reference_id, ...)` para que el trigger sume `amount_paid`, ajuste `status` y registre asiento.
+- Permitir **editar** una compra en estado `draft`: abrir mismo modal con datos precargados, items y pagos existentes mostrados (los pagos previos no se editan, sólo se añaden nuevos).
+- Botón "Pagar compra" existente sigue funcionando para post-recepción.
 
-Tabla `module_settings` con `(tenant_id, module, settings jsonb)`.
+### 3. Mejoras y correcciones detectadas por módulo
 
----
+**POS**
+- `POSEmpresa/Bar/Restaurant`: leer `pos_settings.default_tax_rate_id` y aplicar (hoy se hace parcial); permitir override por venta.
+- Validar `allow_negative_stock` antes de cobrar; bloquear si está en false y stock < 0.
+- Aplicar `rounding_mode` al total final.
+- Auto-imprimir ticket cuando `auto_print_receipt = true`.
 
-## 2. Pagos multi-moneda y multi-método universales
+**Inventario / Almacenes**
+- Filtros: persistir en URL (querystring) para compartir vistas.
+- Indicador visual de stock bajo según `module_settings.inventory.low_stock_threshold` cuando el producto no tiene `min_stock`.
+- Botón "Ajuste rápido" desde la fila para crear movimiento manual.
 
-### Nuevo componente reusable
-`src/components/payments/MultiPaymentDialog.tsx`
+**Cuentas (CxC/CxP)**
+- Vista de "Antigüedad de saldos" (0-30, 31-60, 61-90, +90 días).
+- Recordatorios automáticos: notificación cuando una venta a crédito vence.
 
-Acepta props: `partyType` (customer/employee/supplier), `partyId`, `referenceType` (sale/purchase/invoice/null), `referenceId`, `amountDue`, `currencyDefault`, `onPaid`.
+**Facturas**
+- Usar serie/prefijo desde `module_settings.invoicing` (hoy fallback "A/F").
+- Botón "Anular factura" con asiento de reverso.
 
-Características:
-- **Lista dinámica de métodos** desde `payment_methods` (tabla)
-- **Lista de monedas** desde `currencies` con tasa de cambio editable
-- **Pagos divididos**: agregar varias líneas (método + moneda + monto)
-- **Total convertido a moneda base** mostrado en tiempo real
-- **Validación**: total ≥ monto requerido (o permitir parcial)
-- Llama RPC `register_account_payment` por cada línea
+**Turnos**
+- Respetar `require_opening_count` y `require_difference_reason` (validación en cierre).
+- En `TurnoDetalle`: gráfico de ventas por hora y top productos.
 
-### Sustituye dialogs ad-hoc en:
-- `src/pages/Compras.tsx` → reemplaza el dialog "Pagar compra"
-- `src/pages/Cuentas.tsx` → reemplaza dialogs de pago a clientes/proveedores/empleados
-- `src/components/pos/PaymentDialog.tsx` → reusa la lógica de líneas multi-método
-- `src/pages/Facturas.tsx` → permitir cobrar factura
-- `src/pages/Consignacion.tsx` → liquidación con multi-método
+**Proveedores**
+- Tab "Estado de cuenta" con cronología de compras/pagos/consignaciones.
+- Acción "Liquidar todo" desde la lista de proveedores con saldo pendiente.
 
----
+**Empleados / Clientes**
+- Marcar fiados vencidos en rojo en sus detalles.
+- Acción rápida "Cobrar saldo" usando `MultiPaymentDialog` en lugar de redirigir a `/cuentas`.
 
-## 3. Vinculación módulo por módulo
+**Contabilidad**
+- Filtro por tipo de asiento (venta, compra, pago, ajuste manual).
+- Exportar libro diario a CSV/PDF.
 
-### POS (`POSBar`, `POSRestaurant`, `POSEmpresa`, `PaymentDialog`)
-- Lee `pos_settings`: aplica impuesto configurado, sugiere propina, respeta redondeo
-- Bloquea ventas sin stock si está configurado
-- Auto-imprime ticket si configurado
-- Cobro permite N líneas en N monedas/métodos
+**Marketplace / Pedidos online**
+- Validar stock al confirmar pedido.
+- Estado "preparando" sincronizado con KDS.
 
-### Inventario / Almacenes
-- Usa `module_settings.inventory.low_stock_threshold` para alertas
-- `notify_low_stock` ya respeta `min_stock` por producto; añadir fallback global
+**Configuración**
+- Añadir tab "Series de facturas" para CRUD de `invoice_series`.
+- En `ConfigPOS`: selector visual de `default_tax_rate_id` desde `tax_rates` (hoy es texto libre).
 
-### Compras
-- Estado por defecto desde settings
-- Pago al recibir usando `MultiPaymentDialog`
-
-### Cuentas (CxC/CxP)
-- Pago en cualquier moneda con conversión automática
-- Selector de método dinámico
-
-### Facturas
-- Serie + prefijo desde `module_settings.invoicing`
-- Botón "Registrar pago" usando `MultiPaymentDialog`
-
-### Turnos
-- Apertura/cierre respetan `require_opening_count` y `require_difference_reason`
-
----
-
-## 4. Migración SQL
+### 4. Migración SQL requerida
 
 ```sql
--- pos_settings
-CREATE TABLE pos_settings (
-  id uuid PK, tenant_id uuid UNIQUE,
-  default_tax_rate_id uuid, tax_included boolean,
-  tip_enabled boolean, tip_percentages numeric[], tip_required boolean,
-  rounding_mode text, allow_discounts boolean, max_discount_pct numeric,
-  allow_negative_stock boolean, auto_print_receipt boolean,
-  default_currency text, secondary_currency text,
-  default_credit_days int
-);
-
--- module_settings
-CREATE TABLE module_settings (
-  id uuid PK, tenant_id uuid, module text,
-  settings jsonb DEFAULT '{}',
-  UNIQUE(tenant_id, module)
-);
-
--- RLS por tenant en ambas
--- Seed defaults vía función ensure_pos_settings(tenant_id)
+ALTER TABLE purchases ADD COLUMN tax_rate_id uuid REFERENCES tax_rates(id);
+ALTER TABLE sales ADD COLUMN tax_rate_id uuid REFERENCES tax_rates(id);
+ALTER TABLE invoices ADD COLUMN tax_rate_id uuid REFERENCES tax_rates(id);
+ALTER TABLE products ADD COLUMN default_tax_rate_id uuid REFERENCES tax_rates(id);
+-- índices y RLS heredados
 ```
 
----
+### 5. Orden de ejecución sugerido
 
-## 5. Archivos a crear/editar
+1. Migración SQL + `useTaxRates` hook.
+2. Compras: integrar selector de impuesto + pagos multi-línea en alta/edición (foco principal del pedido).
+3. ConfigPOS: selector real de tasa.
+4. POS: aplicar tasa + redondeo + validación de stock.
+5. Resto de mejoras por módulo en iteraciones siguientes.
 
-**Crear:**
-- `supabase/migrations/<ts>_pos_module_settings.sql`
-- `src/components/config/ConfigPOS.tsx`
-- `src/components/config/ConfigModules.tsx`
-- `src/components/payments/MultiPaymentDialog.tsx`
-- `src/hooks/usePOSSettings.tsx`
-- `src/hooks/useModuleSettings.tsx`
+### Notas
 
-**Editar:**
-- `src/pages/Configuracion.tsx` (añadir 2 tabs)
-- `src/components/pos/PaymentDialog.tsx` (usar settings + multi-líneas)
-- `src/components/pos/POSBar.tsx`, `POSRestaurant.tsx`, `POSEmpresa.tsx` (impuesto, propina, validaciones)
-- `src/pages/Compras.tsx`, `Cuentas.tsx`, `Facturas.tsx`, `Consignacion.tsx` (usar `MultiPaymentDialog`)
-- `src/pages/Turnos.tsx`, `TurnoDetalle.tsx` (validaciones de settings)
-
----
-
-## Notas técnicas
-- `register_account_payment` ya soporta `currency` y `exchange_rate` → la lógica multi-moneda se apoya en él.
-- Los asientos contables se generan automáticamente vía triggers existentes.
-- No se borran datos existentes; las settings tienen defaults seguros.
+- No se borra ningún dato; todas las columnas nuevas son opcionales con fallback al comportamiento actual.
+- `MultiPaymentDialog` ya soporta multi-método/multi-moneda → se reusa su lógica en el form de compras.
+- Los asientos contables se generan automáticamente vía triggers existentes; no hay que tocarlos.
