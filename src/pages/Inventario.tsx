@@ -124,7 +124,7 @@ const Inventario = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "" });
+    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true });
     setDialogOpen(true);
   };
 
@@ -134,6 +134,7 @@ const Inventario = () => {
       name: p.name, sku: p.sku, description: p.description || "", category: p.category || "",
       price: String(p.price), cost: String(p.cost), stock: String(p.stock), min_stock: String(p.min_stock),
       warehouse_id: p.warehouse_id || "", is_online: p.is_online || false, online_stock: String(p.online_stock || 0), image_url: p.image_url || "",
+      is_deliverable: (p as any).is_deliverable ?? true,
     });
     setDialogOpen(true);
   };
