@@ -951,6 +951,7 @@ export type Database = {
           status: string
           subtotal: number
           tax: number
+          tax_rate_id: string | null
           tenant_id: string
           total: number
           updated_at: string
@@ -987,6 +988,7 @@ export type Database = {
           status?: string
           subtotal?: number
           tax?: number
+          tax_rate_id?: string | null
           tenant_id: string
           total?: number
           updated_at?: string
@@ -1023,6 +1025,7 @@ export type Database = {
           status?: string
           subtotal?: number
           tax?: number
+          tax_rate_id?: string | null
           tenant_id?: string
           total?: number
           updated_at?: string
@@ -1040,6 +1043,13 @@ export type Database = {
             columns: ["sale_id"]
             isOneToOne: false
             referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_tax_rate_id_fkey"
+            columns: ["tax_rate_id"]
+            isOneToOne: false
+            referencedRelation: "tax_rates"
             referencedColumns: ["id"]
           },
           {
@@ -1836,6 +1846,7 @@ export type Database = {
           category: string | null
           cost: number
           created_at: string
+          default_tax_rate_id: string | null
           description: string | null
           id: string
           image_url: string | null
@@ -1855,6 +1866,7 @@ export type Database = {
           category?: string | null
           cost?: number
           created_at?: string
+          default_tax_rate_id?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -1874,6 +1886,7 @@ export type Database = {
           category?: string | null
           cost?: number
           created_at?: string
+          default_tax_rate_id?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -1890,6 +1903,13 @@ export type Database = {
           warehouse_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "products_default_tax_rate_id_fkey"
+            columns: ["default_tax_rate_id"]
+            isOneToOne: false
+            referencedRelation: "tax_rates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -2060,6 +2080,7 @@ export type Database = {
           subtotal: number
           supplier_id: string | null
           tax: number
+          tax_rate_id: string | null
           tenant_id: string | null
           total: number
           updated_at: string
@@ -2081,6 +2102,7 @@ export type Database = {
           subtotal?: number
           supplier_id?: string | null
           tax?: number
+          tax_rate_id?: string | null
           tenant_id?: string | null
           total?: number
           updated_at?: string
@@ -2102,6 +2124,7 @@ export type Database = {
           subtotal?: number
           supplier_id?: string | null
           tax?: number
+          tax_rate_id?: string | null
           tenant_id?: string | null
           total?: number
           updated_at?: string
@@ -2112,6 +2135,13 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_tax_rate_id_fkey"
+            columns: ["tax_rate_id"]
+            isOneToOne: false
+            referencedRelation: "tax_rates"
             referencedColumns: ["id"]
           },
         ]
@@ -2427,6 +2457,7 @@ export type Database = {
           store_id: string | null
           subtotal: number
           tax: number
+          tax_rate_id: string | null
           tenant_id: string | null
           ticket_number: string | null
           ticket_series: string | null
@@ -2445,6 +2476,7 @@ export type Database = {
           store_id?: string | null
           subtotal?: number
           tax?: number
+          tax_rate_id?: string | null
           tenant_id?: string | null
           ticket_number?: string | null
           ticket_series?: string | null
@@ -2463,6 +2495,7 @@ export type Database = {
           store_id?: string | null
           subtotal?: number
           tax?: number
+          tax_rate_id?: string | null
           tenant_id?: string | null
           ticket_number?: string | null
           ticket_series?: string | null
@@ -2489,6 +2522,13 @@ export type Database = {
             columns: ["shift_id"]
             isOneToOne: false
             referencedRelation: "sales_shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_tax_rate_id_fkey"
+            columns: ["tax_rate_id"]
+            isOneToOne: false
+            referencedRelation: "tax_rates"
             referencedColumns: ["id"]
           },
           {
