@@ -100,7 +100,7 @@ const Inventario = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({
     name: "", sku: "", description: "", category: "", price: "0", cost: "0",
-    stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "",
+    stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true,
   });
   const [movForm, setMovForm] = useState({ type: "entry", quantity: "0", reason: "" });
 
