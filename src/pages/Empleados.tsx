@@ -84,6 +84,7 @@ const Empleados = () => {
     if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
     const payload = {
       name: form.name.trim(), position: form.position || null, salary: parseFloat(form.salary) || 0,
+      credit_limit: parseFloat(form.credit_limit) || 0,
       phone: form.phone || null, email: form.email || null, hire_date: form.hire_date || null,
       notes: form.notes || null, tenant_id: tenantId,
     };
