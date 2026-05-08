@@ -55,7 +55,7 @@ const Empleados = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
-  const [form, setForm] = useState({ name: "", position: "", salary: "0", phone: "", email: "", hire_date: "", notes: "" });
+  const [form, setForm] = useState({ name: "", position: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: "", notes: "" });
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
@@ -68,13 +68,13 @@ const Empleados = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", position: "", salary: "0", phone: "", email: "", hire_date: new Date().toISOString().slice(0, 10), notes: "" });
+    setForm({ name: "", position: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: new Date().toISOString().slice(0, 10), notes: "" });
     setDialogOpen(true);
   };
 
   const openEdit = (e: Employee) => {
     setEditing(e);
-    setForm({ name: e.name, position: e.position || "", salary: String(e.salary), phone: e.phone || "", email: e.email || "", hire_date: e.hire_date || "", notes: e.notes || "" });
+    setForm({ name: e.name, position: e.position || "", salary: String(e.salary), credit_limit: String((e as any).credit_limit ?? 0), phone: e.phone || "", email: e.email || "", hire_date: e.hire_date || "", notes: e.notes || "" });
     setDialogOpen(true);
   };
 
@@ -84,6 +84,7 @@ const Empleados = () => {
     if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
     const payload = {
       name: form.name.trim(), position: form.position || null, salary: parseFloat(form.salary) || 0,
+      credit_limit: parseFloat(form.credit_limit) || 0,
       phone: form.phone || null, email: form.email || null, hire_date: form.hire_date || null,
       notes: form.notes || null, tenant_id: tenantId,
     };
@@ -223,6 +224,7 @@ const Empleados = () => {
               <div><Label>Puesto</Label><Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} /></div>
               <div><Label>Salario</Label><Input type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} /></div>
             </div>
+            <div><Label>Límite de crédito (fiado)</Label><Input type="number" value={form.credit_limit} onChange={(e) => setForm({ ...form, credit_limit: e.target.value })} placeholder="0 = sin límite" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Teléfono</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
               <div><Label>Email</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>

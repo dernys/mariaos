@@ -1,0 +1,1 @@
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS credit_limit numeric NOT NULL DEFAULT 0;
