@@ -171,13 +171,6 @@ const Facturas = () => {
 
   return (
     <AppLayout title="Facturas">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <MiniStatCard label="Facturas" value={invoices.length} icon={FileText} />
-        <MiniStatCard label="Emitidas" value={issued.length} tone="success" />
-        <MiniStatCard label="Total facturado" value={totalBilled.toFixed(2)} tone="primary" />
-        <MiniStatCard label="Cobrado" value={totalPaid.toFixed(2)} tone="success" />
-      </div>
-
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
         <MiniStatCard label="Facturas" value={invoices.length} icon={FileText} />
         <MiniStatCard label="Emitidas" value={issued.length} tone="success" />
