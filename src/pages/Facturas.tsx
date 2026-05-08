@@ -345,6 +345,9 @@ const Facturas = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <QuickSaleDialog open={quickOpen} onOpenChange={setQuickOpen} onCreated={() => load()} />
+      <EInvoiceSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </AppLayout>
   );
 };
