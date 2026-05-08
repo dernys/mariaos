@@ -224,6 +224,20 @@ export default function Proveedores() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {paying && (
+        <MultiPaymentDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          partyType="supplier"
+          partyId={paying.id}
+          partyName={paying.name}
+          amountDue={Math.max(0, Number(paying.balance || 0))}
+          referenceType={null}
+          title="Pagar a proveedor"
+          onPaid={fetchAll}
+        />
+      )}
     </AppLayout>
   );
 }
