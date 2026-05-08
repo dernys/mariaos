@@ -1613,6 +1613,7 @@ export type Database = {
         Row: {
           created_at: string
           customer_email: string | null
+          customer_id: string | null
           customer_name: string
           customer_phone: string
           delivery_address: string | null
@@ -1620,6 +1621,7 @@ export type Database = {
           id: string
           notes: string | null
           status: string
+          store_id: string | null
           subtotal: number
           tax: number
           tenant_id: string | null
@@ -1630,6 +1632,7 @@ export type Database = {
         Insert: {
           created_at?: string
           customer_email?: string | null
+          customer_id?: string | null
           customer_name: string
           customer_phone: string
           delivery_address?: string | null
@@ -1637,6 +1640,7 @@ export type Database = {
           id?: string
           notes?: string | null
           status?: string
+          store_id?: string | null
           subtotal?: number
           tax?: number
           tenant_id?: string | null
@@ -1647,6 +1651,7 @@ export type Database = {
         Update: {
           created_at?: string
           customer_email?: string | null
+          customer_id?: string | null
           customer_name?: string
           customer_phone?: string
           delivery_address?: string | null
@@ -1654,6 +1659,7 @@ export type Database = {
           id?: string
           notes?: string | null
           status?: string
+          store_id?: string | null
           subtotal?: number
           tax?: number
           tenant_id?: string | null
@@ -1662,6 +1668,27 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "online_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "online_orders_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -2022,6 +2049,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          is_deliverable: boolean | null
           is_online: boolean
           min_stock: number
           name: string
@@ -2042,6 +2070,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_deliverable?: boolean | null
           is_online?: boolean
           min_stock?: number
           name: string
@@ -2062,6 +2091,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_deliverable?: boolean | null
           is_online?: boolean
           min_stock?: number
           name?: string
@@ -2828,6 +2858,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sales_shifts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sales_shifts_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -3005,11 +3042,16 @@ export type Database = {
       }
       stores: {
         Row: {
+          accepts_delivery: boolean | null
+          accepts_pickup: boolean | null
           address: string | null
           created_at: string
+          delivery_radius_km: number | null
           email: string | null
           id: string
           is_active: boolean
+          latitude: number | null
+          longitude: number | null
           manager_id: string | null
           name: string
           phone: string | null
@@ -3017,11 +3059,16 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepts_delivery?: boolean | null
+          accepts_pickup?: boolean | null
           address?: string | null
           created_at?: string
+          delivery_radius_km?: number | null
           email?: string | null
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           manager_id?: string | null
           name: string
           phone?: string | null
@@ -3029,11 +3076,16 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepts_delivery?: boolean | null
+          accepts_pickup?: boolean | null
           address?: string | null
           created_at?: string
+          delivery_radius_km?: number | null
           email?: string | null
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           manager_id?: string | null
           name?: string
           phone?: string | null
@@ -3526,6 +3578,57 @@ export type Database = {
       }
     }
     Views: {
+      stores_public: {
+        Row: {
+          accepts_delivery: boolean | null
+          accepts_pickup: boolean | null
+          address: string | null
+          delivery_radius_km: number | null
+          id: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          accepts_delivery?: never
+          accepts_pickup?: never
+          address?: string | null
+          delivery_radius_km?: never
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          accepts_delivery?: never
+          accepts_pickup?: never
+          address?: string | null
+          delivery_radius_km?: never
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants_public: {
         Row: {
           business_type: string | null
@@ -3585,6 +3688,10 @@ export type Database = {
           p_user_id?: string
         }
         Returns: string
+      }
+      distance_km: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
       }
       ensure_default_accounts: {
         Args: { p_tenant_id: string }
