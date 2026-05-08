@@ -438,6 +438,39 @@ const Marketplace = () => {
         </div>
       </section>
 
+      {/* Geo banner */}
+      <div className="max-w-7xl mx-auto px-4 pb-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {userPos ? (
+            <Badge variant="outline" className="gap-1 bg-emerald-50 border-emerald-200 text-emerald-700">
+              <MapPin className="h-3 w-3" /> Ubicación detectada · ordenando por cercanía
+            </Badge>
+          ) : (
+            <Button size="sm" variant="outline" onClick={requestLocation} className="h-8 text-xs gap-1 rounded-full">
+              <MapPin className="h-3.5 w-3.5" /> Usar mi ubicación
+            </Button>
+          )}
+          {userPos && (
+            <Select value={maxDistance ? String(maxDistance) : "all"} onValueChange={(v) => setMaxDistance(v === "all" ? null : parseFloat(v))}>
+              <SelectTrigger className="w-[160px] h-8 text-xs rounded-full"><SelectValue placeholder="Distancia" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Cualquier distancia</SelectItem>
+                <SelectItem value="2">≤ 2 km</SelectItem>
+                <SelectItem value="5">≤ 5 km</SelectItem>
+                <SelectItem value="10">≤ 10 km</SelectItem>
+                <SelectItem value="25">≤ 25 km</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          <button
+            onClick={() => setDeliveryOnly((v) => !v)}
+            className={`h-8 px-3 rounded-full text-xs font-medium border transition-all ${deliveryOnly ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-600 border-gray-200 hover:bg-emerald-50"}`}
+          >
+            <Truck className="h-3 w-3 inline mr-1" /> Solo delivery
+          </button>
+        </div>
+      </div>
+
       {/* Filters */}
       <div className="max-w-7xl mx-auto px-4 pb-4">
         <div className="flex flex-wrap gap-2 items-center">
@@ -466,12 +499,13 @@ const Marketplace = () => {
             <SelectContent>
               <SelectItem value="all">Todos los negocios</SelectItem>
               {tenants.map(t => (
-                <SelectItem key={t.id} value={t.id}>{bizIcon(t.business_type)} {t.name}</SelectItem>
+                <SelectItem key={t.id} value={t.id}>{bizIcon(t.business_type)} {t.name}{userPos && tenantDistances[t.id] ? ` · ${tenantDistances[t.id]!.dist.toFixed(1)} km` : ""}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
+
 
       {/* Products Grid */}
       <main className="max-w-7xl mx-auto px-4 pb-16">
