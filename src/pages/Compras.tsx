@@ -22,6 +22,7 @@ import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
+import { useTaxRates } from "@/hooks/useTaxRates";
 
 interface Supplier { id: string; name: string; balance: number; phone?: string | null; email?: string | null; }
 interface Product { id: string; name: string; sku: string; cost: number; }
@@ -31,7 +32,11 @@ interface Purchase {
   destination_type: string; destination_id: string;
   subtotal: number; tax: number; total: number; amount_paid: number; payment_status: string;
   notes: string | null; created_at: string; received_at: string | null;
+  tax_rate_id?: string | null;
 }
+interface PayLine { id: string; method: string; currency: string; amount: string; rate: string; }
+interface PaymentMethodRow { id: string; name: string; type: string; }
+interface CurrencyRow { id: string; code: string; exchange_rate: number; is_base: boolean; }
 
 const statusBadge = (s: string) => {
   const m: Record<string, { c: string; l: string }> = {
