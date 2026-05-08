@@ -87,7 +87,7 @@ const Marketplace = () => {
       ]);
       if (pRes.data) setProducts(pRes.data as MarketProduct[]);
       if (tRes.data) setTenants(tRes.data as any);
-      if (sRes.data) setStores(sRes.data as StorePublic[]);
+      if (sRes.data) setStores(sRes.data as unknown as StorePublic[]);
       setLoading(false);
     };
     load();
