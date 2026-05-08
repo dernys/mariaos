@@ -142,16 +142,56 @@ export default function ProveedorDetalle() {
           ]}
         />
 
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" className="gap-1 gradient-brand text-primary-foreground" disabled={debt <= 0} onClick={() => openPay(debt, null, null, "Pagar saldo total")}>
+            <ArrowUpFromLine className="h-3.5 w-3.5" /> Pagar saldo (${debt.toFixed(2)})
+          </Button>
+          <Button size="sm" variant="outline" className="gap-1" onClick={() => nav(`/compras?supplier=${s.id}`)}>
+            <Package className="h-3.5 w-3.5" /> Nueva compra
+          </Button>
+        </div>
+
         <Tabs defaultValue="resumen">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="resumen">Resumen</TabsTrigger>
             <TabsTrigger value="catalog">Productos ({catalog.length})</TabsTrigger>
+            <TabsTrigger value="trace">Rastreo ({trace.length})</TabsTrigger>
             <TabsTrigger value="purchases">Compras ({purchases.length})</TabsTrigger>
             <TabsTrigger value="payables">Por pagar</TabsTrigger>
             <TabsTrigger value="payments">Pagos</TabsTrigger>
             <TabsTrigger value="consignment">Consignación ({activeLots.length})</TabsTrigger>
             <TabsTrigger value="activity">Actividad</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="trace">
+            <div className="bg-card rounded-xl border overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Producto</TableHead>
+                  <TableHead className="text-xs">SKU</TableHead>
+                  <TableHead className="text-xs text-right">Comprado</TableHead>
+                  <TableHead className="text-xs text-right">Recibido</TableHead>
+                  <TableHead className="text-xs text-right">En consig.</TableHead>
+                  <TableHead className="text-xs text-right">Vendido</TableHead>
+                  <TableHead className="text-xs text-right">Total invertido</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {trace.map((t, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="text-xs font-medium flex items-center gap-1.5"><TrendingUp className="h-3 w-3 text-primary" />{t.name}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{t.sku || "—"}</TableCell>
+                      <TableCell className="text-xs text-right">{t.purchased}</TableCell>
+                      <TableCell className="text-xs text-right">{t.received}</TableCell>
+                      <TableCell className="text-xs text-right">{t.consigned}</TableCell>
+                      <TableCell className="text-xs text-right font-bold text-success">{t.sold}</TableCell>
+                      <TableCell className="text-xs text-right font-bold">${t.spent.toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {trace.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin movimientos</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
 
           <TabsContent value="catalog">
             <div className="bg-card rounded-xl border overflow-hidden">
