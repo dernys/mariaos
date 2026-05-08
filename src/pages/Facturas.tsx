@@ -178,12 +178,31 @@ const Facturas = () => {
         <MiniStatCard label="Cobrado" value={totalPaid.toFixed(2)} tone="success" />
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        <MiniStatCard label="Facturas" value={invoices.length} icon={FileText} />
+        <MiniStatCard label="Emitidas" value={issued.length} tone="success" />
+        <MiniStatCard label="Transmitidas" value={transmitted} tone="primary" />
+        <MiniStatCard label="Total facturado" value={totalBilled.toFixed(2)} tone="primary" />
+        <MiniStatCard label="Cobrado" value={totalPaid.toFixed(2)} tone="success" />
+      </div>
+
       <Card className="p-4">
-        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h2 className="text-lg font-semibold">Facturas emitidas</h2>
-          <Button onClick={openIssue} size="sm" className="gap-2">
-            <Plus className="h-4 w-4" /> Emitir factura
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={() => setSettingsOpen(true)} size="sm" variant="outline" className="gap-1">
+              <Settings className="h-4 w-4" /> Facturación electrónica
+            </Button>
+            <Button onClick={() => nav("/pos")} size="sm" variant="outline" className="gap-1">
+              <ShoppingCart className="h-4 w-4" /> Ir al POS
+            </Button>
+            <Button onClick={() => setQuickOpen(true)} size="sm" variant="outline" className="gap-1">
+              <Plus className="h-4 w-4" /> Venta rápida
+            </Button>
+            <Button onClick={openIssue} size="sm" className="gap-1">
+              <Plus className="h-4 w-4" /> Emitir factura
+            </Button>
+          </div>
         </div>
 
         <TableToolbar
