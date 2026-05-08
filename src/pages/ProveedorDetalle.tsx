@@ -249,6 +249,7 @@ export default function ProveedorDetalle() {
                   <TableHead className="text-xs text-right">Pagado</TableHead>
                   <TableHead className="text-xs">Tipo</TableHead>
                   <TableHead className="text-xs">Estado</TableHead>
+                  <TableHead className="text-xs w-24"></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {purchases.map((p) => {
