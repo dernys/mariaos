@@ -12,12 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit2, Trash2, Truck, Wallet, DollarSign, Package, History } from "lucide-react";
+import { Plus, Edit2, Trash2, Truck, Wallet, DollarSign, Package, History, ArrowUpFromLine } from "lucide-react";
 import { useTableState } from "@/hooks/useTableState";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
+import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 interface Supplier {
   id: string;
