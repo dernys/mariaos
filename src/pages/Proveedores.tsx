@@ -42,6 +42,8 @@ export default function Proveedores() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [form, setForm] = useState({ name: "", contact_name: "", phone: "", email: "", rfc: "", address: "" });
+  const [payOpen, setPayOpen] = useState(false);
+  const [paying, setPaying] = useState<Supplier | null>(null);
 
   const fetchAll = async () => {
     const [sR, spR] = await Promise.all([
