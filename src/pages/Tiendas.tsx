@@ -200,10 +200,10 @@ const Tiendas = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Editar Tienda" : "Nueva Tienda"}</DialogTitle>
-            <DialogDescription>Datos de la tienda</DialogDescription>
+            <DialogDescription>Datos de la tienda y ubicación para el marketplace</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
@@ -220,6 +220,39 @@ const Tiendas = () => {
                   {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="border-t pt-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ubicación (Marketplace)</Label>
+                <Button type="button" size="sm" variant="outline" onClick={useMyLocation} disabled={locating} className="h-7 text-xs gap-1">
+                  <MapPin className="h-3 w-3" /> {locating ? "Capturando..." : "Usar mi ubicación"}
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label className="text-xs">Latitud</Label><Input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="23.135" /></div>
+                <div><Label className="text-xs">Longitud</Label><Input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="-82.359" /></div>
+              </div>
+              <div><Label className="text-xs">Radio de entrega (km)</Label><Input type="number" step="0.5" value={form.delivery_radius_km} onChange={(e) => setForm({ ...form, delivery_radius_km: e.target.value })} /></div>
+              <div className="flex gap-4 pt-1">
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" checked={form.accepts_delivery} onChange={(e) => setForm({ ...form, accepts_delivery: e.target.checked })} />
+                  Acepta delivery
+                </label>
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" checked={form.accepts_pickup} onChange={(e) => setForm({ ...form, accepts_pickup: e.target.checked })} />
+                  Acepta recogida
+                </label>
+              </div>
+              {form.latitude && form.longitude && (
+                <a
+                  href={`https://www.google.com/maps?q=${form.latitude},${form.longitude}`}
+                  target="_blank" rel="noreferrer"
+                  className="text-xs text-primary underline inline-flex items-center gap-1"
+                >
+                  <MapPin className="h-3 w-3" /> Ver en mapa
+                </a>
+              )}
             </div>
           </div>
           <DialogFooter>
