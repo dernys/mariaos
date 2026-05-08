@@ -367,8 +367,17 @@ const Inventario = () => {
                     <TableRow key={item.id}>
                       <TableCell className="text-xs font-heading font-semibold">{item.sku}</TableCell>
                       <TableCell className="text-xs font-medium">
-                        {item.name}
-                        {item.is_online && <Badge variant="outline" className="ml-1 text-[9px] bg-emerald-50 text-emerald-600 border-emerald-200"><Globe className="h-2.5 w-2.5 mr-0.5" />Online</Badge>}
+                        <div className="flex items-center gap-2">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt="" className="h-8 w-8 rounded object-cover border" />
+                          ) : (
+                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center">
+                              <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <span>{item.name}</span>
+                          {item.is_online && <Badge variant="outline" className="ml-1 text-[9px] bg-emerald-50 text-emerald-600 border-emerald-200"><Globe className="h-2.5 w-2.5 mr-0.5" />Online</Badge>}
+                        </div>
                       </TableCell>
                       <TableCell className="text-xs font-heading font-bold">{item.stock}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{item.min_stock}</TableCell>
