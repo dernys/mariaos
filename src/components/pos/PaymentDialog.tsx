@@ -68,12 +68,15 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [currencies, setCurrencies] = useState<CurrencyConfig[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
-  const [customerSearch, setCustomerSearch] = useState("");
+  const [partyType, setPartyType] = useState<"none" | "customer" | "employee">("none");
+  const [selectedParty, setSelectedParty] = useState<string>("");
+  const [partySearch, setPartySearch] = useState("");
   const [isPartial, setIsPartial] = useState(false);
   const [saving, setSaving] = useState(false);
   const [qrCopied, setQrCopied] = useState<number | null>(null);
+
+  const selectedCustomer = partyType === "customer" ? selectedParty : "";
+  const selectedEmployee = partyType === "employee" ? selectedParty : "";
 
   // Build exchange rates map from DB currencies
   const exchangeRates: Record<string, number> = {};
@@ -81,14 +84,15 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
   // Auto-enable partial when client/employee selected (allow leaving credit)
   useEffect(() => {
-    if (selectedCustomer || selectedEmployee) setIsPartial(true);
-  }, [selectedCustomer, selectedEmployee]);
+    if (partyType !== "none" && selectedParty) setIsPartial(true);
+  }, [partyType, selectedParty]);
 
   useEffect(() => {
     if (open) {
       setPayments([{ method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" }]);
-      setSelectedCustomer("");
-      setSelectedEmployee("");
+      setPartyType("none");
+      setSelectedParty("");
+      setPartySearch("");
       setIsPartial(false);
       setQrCopied(null);
       fetchData();
@@ -304,9 +308,11 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     }
   };
 
-  const filteredCustomers = customers.filter((c) =>
-    c.name.toLowerCase().includes(customerSearch.toLowerCase())
-  );
+  const filteredParties = partyType === "customer"
+    ? customers.filter((c) => c.name.toLowerCase().includes(partySearch.toLowerCase()))
+    : partyType === "employee"
+      ? employees.filter((e) => e.name.toLowerCase().includes(partySearch.toLowerCase()))
+      : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -319,38 +325,50 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Customer & Employee Selection */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs">Cliente (opcional)</Label>
-              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
+          {/* Party type toggle (cliente XOR empleado) */}
+          <div className="space-y-2">
+            <Label className="text-xs">Asociar venta a</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { v: "none", label: "Sin asociar" },
+                { v: "customer", label: "Cliente" },
+                { v: "employee", label: "Empleado" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => { setPartyType(opt.v); setSelectedParty(""); setPartySearch(""); }}
+                  className={`px-3 py-2 rounded-md text-xs font-medium border transition-colors ${
+                    partyType === opt.v ? "gradient-brand text-primary-foreground border-transparent" : "bg-background hover:bg-muted"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {partyType !== "none" && (
+              <Select value={selectedParty} onValueChange={setSelectedParty}>
+                <SelectTrigger><SelectValue placeholder={partyType === "customer" ? "Seleccionar cliente" : "Seleccionar empleado"} /></SelectTrigger>
                 <SelectContent>
                   <div className="p-2">
-                    <Input placeholder="Buscar..." value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} className="h-8 text-xs" />
+                    <Input placeholder="Buscar..." value={partySearch} onChange={(e) => setPartySearch(e.target.value)} className="h-8 text-xs" />
                   </div>
-                  {filteredCustomers.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
+                  {filteredParties.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>
                       <div className="flex items-center gap-2">
-                        <span>{c.name}</span>
-                        {c.balance > 0 && <Badge variant="destructive" className="text-[10px] px-1">Deuda: ${c.balance}</Badge>}
+                        <span>{p.name}</span>
+                        {partyType === "customer" && p.balance > 0 && (
+                          <Badge variant="destructive" className="text-[10px] px-1">Deuda: ${p.balance}</Badge>
+                        )}
+                        {partyType === "employee" && p.position && (
+                          <span className="text-[10px] text-muted-foreground">({p.position})</span>
+                        )}
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Empleado (opcional)</Label>
-              <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
-                <SelectContent>
-                  {employees.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>{e.name} {e.position && `(${e.position})`}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            )}
           </div>
 
           {/* Partial Payment Toggle */}

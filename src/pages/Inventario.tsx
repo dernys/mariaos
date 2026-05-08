@@ -367,8 +367,17 @@ const Inventario = () => {
                     <TableRow key={item.id}>
                       <TableCell className="text-xs font-heading font-semibold">{item.sku}</TableCell>
                       <TableCell className="text-xs font-medium">
-                        {item.name}
-                        {item.is_online && <Badge variant="outline" className="ml-1 text-[9px] bg-emerald-50 text-emerald-600 border-emerald-200"><Globe className="h-2.5 w-2.5 mr-0.5" />Online</Badge>}
+                        <div className="flex items-center gap-2">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt="" className="h-8 w-8 rounded object-cover border" />
+                          ) : (
+                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center">
+                              <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <span>{item.name}</span>
+                          {item.is_online && <Badge variant="outline" className="ml-1 text-[9px] bg-emerald-50 text-emerald-600 border-emerald-200"><Globe className="h-2.5 w-2.5 mr-0.5" />Online</Badge>}
+                        </div>
                       </TableCell>
                       <TableCell className="text-xs font-heading font-bold">{item.stock}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{item.min_stock}</TableCell>
@@ -562,6 +571,51 @@ const Inventario = () => {
               <div><Label>Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} /></div>
               <div><Label>Mínimo</Label><Input type="number" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
             </div>
+            {/* Imagen del producto (siempre disponible para POS) */}
+            <div className="border rounded-lg p-3 space-y-2 bg-muted/30">
+              <Label className="text-sm font-medium">Imagen del producto</Label>
+              <p className="text-[11px] text-muted-foreground">Se muestra en el POS y en el marketplace</p>
+              <div className="flex items-start gap-3">
+                {form.image_url ? (
+                  <img src={form.image_url} alt="preview" className="h-20 w-20 rounded-lg object-cover border" />
+                ) : (
+                  <div className="h-20 w-20 rounded-lg bg-muted border flex items-center justify-center text-muted-foreground">
+                    <Package className="h-6 w-6" />
+                  </div>
+                )}
+                <div className="flex-1 space-y-2">
+                  <Input
+                    value={form.image_url}
+                    onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                    placeholder="https://... o sube un archivo"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="text-xs"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file || !tenantId) return;
+                        const ext = file.name.split(".").pop() || "jpg";
+                        const path = `${tenantId}/${Date.now()}.${ext}`;
+                        const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
+                        if (error) { toast({ title: "Error subiendo imagen", description: error.message, variant: "destructive" }); return; }
+                        const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+                        setForm((f) => ({ ...f, image_url: data.publicUrl }));
+                        toast({ title: "Imagen subida" });
+                      }}
+                    />
+                    {form.image_url && (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, image_url: "" })}>
+                        Quitar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Online sale section */}
             <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
               <div className="flex items-center justify-between">
@@ -572,10 +626,7 @@ const Inventario = () => {
                 <Switch checked={form.is_online} onCheckedChange={(v) => setForm({ ...form, is_online: v })} />
               </div>
               {form.is_online && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Stock Online</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
-                  <div><Label>URL de Imagen</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." /></div>
-                </div>
+                <div><Label>Stock Online</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
               )}
             </div>
           </div>

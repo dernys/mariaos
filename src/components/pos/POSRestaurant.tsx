@@ -21,6 +21,7 @@ interface Product {
   sku: string;
   stock: number;
   category: string | null;
+  image_url?: string | null;
 }
 
 interface CartItem {
@@ -77,7 +78,7 @@ export function POSRestaurant() {
 
   useEffect(() => {
     if (!tenantId) return;
-    supabase.from("products").select("id, name, price, sku, stock, category").eq("tenant_id", tenantId).eq("is_active", true).order("category").then(({ data }) => {
+    supabase.from("products").select("id, name, price, sku, stock, category, image_url").eq("tenant_id", tenantId).eq("is_active", true).order("category").then(({ data }) => {
       if (data) setProducts(data);
     });
   }, [tenantId]);
@@ -274,6 +275,9 @@ export function POSRestaurant() {
                             return (
                               <motion.button key={product.id} whileTap={{ scale: 0.96 }} onClick={() => addToCart(product)} className={`relative bg-gradient-to-br ${colors} rounded-xl p-3 shadow-card border text-left hover:shadow-elevated transition-all`}>
                                 {inCart && <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>}
+                                {product.image_url && (
+                                  <img src={product.image_url} alt={product.name} loading="lazy" className="h-16 w-full rounded-lg object-cover mb-2 bg-rose-500/10" />
+                                )}
                                 <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
                                 <p className="text-base font-heading font-bold mt-1 text-rose-400">${product.price}</p>
                               </motion.button>
@@ -293,9 +297,13 @@ export function POSRestaurant() {
                     return (
                       <motion.button key={product.id} whileTap={{ scale: 0.96 }} onClick={() => addToCart(product)} className={`relative bg-gradient-to-br ${colors} rounded-xl p-3 sm:p-4 shadow-card border text-left hover:shadow-elevated transition-all`}>
                         {inCart && <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>}
-                        <div className="h-9 w-9 rounded-lg bg-rose-500/15 flex items-center justify-center mb-2">
-                          <Icon className="h-4.5 w-4.5 text-rose-400" />
-                        </div>
+                        {product.image_url ? (
+                          <img src={product.image_url} alt={product.name} loading="lazy" className="h-16 w-full rounded-lg object-cover mb-2 bg-rose-500/10" />
+                        ) : (
+                          <div className="h-9 w-9 rounded-lg bg-rose-500/15 flex items-center justify-center mb-2">
+                            <Icon className="h-4.5 w-4.5 text-rose-400" />
+                          </div>
+                        )}
                         <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
                         <p className="text-[10px] text-muted-foreground">{product.category}</p>
                         <p className="text-base sm:text-lg font-heading font-bold mt-1 text-rose-400">${product.price}</p>
