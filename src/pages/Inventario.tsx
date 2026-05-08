@@ -151,6 +151,7 @@ const Inventario = () => {
       warehouse_id: form.warehouse_id || null, tenant_id: tenantId,
       is_online: form.is_online, online_stock: form.is_online ? (parseInt(form.online_stock) || 0) : 0,
       image_url: form.image_url.trim() || null,
+      is_deliverable: form.is_deliverable,
     };
 
     if (editing) {
