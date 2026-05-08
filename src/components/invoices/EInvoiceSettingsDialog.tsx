@@ -34,7 +34,7 @@ export function EInvoiceSettingsDialog({ open, onOpenChange }: Props) {
     if (!open || !tenantId) return;
     (async () => {
       const { data } = await supabase.from("einvoice_settings" as any).select("*").eq("tenant_id", tenantId).maybeSingle();
-      if (data) setS({ ...DEFAULT, ...data });
+      if (data) setS({ ...DEFAULT, ...(data as any) });
       else setS(DEFAULT);
     })();
   }, [open, tenantId]);
