@@ -432,6 +432,21 @@ export default function ProveedorDetalle() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {payCtx && (
+        <MultiPaymentDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          partyType="supplier"
+          partyId={s.id}
+          partyName={s.name}
+          amountDue={payCtx.amount}
+          referenceType={payCtx.refType}
+          referenceId={payCtx.refId}
+          title={payCtx.title}
+          onPaid={fetchAll}
+        />
+      )}
     </AppLayout>
   );
 }
