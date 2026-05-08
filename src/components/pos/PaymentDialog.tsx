@@ -390,27 +390,49 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           </div>
 
           {/* Partial Payment Toggle */}
-          <div className="flex items-center justify-between gap-2 bg-muted/30 rounded-lg p-2.5">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="partial"
-                checked={isPartial}
-                onChange={(e) => setIsPartial(e.target.checked)}
-                disabled={!!(selectedCustomer || selectedEmployee)}
-                className="h-4 w-4 rounded border-input"
-              />
-              <Label htmlFor="partial" className="text-xs cursor-pointer">
-                Permitir pago parcial / fiado
-                {(selectedCustomer || selectedEmployee) && <span className="ml-1 text-primary">(activo automáticamente)</span>}
-              </Label>
-            </div>
-            {isPartial && remaining > 0.01 && (
-              <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning">
-                Saldo: ${remaining.toFixed(2)}
-              </Badge>
-            )}
-          </div>
+          {(() => {
+            const party: any = selectedCustomer
+              ? customers.find((c) => c.id === selectedCustomer)
+              : selectedEmployee
+                ? employees.find((e) => e.id === selectedEmployee)
+                : null;
+            const limit = Number(party?.credit_limit || 0);
+            const curBal = Number(party?.balance || 0);
+            const available = limit > 0 ? Math.max(0, limit - curBal) : null;
+            const projected = curBal + remaining;
+            const overLimit = !!party && limit > 0 && isPartial && remaining > 0.01 && projected > limit;
+            return (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2 bg-muted/30 rounded-lg p-2.5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="partial"
+                      checked={isPartial}
+                      onChange={(e) => setIsPartial(e.target.checked)}
+                      disabled={!!(selectedCustomer || selectedEmployee)}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                    <Label htmlFor="partial" className="text-xs cursor-pointer">
+                      Permitir pago parcial / fiado
+                      {(selectedCustomer || selectedEmployee) && <span className="ml-1 text-primary">(activo automáticamente)</span>}
+                    </Label>
+                  </div>
+                  {isPartial && remaining > 0.01 && (
+                    <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning">
+                      Saldo: ${remaining.toFixed(2)}
+                    </Badge>
+                  )}
+                </div>
+                {party && (
+                  <div className={`text-[10px] flex items-center justify-between rounded px-2 py-1 ${overLimit ? "bg-destructive/10 text-destructive" : "bg-muted/40 text-muted-foreground"}`}>
+                    <span>Deuda actual: <b>${curBal.toFixed(2)}</b> {limit > 0 && <>· Límite: <b>${limit.toFixed(2)}</b> · Disponible: <b>${(available ?? 0).toFixed(2)}</b></>}{limit === 0 && <> · Sin límite configurado</>}</span>
+                    {overLimit && <span className="font-semibold">Excede límite</span>}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Payment Lines */}
           <div className="space-y-3">
