@@ -598,11 +598,11 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
           <Button
             onClick={handleSubmit}
-            disabled={saving || (payments.every((p) => !parseFloat(p.amount)))}
+            disabled={saving || (!(isPartial && (selectedCustomer || selectedEmployee)) && payments.every((p) => !parseFloat(p.amount)))}
             className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-11"
           >
             {saving ? "Procesando..." : isPartial && remaining > 0.01
-              ? `Cobrar Parcial $${totalPaidInBase.toFixed(2)} CUP`
+              ? (totalPaidInBase > 0 ? `Cobrar Parcial $${totalPaidInBase.toFixed(2)} CUP` : `Dejar Fiado $${total.toFixed(2)} CUP`)
               : `Cobrar $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP`}
           </Button>
         </div>
