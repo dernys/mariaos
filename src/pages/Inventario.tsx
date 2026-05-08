@@ -100,7 +100,7 @@ const Inventario = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({
     name: "", sku: "", description: "", category: "", price: "0", cost: "0",
-    stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "",
+    stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true,
   });
   const [movForm, setMovForm] = useState({ type: "entry", quantity: "0", reason: "" });
 
@@ -124,7 +124,7 @@ const Inventario = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "" });
+    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true });
     setDialogOpen(true);
   };
 
@@ -134,6 +134,7 @@ const Inventario = () => {
       name: p.name, sku: p.sku, description: p.description || "", category: p.category || "",
       price: String(p.price), cost: String(p.cost), stock: String(p.stock), min_stock: String(p.min_stock),
       warehouse_id: p.warehouse_id || "", is_online: p.is_online || false, online_stock: String(p.online_stock || 0), image_url: p.image_url || "",
+      is_deliverable: (p as any).is_deliverable ?? true,
     });
     setDialogOpen(true);
   };
@@ -150,6 +151,7 @@ const Inventario = () => {
       warehouse_id: form.warehouse_id || null, tenant_id: tenantId,
       is_online: form.is_online, online_stock: form.is_online ? (parseInt(form.online_stock) || 0) : 0,
       image_url: form.image_url.trim() || null,
+      is_deliverable: form.is_deliverable,
     };
 
     if (editing) {
@@ -626,7 +628,16 @@ const Inventario = () => {
                 <Switch checked={form.is_online} onCheckedChange={(v) => setForm({ ...form, is_online: v })} />
               </div>
               {form.is_online && (
-                <div><Label>Stock Online</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
+                <>
+                  <div><Label>Stock Online</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <Label className="text-xs">Disponible para delivery</Label>
+                      <p className="text-[10px] text-muted-foreground">Si está desactivado, solo se ofrece para recogida</p>
+                    </div>
+                    <Switch checked={form.is_deliverable} onCheckedChange={(v) => setForm({ ...form, is_deliverable: v })} />
+                  </div>
+                </>
               )}
             </div>
           </div>

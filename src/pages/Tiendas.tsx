@@ -25,6 +25,11 @@ interface StoreItem {
   email: string | null;
   manager_id: string | null;
   is_active: boolean;
+  latitude: number | null;
+  longitude: number | null;
+  delivery_radius_km: number | null;
+  accepts_delivery: boolean | null;
+  accepts_pickup: boolean | null;
 }
 
 interface Employee {
@@ -42,7 +47,22 @@ const Tiendas = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailStore, setDetailStore] = useState<StoreItem | null>(null);
   const [editing, setEditing] = useState<StoreItem | null>(null);
-  const [form, setForm] = useState({ name: "", address: "", phone: "", email: "", manager_id: "" });
+  const [form, setForm] = useState({ name: "", address: "", phone: "", email: "", manager_id: "", latitude: "", longitude: "", delivery_radius_km: "5", accepts_delivery: true, accepts_pickup: true });
+  const [locating, setLocating] = useState(false);
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) { toast({ title: "Geolocalización no disponible", variant: "destructive" }); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((f) => ({ ...f, latitude: pos.coords.latitude.toFixed(6), longitude: pos.coords.longitude.toFixed(6) }));
+        setLocating(false);
+        toast({ title: "Ubicación capturada" });
+      },
+      (err) => { setLocating(false); toast({ title: "Error", description: err.message, variant: "destructive" }); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const fetchData = async () => {
     const [stRes, empRes] = await Promise.all([
@@ -58,21 +78,31 @@ const Tiendas = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", address: "", phone: "", email: "", manager_id: "" });
+    setForm({ name: "", address: "", phone: "", email: "", manager_id: "", latitude: "", longitude: "", delivery_radius_km: "5", accepts_delivery: true, accepts_pickup: true });
     setDialogOpen(true);
   };
 
   const openEdit = (s: StoreItem) => {
     setEditing(s);
-    setForm({ name: s.name, address: s.address || "", phone: s.phone || "", email: s.email || "", manager_id: s.manager_id || "" });
+    setForm({
+      name: s.name, address: s.address || "", phone: s.phone || "", email: s.email || "", manager_id: s.manager_id || "",
+      latitude: s.latitude?.toString() || "", longitude: s.longitude?.toString() || "",
+      delivery_radius_km: (s.delivery_radius_km ?? 5).toString(),
+      accepts_delivery: s.accepts_delivery ?? true, accepts_pickup: s.accepts_pickup ?? true,
+    });
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
-    const payload = {
+    const payload: any = {
       name: form.name.trim(), address: form.address || null, phone: form.phone || null,
       email: form.email || null, manager_id: form.manager_id || null, tenant_id: tenantId,
+      latitude: form.latitude ? parseFloat(form.latitude) : null,
+      longitude: form.longitude ? parseFloat(form.longitude) : null,
+      delivery_radius_km: form.delivery_radius_km ? parseFloat(form.delivery_radius_km) : 5,
+      accepts_delivery: form.accepts_delivery,
+      accepts_pickup: form.accepts_pickup,
     };
     if (editing) {
       const { error } = await supabase.from("stores").update(payload).eq("id", editing.id);
@@ -170,10 +200,10 @@ const Tiendas = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Editar Tienda" : "Nueva Tienda"}</DialogTitle>
-            <DialogDescription>Datos de la tienda</DialogDescription>
+            <DialogDescription>Datos de la tienda y ubicación para el marketplace</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
@@ -190,6 +220,39 @@ const Tiendas = () => {
                   {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="border-t pt-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ubicación (Marketplace)</Label>
+                <Button type="button" size="sm" variant="outline" onClick={useMyLocation} disabled={locating} className="h-7 text-xs gap-1">
+                  <MapPin className="h-3 w-3" /> {locating ? "Capturando..." : "Usar mi ubicación"}
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label className="text-xs">Latitud</Label><Input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="23.135" /></div>
+                <div><Label className="text-xs">Longitud</Label><Input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="-82.359" /></div>
+              </div>
+              <div><Label className="text-xs">Radio de entrega (km)</Label><Input type="number" step="0.5" value={form.delivery_radius_km} onChange={(e) => setForm({ ...form, delivery_radius_km: e.target.value })} /></div>
+              <div className="flex gap-4 pt-1">
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" checked={form.accepts_delivery} onChange={(e) => setForm({ ...form, accepts_delivery: e.target.checked })} />
+                  Acepta delivery
+                </label>
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" checked={form.accepts_pickup} onChange={(e) => setForm({ ...form, accepts_pickup: e.target.checked })} />
+                  Acepta recogida
+                </label>
+              </div>
+              {form.latitude && form.longitude && (
+                <a
+                  href={`https://www.google.com/maps?q=${form.latitude},${form.longitude}`}
+                  target="_blank" rel="noreferrer"
+                  className="text-xs text-primary underline inline-flex items-center gap-1"
+                >
+                  <MapPin className="h-3 w-3" /> Ver en mapa
+                </a>
+              )}
             </div>
           </div>
           <DialogFooter>

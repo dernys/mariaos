@@ -28,6 +28,7 @@ interface MarketProduct {
   image_url: string | null;
   online_stock: number;
   tenant_id: string;
+  is_deliverable: boolean | null;
 }
 
 interface Tenant {
@@ -35,6 +36,18 @@ interface Tenant {
   name: string;
   business_type: string;
   address: string | null;
+}
+
+interface StorePublic {
+  id: string;
+  tenant_id: string;
+  name: string;
+  address: string | null;
+  latitude: number;
+  longitude: number;
+  delivery_radius_km: number;
+  accepts_delivery: boolean;
+  accepts_pickup: boolean;
 }
 
 interface CartItem extends MarketProduct {
@@ -48,10 +61,14 @@ const Marketplace = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<MarketProduct[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [stores, setStores] = useState<StorePublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedTenant, setSelectedTenant] = useState("all");
+  const [deliveryOnly, setDeliveryOnly] = useState(false);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [maxDistance, setMaxDistance] = useState<number | null>(null); // km filter
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState(false);
@@ -63,21 +80,55 @@ const Marketplace = () => {
 
   useEffect(() => {
     const load = async () => {
-      const [pRes, tRes] = await Promise.all([
-        supabase.from("products").select("id, name, description, price, category, image_url, online_stock, tenant_id").eq("is_online", true).eq("is_active", true).gt("online_stock", 0),
-        supabase.from("tenants").select("id, name, business_type, address").eq("is_active", true),
+      const [pRes, tRes, sRes] = await Promise.all([
+        supabase.from("products").select("id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable").eq("is_online", true).eq("is_active", true).gt("online_stock", 0),
+        supabase.from("tenants_public" as any).select("id, name, business_type"),
+        supabase.from("stores_public" as any).select("*"),
       ]);
       if (pRes.data) setProducts(pRes.data as MarketProduct[]);
-      if (tRes.data) setTenants(tRes.data as Tenant[]);
+      if (tRes.data) setTenants(tRes.data as any);
+      if (sRes.data) setStores(sRes.data as unknown as StorePublic[]);
       setLoading(false);
     };
     load();
+    // Try silent geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (p) => setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => {},
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+      );
+    }
   }, []);
 
-  const categories = useMemo(() => {
-    const cats = new Set(products.map(p => p.category).filter(Boolean));
-    return Array.from(cats) as string[];
-  }, [products]);
+  const requestLocation = () => {
+    if (!navigator.geolocation) { toast({ title: "Geolocalización no disponible", variant: "destructive" }); return; }
+    navigator.geolocation.getCurrentPosition(
+      (p) => { setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }); toast({ title: "Ubicación detectada" }); },
+      (err) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const distanceKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+    const R = 6371;
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLng = (b.lng - a.lng) * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.asin(Math.sqrt(x));
+  };
+
+  // Compute nearest store distance per tenant
+  const tenantDistances = useMemo(() => {
+    const out: Record<string, { dist: number; store: StorePublic } | null> = {};
+    if (!userPos) return out;
+    for (const s of stores) {
+      const d = distanceKm(userPos, { lat: s.latitude, lng: s.longitude });
+      const cur = out[s.tenant_id];
+      if (!cur || d < cur.dist) out[s.tenant_id] = { dist: d, store: s };
+    }
+    return out;
+  }, [stores, userPos]);
 
   const tenantMap = useMemo(() => {
     const m: Record<string, Tenant> = {};
@@ -85,14 +136,30 @@ const Marketplace = () => {
     return m;
   }, [tenants]);
 
+  const categories = useMemo(() => {
+    const cats = new Set(products.map(p => p.category).filter(Boolean));
+    return Array.from(cats) as string[];
+  }, [products]);
+
   const filtered = useMemo(() => {
     return products.filter(p => {
       const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.description || "").toLowerCase().includes(search.toLowerCase());
       const matchCat = selectedCategory === "all" || p.category === selectedCategory;
       const matchTenant = selectedTenant === "all" || p.tenant_id === selectedTenant;
-      return matchSearch && matchCat && matchTenant;
+      const matchDeliv = !deliveryOnly || (p.is_deliverable !== false);
+      let matchDist = true;
+      if (maxDistance && userPos) {
+        const td = tenantDistances[p.tenant_id];
+        matchDist = !!td && td.dist <= maxDistance;
+      }
+      return matchSearch && matchCat && matchTenant && matchDeliv && matchDist;
+    }).sort((a, b) => {
+      if (!userPos) return 0;
+      const da = tenantDistances[a.tenant_id]?.dist ?? 9999;
+      const db = tenantDistances[b.tenant_id]?.dist ?? 9999;
+      return da - db;
     });
-  }, [products, search, selectedCategory, selectedTenant]);
+  }, [products, search, selectedCategory, selectedTenant, deliveryOnly, maxDistance, userPos, tenantDistances]);
 
   const addToCart = (p: MarketProduct) => {
     if (!user) {
@@ -246,9 +313,14 @@ const Marketplace = () => {
 
           <div className="flex items-center gap-2">
             {!user && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/auth")} className="rounded-full text-xs">
-                Iniciar sesión
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="rounded-full text-xs hidden sm:inline-flex">
+                  Iniciar sesión
+                </Button>
+                <Button size="sm" onClick={() => navigate("/auth?view=register")} className="rounded-full text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                  Crear cuenta
+                </Button>
+              </>
             )}
             <Sheet open={cartOpen} onOpenChange={setCartOpen}>
               <SheetTrigger asChild>
@@ -371,6 +443,39 @@ const Marketplace = () => {
         </div>
       </section>
 
+      {/* Geo banner */}
+      <div className="max-w-7xl mx-auto px-4 pb-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {userPos ? (
+            <Badge variant="outline" className="gap-1 bg-emerald-50 border-emerald-200 text-emerald-700">
+              <MapPin className="h-3 w-3" /> Ubicación detectada · ordenando por cercanía
+            </Badge>
+          ) : (
+            <Button size="sm" variant="outline" onClick={requestLocation} className="h-8 text-xs gap-1 rounded-full">
+              <MapPin className="h-3.5 w-3.5" /> Usar mi ubicación
+            </Button>
+          )}
+          {userPos && (
+            <Select value={maxDistance ? String(maxDistance) : "all"} onValueChange={(v) => setMaxDistance(v === "all" ? null : parseFloat(v))}>
+              <SelectTrigger className="w-[160px] h-8 text-xs rounded-full"><SelectValue placeholder="Distancia" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Cualquier distancia</SelectItem>
+                <SelectItem value="2">≤ 2 km</SelectItem>
+                <SelectItem value="5">≤ 5 km</SelectItem>
+                <SelectItem value="10">≤ 10 km</SelectItem>
+                <SelectItem value="25">≤ 25 km</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          <button
+            onClick={() => setDeliveryOnly((v) => !v)}
+            className={`h-8 px-3 rounded-full text-xs font-medium border transition-all ${deliveryOnly ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-600 border-gray-200 hover:bg-emerald-50"}`}
+          >
+            <Truck className="h-3 w-3 inline mr-1" /> Solo delivery
+          </button>
+        </div>
+      </div>
+
       {/* Filters */}
       <div className="max-w-7xl mx-auto px-4 pb-4">
         <div className="flex flex-wrap gap-2 items-center">
@@ -399,12 +504,13 @@ const Marketplace = () => {
             <SelectContent>
               <SelectItem value="all">Todos los negocios</SelectItem>
               {tenants.map(t => (
-                <SelectItem key={t.id} value={t.id}>{bizIcon(t.business_type)} {t.name}</SelectItem>
+                <SelectItem key={t.id} value={t.id}>{bizIcon(t.business_type)} {t.name}{userPos && tenantDistances[t.id] ? ` · ${tenantDistances[t.id]!.dist.toFixed(1)} km` : ""}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
+
 
       {/* Products Grid */}
       <main className="max-w-7xl mx-auto px-4 pb-16">
@@ -446,8 +552,11 @@ const Marketplace = () => {
                     </div>
                     <div className="p-3 space-y-1.5">
                       {tenant && (
-                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide truncate">
-                          {bizIcon(tenant.business_type)} {tenant.name}
+                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide truncate flex items-center gap-1">
+                          <span className="truncate">{bizIcon(tenant.business_type)} {tenant.name}</span>
+                          {userPos && tenantDistances[p.tenant_id] && (
+                            <span className="text-emerald-600 font-semibold whitespace-nowrap">· {tenantDistances[p.tenant_id]!.dist.toFixed(1)} km</span>
+                          )}
                         </p>
                       )}
                       <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-tight">{p.name}</h3>
@@ -462,7 +571,12 @@ const Marketplace = () => {
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                      <p className="text-[10px] text-gray-400">{p.online_stock} disponibles</p>
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="text-[10px] text-gray-400">{p.online_stock} disponibles</p>
+                        {p.is_deliverable === false && (
+                          <span className="text-[9px] text-amber-600 font-medium">Solo recogida</span>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 );
