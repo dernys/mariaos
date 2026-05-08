@@ -55,7 +55,7 @@ export function POSBar() {
 
   useEffect(() => {
     if (!tenantId) return;
-    supabase.from("products").select("id, name, price, sku, stock, category").eq("tenant_id", tenantId).eq("is_active", true).order("category").then(({ data }) => {
+    supabase.from("products").select("id, name, price, sku, stock, category, image_url").eq("tenant_id", tenantId).eq("is_active", true).order("category").then(({ data }) => {
       if (data) setProducts(data);
     });
   }, [tenantId]);
