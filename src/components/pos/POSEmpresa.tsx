@@ -122,9 +122,13 @@ export function POSEmpresa() {
                 {inCart && (
                   <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>
                 )}
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
-                  <Icon className="h-4.5 w-4.5 text-primary" />
-                </div>
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} loading="lazy" className="h-16 w-full rounded-lg object-cover mb-2 bg-muted" />
+                ) : (
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
+                    <Icon className="h-4.5 w-4.5 text-primary" />
+                  </div>
+                )}
                 <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
                 <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
                 <div className="flex items-center justify-between mt-1">
