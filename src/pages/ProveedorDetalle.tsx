@@ -97,6 +97,34 @@ export default function ProveedorDetalle() {
     setSelected(new Set()); fetchAll();
   };
 
+  const openPay = (amount: number, refType: any = null, refId: string | null = null, title = "Pagar a proveedor") => {
+    if (amount <= 0) { toast({ title: "Sin saldo a pagar" }); return; }
+    setPayCtx({ amount, refType, refId, title });
+    setPayOpen(true);
+  };
+
+  // Aggregate product traceability from purchase_items + lots + settlements
+  const trace = (() => {
+    const map = new Map<string, { name: string; sku: string; purchased: number; received: number; consigned: number; sold: number; spent: number }>();
+    purchaseItems.forEach((it) => {
+      const k = it.product_id || it.product_name;
+      if (!k) return;
+      const cur = map.get(k) || { name: it.product_name || "—", sku: it.sku || "", purchased: 0, received: 0, consigned: 0, sold: 0, spent: 0 };
+      cur.purchased += Number(it.qty || 0);
+      cur.received += Number(it.qty_received || 0);
+      cur.spent += Number(it.qty || 0) * Number(it.cost || 0);
+      map.set(k, cur);
+    });
+    lots.forEach((l) => {
+      const k = l.product_id;
+      const cur = map.get(k) || { name: l.products?.name || "—", sku: l.products?.sku || "", purchased: 0, received: 0, consigned: 0, sold: 0, spent: 0 };
+      cur.consigned += Number(l.quantity_remaining || 0);
+      cur.sold += Number(l.quantity_sold || 0);
+      map.set(k, cur);
+    });
+    return Array.from(map.values()).sort((a, b) => b.purchased - a.purchased);
+  })();
+
   return (
     <AppLayout title={s.name}>
       <div className="space-y-6">
