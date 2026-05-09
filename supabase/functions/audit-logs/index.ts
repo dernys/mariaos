@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
 
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const {
-      tenant_id, user_id, entity_type, action, search,
+      tenant_id, user_id, entity_type, entity_id, action, search,
       from_date, to_date, limit = 100, offset = 0,
     } = body;
 
@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
     if (tenant_id) q = q.eq("tenant_id", tenant_id);
     if (user_id) q = q.eq("performed_by", user_id);
     if (entity_type) q = q.eq("entity_type", entity_type);
+    if (entity_id) q = q.eq("entity_id", entity_id);
     if (action) q = q.ilike("action", `%${action}%`);
     if (search) q = q.or(`description.ilike.%${search}%,action.ilike.%${search}%`);
     if (from_date) q = q.gte("created_at", from_date);
