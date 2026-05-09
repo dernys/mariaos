@@ -14,15 +14,22 @@ export function useSuperadmin() {
       return;
     }
 
+    // Hydrate from cache for instant UI, then verify in background
+    const cacheKey = `sa:${user.id}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached !== null) {
+      setIsSuperadmin(cached === "1");
+      setLoading(false);
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke("check-superadmin");
-      if (!error && data?.is_superadmin) {
-        setIsSuperadmin(true);
-      } else {
-        setIsSuperadmin(false);
-      }
+      const value = !error && !!data?.is_superadmin;
+      setIsSuperadmin(value);
+      sessionStorage.setItem(cacheKey, value ? "1" : "0");
     } catch {
       setIsSuperadmin(false);
+      sessionStorage.setItem(cacheKey, "0");
     }
     setLoading(false);
   }, [user]);
