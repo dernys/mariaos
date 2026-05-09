@@ -274,6 +274,16 @@ const Auth = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {password.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex gap-1">
+                      {[0, 1, 2, 3, 4].map(i => (
+                        <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i < pwdStrength.score ? pwdStrength.color : "bg-muted"}`} />
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Seguridad: <span className="font-medium">{pwdStrength.label}</span></p>
+                  </div>
+                )}
               </div>
 
               <Button
