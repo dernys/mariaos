@@ -158,13 +158,24 @@ const Landing = () => {
             </Link>
           </div>
 
-          {/* Hero screenshot */}
+          {/* Hero screenshot con chrome de navegador */}
           <div className="mt-16 relative max-w-5xl mx-auto animate-fade-in">
-            <div aria-hidden className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-emerald-400/20 blur-2xl rounded-3xl" />
-            <div className="relative rounded-2xl border border-border shadow-2xl overflow-hidden bg-card">
+            <div aria-hidden className="absolute -inset-6 bg-gradient-to-r from-primary/30 via-emerald-400/20 to-primary/30 blur-3xl rounded-[2rem] opacity-70" />
+            <div aria-hidden className="absolute -top-10 left-10 h-24 w-24 rounded-full bg-primary/40 blur-3xl" />
+            <div aria-hidden className="absolute -bottom-10 right-10 h-28 w-28 rounded-full bg-emerald-400/30 blur-3xl" />
+            <div className="relative rounded-2xl border border-border/80 shadow-2xl overflow-hidden bg-card ring-1 ring-white/5">
+              {/* Browser chrome */}
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-card/90 border-b border-border/60">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />
+                <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/80" />
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
+                <div className="flex-1 mx-4 h-6 rounded-md bg-background/60 border border-border/50 flex items-center justify-center text-[10px] text-muted-foreground font-mono">
+                  app.gaia.cloud / dashboard
+                </div>
+              </div>
               <img
-                src="/landing/marketplace.png"
-                alt="Captura del Marketplace de GaIA"
+                src="/landing/modules/dashboard.png"
+                alt="Dashboard ejecutivo de GaIA con KPIs, ventas y alertas en tiempo real"
                 width={1600}
                 height={900}
                 fetchPriority="high"
