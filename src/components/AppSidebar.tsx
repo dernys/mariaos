@@ -28,6 +28,12 @@ import {
   Briefcase,
   Bike,
   Truck,
+  Bot,
+  Brain,
+  ShieldAlert,
+  Workflow,
+  GitBranch,
+  Sparkles,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
