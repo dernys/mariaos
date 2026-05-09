@@ -44,6 +44,13 @@ import TurnoDetalle from "./pages/TurnoDetalle";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import Auditoria from "./pages/Auditoria";
+import CommandCenter from "./pages/CommandCenter";
+import Agents from "./pages/Agents";
+import Decisions from "./pages/Decisions";
+import RiskEngine from "./pages/RiskEngine";
+import BusinessMemory from "./pages/BusinessMemory";
+import Workflows from "./pages/Workflows";
+import DigitalTwin from "./pages/DigitalTwin";
 
 const queryClient = new QueryClient();
 
