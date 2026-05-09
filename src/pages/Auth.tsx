@@ -30,10 +30,10 @@ const Auth = () => {
         if (data?.is_superadmin) {
           navigate("/superadmin", { replace: true });
         } else {
-          navigate("/", { replace: true });
+          navigate("/app", { replace: true });
         }
       } catch {
-        navigate("/", { replace: true });
+        navigate("/app", { replace: true });
       }
     };
 

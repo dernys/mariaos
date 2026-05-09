@@ -30,7 +30,7 @@ const ResetPassword = () => {
     if (error) toast.error(error.message);
     else {
       toast.success("Contraseña actualizada correctamente.");
-      navigate("/");
+      navigate("/app");
     }
     setLoading(false);
   };

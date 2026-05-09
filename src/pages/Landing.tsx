@@ -1,77 +1,21 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ShoppingCart,
-  Package,
-  Users,
-  CreditCard,
-  BarChart3,
-  Store,
-  Truck,
-  ChefHat,
-  Receipt,
-  Globe,
-  Shield,
-  Zap,
-  Smartphone,
-  Cloud,
-  ArrowRight,
-  Check,
-  Sparkles,
+  ShoppingCart, Package, Users, BarChart3, Truck, ChefHat, Receipt, Globe,
+  Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import gaiaLogo from "@/assets/gaia-logo.png";
 import heroBg from "@/assets/landing-hero-bg.jpg";
 
 const modules = [
-  {
-    icon: ShoppingCart,
-    title: "POS Adaptable",
-    desc: "Tres modos especializados: Bar con cuentas, Restaurante con mapa de mesas y KDS, y Retail con búsqueda por SKU/código de barras.",
-    bullets: ["Cobro en segundos", "Pagos divididos y multimoneda", "QR, tarjeta, efectivo y crédito"],
-  },
-  {
-    icon: Package,
-    title: "Inventario Inteligente",
-    desc: "Control total de stock con recetas (BOM), múltiples almacenes, transferencias y alertas automáticas de bajo stock.",
-    bullets: ["Movimientos auditables", "Recetas y descuento automático", "Alertas en tiempo real"],
-  },
-  {
-    icon: ChefHat,
-    title: "Operaciones Restaurante",
-    desc: "Mapa de mesas en tiempo real, KDS de cocina sincronizado, división de cuentas y gestión completa del salón.",
-    bullets: ["Realtime entre dispositivos", "Cocina conectada", "Mesas, bar y delivery"],
-  },
-  {
-    icon: Globe,
-    title: "Marketplace Online",
-    desc: "Tienda online pública con geolocalización: tus clientes encuentran tus productos según ubicación del dispositivo.",
-    bullets: ["PWA instalable", "Registro y conversión a cliente", "Catálogo por tienda"],
-  },
-  {
-    icon: Receipt,
-    title: "Facturación Electrónica",
-    desc: "Emisión local y electrónica con UBL 2.1, CUFE y transmisión por webhook a tu PAC. PDF profesional incluido.",
-    bullets: ["UBL 2.1 + XML firmado", "Compatible LATAM", "Envío por correo automático"],
-  },
-  {
-    icon: Users,
-    title: "Clientes y Empleados",
-    desc: "Gestión de saldos, fidelización, salarios, asistencia, horarios y nóminas con timeline de actividad por persona.",
-    bullets: ["Programa de fidelización", "RRHH integrado", "Historial completo"],
-  },
-  {
-    icon: Truck,
-    title: "Delivery y Repartos",
-    desc: "Zonas, repartidores y asignación de pedidos en tiempo real para coordinar tu logística de última milla.",
-    bullets: ["Zonas configurables", "Asignación realtime", "Seguimiento por pedido"],
-  },
-  {
-    icon: BarChart3,
-    title: "Analytics y Contabilidad",
-    desc: "Dashboards en vivo, reportes exportables y partida doble validada para una contabilidad básica integrada.",
-    bullets: ["KPIs por tienda y turno", "Asientos auditables", "Exportación CSV/PDF"],
-  },
+  { icon: ShoppingCart, title: "POS Adaptable", desc: "Tres modos especializados: Bar con cuentas, Restaurante con mapa de mesas y KDS, y Retail con búsqueda por SKU/código de barras.", bullets: ["Cobro en segundos", "Pagos divididos y multimoneda", "QR, tarjeta, efectivo y crédito"] },
+  { icon: Package, title: "Inventario Inteligente", desc: "Control total de stock con recetas (BOM), múltiples almacenes, transferencias y alertas automáticas de bajo stock.", bullets: ["Movimientos auditables", "Recetas y descuento automático", "Alertas en tiempo real"] },
+  { icon: ChefHat, title: "Operaciones Restaurante", desc: "Mapa de mesas en tiempo real, KDS de cocina sincronizado, división de cuentas y gestión completa del salón.", bullets: ["Realtime entre dispositivos", "Cocina conectada", "Mesas, bar y delivery"] },
+  { icon: Globe, title: "Marketplace Online", desc: "Tienda online pública con geolocalización: tus clientes encuentran tus productos según ubicación del dispositivo.", bullets: ["PWA instalable", "Registro y conversión a cliente", "Catálogo por tienda"] },
+  { icon: Receipt, title: "Facturación Electrónica", desc: "Emisión local y electrónica con UBL 2.1, CUFE y transmisión por webhook a tu PAC. PDF profesional incluido.", bullets: ["UBL 2.1 + XML firmado", "Compatible LATAM", "Envío por correo automático"] },
+  { icon: Users, title: "Clientes y Empleados", desc: "Gestión de saldos, fidelización, salarios, asistencia, horarios y nóminas con timeline de actividad por persona.", bullets: ["Programa de fidelización", "RRHH integrado", "Historial completo"] },
+  { icon: Truck, title: "Delivery y Repartos", desc: "Zonas, repartidores y asignación de pedidos en tiempo real para coordinar tu logística de última milla.", bullets: ["Zonas configurables", "Asignación realtime", "Seguimiento por pedido"] },
+  { icon: BarChart3, title: "Analytics y Contabilidad", desc: "Dashboards en vivo, reportes exportables y partida doble validada para una contabilidad básica integrada.", bullets: ["KPIs por tienda y turno", "Asientos auditables", "Exportación CSV/PDF"] },
 ];
 
 const platformFeatures = [
@@ -89,19 +33,19 @@ const screenshots = [
 
 const Landing = () => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground antialiased">
       {/* Nav */}
       <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-background/70 border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/landing" className="flex items-center gap-2">
-            <img src={gaiaLogo} alt="GaIA" width={36} height={36} className="h-9 w-9" />
+          <Link to="/" className="flex items-center gap-2">
+            <img src={gaiaLogo} alt="GaIA" width={36} height={36} className="h-9 w-9" decoding="async" />
             <span className="font-heading font-bold text-lg tracking-tight">GaIA</span>
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm">
-            <a href="#modulos" className="text-muted-foreground hover:text-foreground transition">Módulos</a>
-            <a href="#plataforma" className="text-muted-foreground hover:text-foreground transition">Plataforma</a>
-            <a href="#capturas" className="text-muted-foreground hover:text-foreground transition">Capturas</a>
-            <a href="#contacto" className="text-muted-foreground hover:text-foreground transition">Contacto</a>
+            <a href="#modulos" className="text-muted-foreground hover:text-foreground transition-colors">Módulos</a>
+            <a href="#plataforma" className="text-muted-foreground hover:text-foreground transition-colors">Plataforma</a>
+            <a href="#capturas" className="text-muted-foreground hover:text-foreground transition-colors">Capturas</a>
+            <a href="#contacto" className="text-muted-foreground hover:text-foreground transition-colors">Contacto</a>
           </nav>
           <div className="flex items-center gap-2">
             <Link to="/auth"><Button variant="ghost" size="sm">Ingresar</Button></Link>
@@ -111,51 +55,45 @@ const Landing = () => {
       </header>
 
       {/* Hero */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
-        <img
-          src={heroBg}
-          alt=""
-          width={1920}
-          height={1080}
-          className="absolute inset-0 w-full h-full object-cover opacity-25"
+      <section className="relative pt-32 pb-20 overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-25"
+          style={{
+            backgroundImage: `url(${heroBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
+        {/* subtle grid */}
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+            maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
+          }}
+        />
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-6"
-          >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-6 animate-fade-in">
             <Sparkles className="h-3.5 w-3.5" />
             Plataforma todo-en-uno · Construida por GaIA
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.05 }}
-            className="font-heading font-bold text-4xl sm:text-6xl lg:text-7xl tracking-tight max-w-4xl mx-auto leading-[1.05]"
-          >
+          </div>
+          <h1 className="font-heading font-bold text-4xl sm:text-6xl lg:text-7xl tracking-tight max-w-4xl mx-auto leading-[1.05] animate-fade-in">
             El sistema operativo de tu{" "}
             <span className="bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
               negocio moderno
             </span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto"
-          >
+          </h1>
+          <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto animate-fade-in">
             POS adaptable, inventario, facturación electrónica, marketplace, delivery y RRHH en una sola plataforma
             multi-empresa, en tiempo real y lista para escalar.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            className="mt-9 flex items-center justify-center gap-3 flex-wrap"
-          >
+          </p>
+          <div className="mt-9 flex items-center justify-center gap-3 flex-wrap animate-fade-in">
             <Link to="/auth">
               <Button size="lg" className="bg-primary hover:bg-primary/90 gap-2">
                 Probar gratis <ArrowRight className="h-4 w-4" />
@@ -166,26 +104,23 @@ const Landing = () => {
                 Ver marketplace en vivo
               </Button>
             </Link>
-          </motion.div>
+          </div>
 
           {/* Hero screenshot */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.25 }}
-            className="mt-16 relative max-w-5xl mx-auto"
-          >
-            <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 to-emerald-400/30 blur-3xl opacity-50 rounded-3xl" />
+          <div className="mt-16 relative max-w-5xl mx-auto animate-fade-in">
+            <div aria-hidden className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-emerald-400/20 blur-2xl rounded-3xl" />
             <div className="relative rounded-2xl border border-border shadow-2xl overflow-hidden bg-card">
               <img
                 src="/landing/marketplace.png"
                 alt="Captura del Marketplace de GaIA"
                 width={1600}
                 height={900}
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-auto"
               />
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -193,21 +128,14 @@ const Landing = () => {
       <section id="plataforma" className="py-20 border-y border-border bg-card/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {platformFeatures.map((f, i) => (
-              <motion.div
-                key={f.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="text-center sm:text-left"
-              >
+            {platformFeatures.map((f) => (
+              <div key={f.title} className="text-center sm:text-left">
                 <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-primary/10 text-primary mb-3">
                   <f.icon className="h-5 w-5" />
                 </div>
                 <h3 className="font-heading font-semibold text-sm">{f.title}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{f.desc}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -226,15 +154,11 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {modules.map((m, i) => (
-              <motion.div
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {modules.map((m) => (
+              <div
                 key={m.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.04 }}
-                className="group relative rounded-2xl border border-border bg-card p-6 hover:shadow-elevated hover:border-primary/40 transition-all"
+                className="group relative rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.3)]"
               >
                 <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-primary to-emerald-500 text-primary-foreground mb-4 shadow-lg shadow-primary/20">
                   <m.icon className="h-5 w-5" />
@@ -249,7 +173,7 @@ const Landing = () => {
                     </li>
                   ))}
                 </ul>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -268,24 +192,25 @@ const Landing = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {screenshots.map((s, i) => (
-              <motion.figure
-                key={s.src}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.07 }}
-                className="rounded-2xl overflow-hidden border border-border bg-card shadow-card"
-              >
-                <img src={s.src} alt={s.alt} loading="lazy" className="w-full h-64 object-cover object-top" />
+            {screenshots.map((s) => (
+              <figure key={s.src} className="rounded-2xl overflow-hidden border border-border bg-card shadow-card transition-transform duration-300 hover:-translate-y-1">
+                <img
+                  src={s.src}
+                  alt={s.alt}
+                  loading="lazy"
+                  decoding="async"
+                  width={800}
+                  height={500}
+                  className="w-full h-64 object-cover object-top"
+                />
                 <figcaption className="p-4 text-xs text-muted-foreground font-medium">{s.label}</figcaption>
-              </motion.figure>
+              </figure>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Stats / Trust */}
+      {/* Stats */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -310,8 +235,8 @@ const Landing = () => {
       <section id="contacto" className="py-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="relative rounded-3xl overflow-hidden border border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card p-10 sm:p-16 text-center">
-            <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/30 blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
+            <div aria-hidden className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/30 blur-3xl" />
+            <div aria-hidden className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
             <div className="relative">
               <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
                 Listo para digitalizar tu negocio
@@ -338,7 +263,7 @@ const Landing = () => {
       <footer className="border-t border-border py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={gaiaLogo} alt="GaIA" width={28} height={28} className="h-7 w-7" />
+            <img src={gaiaLogo} alt="GaIA" width={28} height={28} className="h-7 w-7" decoding="async" />
             <span className="font-heading font-semibold text-sm">GaIA</span>
             <span className="text-xs text-muted-foreground ml-2">© {new Date().getFullYear()} Todos los derechos reservados.</span>
           </div>

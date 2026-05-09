@@ -172,7 +172,7 @@ const SuperAdmin = () => {
   }
 
   if (!isSuperadmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   const availableUsers = allProfiles.filter(
