@@ -58,10 +58,33 @@ const screenshots = [
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
 
-  const startDemo = (type: string) => {
-    try { localStorage.setItem("gaia_demo_business_type", type); } catch {}
-    navigate(`/auth?view=register&demo=${type}`);
+  const DEMO_EMAILS: Record<string, string> = {
+    bar: "demo-bar@gaia.app",
+    restaurant: "demo-restaurante@gaia.app",
+    retail: "demo-empresa@gaia.app",
+    empresa: "demo-empresa@gaia.app",
+  };
+
+  const startDemo = async (type: string) => {
+    setDemoLoading(type);
+    try {
+      const { error: seedErr } = await supabase.functions.invoke("seed-demo");
+      if (seedErr) throw seedErr;
+      const email = DEMO_EMAILS[type] ?? DEMO_EMAILS.empresa;
+      const { error: loginErr } = await supabase.auth.signInWithPassword({
+        email,
+        password: "demo1234",
+      });
+      if (loginErr) throw loginErr;
+      toast.success("Demo lista. Bienvenido a GaIA.");
+      navigate("/app");
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo iniciar la demo");
+    } finally {
+      setDemoLoading(null);
+    }
   };
 
   return (
