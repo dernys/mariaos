@@ -44,6 +44,13 @@ import TurnoDetalle from "./pages/TurnoDetalle";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import Auditoria from "./pages/Auditoria";
+import CommandCenter from "./pages/CommandCenter";
+import Agents from "./pages/Agents";
+import Decisions from "./pages/Decisions";
+import RiskEngine from "./pages/RiskEngine";
+import BusinessMemory from "./pages/BusinessMemory";
+import Workflows from "./pages/Workflows";
+import DigitalTwin from "./pages/DigitalTwin";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +99,13 @@ const App = () => (
               <Route path="/delivery" element={<ProtectedRoute><Delivery /></ProtectedRoute>} />
               <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
               <Route path="/auditoria" element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
+              <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
+              <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
+              <Route path="/decisions" element={<ProtectedRoute><Decisions /></ProtectedRoute>} />
+              <Route path="/risk" element={<ProtectedRoute><RiskEngine /></ProtectedRoute>} />
+              <Route path="/memory" element={<ProtectedRoute><BusinessMemory /></ProtectedRoute>} />
+              <Route path="/workflows" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
+              <Route path="/digital-twin" element={<ProtectedRoute><DigitalTwin /></ProtectedRoute>} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />

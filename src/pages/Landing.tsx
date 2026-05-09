@@ -90,7 +90,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <img src={gaiaLogo} alt="GaIA" width={36} height={36} className="h-9 w-9" decoding="async" />
-            <span className="font-heading font-bold text-lg tracking-tight">GaIA</span>
+            <span className="font-heading font-bold text-lg tracking-tight">GaIA OS</span>
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm">
             <a href="#modulos" className="text-muted-foreground hover:text-foreground transition-colors">Módulos</a>

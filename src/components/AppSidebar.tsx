@@ -28,6 +28,12 @@ import {
   Briefcase,
   Bike,
   Truck,
+  Bot,
+  Brain,
+  ShieldAlert,
+  Workflow,
+  GitBranch,
+  Sparkles,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -65,6 +71,18 @@ interface MenuGroup {
 }
 
 const menuGroups: MenuGroup[] = [
+  {
+    label: "GaIA OS",
+    items: [
+      { title: "Command Center", url: "/command-center", icon: Sparkles },
+      { title: "Agentes IA", url: "/agents", icon: Bot },
+      { title: "Decisiones", url: "/decisions", icon: Brain },
+      { title: "Riesgos", url: "/risk", icon: ShieldAlert },
+      { title: "Memoria", url: "/memory", icon: GitBranch },
+      { title: "Digital Twin", url: "/digital-twin", icon: Workflow },
+      { title: "Workflows", url: "/workflows", icon: Workflow },
+    ],
+  },
   {
     label: "General",
     items: [
@@ -179,7 +197,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-heading text-sm font-bold text-sidebar-primary-foreground tracking-tight">
-                GaIA ERP
+                GaIA OS
               </span>
               <span className="text-[10px] text-sidebar-foreground/60">
                 {tenant?.name || "Sistema de Ventas"}

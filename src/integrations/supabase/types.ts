@@ -180,6 +180,113 @@ export type Database = {
           },
         ]
       }
+      agent_actions: {
+        Row: {
+          action_type: string
+          agent_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          executed_at: string | null
+          id: string
+          payload: Json
+          requires_approval: boolean
+          result: Json | null
+          status: Database["public"]["Enums"]["action_status"]
+          target_entity_id: string | null
+          target_entity_type: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          agent_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          executed_at?: string | null
+          id?: string
+          payload?: Json
+          requires_approval?: boolean
+          result?: Json | null
+          status?: Database["public"]["Enums"]["action_status"]
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          agent_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          executed_at?: string | null
+          id?: string
+          payload?: Json
+          requires_approval?: boolean
+          result?: Json | null
+          status?: Database["public"]["Enums"]["action_status"]
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_actions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agents: {
+        Row: {
+          autonomy_level: Database["public"]["Enums"]["autonomy_level"]
+          config: Json
+          created_at: string
+          description: string | null
+          id: string
+          last_run_at: string | null
+          metrics: Json
+          name: string
+          status: Database["public"]["Enums"]["agent_status"]
+          tenant_id: string
+          type: Database["public"]["Enums"]["agent_type"]
+          updated_at: string
+        }
+        Insert: {
+          autonomy_level?: Database["public"]["Enums"]["autonomy_level"]
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_run_at?: string | null
+          metrics?: Json
+          name: string
+          status?: Database["public"]["Enums"]["agent_status"]
+          tenant_id: string
+          type: Database["public"]["Enums"]["agent_type"]
+          updated_at?: string
+        }
+        Update: {
+          autonomy_level?: Database["public"]["Enums"]["autonomy_level"]
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_run_at?: string | null
+          metrics?: Json
+          name?: string
+          status?: Database["public"]["Enums"]["agent_status"]
+          tenant_id?: string
+          type?: Database["public"]["Enums"]["agent_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_modules: {
         Row: {
           created_at: string
@@ -206,6 +313,130 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      business_decisions: {
+        Row: {
+          agent_id: string | null
+          context: Json
+          created_at: string
+          effectiveness_score: number | null
+          id: string
+          outcome: Json | null
+          reasoning: string | null
+          recommendation: Json
+          status: Database["public"]["Enums"]["action_status"]
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          context?: Json
+          created_at?: string
+          effectiveness_score?: number | null
+          id?: string
+          outcome?: Json | null
+          reasoning?: string | null
+          recommendation?: Json
+          status?: Database["public"]["Enums"]["action_status"]
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          context?: Json
+          created_at?: string
+          effectiveness_score?: number | null
+          id?: string
+          outcome?: Json | null
+          reasoning?: string | null
+          recommendation?: Json
+          status?: Database["public"]["Enums"]["action_status"]
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_decisions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean
+          source: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          processed?: boolean
+          source: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean
+          source?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      business_memory: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          source_decision_id: string | null
+          summary: string
+          tenant_id: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          source_decision_id?: string | null
+          summary: string
+          tenant_id: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          source_decision_id?: string | null
+          summary?: string
+          tenant_id?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_memory_source_decision_id_fkey"
+            columns: ["source_decision_id"]
+            isOneToOne: false
+            referencedRelation: "business_decisions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       consignment_lots: {
         Row: {
@@ -2506,6 +2737,54 @@ export type Database = {
           },
         ]
       }
+      risk_alerts: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          metadata: Json
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: Database["public"]["Enums"]["risk_severity"]
+          status: string
+          tenant_id: string
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["risk_severity"]
+          status?: string
+          tenant_id: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["risk_severity"]
+          status?: string
+          tenant_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           can_create: boolean
@@ -3660,6 +3939,48 @@ export type Database = {
           },
         ]
       }
+      workflows: {
+        Row: {
+          created_at: string
+          definition: Json
+          description: string | null
+          enabled: boolean
+          id: string
+          last_run_at: string | null
+          name: string
+          run_count: number
+          tenant_id: string
+          trigger: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          definition?: Json
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          last_run_at?: string | null
+          name: string
+          run_count?: number
+          tenant_id: string
+          trigger?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          definition?: Json
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          last_run_at?: string | null
+          name?: string
+          run_count?: number
+          tenant_id?: string
+          trigger?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       stores_public: {
@@ -3918,7 +4239,19 @@ export type Database = {
       }
     }
     Enums: {
+      action_status: "pending" | "approved" | "rejected" | "executed" | "failed"
+      agent_status: "active" | "paused" | "training" | "error"
+      agent_type:
+        | "cfo"
+        | "inventory"
+        | "operations"
+        | "marketplace"
+        | "compliance"
+        | "procurement"
+        | "analytics"
       app_role: "admin" | "gerente" | "supervisor" | "cajero" | "inventarista"
+      autonomy_level: "manual" | "suggest" | "auto_approve" | "autonomous"
+      risk_severity: "low" | "medium" | "high" | "critical"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4046,7 +4379,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      action_status: ["pending", "approved", "rejected", "executed", "failed"],
+      agent_status: ["active", "paused", "training", "error"],
+      agent_type: [
+        "cfo",
+        "inventory",
+        "operations",
+        "marketplace",
+        "compliance",
+        "procurement",
+        "analytics",
+      ],
       app_role: ["admin", "gerente", "supervisor", "cajero", "inventarista"],
+      autonomy_level: ["manual", "suggest", "auto_approve", "autonomous"],
+      risk_severity: ["low", "medium", "high", "critical"],
     },
   },
 } as const
