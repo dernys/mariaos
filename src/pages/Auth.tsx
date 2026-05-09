@@ -7,6 +7,7 @@ import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { InstallPWAPrompt } from "@/components/InstallPWAPrompt";
 
 type AuthView = "login" | "register" | "forgot";
 
