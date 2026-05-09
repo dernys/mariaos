@@ -1,11 +1,29 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ShoppingCart, Package, Users, BarChart3, Truck, ChefHat, Receipt, Globe,
-  Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles,
+  Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles, Store, Utensils, Building2, PlayCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import gaiaLogo from "@/assets/gaia-logo.png";
 import heroBg from "@/assets/landing-hero-bg.jpg";
+
+const moduleSlides = [
+  { img: "/landing/modules/pos.jpg", icon: ShoppingCart, title: "POS Adaptable", desc: "Bar, restaurante o retail. Cobro veloz con pagos divididos, multimoneda y atajos de teclado.", features: ["3 modos especializados", "Multi-pago y multimoneda", "Atajos y mobile-first"] },
+  { img: "/landing/modules/restaurante.jpg", icon: ChefHat, title: "Operaciones Restaurante", desc: "Mapa de mesas, KDS de cocina sincronizado en tiempo real y división avanzada de cuentas.", features: ["Mapa de salón visual", "Cocina en tiempo real", "Bill splitting"] },
+  { img: "/landing/modules/inventario.jpg", icon: Package, title: "Inventario Inteligente", desc: "Stock por almacén, recetas (BOM), transferencias y alertas automáticas de bajo stock.", features: ["Movimientos auditables", "Recetas y descuento", "Alertas en tiempo real"] },
+  { img: "/landing/modules/marketplace.jpg", icon: Globe, title: "Marketplace Online", desc: "Tienda pública PWA con geolocalización para que tus clientes te encuentren cerca.", features: ["Geolocalización nativa", "Registro a cliente", "Instalable como app"] },
+  { img: "/landing/modules/facturacion.jpg", icon: Receipt, title: "Facturación Electrónica", desc: "Facturación local y electrónica con UBL 2.1, CUFE y transmisión por webhook a tu PAC.", features: ["UBL 2.1 + XML firmado", "PDF profesional", "Envío por email"] },
+  { img: "/landing/modules/clientes.jpg", icon: Users, title: "Clientes y Empleados", desc: "CRM con saldos, fidelización, nómina, asistencia y timeline completo de actividad.", features: ["Programa de puntos", "RRHH integrado", "Historial completo"] },
+  { img: "/landing/modules/delivery.jpg", icon: Truck, title: "Delivery y Repartos", desc: "Asignación de pedidos, zonas configurables y seguimiento de repartidores en tiempo real.", features: ["Zonas y tarifas", "Asignación realtime", "Tracking por pedido"] },
+  { img: "/landing/modules/analytics.jpg", icon: BarChart3, title: "Analytics y Contabilidad", desc: "Dashboards en vivo, reportes exportables y partida doble validada con asientos auditables.", features: ["KPIs por turno", "Asientos auditables", "Exportación CSV/PDF"] },
+];
+
+const demoBusinessTypes = [
+  { id: "bar", icon: Store, title: "Bar / Cafetería", desc: "Cuentas abiertas, comanda rápida y cobro por consumición.", accent: "from-amber-500 to-orange-500" },
+  { id: "restaurant", icon: Utensils, title: "Restaurante", desc: "Mapa de mesas, KDS de cocina y división de cuentas.", accent: "from-rose-500 to-red-500" },
+  { id: "retail", icon: Building2, title: "Retail / Empresa", desc: "Búsqueda por SKU, multi-tienda y facturación.", accent: "from-primary to-emerald-500" },
+];
 
 const modules = [
   { icon: ShoppingCart, title: "POS Adaptable", desc: "Tres modos especializados: Bar con cuentas, Restaurante con mapa de mesas y KDS, y Retail con búsqueda por SKU/código de barras.", bullets: ["Cobro en segundos", "Pagos divididos y multimoneda", "QR, tarjeta, efectivo y crédito"] },
@@ -32,6 +50,13 @@ const screenshots = [
 ];
 
 const Landing = () => {
+  const navigate = useNavigate();
+
+  const startDemo = (type: string) => {
+    try { localStorage.setItem("gaia_demo_business_type", type); } catch {}
+    navigate(`/auth?view=register&demo=${type}`);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       {/* Nav */}
@@ -43,8 +68,9 @@ const Landing = () => {
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm">
             <a href="#modulos" className="text-muted-foreground hover:text-foreground transition-colors">Módulos</a>
+            <a href="#tour" className="text-muted-foreground hover:text-foreground transition-colors">Tour</a>
+            <a href="#demo" className="text-muted-foreground hover:text-foreground transition-colors">Demo</a>
             <a href="#plataforma" className="text-muted-foreground hover:text-foreground transition-colors">Plataforma</a>
-            <a href="#capturas" className="text-muted-foreground hover:text-foreground transition-colors">Capturas</a>
             <a href="#contacto" className="text-muted-foreground hover:text-foreground transition-colors">Contacto</a>
           </nav>
           <div className="flex items-center gap-2">
@@ -94,14 +120,14 @@ const Landing = () => {
             multi-empresa, en tiempo real y lista para escalar.
           </p>
           <div className="mt-9 flex items-center justify-center gap-3 flex-wrap animate-fade-in">
-            <Link to="/auth">
+            <a href="#demo">
               <Button size="lg" className="bg-primary hover:bg-primary/90 gap-2">
-                Probar gratis <ArrowRight className="h-4 w-4" />
+                <PlayCircle className="h-4 w-4" /> Probar la demo
               </Button>
-            </Link>
-            <Link to="/marketplace">
+            </a>
+            <Link to="/auth">
               <Button size="lg" variant="outline" className="gap-2">
-                Ver marketplace en vivo
+                Crear cuenta gratis <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -175,6 +201,107 @@ const Landing = () => {
                 </ul>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Module Carousel */}
+      <section id="tour" className="py-24 bg-gradient-to-b from-background via-card/30 to-background border-y border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Tour visual</p>
+            <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
+              Conoce cada módulo en acción
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Desliza para explorar las pantallas reales y sus capacidades clave.
+            </p>
+          </div>
+
+          <Carousel opts={{ align: "start", loop: true }} className="relative">
+            <CarouselContent className="-ml-4">
+              {moduleSlides.map((s) => (
+                <CarouselItem key={s.title} className="pl-4 md:basis-1/2 lg:basis-1/2">
+                  <div className="group relative rounded-3xl overflow-hidden border border-border bg-card shadow-card hover:shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.35)] hover:border-primary/40 transition-all duration-500">
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <img
+                        src={s.img}
+                        alt={s.title}
+                        loading="lazy"
+                        decoding="async"
+                        width={1280}
+                        height={800}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                      />
+                      <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+                      <div className="absolute top-4 left-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background/70 backdrop-blur border border-primary/30 text-primary text-xs font-medium">
+                        <s.icon className="h-3.5 w-3.5" />
+                        {s.title}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                      <ul className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {s.features.map((f) => (
+                          <li key={f} className="flex items-center gap-2 text-xs text-foreground/85">
+                            <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex -left-5 bg-card border-border" />
+            <CarouselNext className="hidden md:flex -right-5 bg-card border-border" />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* Demo selector */}
+      <section id="demo" className="py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-4">
+              <PlayCircle className="h-3.5 w-3.5" />
+              Demo interactiva
+            </div>
+            <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
+              Elige tu tipo de negocio
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Entra a una demo preconfigurada según tu rubro. Sin tarjeta, sin instalaciones.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {demoBusinessTypes.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => startDemo(b.id)}
+                className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)]"
+              >
+                <div aria-hidden className={`absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${b.accent} opacity-20 blur-3xl group-hover:opacity-40 transition-opacity`} />
+                <div className={`relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br ${b.accent} text-white shadow-lg mb-5`}>
+                  <b.icon className="h-6 w-6" />
+                </div>
+                <h3 className="relative font-heading font-semibold text-lg">{b.title}</h3>
+                <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
+                <div className="relative mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                  Probar demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link to="/marketplace">
+              <Button variant="outline" size="lg" className="gap-2">
+                <Globe className="h-4 w-4" /> Explorar marketplace público
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
