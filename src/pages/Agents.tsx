@@ -147,10 +147,15 @@ export default function Agents() {
                         <div><p className="text-muted-foreground text-[10px]">Análisis</p><p className="font-semibold">{(agent.metrics as any)?.runs ?? 0}</p></div>
                         <div><p className="text-muted-foreground text-[10px]">Última</p><p className="font-semibold text-[11px]">{agent.last_run_at ? formatDistanceToNow(new Date(agent.last_run_at), { locale: es, addSuffix: true }) : "—"}</p></div>
                       </div>
-                      <Button onClick={() => runAgent(agent)} disabled={running === agent.id} className="w-full" size="sm">
-                        {running === agent.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlayCircle className="h-4 w-4 mr-2" />}
-                        Ejecutar análisis ahora
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button onClick={() => runAgent(agent)} disabled={running === agent.id} className="flex-1" size="sm">
+                          {running === agent.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlayCircle className="h-4 w-4 mr-2" />}
+                          Ejecutar
+                        </Button>
+                        <Link to={`/agents/${agent.id}`}>
+                          <Button variant="outline" size="sm" className="px-2"><ExternalLink className="h-4 w-4" /></Button>
+                        </Link>
+                      </div>
                     </>
                   )}
                 </CardContent>
