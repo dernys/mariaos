@@ -84,8 +84,21 @@ export default function Agents() {
   return (
     <AppLayout title="Agentes IA">
       <div className="space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
-          <Sparkles className="h-3 w-3" /> 7 agentes especializados
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
+            <Sparkles className="h-3 w-3" /> {agents.length}/{AGENT_DEFINITIONS.length} agentes provisionados · {agents.filter((a) => a.status === "active").length} activos
+          </div>
+          <div className="flex gap-2">
+            {agents.length < AGENT_DEFINITIONS.length && (
+              <Button variant="outline" size="sm" onClick={provisionAll} disabled={bulkBusy}>
+                <Bot className="h-4 w-4 mr-2" /> Provisionar todos
+              </Button>
+            )}
+            <Button size="sm" onClick={runAll} disabled={bulkBusy || agents.filter((a) => a.status === "active").length === 0}>
+              {bulkBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+              Ejecutar todos los activos
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
