@@ -8,15 +8,19 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import gaiaLogo from "@/assets/gaia-logo.png";
 import heroBg from "@/assets/landing-hero-bg.jpg";
 
+import { Clock4 } from "lucide-react";
+
 const moduleSlides = [
-  { img: "/landing/modules/pos.jpg", icon: ShoppingCart, title: "POS Adaptable", desc: "Bar, restaurante o retail. Cobro veloz con pagos divididos, multimoneda y atajos de teclado.", features: ["3 modos especializados", "Multi-pago y multimoneda", "Atajos y mobile-first"] },
-  { img: "/landing/modules/restaurante.jpg", icon: ChefHat, title: "Operaciones Restaurante", desc: "Mapa de mesas, KDS de cocina sincronizado en tiempo real y división avanzada de cuentas.", features: ["Mapa de salón visual", "Cocina en tiempo real", "Bill splitting"] },
-  { img: "/landing/modules/inventario.jpg", icon: Package, title: "Inventario Inteligente", desc: "Stock por almacén, recetas (BOM), transferencias y alertas automáticas de bajo stock.", features: ["Movimientos auditables", "Recetas y descuento", "Alertas en tiempo real"] },
-  { img: "/landing/modules/marketplace.jpg", icon: Globe, title: "Marketplace Online", desc: "Tienda pública PWA con geolocalización para que tus clientes te encuentren cerca.", features: ["Geolocalización nativa", "Registro a cliente", "Instalable como app"] },
-  { img: "/landing/modules/facturacion.jpg", icon: Receipt, title: "Facturación Electrónica", desc: "Facturación local y electrónica con UBL 2.1, CUFE y transmisión por webhook a tu PAC.", features: ["UBL 2.1 + XML firmado", "PDF profesional", "Envío por email"] },
-  { img: "/landing/modules/clientes.jpg", icon: Users, title: "Clientes y Empleados", desc: "CRM con saldos, fidelización, nómina, asistencia y timeline completo de actividad.", features: ["Programa de puntos", "RRHH integrado", "Historial completo"] },
-  { img: "/landing/modules/delivery.jpg", icon: Truck, title: "Delivery y Repartos", desc: "Asignación de pedidos, zonas configurables y seguimiento de repartidores en tiempo real.", features: ["Zonas y tarifas", "Asignación realtime", "Tracking por pedido"] },
-  { img: "/landing/modules/analytics.jpg", icon: BarChart3, title: "Analytics y Contabilidad", desc: "Dashboards en vivo, reportes exportables y partida doble validada con asientos auditables.", features: ["KPIs por turno", "Asientos auditables", "Exportación CSV/PDF"] },
+  { img: "/landing/modules/dashboard.png", icon: BarChart3, title: "Dashboard Ejecutivo", desc: "Indicadores clave de tu negocio en vivo: ventas del día, top productos, alertas de stock y rendimiento por sucursal.", features: ["KPIs en tiempo real", "Gráficos interactivos", "Alertas inteligentes"] },
+  { img: "/landing/modules/pos.png", icon: ShoppingCart, title: "Punto de Venta Adaptable", desc: "POS especializado para Bar, Restaurante y Retail. Cobro veloz con pagos divididos, multimoneda y atajos de teclado.", features: ["3 modos especializados", "Multi-pago y multimoneda", "Atajos y mobile-first"] },
+  { img: "/landing/modules/restaurante.png", icon: ChefHat, title: "Mapa de Mesas y Salón", desc: "Visualiza tu salón en tiempo real: mesas libres, ocupadas, servidas y esperando cuenta. Asignación de meseros con un clic.", features: ["Mapa visual del salón", "Estados en tiempo real", "Asignación de meseros"] },
+  { img: "/landing/modules/inventario.png", icon: Package, title: "Inventario Inteligente", desc: "Control total: stock por almacén, recetas (BOM), kardex, movimientos auditables y alertas automáticas de bajo stock.", features: ["Kardex y movimientos", "Recetas (BOM)", "Alertas de stock bajo"] },
+  { img: "/landing/modules/marketplace.png", icon: Globe, title: "Marketplace Online", desc: "Tienda pública PWA con geolocalización para que tus clientes te encuentren y pidan online en tu ciudad.", features: ["Geolocalización nativa", "Catálogo multi-tenant", "Instalable como app"] },
+  { img: "/landing/modules/facturacion.png", icon: Receipt, title: "Facturación Electrónica", desc: "Emite facturas locales y electrónicas con UBL 2.1, XML firmado y transmisión por webhook a tu PAC. PDF profesional incluido.", features: ["UBL 2.1 + XML", "Envío por email", "Cobros y estado"] },
+  { img: "/landing/modules/clientes.png", icon: Users, title: "Gestión de Clientes (CRM)", desc: "Saldos, crédito otorgado, deudas, fidelización y timeline de actividad por cliente con un panel claro y rápido.", features: ["Crédito y saldos", "Programa de puntos", "Historial completo"] },
+  { img: "/landing/modules/empleados.png", icon: Users, title: "RRHH y Nómina", desc: "Empleados, puestos, salarios, adelantos y nómina mensual integrada. Control de asistencia y horarios incluido.", features: ["Nómina automática", "Adelantos y bonos", "Asistencia y horarios"] },
+  { img: "/landing/modules/turnos.png", icon: Clock4, title: "Turnos y Caja", desc: "Apertura y cierre de turnos por tienda y cajero, con conteo de caja inicial, ventas y diferencias auditables.", features: ["Caja por turno", "Multi-tienda", "Cierre auditado"] },
+  { img: "/landing/modules/delivery.png", icon: Truck, title: "Delivery y Repartos", desc: "Coordina pedidos, repartidores y zonas en tiempo real. Asignación con un clic y seguimiento por estado.", features: ["Zonas configurables", "Asignación realtime", "Estado por pedido"] },
 ];
 
 const demoBusinessTypes = [
