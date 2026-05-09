@@ -50,11 +50,7 @@ const platformFeatures = [
   { icon: Cloud, title: "Cloud Escalable", desc: "Infraestructura gestionada lista para crecer." },
 ];
 
-const screenshots = [
-  { src: "/landing/marketplace.png", alt: "Marketplace de GaIA en escritorio", label: "Marketplace · Desktop" },
-  { src: "/landing/marketplace-mobile.png", alt: "Marketplace de GaIA en móvil", label: "Marketplace · Mobile" },
-  { src: "/landing/auth.png", alt: "Pantalla de autenticación de GaIA", label: "Acceso seguro" },
-];
+// (Sección "Capturas reales" eliminada: el carrusel del tour ya muestra las pantallas reales sin duplicarlas)
 
 const Landing = () => {
   const navigate = useNavigate();
