@@ -50,6 +50,13 @@ const screenshots = [
 ];
 
 const Landing = () => {
+  const navigate = useNavigate();
+
+  const startDemo = (type: string) => {
+    try { localStorage.setItem("gaia_demo_business_type", type); } catch {}
+    navigate(`/auth?view=register&demo=${type}`);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       {/* Nav */}
