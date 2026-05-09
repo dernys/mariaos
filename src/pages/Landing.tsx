@@ -204,6 +204,107 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Module Carousel */}
+      <section id="tour" className="py-24 bg-gradient-to-b from-background via-card/30 to-background border-y border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Tour visual</p>
+            <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
+              Conoce cada módulo en acción
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Desliza para explorar las pantallas reales y sus capacidades clave.
+            </p>
+          </div>
+
+          <Carousel opts={{ align: "start", loop: true }} className="relative">
+            <CarouselContent className="-ml-4">
+              {moduleSlides.map((s) => (
+                <CarouselItem key={s.title} className="pl-4 md:basis-1/2 lg:basis-1/2">
+                  <div className="group relative rounded-3xl overflow-hidden border border-border bg-card shadow-card hover:shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.35)] hover:border-primary/40 transition-all duration-500">
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <img
+                        src={s.img}
+                        alt={s.title}
+                        loading="lazy"
+                        decoding="async"
+                        width={1280}
+                        height={800}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                      />
+                      <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+                      <div className="absolute top-4 left-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background/70 backdrop-blur border border-primary/30 text-primary text-xs font-medium">
+                        <s.icon className="h-3.5 w-3.5" />
+                        {s.title}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                      <ul className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {s.features.map((f) => (
+                          <li key={f} className="flex items-center gap-2 text-xs text-foreground/85">
+                            <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex -left-5 bg-card border-border" />
+            <CarouselNext className="hidden md:flex -right-5 bg-card border-border" />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* Demo selector */}
+      <section id="demo" className="py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-4">
+              <PlayCircle className="h-3.5 w-3.5" />
+              Demo interactiva
+            </div>
+            <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
+              Elige tu tipo de negocio
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Entra a una demo preconfigurada según tu rubro. Sin tarjeta, sin instalaciones.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {demoBusinessTypes.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => startDemo(b.id)}
+                className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)]"
+              >
+                <div aria-hidden className={`absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${b.accent} opacity-20 blur-3xl group-hover:opacity-40 transition-opacity`} />
+                <div className={`relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br ${b.accent} text-white shadow-lg mb-5`}>
+                  <b.icon className="h-6 w-6" />
+                </div>
+                <h3 className="relative font-heading font-semibold text-lg">{b.title}</h3>
+                <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
+                <div className="relative mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                  Probar demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link to="/marketplace">
+              <Button variant="outline" size="lg" className="gap-2">
+                <Globe className="h-4 w-4" /> Explorar marketplace público
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Screenshots */}
       <section id="capturas" className="py-24 bg-card/40 border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
