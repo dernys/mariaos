@@ -52,6 +52,8 @@ import RiskEngine from "./pages/RiskEngine";
 import BusinessMemory from "./pages/BusinessMemory";
 import Workflows from "./pages/Workflows";
 import DigitalTwin from "./pages/DigitalTwin";
+import Conteos from "./pages/Conteos";
+import InventoryIntelligence from "./pages/InventoryIntelligence";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +110,8 @@ const App = () => (
               <Route path="/memory" element={<ProtectedRoute><BusinessMemory /></ProtectedRoute>} />
               <Route path="/workflows" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
               <Route path="/digital-twin" element={<ProtectedRoute><DigitalTwin /></ProtectedRoute>} />
+              <Route path="/conteos" element={<ProtectedRoute><Conteos /></ProtectedRoute>} />
+              <Route path="/inventario/inteligencia" element={<ProtectedRoute><InventoryIntelligence /></ProtectedRoute>} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
