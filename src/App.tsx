@@ -99,6 +99,13 @@ const App = () => (
               <Route path="/delivery" element={<ProtectedRoute><Delivery /></ProtectedRoute>} />
               <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
               <Route path="/auditoria" element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
+              <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
+              <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
+              <Route path="/decisions" element={<ProtectedRoute><Decisions /></ProtectedRoute>} />
+              <Route path="/risk" element={<ProtectedRoute><RiskEngine /></ProtectedRoute>} />
+              <Route path="/memory" element={<ProtectedRoute><BusinessMemory /></ProtectedRoute>} />
+              <Route path="/workflows" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
+              <Route path="/digital-twin" element={<ProtectedRoute><DigitalTwin /></ProtectedRoute>} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
