@@ -102,6 +102,7 @@ const App = () => (
               <Route path="/auditoria" element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
               <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
               <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
+              <Route path="/agents/:id" element={<ProtectedRoute><AgentDetalle /></ProtectedRoute>} />
               <Route path="/decisions" element={<ProtectedRoute><Decisions /></ProtectedRoute>} />
               <Route path="/risk" element={<ProtectedRoute><RiskEngine /></ProtectedRoute>} />
               <Route path="/memory" element={<ProtectedRoute><BusinessMemory /></ProtectedRoute>} />
