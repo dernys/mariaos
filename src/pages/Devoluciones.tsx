@@ -41,7 +41,23 @@ export default function Devoluciones() {
     setReturns(rR.data || []);
   };
 
+  const [searchParams] = useSearchParams();
   useEffect(() => { fetchAll(); }, []);
+
+  // Auto-open dialog when arriving with ?sale=ID (from TurnoDetalle action)
+  useEffect(() => {
+    const saleId = searchParams.get("sale");
+    if (!saleId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("sales")
+        .select("id, ticket_number, total, status, created_at")
+        .eq("id", saleId)
+        .maybeSingle();
+      if (data) openReturn(data as Sale);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const openReturn = async (s: Sale) => {
     setSelectedSale(s);
