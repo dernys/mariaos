@@ -311,7 +311,8 @@ const Landing = () => {
               <button
                 key={b.id}
                 onClick={() => startDemo(b.id)}
-                className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)]"
+                disabled={demoLoading !== null}
+                className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)] disabled:opacity-60 disabled:cursor-wait"
               >
                 <div aria-hidden className={`absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${b.accent} opacity-20 blur-3xl group-hover:opacity-40 transition-opacity`} />
                 <div className={`relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br ${b.accent} text-white shadow-lg mb-5`}>
@@ -320,7 +321,11 @@ const Landing = () => {
                 <h3 className="relative font-heading font-semibold text-lg">{b.title}</h3>
                 <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
                 <div className="relative mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                  Probar demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  {demoLoading === b.id ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Preparando demo…</>
+                  ) : (
+                    <>Entrar a la demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
+                  )}
                 </div>
               </button>
             ))}
