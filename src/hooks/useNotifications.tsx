@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "./useTenant";
 import { useAuth } from "./useAuth";
+import { usePushNotifications } from "./usePushNotifications";
 
 export interface Notification {
   id: string;
@@ -21,6 +22,8 @@ export function useNotifications() {
   const { user } = useAuth();
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
+  const { showNotification } = usePushNotifications();
+  const seenIds = useRef<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     if (!tenantId) return;
@@ -45,14 +48,35 @@ export function useNotifications() {
       .channel(`notifications-${tenantId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `tenant_id=eq.${tenantId}` },
+        { event: "INSERT", schema: "public", table: "notifications", filter: `tenant_id=eq.${tenantId}` },
+        (payload) => {
+          const n = payload.new as Notification;
+          if (!seenIds.current.has(n.id)) {
+            seenIds.current.add(n.id);
+            showNotification(n.title, {
+              body: n.message || undefined,
+              tag: n.id,
+              url: n.action_url || "/app",
+            });
+          }
+          load();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "notifications", filter: `tenant_id=eq.${tenantId}` },
+        () => load()
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "notifications", filter: `tenant_id=eq.${tenantId}` },
         () => load()
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [tenantId, load]);
+  }, [tenantId, load, showNotification]);
 
   const unreadCount = items.filter((n) => !n.read_at).length;
 
