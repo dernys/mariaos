@@ -68,8 +68,9 @@ const Landing = () => {
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm">
             <a href="#modulos" className="text-muted-foreground hover:text-foreground transition-colors">Módulos</a>
+            <a href="#tour" className="text-muted-foreground hover:text-foreground transition-colors">Tour</a>
+            <a href="#demo" className="text-muted-foreground hover:text-foreground transition-colors">Demo</a>
             <a href="#plataforma" className="text-muted-foreground hover:text-foreground transition-colors">Plataforma</a>
-            <a href="#capturas" className="text-muted-foreground hover:text-foreground transition-colors">Capturas</a>
             <a href="#contacto" className="text-muted-foreground hover:text-foreground transition-colors">Contacto</a>
           </nav>
           <div className="flex items-center gap-2">
