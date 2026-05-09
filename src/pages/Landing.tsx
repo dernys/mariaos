@@ -1,11 +1,29 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ShoppingCart, Package, Users, BarChart3, Truck, ChefHat, Receipt, Globe,
-  Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles,
+  Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles, Store, Utensils, Building2, PlayCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import gaiaLogo from "@/assets/gaia-logo.png";
 import heroBg from "@/assets/landing-hero-bg.jpg";
+
+const moduleSlides = [
+  { img: "/landing/modules/pos.jpg", icon: ShoppingCart, title: "POS Adaptable", desc: "Bar, restaurante o retail. Cobro veloz con pagos divididos, multimoneda y atajos de teclado.", features: ["3 modos especializados", "Multi-pago y multimoneda", "Atajos y mobile-first"] },
+  { img: "/landing/modules/restaurante.jpg", icon: ChefHat, title: "Operaciones Restaurante", desc: "Mapa de mesas, KDS de cocina sincronizado en tiempo real y división avanzada de cuentas.", features: ["Mapa de salón visual", "Cocina en tiempo real", "Bill splitting"] },
+  { img: "/landing/modules/inventario.jpg", icon: Package, title: "Inventario Inteligente", desc: "Stock por almacén, recetas (BOM), transferencias y alertas automáticas de bajo stock.", features: ["Movimientos auditables", "Recetas y descuento", "Alertas en tiempo real"] },
+  { img: "/landing/modules/marketplace.jpg", icon: Globe, title: "Marketplace Online", desc: "Tienda pública PWA con geolocalización para que tus clientes te encuentren cerca.", features: ["Geolocalización nativa", "Registro a cliente", "Instalable como app"] },
+  { img: "/landing/modules/facturacion.jpg", icon: Receipt, title: "Facturación Electrónica", desc: "Facturación local y electrónica con UBL 2.1, CUFE y transmisión por webhook a tu PAC.", features: ["UBL 2.1 + XML firmado", "PDF profesional", "Envío por email"] },
+  { img: "/landing/modules/clientes.jpg", icon: Users, title: "Clientes y Empleados", desc: "CRM con saldos, fidelización, nómina, asistencia y timeline completo de actividad.", features: ["Programa de puntos", "RRHH integrado", "Historial completo"] },
+  { img: "/landing/modules/delivery.jpg", icon: Truck, title: "Delivery y Repartos", desc: "Asignación de pedidos, zonas configurables y seguimiento de repartidores en tiempo real.", features: ["Zonas y tarifas", "Asignación realtime", "Tracking por pedido"] },
+  { img: "/landing/modules/analytics.jpg", icon: BarChart3, title: "Analytics y Contabilidad", desc: "Dashboards en vivo, reportes exportables y partida doble validada con asientos auditables.", features: ["KPIs por turno", "Asientos auditables", "Exportación CSV/PDF"] },
+];
+
+const demoBusinessTypes = [
+  { id: "bar", icon: Store, title: "Bar / Cafetería", desc: "Cuentas abiertas, comanda rápida y cobro por consumición.", accent: "from-amber-500 to-orange-500" },
+  { id: "restaurant", icon: Utensils, title: "Restaurante", desc: "Mapa de mesas, KDS de cocina y división de cuentas.", accent: "from-rose-500 to-red-500" },
+  { id: "retail", icon: Building2, title: "Retail / Empresa", desc: "Búsqueda por SKU, multi-tienda y facturación.", accent: "from-primary to-emerald-500" },
+];
 
 const modules = [
   { icon: ShoppingCart, title: "POS Adaptable", desc: "Tres modos especializados: Bar con cuentas, Restaurante con mapa de mesas y KDS, y Retail con búsqueda por SKU/código de barras.", bullets: ["Cobro en segundos", "Pagos divididos y multimoneda", "QR, tarjeta, efectivo y crédito"] },
