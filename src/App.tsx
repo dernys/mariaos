@@ -46,6 +46,7 @@ import Landing from "./pages/Landing";
 import Auditoria from "./pages/Auditoria";
 import CommandCenter from "./pages/CommandCenter";
 import Agents from "./pages/Agents";
+import AgentDetalle from "./pages/AgentDetalle";
 import Decisions from "./pages/Decisions";
 import RiskEngine from "./pages/RiskEngine";
 import BusinessMemory from "./pages/BusinessMemory";
