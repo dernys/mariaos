@@ -1,10 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   ShoppingCart, Package, Users, BarChart3, Truck, ChefHat, Receipt, Globe,
-  Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles, Store, Utensils, Building2, PlayCircle,
+  Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles, Store, Utensils, Building2, PlayCircle, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import gaiaLogo from "@/assets/gaia-logo.png";
 import heroBg from "@/assets/landing-hero-bg.jpg";
 
