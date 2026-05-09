@@ -347,6 +347,10 @@ const Auth = () => {
             </form>
           )}
         </div>
+
+        <div className="mt-4">
+          <InstallPWAPrompt />
+        </div>
       </motion.div>
     </div>
   );
