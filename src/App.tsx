@@ -46,6 +46,7 @@ import Landing from "./pages/Landing";
 import Auditoria from "./pages/Auditoria";
 import CommandCenter from "./pages/CommandCenter";
 import Agents from "./pages/Agents";
+import AgentDetalle from "./pages/AgentDetalle";
 import Decisions from "./pages/Decisions";
 import RiskEngine from "./pages/RiskEngine";
 import BusinessMemory from "./pages/BusinessMemory";
@@ -101,6 +102,7 @@ const App = () => (
               <Route path="/auditoria" element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
               <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
               <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
+              <Route path="/agents/:id" element={<ProtectedRoute><AgentDetalle /></ProtectedRoute>} />
               <Route path="/decisions" element={<ProtectedRoute><Decisions /></ProtectedRoute>} />
               <Route path="/risk" element={<ProtectedRoute><RiskEngine /></ProtectedRoute>} />
               <Route path="/memory" element={<ProtectedRoute><BusinessMemory /></ProtectedRoute>} />

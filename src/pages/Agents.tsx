@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { AGENT_DEFINITIONS } from "@/lib/agents";
-import { Bot, Loader2, PlayCircle, Sparkles } from "lucide-react";
+import { Bot, ExternalLink, Loader2, PlayCircle, Sparkles, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -17,6 +18,7 @@ export default function Agents() {
   const { tenantId } = useTenantContext();
   const [agents, setAgents] = useState<any[]>([]);
   const [running, setRunning] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const load = async () => {
     if (!tenantId) return;
@@ -32,6 +34,18 @@ export default function Agents() {
       tenant_id: tenantId, type: def.type, name: def.name, description: def.description,
     });
     if (error) toast.error(error.message); else { toast.success(`${def.name} provisionado`); load(); }
+  };
+
+  const provisionAll = async () => {
+    if (!tenantId) return;
+    setBulkBusy(true);
+    const missing = AGENT_DEFINITIONS.filter((d) => !agents.some((a) => a.type === d.type));
+    if (missing.length === 0) { toast.info("Todos los agentes ya están provisionados"); setBulkBusy(false); return; }
+    const { error } = await supabase.from("ai_agents").insert(
+      missing.map((d) => ({ tenant_id: tenantId, type: d.type, name: d.name, description: d.description }))
+    );
+    if (error) toast.error(error.message); else { toast.success(`${missing.length} agentes provisionados`); await load(); }
+    setBulkBusy(false);
   };
 
   const updateAgent = async (id: string, patch: any) => {
@@ -51,11 +65,40 @@ export default function Agents() {
     } finally { setRunning(null); }
   };
 
+  const runAll = async () => {
+    const active = agents.filter((a) => a.status === "active");
+    if (active.length === 0) { toast.info("No hay agentes activos"); return; }
+    setBulkBusy(true);
+    let ok = 0;
+    for (const a of active) {
+      try {
+        await supabase.functions.invoke("agent-runner", { body: { agent_id: a.id } });
+        ok++;
+      } catch (e) { /* continue */ }
+    }
+    toast.success(`${ok}/${active.length} agentes ejecutados`);
+    await load();
+    setBulkBusy(false);
+  };
+
   return (
     <AppLayout title="Agentes IA">
       <div className="space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
-          <Sparkles className="h-3 w-3" /> 7 agentes especializados
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
+            <Sparkles className="h-3 w-3" /> {agents.length}/{AGENT_DEFINITIONS.length} agentes provisionados · {agents.filter((a) => a.status === "active").length} activos
+          </div>
+          <div className="flex gap-2">
+            {agents.length < AGENT_DEFINITIONS.length && (
+              <Button variant="outline" size="sm" onClick={provisionAll} disabled={bulkBusy}>
+                <Bot className="h-4 w-4 mr-2" /> Provisionar todos
+              </Button>
+            )}
+            <Button size="sm" onClick={runAll} disabled={bulkBusy || agents.filter((a) => a.status === "active").length === 0}>
+              {bulkBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+              Ejecutar todos los activos
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -104,10 +147,15 @@ export default function Agents() {
                         <div><p className="text-muted-foreground text-[10px]">Análisis</p><p className="font-semibold">{(agent.metrics as any)?.runs ?? 0}</p></div>
                         <div><p className="text-muted-foreground text-[10px]">Última</p><p className="font-semibold text-[11px]">{agent.last_run_at ? formatDistanceToNow(new Date(agent.last_run_at), { locale: es, addSuffix: true }) : "—"}</p></div>
                       </div>
-                      <Button onClick={() => runAgent(agent)} disabled={running === agent.id} className="w-full" size="sm">
-                        {running === agent.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlayCircle className="h-4 w-4 mr-2" />}
-                        Ejecutar análisis ahora
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button onClick={() => runAgent(agent)} disabled={running === agent.id} className="flex-1" size="sm">
+                          {running === agent.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlayCircle className="h-4 w-4 mr-2" />}
+                          Ejecutar
+                        </Button>
+                        <Link to={`/agents/${agent.id}`}>
+                          <Button variant="outline" size="sm" className="px-2"><ExternalLink className="h-4 w-4" /></Button>
+                        </Link>
+                      </div>
                     </>
                   )}
                 </CardContent>
