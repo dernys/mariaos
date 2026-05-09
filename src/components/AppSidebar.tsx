@@ -224,13 +224,17 @@ export function AppSidebar() {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/superadmin")} tooltip="Super Admin">
-                    <NavLink
-                      to="/superadmin"
-                      className="transition-colors"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                    >
+                    <NavLink to="/superadmin" className="transition-colors" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                       <Crown className="h-4 w-4" />
                       {!collapsed && <span>Gestión Empresas</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/auditoria")} tooltip="Auditoría">
+                    <NavLink to="/auditoria" className="transition-colors" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                      <Shield className="h-4 w-4" />
+                      {!collapsed && <span>Auditoría</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,30 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 type AuthView = "login" | "register" | "forgot";
+
+const translateAuthError = (msg: string): string => {
+  const m = msg.toLowerCase();
+  if (m.includes("invalid login") || m.includes("invalid credentials")) return "Correo o contraseña incorrectos";
+  if (m.includes("email not confirmed")) return "Debes confirmar tu correo antes de ingresar";
+  if (m.includes("user already registered") || m.includes("already been registered")) return "Este correo ya está registrado";
+  if (m.includes("password should be at least")) return "La contraseña debe tener al menos 6 caracteres";
+  if (m.includes("pwned") || m.includes("compromised") || m.includes("hibp")) return "Esta contraseña apareció en filtraciones de seguridad. Elige otra.";
+  if (m.includes("rate limit") || m.includes("too many")) return "Demasiados intentos. Espera unos minutos.";
+  if (m.includes("network") || m.includes("fetch")) return "Error de conexión. Verifica tu internet.";
+  return msg;
+};
+
+const passwordStrength = (pwd: string): { score: number; label: string; color: string } => {
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+  if (/\d/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  const labels = ["Muy débil", "Débil", "Aceptable", "Buena", "Fuerte", "Excelente"];
+  const colors = ["bg-destructive", "bg-destructive", "bg-warning", "bg-warning", "bg-success", "bg-success"];
+  return { score, label: labels[score], color: colors[score] };
+};
 
 const Auth = () => {
   const { session, loading: authLoading } = useAuth();
@@ -26,12 +50,15 @@ const Auth = () => {
 
     const checkAndRedirect = async () => {
       try {
+        // Use cache for instant redirect
+        const cached = sessionStorage.getItem(`sa:${session.user.id}`);
+        if (cached === "1") return navigate("/superadmin", { replace: true });
+        if (cached === "0") return navigate("/app", { replace: true });
+
         const { data } = await supabase.functions.invoke("check-superadmin");
-        if (data?.is_superadmin) {
-          navigate("/superadmin", { replace: true });
-        } else {
-          navigate("/app", { replace: true });
-        }
+        const isSA = !!data?.is_superadmin;
+        sessionStorage.setItem(`sa:${session.user.id}`, isSA ? "1" : "0");
+        navigate(isSA ? "/superadmin" : "/app", { replace: true });
       } catch {
         navigate("/app", { replace: true });
       }
@@ -43,49 +70,48 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
     if (error) {
-      toast.error(error.message);
+      toast.error(translateAuthError(error.message));
       setLoading(false);
+    } else {
+      toast.success("Bienvenido de vuelta");
     }
-    // Redirect handled by useEffect above
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (passwordStrength(password).score < 2) {
+      return toast.error("Usa una contraseña más segura (mín. 8 caracteres con mayúsculas y números)");
+    }
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
 
     // Try superadmin registration first (auto-confirms email)
     try {
       const { data, error: fnError } = await supabase.functions.invoke("register-superadmin", {
-        body: { email, password, full_name: fullName },
+        body: { email: cleanEmail, password, full_name: fullName },
       });
 
       if (!fnError && data?.success) {
         toast.success("¡Cuenta de superadmin creada! Iniciando sesión...");
-        // Auto-login after superadmin registration
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (loginError) {
-          toast.error(loginError.message);
+          toast.error(translateAuthError(loginError.message));
           setLoading(false);
         }
-        // Redirect handled by useEffect
         return;
       }
     } catch {
-      // Not superadmin, continue with normal registration
+      // Not superadmin, continue
     }
 
-    // Normal registration
     const { error } = await supabase.auth.signUp({
-      email,
+      email: cleanEmail,
       password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: window.location.origin,
-      },
+      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
     });
-    if (error) toast.error(error.message);
+    if (error) toast.error(translateAuthError(error.message));
     else toast.success("Cuenta creada. Revisa tu correo para confirmar.");
     setLoading(false);
   };
@@ -93,13 +119,15 @@ const Auth = () => {
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) toast.error(error.message);
+    if (error) toast.error(translateAuthError(error.message));
     else toast.success("Correo de recuperación enviado.");
     setLoading(false);
   };
+
+  const pwdStrength = useMemo(() => passwordStrength(password), [password]);
 
   // Show spinner while checking auth state
   if (authLoading || session) {
@@ -246,6 +274,16 @@ const Auth = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {password.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex gap-1">
+                      {[0, 1, 2, 3, 4].map(i => (
+                        <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i < pwdStrength.score ? pwdStrength.color : "bg-muted"}`} />
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Seguridad: <span className="font-medium">{pwdStrength.label}</span></p>
+                  </div>
+                )}
               </div>
 
               <Button

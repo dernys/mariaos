@@ -43,6 +43,7 @@ import Consignacion from "./pages/Consignacion";
 import TurnoDetalle from "./pages/TurnoDetalle";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
+import Auditoria from "./pages/Auditoria";
 
 const queryClient = new QueryClient();
 
@@ -90,6 +91,7 @@ const App = () => (
               <Route path="/rrhh" element={<ProtectedRoute><RRHH /></ProtectedRoute>} />
               <Route path="/delivery" element={<ProtectedRoute><Delivery /></ProtectedRoute>} />
               <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
+              <Route path="/auditoria" element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
