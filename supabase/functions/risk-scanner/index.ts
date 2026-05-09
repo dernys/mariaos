@@ -67,8 +67,6 @@ Deno.serve(async (req) => {
     }
 
     // 4. Low stock alerts
-    const { data: prods } = await admin.rpc("noop_dummy", {}).select?.() ?? { data: null };
-    // simple low-stock detection
     const { data: lowStock } = await admin
       .from("products")
       .select("id, name, min_stock")
