@@ -348,32 +348,39 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Screenshots */}
-      <section id="capturas" className="py-24 bg-card/40 border-y border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Why GaIA — beneficios (reemplaza la sección de capturas duplicadas) */}
+      <section id="beneficios" className="py-24 bg-card/40 border-y border-border relative overflow-hidden">
+        <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        <div aria-hidden className="absolute -top-32 right-1/4 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Capturas reales</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">¿Por qué GaIA?</p>
             <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
-              Una interfaz hecha para vender
+              Hecho para el ritmo de tu negocio
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Diseño moderno, mobile-first y pensado para el ritmo del piso de venta.
+              Una sola plataforma que reemplaza POS, inventario, facturación, marketplace y RRHH.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {screenshots.map((s) => (
-              <figure key={s.src} className="rounded-2xl overflow-hidden border border-border bg-card shadow-card transition-transform duration-300 hover:-translate-y-1">
-                <img
-                  src={s.src}
-                  alt={s.alt}
-                  loading="lazy"
-                  decoding="async"
-                  width={800}
-                  height={500}
-                  className="w-full h-64 object-cover object-top"
-                />
-                <figcaption className="p-4 text-xs text-muted-foreground font-medium">{s.label}</figcaption>
-              </figure>
+            {[
+              { icon: Zap, title: "Cobra en segundos", desc: "POS optimizado por rubro: cuentas en bar, mapa de mesas en restaurante y SKU en retail." },
+              { icon: Shield, title: "Datos a salvo", desc: "Aislamiento por empresa con Row-Level Security y respaldos automáticos en la nube." },
+              { icon: Smartphone, title: "En cualquier dispositivo", desc: "PWA instalable, mobile-first y sincronización en tiempo real con tu equipo." },
+              { icon: BarChart3, title: "Decisiones con datos", desc: "Dashboards en vivo, reportes exportables y contabilidad básica integrada." },
+              { icon: Globe, title: "Vende online sin fricción", desc: "Marketplace público con geolocalización y catálogo controlado por tu tienda." },
+              { icon: Sparkles, title: "Activa solo lo que usas", desc: "Módulos opcionales: factura electrónica, fidelización, delivery, recetas y más." },
+            ].map((b) => (
+              <div
+                key={b.title}
+                className="group relative rounded-2xl border border-border bg-card/80 backdrop-blur p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_15px_45px_-15px_hsl(var(--primary)/0.4)]"
+              >
+                <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-primary/20 to-emerald-400/10 text-primary border border-primary/20 mb-4">
+                  <b.icon className="h-5 w-5" />
+                </div>
+                <h3 className="font-heading font-semibold text-base">{b.title}</h3>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
+              </div>
             ))}
           </div>
         </div>
