@@ -197,7 +197,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-heading text-sm font-bold text-sidebar-primary-foreground tracking-tight">
-                GaIA ERP
+                GaIA OS
               </span>
               <span className="text-[10px] text-sidebar-foreground/60">
                 {tenant?.name || "Sistema de Ventas"}
