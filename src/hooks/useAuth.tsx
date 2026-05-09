@@ -64,6 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    // Clear superadmin cache on logout
+    if (user) sessionStorage.removeItem(`sa:${user.id}`);
     await supabase.auth.signOut();
   };
 
