@@ -3,9 +3,10 @@ import { useTenantContext } from "@/hooks/useTenantContext";
 import { POSBar } from "@/components/pos/POSBar";
 import { POSRestaurant } from "@/components/pos/POSRestaurant";
 import { POSEmpresa } from "@/components/pos/POSEmpresa";
+import { ShiftRequiredGate } from "@/components/pos/ShiftRequiredGate";
 
 const POS = () => {
-  const { businessType, tenant, loading } = useTenantContext();
+  const { businessType, loading } = useTenantContext();
 
   const titles: Record<string, string> = {
     bar: "Barra — Punto de Venta",
@@ -24,12 +25,18 @@ const POS = () => {
     );
   }
 
+  const variant: "bar" | "restaurant" | "empresa" =
+    businessType === "bar" ? "bar"
+    : businessType === "restaurant" || businessType === "restaurante" ? "restaurant"
+    : "empresa";
+
   return (
     <AppLayout title={titles[businessType] || "Punto de Venta"}>
-      {businessType === "bar" && <POSBar />}
-      {(businessType === "restaurant" || businessType === "restaurante") && <POSRestaurant />}
-      {businessType === "empresa" && <POSEmpresa />}
-      {!["bar", "restaurant", "restaurante", "empresa"].includes(businessType) && <POSEmpresa />}
+      <ShiftRequiredGate variant={variant}>
+        {variant === "bar" && <POSBar />}
+        {variant === "restaurant" && <POSRestaurant />}
+        {variant === "empresa" && <POSEmpresa />}
+      </ShiftRequiredGate>
     </AppLayout>
   );
 };
