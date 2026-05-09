@@ -104,6 +104,8 @@ const menuGroups: MenuGroup[] = [
     label: "Inventario",
     items: [
       { title: "Productos", url: "/inventario", icon: Package },
+      { title: "Inteligencia", url: "/inventario/inteligencia", icon: Brain },
+      { title: "Conteos físicos", url: "/conteos", icon: Shield },
       { title: "Almacenes", url: "/almacenes", icon: Warehouse },
       { title: "Tiendas", url: "/tiendas", icon: Store },
       { title: "Transferencias", url: "/transferencias", icon: ArrowRightLeft },
