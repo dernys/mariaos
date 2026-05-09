@@ -72,6 +72,18 @@ interface MenuGroup {
 
 const menuGroups: MenuGroup[] = [
   {
+    label: "GaIA OS",
+    items: [
+      { title: "Command Center", url: "/command-center", icon: Sparkles },
+      { title: "Agentes IA", url: "/agents", icon: Bot },
+      { title: "Decisiones", url: "/decisions", icon: Brain },
+      { title: "Riesgos", url: "/risk", icon: ShieldAlert },
+      { title: "Memoria", url: "/memory", icon: GitBranch },
+      { title: "Digital Twin", url: "/digital-twin", icon: Workflow },
+      { title: "Workflows", url: "/workflows", icon: Workflow },
+    ],
+  },
+  {
     label: "General",
     items: [
       { title: "Dashboard", url: "/", icon: LayoutDashboard },
