@@ -1,10 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   ShoppingCart, Package, Users, BarChart3, Truck, ChefHat, Receipt, Globe,
-  Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles, Store, Utensils, Building2, PlayCircle,
+  Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles, Store, Utensils, Building2, PlayCircle, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import gaiaLogo from "@/assets/gaia-logo.png";
 import heroBg from "@/assets/landing-hero-bg.jpg";
 
@@ -55,10 +58,33 @@ const screenshots = [
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
 
-  const startDemo = (type: string) => {
-    try { localStorage.setItem("gaia_demo_business_type", type); } catch {}
-    navigate(`/auth?view=register&demo=${type}`);
+  const DEMO_EMAILS: Record<string, string> = {
+    bar: "demo-bar@gaia.app",
+    restaurant: "demo-restaurante@gaia.app",
+    retail: "demo-empresa@gaia.app",
+    empresa: "demo-empresa@gaia.app",
+  };
+
+  const startDemo = async (type: string) => {
+    setDemoLoading(type);
+    try {
+      const { error: seedErr } = await supabase.functions.invoke("seed-demo");
+      if (seedErr) throw seedErr;
+      const email = DEMO_EMAILS[type] ?? DEMO_EMAILS.empresa;
+      const { error: loginErr } = await supabase.auth.signInWithPassword({
+        email,
+        password: "demo1234",
+      });
+      if (loginErr) throw loginErr;
+      toast.success("Demo lista. Bienvenido a GaIA.");
+      navigate("/app");
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo iniciar la demo");
+    } finally {
+      setDemoLoading(null);
+    }
   };
 
   return (
@@ -285,7 +311,8 @@ const Landing = () => {
               <button
                 key={b.id}
                 onClick={() => startDemo(b.id)}
-                className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)]"
+                disabled={demoLoading !== null}
+                className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)] disabled:opacity-60 disabled:cursor-wait"
               >
                 <div aria-hidden className={`absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${b.accent} opacity-20 blur-3xl group-hover:opacity-40 transition-opacity`} />
                 <div className={`relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br ${b.accent} text-white shadow-lg mb-5`}>
@@ -294,7 +321,11 @@ const Landing = () => {
                 <h3 className="relative font-heading font-semibold text-lg">{b.title}</h3>
                 <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
                 <div className="relative mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                  Probar demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  {demoLoading === b.id ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Preparando demo…</>
+                  ) : (
+                    <>Entrar a la demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
+                  )}
                 </div>
               </button>
             ))}
