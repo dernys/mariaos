@@ -2744,6 +2744,9 @@ export type Database = {
       sales: {
         Row: {
           amount_paid: number
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           customer_id: string | null
           employee_id: string | null
@@ -2763,6 +2766,9 @@ export type Database = {
         }
         Insert: {
           amount_paid?: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           customer_id?: string | null
           employee_id?: string | null
@@ -2782,6 +2788,9 @@ export type Database = {
         }
         Update: {
           amount_paid?: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           customer_id?: string | null
           employee_id?: string | null
@@ -3740,6 +3749,10 @@ export type Database = {
       }
       award_loyalty_points: { Args: { p_sale_id: string }; Returns: number }
       calculate_shift_summary: { Args: { p_shift_id: string }; Returns: Json }
+      cancel_sale: {
+        Args: { p_reason: string; p_sale_id: string }
+        Returns: undefined
+      }
       close_shift_with_summary: {
         Args: { p_declared_cash: number; p_notes?: string; p_shift_id: string }
         Returns: Json
