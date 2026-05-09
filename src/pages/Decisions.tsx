@@ -20,7 +20,7 @@ export default function Decisions() {
   };
   useEffect(() => { load(); }, [tenantId]);
 
-  const setStatus = async (id: string, status: string) => {
+  const setStatus = async (id: string, status: "approved" | "rejected" | "executed" | "pending" | "failed") => {
     const { error } = await supabase.from("business_decisions").update({ status }).eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Decisión actualizada"); load(); }
   };
