@@ -1,134 +1,179 @@
-# VentaPro — Sistema de Gestión Multi-Tenant
+<div align="center">
 
-VentaPro es una plataforma SaaS multi-tenant para la gestión integral de **restaurantes, bares y empresas (retail)**. Construida sobre Lovable Cloud (Supabase) con React + Vite + TypeScript + Tailwind + shadcn/ui.
+# 🌿 GaIA ERP
+
+### **El sistema operativo de tu negocio.**
+
+Plataforma multi-tenant todo-en-uno para **restaurantes, bares, cafeterías y empresas de retail**.
+Vende, gestiona, cobra, factura y entrega — desde una sola aplicación, en cualquier dispositivo.
+
+[![PWA](https://img.shields.io/badge/PWA-installable-10b981?style=for-the-badge)]()
+[![Multi-tenant](https://img.shields.io/badge/Multi--tenant-RLS-0f172a?style=for-the-badge)]()
+[![Realtime](https://img.shields.io/badge/Realtime-Supabase-3ecf8e?style=for-the-badge)]()
+[![Mobile First](https://img.shields.io/badge/Mobile-First-10b981?style=for-the-badge)]()
+
+</div>
 
 ---
 
-## 🚀 Funcionalidades Implementadas
+## 🎯 ¿Para quién es GaIA ERP?
 
-### 🏢 Arquitectura Multi-Tenant
-- Aislamiento de datos por `tenant_id` con políticas **RLS** en todas las tablas.
-- Tabla `tenants` y `tenant_users` para gestión de membresías.
-- Selector de tenant activo en la barra lateral (`TenantSelector`).
-- **Sidebar dinámico** según `business_type` del tenant:
-  - `restaurante` / `bar` → Mesas + Cocina (KDS)
-  - `empresa` → Tiendas
-- Hook `useTenantContext` como única fuente de verdad del tenant activo.
+| 🍔 Restaurantes | 🍹 Bares | 🛒 Retail / Empresas |
+|---|---|---|
+| Mapa de mesas, KDS de cocina, división de cuenta, recetas | Comandas rápidas, pestañas (tabs), múltiples cajeros | Catálogo SKU, multi-tienda, multi-almacén, transferencias |
 
-### 🔐 Autenticación y Autorización
-- Sign up / Sign in con email + password (Supabase Auth).
-- Recuperación de contraseña (`/reset-password`).
-- `ProtectedRoute` para rutas privadas.
-- Tabla **`user_roles`** separada (evita escalada de privilegios) con función `has_role()` `SECURITY DEFINER`.
-- Roles: `admin`, `manager`, `cashier`, `kitchen`, `waiter`, etc.
-- **Superadmin** con panel propio (`/superadmin`) para gestión global de tenants.
-- Edge functions: `check-superadmin`, `register-superadmin`, `manage-users`.
+> **Un solo sistema, tres modos de operación.** El POS y los menús se adaptan automáticamente al tipo de negocio que registres.
 
-### 👥 Roles y Permisos (`/roles`)
-- Pestañas: **Usuarios**, **Permisos**, **Módulos**.
-- Asignación de roles por tenant.
-- Gestión de invitaciones y altas de usuarios (vía edge function `manage-users`).
+---
 
-### 🛒 Punto de Venta (POS) (`/pos`)
-- Modo **Empresa/Retail**: catálogo + carrito + cobro rápido.
-- Modo **Restaurante/Bar**: comandas por mesa, envío a cocina.
-- **`PaymentDialog`**: múltiples métodos de pago (efectivo, tarjeta, mixto).
-- **`SplitBillDialog`**: división de cuenta (por ítem o partes iguales).
-- Carrito persistente con `CartContent`.
-- Barra superior `POSBar` con turno activo, caja y atajos.
+## 🌐 Vista pública — Marketplace integrado
 
-### 🍽️ Gestión de Restaurante
-- **Mapa visual de mesas** (`/mesas`) con `FloorMap` — estados: libre, ocupada, reservada, cuenta pedida.
-- `TableManageDialog` y `TableOrdersPanel` para gestionar pedidos por mesa.
-- **KDS (Kitchen Display System)** (`/cocina`) — pantalla de cocina con tickets en tiempo real, tiempos de preparación y estados (pendiente, en preparación, listo).
+![Marketplace web](docs/screenshots/marketplace.png)
 
-### 📦 Inventario (`/inventario`)
-- CRUD de productos con SKU, código de barras, categoría, precio, costo.
-- Stock por almacén con **movimientos** (entradas, salidas, ajustes) y registro `previous_stock` / `new_stock`.
-- Alertas de **stock mínimo**.
-- Soporte de **recetas** (BOM) para restaurantes (descuento de ingredientes al vender).
-- Toggle **Venta Online** + `online_stock` + `image_url` para productos del marketplace.
+Cada negocio recibe su **escaparate online gratuito** con catálogo, geolocalización y pedidos sin pago online (cobro a la entrega/recogida).
+
+<table>
+<tr>
+<td width="50%">
+
+### 📱 Mobile-first
+![Marketplace móvil](docs/screenshots/marketplace-mobile.png)
+
+</td>
+<td width="50%">
+
+### 🔐 Acceso seguro
+![Login](docs/screenshots/auth.png)
+
+Autenticación con email, recuperación de contraseña, roles separados y panel **Superadmin** para gestión de empresas.
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📦 Funcionalidades por módulo
+
+### 🛒 Punto de Venta (POS) — *adaptable*
+- **Modo Bar**: pestañas por cliente/silla, cobros rápidos, propinas.
+- **Modo Restaurante**: comandas por mesa, envío automático a cocina, división de cuenta por ítem o partes iguales.
+- **Modo Empresa/Retail**: búsqueda por SKU/código de barras, carrito ágil.
+- **Multi-pago**: efectivo, tarjeta, transferencia, QR, mixto, crédito y pago parcial.
+- **Multi-moneda**: CUP, USD, EUR con tasa de cambio configurable.
+- Asociación automática al **turno** y **caja** activos.
+
+### 🍽️ Operaciones de Restaurante
+- **Mapa visual de mesas** con estados en tiempo real: libre · ocupada · reservada · cuenta pedida.
+- **KDS (Kitchen Display System)**: pantalla de cocina con tickets, tiempos y estados (pendiente → preparando → listo).
+- **Sincronización realtime** entre meseros, caja y cocina.
+- **División de cuenta** flexible.
+
+### 📦 Inventario inteligente
+- CRUD de productos con SKU, código de barras, categoría, precio, costo, foto.
+- Stock por almacén con **historial de movimientos** (entradas, salidas, ajustes, transferencias).
+- **Alertas de stock mínimo** automáticas.
+- **Recetas (BOM)** para restaurantes: descuenta ingredientes al vender el plato.
+- **Disponibilidad online** y **delivery** por producto, con stock independiente.
 
 ### 🏪 Tiendas y 🏬 Almacenes
-- CRUD de **tiendas** (`/tiendas`) — solo visible para `business_type = empresa`.
-- CRUD de **almacenes** (`/almacenes`) con datos operativos.
-- **Activity Log** (`ActivityTimeline`) por entidad para auditoría.
+- Multi-tienda y multi-almacén con datos operativos.
+- **Geolocalización** exacta en mapa para que el marketplace sugiera tiendas cercanas.
+- Configuración de **delivery / recogida en local** y **radio de entrega**.
+- **Transferencias** entre almacenes con trazabilidad.
+- **Activity log** de cada movimiento.
 
-### 👤 Clientes (`/clientes`)
-- CRUD de clientes con datos fiscales, contacto e historial.
+### 🛍️ Compras y Proveedores
+- Gestión completa de **proveedores** con historial, deuda actual y rastreo de productos suministrados.
+- Órdenes de **compra** que actualizan stock automáticamente.
+- **Devoluciones** a proveedor y de cliente.
+- **Cuentas por pagar (CxP)** y **Cuentas por cobrar (CxC)** unificadas.
+- **Consignaciones** (productos en depósito).
 
-### 👨‍💼 Empleados (`/empleados`)
-- CRUD de empleados con asignación a tiendas/roles.
+### 💳 Facturación + e-invoicing
+- Facturación local con **PDF profesional** y envío por email.
+- **Venta rápida** desde el módulo de Facturas (sin abrir el POS).
+- Generación de **XML UBL 2.1** firmado (CUFE) listo para PAC/SUNAT/DIAN/SAT.
+- **Webhook configurable** para conectar a cualquier proveedor de facturación electrónica.
+- Estado de transmisión visible en tiempo real.
 
-### ⏰ Turnos y Cajas (`/turnos`)
-- Apertura y cierre de turno con conteo de caja.
-- Asociación de ventas al turno activo.
+### 👥 Clientes y CRM
+- Ficha completa con datos fiscales, balance y consumo histórico.
+- **Alta automática** de clientes desde pedidos del marketplace (matching por teléfono/email).
+- Programa de **fidelización** con puntos.
 
-### 📒 Contabilidad (básica) (`/contabilidad`)
-- Vista de ingresos y gastos derivados de las ventas.
+### 👨‍💼 Empleados y RRHH
+- Gestión de empleados con asignación a tienda/rol.
+- **Asistencia, horarios y nóminas**.
+- Timeline de actividad por empleado.
+
+### ⏰ Turnos y Cajas
+- Apertura/cierre de turno con conteo de caja.
+- Reporte X/Z, arqueo y diferencias.
+- Asignación tienda + cajero + responsable.
+
+### 🌐 Marketplace público + Pedidos online
+- Catálogo público sin login, con búsqueda, categorías y filtros por negocio.
+- **Geolocalización del dispositivo** para sugerir productos cercanos por radio (2/5/10 km).
+- Filtro **"Solo delivery"** y badge de distancia por producto.
+- Checkout requiere registro → cliente queda automáticamente vinculado a la tienda.
+- Dashboard de **pedidos online** en tiempo real: pendiente → preparando → listo → entregado.
+
+### 🛵 Delivery
+- Zonas de reparto, asignación de repartidores.
+- Seguimiento en tiempo real de pedidos asignados.
+
+### 📒 Contabilidad
+- Diario contable de doble entrada con validación de balance.
+- Ingresos y gastos derivados automáticamente de las ventas y compras.
 - Listado de transacciones por periodo.
 
-### 📊 Analytics (`/analytics`)
+### 📊 Analytics, Reportes & BI
 - Dashboard con KPIs: ventas del día, ticket medio, productos top, comparativas.
-- Gráficos con Recharts (vía `chart.tsx` de shadcn).
+- Reportes filtrables por tienda, turno, categoría, empleado.
+- Exportación a CSV/Excel.
 
-### 🌐 Marketplace Online (`/marketplace`) — **Público**
-- Catálogo público sin login (navegación libre).
-- Filtros por **categoría**, **negocio** y **ubicación**.
-- Carrito persistente.
-- **Checkout requiere registro** (acceso público para ver, registro para comprar).
-- Opciones de entrega: **Recogida en local** o **Delivery a domicilio**.
-- Sin pago online — solo pedido (pago a la entrega/recogida).
-- Stock online independiente del stock interno.
+### 🔐 Roles, Permisos y Seguridad
+- Tabla `user_roles` separada (anti-escalada de privilegios).
+- **Matriz RBAC configurable por módulo**.
+- Roles: admin, manager, cashier, kitchen, waiter, delivery…
+- **Superadmin** con panel global para gestionar todas las empresas.
 
-### 📥 Pedidos Online (`/pedidos-online`)
-- Dashboard en tiempo real (Supabase Realtime).
-- Estados: **pendiente → preparando → listo → entregado**.
-- Tablas: `online_orders`, `online_order_items` con RLS.
-
-### ⚙️ Configuración (`/configuracion`)
-- General (`ConfigGeneral`): datos del tenant, logo, moneda base.
-- **Categorías** de productos.
-- **Monedas**.
-- **Métodos de pago**.
-- **Tipos de impuestos** (IVA, etc.).
-
-### 🎨 Sistema de Diseño
-- Tokens semánticos HSL en `index.css` y `tailwind.config.ts`.
-- Componentes shadcn/ui completos (50+ componentes).
-- Modo claro/oscuro listo (vía variables CSS).
-- Layout responsive con sidebar colapsable (`AppLayout` + `AppSidebar`).
-
-### 🛠️ Stack Técnico
-- **Frontend**: React 18, Vite 5, TypeScript 5, Tailwind v3, shadcn/ui, React Router, TanStack Query.
-- **Backend**: Lovable Cloud (Supabase) — Postgres + Auth + Storage + Edge Functions + Realtime.
-- **Testing**: Vitest configurado.
-- **Iconografía**: lucide-react.
+### ⚙️ Configuración global
+- Datos del tenant (logo, moneda base, dirección).
+- **Categorías**, **impuestos**, **monedas**, **métodos de pago**.
+- Ajustes específicos del **POS** y módulos activos.
+- Configuración de **facturación electrónica** (régimen, NIT, claves, webhook).
 
 ---
 
-## 📁 Estructura del Proyecto
+## 🏗️ Arquitectura multi-tenant
 
-```
-src/
-├── components/
-│   ├── pos/          # POS, KDS, FloorMap, PaymentDialog, SplitBillDialog
-│   ├── config/       # Pestañas de configuración
-│   ├── roles/        # Gestión de roles, permisos, usuarios
-│   └── ui/           # shadcn/ui
-├── hooks/            # useAuth, useTenantContext, useSuperadmin, useActivityLog
-├── pages/            # Una página por módulo del sidebar
-└── integrations/supabase/  # Cliente y tipos auto-generados
-supabase/
-├── functions/        # Edge functions
-└── migrations/       # Migraciones SQL
-```
+- 🔒 **Aislamiento total por tenant** mediante Row-Level Security en *todas* las tablas.
+- 🎚️ **Sidebar dinámico**: el menú se adapta al tipo de negocio (`restaurante`, `bar`, `empresa`).
+- 🔄 **Selector de empresa** en la barra lateral para superadmins.
+- ⚡ **Realtime** vía Supabase para mesas, cocina y pedidos online.
 
 ---
 
-## 🔗 URLs
+## 📲 PWA Instalable
 
-- **Preview**: definida por Lovable.
-- **Marketplace público**: `/marketplace`.
-- **Auth**: `/auth`.
-- **Reset password**: `/reset-password`.
+GaIA ERP es una **Progressive Web App**: se instala en escritorio, Android e iOS, funciona offline en lectura y carga al instante con caché inteligente.
+
+---
+
+## 🛠️ Stack
+
+**Frontend** · React 18 · Vite · TypeScript · Tailwind · shadcn/ui · TanStack Query · React Router
+**Backend** · Lovable Cloud (Postgres + Auth + Storage + Edge Functions + Realtime)
+**Infra** · RLS en cada tabla · Edge Functions para email, facturación electrónica y administración
+
+---
+
+<div align="center">
+
+### 🌱 Construido para crecer contigo.
+
+*De un único punto de venta a una cadena multi-tienda con marketplace, sin cambiar de sistema.*
+
+</div>
