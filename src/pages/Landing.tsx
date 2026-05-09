@@ -120,14 +120,14 @@ const Landing = () => {
             multi-empresa, en tiempo real y lista para escalar.
           </p>
           <div className="mt-9 flex items-center justify-center gap-3 flex-wrap animate-fade-in">
-            <Link to="/auth">
+            <a href="#demo">
               <Button size="lg" className="bg-primary hover:bg-primary/90 gap-2">
-                Probar gratis <ArrowRight className="h-4 w-4" />
+                <PlayCircle className="h-4 w-4" /> Probar la demo
               </Button>
-            </Link>
-            <Link to="/marketplace">
+            </a>
+            <Link to="/auth">
               <Button size="lg" variant="outline" className="gap-2">
-                Ver marketplace en vivo
+                Crear cuenta gratis <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
