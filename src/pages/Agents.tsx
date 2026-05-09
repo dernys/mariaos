@@ -18,6 +18,7 @@ export default function Agents() {
   const { tenantId } = useTenantContext();
   const [agents, setAgents] = useState<any[]>([]);
   const [running, setRunning] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const load = async () => {
     if (!tenantId) return;
@@ -35,6 +36,18 @@ export default function Agents() {
     if (error) toast.error(error.message); else { toast.success(`${def.name} provisionado`); load(); }
   };
 
+  const provisionAll = async () => {
+    if (!tenantId) return;
+    setBulkBusy(true);
+    const missing = AGENT_DEFINITIONS.filter((d) => !agents.some((a) => a.type === d.type));
+    if (missing.length === 0) { toast.info("Todos los agentes ya están provisionados"); setBulkBusy(false); return; }
+    const { error } = await supabase.from("ai_agents").insert(
+      missing.map((d) => ({ tenant_id: tenantId, type: d.type, name: d.name, description: d.description }))
+    );
+    if (error) toast.error(error.message); else { toast.success(`${missing.length} agentes provisionados`); await load(); }
+    setBulkBusy(false);
+  };
+
   const updateAgent = async (id: string, patch: any) => {
     const { error } = await supabase.from("ai_agents").update(patch).eq("id", id);
     if (error) toast.error(error.message); else load();
@@ -50,6 +63,22 @@ export default function Agents() {
     } catch (e: any) {
       toast.error(e?.message ?? "Error ejecutando agente");
     } finally { setRunning(null); }
+  };
+
+  const runAll = async () => {
+    const active = agents.filter((a) => a.status === "active");
+    if (active.length === 0) { toast.info("No hay agentes activos"); return; }
+    setBulkBusy(true);
+    let ok = 0;
+    for (const a of active) {
+      try {
+        await supabase.functions.invoke("agent-runner", { body: { agent_id: a.id } });
+        ok++;
+      } catch (e) { /* continue */ }
+    }
+    toast.success(`${ok}/${active.length} agentes ejecutados`);
+    await load();
+    setBulkBusy(false);
   };
 
   return (
