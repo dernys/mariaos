@@ -56,6 +56,18 @@ const platformFeatures = [
 const Landing = () => {
   const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
+  const [api, setApi] = useState<CarouselApi | null>(null);
+  const [selected, setSelected] = useState(0);
+  const autoplay = useRef(Autoplay({ delay: 4500, stopOnInteraction: false, stopOnMouseEnter: true }));
+
+  useEffect(() => {
+    if (!api) return;
+    const onSelect = () => setSelected(api.selectedScrollSnap());
+    onSelect();
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
+    return () => { api.off("select", onSelect); };
+  }, [api]);
 
   const DEMO_EMAILS: Record<string, string> = {
     bar: "demo-bar@gaia.app",
