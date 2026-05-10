@@ -54,6 +54,7 @@ import Workflows from "./pages/Workflows";
 import DigitalTwin from "./pages/DigitalTwin";
 import Conteos from "./pages/Conteos";
 import InventoryIntelligence from "./pages/InventoryIntelligence";
+import Operaciones from "./pages/Operaciones";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +113,7 @@ const App = () => (
               <Route path="/digital-twin" element={<ProtectedRoute><DigitalTwin /></ProtectedRoute>} />
               <Route path="/conteos" element={<ProtectedRoute><Conteos /></ProtectedRoute>} />
               <Route path="/inventario/inteligencia" element={<ProtectedRoute><InventoryIntelligence /></ProtectedRoute>} />
+              <Route path="/operaciones" element={<ProtectedRoute><Operaciones /></ProtectedRoute>} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
