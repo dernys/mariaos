@@ -268,45 +268,78 @@ const Landing = () => {
             </p>
           </div>
 
-          <Carousel opts={{ align: "start", loop: true }} className="relative">
-            <CarouselContent className="-ml-4">
-              {moduleSlides.map((s) => (
-                <CarouselItem key={s.title} className="pl-4 md:basis-1/2 lg:basis-1/2">
-                  <div className="group relative rounded-3xl overflow-hidden border border-border bg-card shadow-card hover:shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.35)] hover:border-primary/40 transition-all duration-500">
-                    <div className="relative aspect-[16/10] overflow-hidden">
-                      <img
-                        src={s.img}
-                        alt={s.title}
-                        loading="lazy"
-                        decoding="async"
-                        width={1280}
-                        height={800}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                      />
-                      <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                      <div className="absolute top-4 left-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background/70 backdrop-blur border border-primary/30 text-primary text-xs font-medium">
-                        <s.icon className="h-3.5 w-3.5" />
-                        {s.title}
+          <Carousel
+            opts={{ align: "center", loop: true }}
+            plugins={[autoplay.current]}
+            setApi={setApi}
+            className="relative"
+          >
+            <CarouselContent className="-ml-4 py-2">
+              {moduleSlides.map((s, i) => {
+                const isActive = i === selected;
+                return (
+                  <CarouselItem key={s.title} className="pl-4 md:basis-3/4 lg:basis-2/3 xl:basis-1/2">
+                    <div
+                      className={[
+                        "group relative rounded-3xl overflow-hidden border bg-card transition-all duration-700 ease-out",
+                        isActive
+                          ? "border-primary/40 shadow-[0_30px_80px_-25px_hsl(var(--primary)/0.45)] scale-100 opacity-100"
+                          : "border-border/60 shadow-card scale-[0.96] opacity-70",
+                      ].join(" ")}
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        <img
+                          src={s.img}
+                          alt={s.title}
+                          loading="lazy"
+                          decoding="async"
+                          width={1280}
+                          height={800}
+                          className="w-full h-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
+                        />
+                        {/* soft gradient + glow */}
+                        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+                        <div aria-hidden className="absolute -inset-px ring-1 ring-inset ring-white/5" />
+                        <div aria-hidden className={`absolute -bottom-24 left-1/2 -translate-x-1/2 h-40 w-2/3 rounded-full bg-primary/30 blur-3xl transition-opacity duration-700 ${isActive ? "opacity-60" : "opacity-0"}`} />
+                        <div className="absolute top-4 left-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background/70 backdrop-blur-md border border-primary/30 text-primary text-xs font-medium shadow-sm">
+                          <s.icon className="h-3.5 w-3.5" />
+                          {s.title}
+                        </div>
+                      </div>
+                      <div className="p-6 sm:p-7">
+                        <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                        <ul className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {s.features.map((f) => (
+                            <li key={f} className="flex items-center gap-2 text-xs text-foreground/85">
+                              <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                              {f}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
-                    <div className="p-6">
-                      <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-                      <ul className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {s.features.map((f) => (
-                          <li key={f} className="flex items-center gap-2 text-xs text-foreground/85">
-                            <Check className="h-3.5 w-3.5 text-primary shrink-0" />
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </CarouselItem>
-              ))}
+                  </CarouselItem>
+                );
+              })}
             </CarouselContent>
-            <CarouselPrevious className="hidden md:flex -left-5 bg-card border-border" />
-            <CarouselNext className="hidden md:flex -right-5 bg-card border-border" />
+            <CarouselPrevious className="hidden md:flex -left-5 bg-card/90 backdrop-blur border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors" />
+            <CarouselNext className="hidden md:flex -right-5 bg-card/90 backdrop-blur border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors" />
           </Carousel>
+
+          {/* Indicadores */}
+          <div className="mt-8 flex items-center justify-center gap-2">
+            {moduleSlides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => api?.scrollTo(i)}
+                aria-label={`Ir al módulo ${i + 1}`}
+                className={[
+                  "h-1.5 rounded-full transition-all duration-500",
+                  i === selected ? "w-8 bg-primary" : "w-2 bg-border hover:bg-muted-foreground/40",
+                ].join(" ")}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
