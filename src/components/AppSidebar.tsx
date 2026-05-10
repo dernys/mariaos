@@ -108,6 +108,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Conteos físicos", url: "/conteos", icon: Shield },
       { title: "Almacenes", url: "/almacenes", icon: Warehouse },
       { title: "Tiendas", url: "/tiendas", icon: Store },
+      { title: "Operaciones", url: "/operaciones", icon: Workflow },
       { title: "Transferencias", url: "/transferencias", icon: ArrowRightLeft },
     ],
   },
