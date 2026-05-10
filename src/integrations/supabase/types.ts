@@ -438,6 +438,65 @@ export type Database = {
           },
         ]
       }
+      checklist_runs: {
+        Row: {
+          checklist_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          location_id: string
+          location_type: string
+          notes: string | null
+          responses: Json
+          score: number | null
+          started_by: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          checklist_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          location_id: string
+          location_type: string
+          notes?: string | null
+          responses?: Json
+          score?: number | null
+          started_by?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          checklist_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          location_id?: string
+          location_type?: string
+          notes?: string | null
+          responses?: Json
+          score?: number | null
+          started_by?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_runs_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "operational_checklists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consignment_lots: {
         Row: {
           created_at: string
@@ -2010,6 +2069,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      operational_checklists: {
+        Row: {
+          checklist_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          items: Json
+          name: string
+          scope: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          checklist_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          items?: Json
+          name: string
+          scope?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          checklist_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          items?: Json
+          name?: string
+          scope?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       payment_methods: {
         Row: {
@@ -3780,21 +3875,94 @@ export type Database = {
         }
         Relationships: []
       }
+      store_incidents: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          incident_type: string
+          metadata: Json | null
+          reported_by: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          store_id: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          incident_type: string
+          metadata?: Json | null
+          reported_by?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          store_id: string
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          incident_type?: string
+          metadata?: Json | null
+          reported_by?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          store_id?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_incidents_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_incidents_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           accepts_delivery: boolean | null
           accepts_pickup: boolean | null
           address: string | null
+          capacity: number | null
           created_at: string
           delivery_radius_km: number | null
           email: string | null
+          geo_lat: number | null
+          geo_lng: number | null
           id: string
           is_active: boolean
           latitude: number | null
           longitude: number | null
           manager_id: string | null
           name: string
+          opened_at: string | null
+          operational_status: string | null
           phone: string | null
+          schedule: Json | null
+          store_type: string | null
           tenant_id: string | null
           updated_at: string
         }
@@ -3802,16 +3970,23 @@ export type Database = {
           accepts_delivery?: boolean | null
           accepts_pickup?: boolean | null
           address?: string | null
+          capacity?: number | null
           created_at?: string
           delivery_radius_km?: number | null
           email?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
           id?: string
           is_active?: boolean
           latitude?: number | null
           longitude?: number | null
           manager_id?: string | null
           name: string
+          opened_at?: string | null
+          operational_status?: string | null
           phone?: string | null
+          schedule?: Json | null
+          store_type?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -3819,16 +3994,23 @@ export type Database = {
           accepts_delivery?: boolean | null
           accepts_pickup?: boolean | null
           address?: string | null
+          capacity?: number | null
           created_at?: string
           delivery_radius_km?: number | null
           email?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
           id?: string
           is_active?: boolean
           latitude?: number | null
           longitude?: number | null
           manager_id?: string | null
           name?: string
+          opened_at?: string | null
+          operational_status?: string | null
           phone?: string | null
+          schedule?: Json | null
+          store_type?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -4217,32 +4399,47 @@ export type Database = {
         Row: {
           capacity: number | null
           created_at: string
+          geo_lat: number | null
+          geo_lng: number | null
           id: string
           is_active: boolean
           location: string | null
+          manager_id: string | null
           name: string
           tenant_id: string | null
           updated_at: string
+          warehouse_type: string | null
+          zones: Json | null
         }
         Insert: {
           capacity?: number | null
           created_at?: string
+          geo_lat?: number | null
+          geo_lng?: number | null
           id?: string
           is_active?: boolean
           location?: string | null
+          manager_id?: string | null
           name: string
           tenant_id?: string | null
           updated_at?: string
+          warehouse_type?: string | null
+          zones?: Json | null
         }
         Update: {
           capacity?: number | null
           created_at?: string
+          geo_lat?: number | null
+          geo_lng?: number | null
           id?: string
           is_active?: boolean
           location?: string | null
+          manager_id?: string | null
           name?: string
           tenant_id?: string | null
           updated_at?: string
+          warehouse_type?: string | null
+          zones?: Json | null
         }
         Relationships: [
           {
