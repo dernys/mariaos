@@ -129,6 +129,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Clientes", url: "/clientes", icon: Users },
       { title: "Empleados", url: "/empleados", icon: UserCheck },
       { title: "RRHH", url: "/rrhh", icon: Briefcase },
+      { title: "RRHH Operativo", url: "/rrhh/operativo", icon: Briefcase },
       { title: "Fidelización", url: "/fidelizacion", icon: Award },
     ],
   },

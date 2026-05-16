@@ -56,6 +56,7 @@ import Conteos from "./pages/Conteos";
 import InventoryIntelligence from "./pages/InventoryIntelligence";
 import Operaciones from "./pages/Operaciones";
 import Tesoreria from "./pages/Tesoreria";
+import RRHHEnterprise from "./pages/RRHHEnterprise";
 
 const queryClient = new QueryClient();
 
@@ -116,6 +117,7 @@ const App = () => (
               <Route path="/inventario/inteligencia" element={<ProtectedRoute><InventoryIntelligence /></ProtectedRoute>} />
               <Route path="/operaciones" element={<ProtectedRoute><Operaciones /></ProtectedRoute>} />
               <Route path="/tesoreria" element={<ProtectedRoute><Tesoreria /></ProtectedRoute>} />
+              <Route path="/rrhh/operativo" element={<ProtectedRoute><RRHHEnterprise /></ProtectedRoute>} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
