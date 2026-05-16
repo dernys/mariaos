@@ -136,6 +136,7 @@ const menuGroups: MenuGroup[] = [
     label: "Finanzas",
     items: [
       { title: "Contabilidad", url: "/contabilidad", icon: BookOpen },
+      { title: "Tesorería", url: "/tesoreria", icon: Wallet },
     ],
   },
   {
