@@ -56,6 +56,7 @@ import Conteos from "./pages/Conteos";
 import InventoryIntelligence from "./pages/InventoryIntelligence";
 import Operaciones from "./pages/Operaciones";
 import Tesoreria from "./pages/Tesoreria";
+import RRHHEnterprise from "./pages/RRHHEnterprise";
 
 const queryClient = new QueryClient();
 
