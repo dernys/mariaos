@@ -55,6 +55,7 @@ import DigitalTwin from "./pages/DigitalTwin";
 import Conteos from "./pages/Conteos";
 import InventoryIntelligence from "./pages/InventoryIntelligence";
 import Operaciones from "./pages/Operaciones";
+import Tesoreria from "./pages/Tesoreria";
 
 const queryClient = new QueryClient();
 
