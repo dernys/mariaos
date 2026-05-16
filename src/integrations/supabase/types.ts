@@ -399,6 +399,291 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_accounts: {
+        Row: {
+          account_number: string | null
+          accounting_account_id: string | null
+          bank_name: string | null
+          created_at: string
+          currency: string
+          current_balance: number
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          accounting_account_id?: string | null
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          accounting_account_id?: string | null
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_accounting_account_id_fkey"
+            columns: ["accounting_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_accounts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_accounts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_reconciliations: {
+        Row: {
+          bank_account_id: string
+          bank_balance: number
+          book_balance: number
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          difference: number
+          id: string
+          notes: string | null
+          period_end: string
+          period_start: string
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          bank_account_id: string
+          bank_balance?: number
+          book_balance?: number
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          difference?: number
+          id?: string
+          notes?: string | null
+          period_end: string
+          period_start: string
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          bank_account_id?: string
+          bank_balance?: number
+          book_balance?: number
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          difference?: number
+          id?: string
+          notes?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_reconciliations_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_statements: {
+        Row: {
+          bank_account_id: string
+          closing_balance: number
+          created_at: string
+          file_name: string | null
+          id: string
+          imported_by: string | null
+          opening_balance: number
+          statement_date: string
+          tenant_id: string
+        }
+        Insert: {
+          bank_account_id: string
+          closing_balance?: number
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          imported_by?: string | null
+          opening_balance?: number
+          statement_date: string
+          tenant_id: string
+        }
+        Update: {
+          bank_account_id?: string
+          closing_balance?: number
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          imported_by?: string | null
+          opening_balance?: number
+          statement_date?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_statements_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statements_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statements_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_transactions: {
+        Row: {
+          amount: number
+          balance_after: number | null
+          bank_account_id: string
+          created_at: string
+          description: string | null
+          direction: string
+          id: string
+          matched_at: string | null
+          matched_by: string | null
+          matched_payment_id: string | null
+          reference: string | null
+          statement_id: string | null
+          status: string
+          tenant_id: string
+          transaction_date: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number | null
+          bank_account_id: string
+          created_at?: string
+          description?: string | null
+          direction: string
+          id?: string
+          matched_at?: string | null
+          matched_by?: string | null
+          matched_payment_id?: string | null
+          reference?: string | null
+          statement_id?: string | null
+          status?: string
+          tenant_id: string
+          transaction_date: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number | null
+          bank_account_id?: string
+          created_at?: string
+          description?: string | null
+          direction?: string
+          id?: string
+          matched_at?: string | null
+          matched_by?: string | null
+          matched_payment_id?: string | null
+          reference?: string | null
+          statement_id?: string | null
+          status?: string
+          tenant_id?: string
+          transaction_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_matched_payment_id_fkey"
+            columns: ["matched_payment_id"]
+            isOneToOne: false
+            referencedRelation: "account_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "bank_statements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_decisions: {
         Row: {
           agent_id: string | null
@@ -4568,6 +4853,85 @@ export type Database = {
         }
         Relationships: []
       }
+      treasury_forecast: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          category: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          direction: string
+          due_date: string
+          id: string
+          party_id: string | null
+          party_type: string | null
+          reference_id: string | null
+          reference_type: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bank_account_id?: string | null
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          direction: string
+          due_date: string
+          id?: string
+          party_id?: string | null
+          party_type?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          direction?: string
+          due_date?: string
+          id?: string
+          party_id?: string | null
+          party_type?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treasury_forecast_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_forecast_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_forecast_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -4922,6 +5286,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      find_account_by_codes: {
+        Args: { p_codes: string[]; p_tenant: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4929,6 +5297,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      ignore_bank_transaction: { Args: { p_tx_id: string }; Returns: undefined }
       import_chart_template: {
         Args: { p_template: string; p_tenant_id: string }
         Returns: number
@@ -4951,12 +5320,24 @@ export type Database = {
         }
         Returns: undefined
       }
+      match_bank_transaction: {
+        Args: { p_payment_id: string; p_tx_id: string }
+        Returns: undefined
+      }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
+      post_payroll_journal_entry: {
+        Args: { p_payroll_id: string }
+        Returns: string
+      }
       post_purchase_journal_entry: {
         Args: { p_purchase_id: string }
         Returns: string
       }
       post_sale_journal_entry: { Args: { p_sale_id: string }; Returns: string }
+      post_sale_return_journal_entry: {
+        Args: { p_return_id: string }
+        Returns: string
+      }
       process_sale_return: {
         Args: {
           p_location_id: string
