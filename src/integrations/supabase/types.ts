@@ -73,10 +73,16 @@ export type Database = {
           balance: number
           code: string
           created_at: string
+          currency: string | null
+          description: string | null
           id: string
           is_active: boolean
+          is_postable: boolean
+          level: number
           name: string
+          nature: string
           parent_id: string | null
+          plan_template: string | null
           tenant_id: string | null
           type: string
           updated_at: string
@@ -85,10 +91,16 @@ export type Database = {
           balance?: number
           code: string
           created_at?: string
+          currency?: string | null
+          description?: string | null
           id?: string
           is_active?: boolean
+          is_postable?: boolean
+          level?: number
           name: string
+          nature?: string
           parent_id?: string | null
+          plan_template?: string | null
           tenant_id?: string | null
           type: string
           updated_at?: string
@@ -97,10 +109,16 @@ export type Database = {
           balance?: number
           code?: string
           created_at?: string
+          currency?: string | null
+          description?: string | null
           id?: string
           is_active?: boolean
+          is_postable?: boolean
+          level?: number
           name?: string
+          nature?: string
           parent_id?: string | null
+          plan_template?: string | null
           tenant_id?: string | null
           type?: string
           updated_at?: string
@@ -122,6 +140,73 @@ export type Database = {
           },
           {
             foreignKeyName: "accounting_accounts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_periods: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          end_date: string
+          fiscal_year_id: string
+          id: string
+          name: string
+          period_number: number
+          start_date: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date: string
+          fiscal_year_id: string
+          id?: string
+          name: string
+          period_number: number
+          start_date: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date?: string
+          fiscal_year_id?: string
+          id?: string
+          name?: string
+          period_number?: number
+          start_date?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_periods_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_periods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_periods_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
@@ -1219,6 +1304,66 @@ export type Database = {
           },
         ]
       }
+      fiscal_years: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          end_date: string
+          id: string
+          is_current: boolean
+          name: string
+          start_date: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          is_current?: boolean
+          name: string
+          start_date: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_current?: boolean
+          name?: string
+          start_date?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_years_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_years_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           created_at: string
@@ -1534,9 +1679,16 @@ export type Database = {
           date: string
           description: string | null
           entry_number: string
+          fiscal_year_id: string | null
           id: string
+          period_id: string | null
+          posted_at: string | null
+          posted_by: string | null
           reference_id: string | null
           reference_type: string | null
+          reversed_by: string | null
+          reverses: string | null
+          series: string
           status: string
           tenant_id: string | null
           updated_at: string
@@ -1547,9 +1699,16 @@ export type Database = {
           date?: string
           description?: string | null
           entry_number: string
+          fiscal_year_id?: string | null
           id?: string
+          period_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          reversed_by?: string | null
+          reverses?: string | null
+          series?: string
           status?: string
           tenant_id?: string | null
           updated_at?: string
@@ -1560,14 +1719,49 @@ export type Database = {
           date?: string
           description?: string | null
           entry_number?: string
+          fiscal_year_id?: string | null
           id?: string
+          period_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          reversed_by?: string | null
+          reverses?: string | null
+          series?: string
           status?: string
           tenant_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "journal_entries_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversed_by_fkey"
+            columns: ["reversed_by"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reverses_fkey"
+            columns: ["reverses"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "journal_entries_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -4648,6 +4842,10 @@ export type Database = {
         Args: { p_reason: string; p_sale_id: string }
         Returns: undefined
       }
+      close_accounting_period: {
+        Args: { p_period_id: string }
+        Returns: undefined
+      }
       close_shift_with_summary: {
         Args: { p_declared_cash: number; p_notes?: string; p_shift_id: string }
         Returns: Json
@@ -4658,6 +4856,10 @@ export type Database = {
           base: number
           hours_worked: number
         }[]
+      }
+      create_fiscal_year: {
+        Args: { p_start_month?: number; p_tenant_id: string; p_year: number }
+        Returns: string
       }
       create_notification: {
         Args: {
@@ -4727,6 +4929,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_chart_template: {
+        Args: { p_template: string; p_tenant_id: string }
+        Returns: number
+      }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
       is_tenant_member: { Args: { _tenant: string }; Returns: boolean }
       issue_invoice: {
@@ -4745,6 +4951,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
       post_purchase_journal_entry: {
         Args: { p_purchase_id: string }
         Returns: string
@@ -4791,6 +4998,22 @@ export type Database = {
           p_reference_id?: string
           p_reference_type?: string
         }
+        Returns: string
+      }
+      relink_chart_parents: {
+        Args: { p_tenant_id: string }
+        Returns: undefined
+      }
+      reopen_accounting_period: {
+        Args: { p_period_id: string }
+        Returns: undefined
+      }
+      resolve_period: {
+        Args: { p_date: string; p_tenant_id: string }
+        Returns: string
+      }
+      reverse_journal_entry: {
+        Args: { p_entry_id: string; p_reason: string }
         Returns: string
       }
       revert_sale_stock: { Args: { p_sale_id: string }; Returns: undefined }
