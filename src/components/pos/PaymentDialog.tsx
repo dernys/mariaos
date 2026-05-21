@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { printThermalReceipt } from "@/lib/printReceipt";
+import { enqueueSale } from "@/lib/offline/db";
 
 interface CartItem {
   id: number;
@@ -228,24 +229,78 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       }
 
       const status = isPartial && remaining > 0.01 ? "partial" : "paid";
+      const clientUuid = crypto.randomUUID();
+      const paymentRows = payments
+        .filter((p) => parseFloat(p.amount) > 0)
+        .map((p) => ({
+          method: p.method,
+          currency: p.currency,
+          amount: parseFloat(p.amount),
+          amount_in_base: parseFloat(p.amount) * (parseFloat(p.exchange_rate) || 1),
+          exchange_rate: parseFloat(p.exchange_rate) || 1,
+          card_last_four: p.method === "card" ? p.card_last_four : null,
+          card_holder: p.method === "card" ? p.card_holder : null,
+          card_description: p.method === "card" ? p.card_description : null,
+        }));
 
-      // Create sale (con shift, store y ticket auto)
-      const { data: sale, error: saleErr } = await supabase.from("sales").insert({
+      // --- OFFLINE PATH: si no hay red, encola y termina ---
+      const offlinePayload = {
+        client_uuid: clientUuid,
         tenant_id: tu?.tenant_id,
         customer_id: selectedCustomer || null,
         employee_id: selectedEmployee || null,
         shift_id: openShift.id,
-        store_id: openShift.store_id || null,
-        subtotal,
-        tax,
-        total,
+        location_type: "store",
+        location_id: openShift.store_id || null,
+        subtotal, tax, total,
         amount_paid: totalPaidInBase,
         status,
-      }).select("id, ticket_number").single();
+        created_at: new Date().toISOString(),
+        items: cart.map((it) => ({
+          client_uuid: crypto.randomUUID(),
+          product_id: it.productId || null,
+          product_name: it.name,
+          sku: it.sku || null,
+          price: it.price, qty: it.qty,
+          total: it.price * it.qty,
+        })),
+        payments: paymentRows.map((p) => ({
+          client_uuid: crypto.randomUUID(),
+          party_type: selectedCustomer ? "customer" : selectedEmployee ? "employee" : "customer",
+          party_id: selectedCustomer || selectedEmployee || null,
+          method: p.method, currency: p.currency,
+          amount: p.amount, amount_in_base: p.amount_in_base,
+          exchange_rate: p.exchange_rate,
+        })),
+      };
+
+      if (!navigator.onLine && tu?.tenant_id) {
+        await enqueueSale({ client_uuid: clientUuid, tenant_id: tu.tenant_id, payload: offlinePayload });
+        toast({
+          title: "Venta guardada offline",
+          description: "Se sincronizará automáticamente al recuperar conexión.",
+        });
+        onSaleComplete();
+        onOpenChange(false);
+        setSaving(false);
+        return;
+      }
+
+      // --- ONLINE PATH ---
+      const { data: sale, error: saleErr } = await supabase.from("sales").insert({
+        tenant_id: tu?.tenant_id,
+        client_uuid: clientUuid,
+        customer_id: selectedCustomer || null,
+        employee_id: selectedEmployee || null,
+        shift_id: openShift.id,
+        store_id: openShift.store_id || null,
+        subtotal, tax, total,
+        amount_paid: totalPaidInBase,
+        status,
+      } as any).select("id, ticket_number").single();
 
       if (saleErr || !sale) throw saleErr || new Error("Error creando venta");
 
-      // Insert sale items (con product_id)
       const items = cart.map((item) => ({
         sale_id: sale.id,
         product_id: item.productId || null,
@@ -258,28 +313,13 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       const { error: itemsErr } = await supabase.from("sale_items").insert(items);
       if (itemsErr) throw itemsErr;
 
-      // Insert payments
-      const paymentRows = payments
-        .filter((p) => parseFloat(p.amount) > 0)
-        .map((p) => ({
-          sale_id: sale.id,
-          method: p.method,
-          currency: p.currency,
-          amount: parseFloat(p.amount),
-          amount_in_base: parseFloat(p.amount) * (parseFloat(p.exchange_rate) || 1),
-          exchange_rate: parseFloat(p.exchange_rate) || 1,
-          card_last_four: p.method === "card" ? p.card_last_four : null,
-          card_holder: p.method === "card" ? p.card_holder : null,
-          card_description: p.method === "card" ? p.card_description : null,
-        }));
       if (paymentRows.length > 0) {
-        const { error: payErr } = await supabase.from("sale_payments").insert(paymentRows);
+        const { error: payErr } = await supabase.from("sale_payments").insert(
+          paymentRows.map((p) => ({ ...p, sale_id: sale.id }))
+        );
         if (payErr) throw payErr;
       }
 
-      // El saldo de cliente/empleado lo actualiza el trigger trg_apply_sale_credit_balance automáticamente.
-
-      // Descontar stock de la tienda del turno (si hay store_id y productos vinculados)
       if (openShift.store_id && cart.some((c) => c.productId)) {
         const { error: stockErr } = await supabase.rpc("process_sale_stock", {
           p_sale_id: sale.id,
@@ -320,7 +360,45 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       onSaleComplete();
       onOpenChange(false);
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      // Fallback: si el error sugiere problema de red, encolamos offline
+      const msg = String(err?.message || err);
+      const isNetwork = /Failed to fetch|NetworkError|TypeError|fetch/i.test(msg) || !navigator.onLine;
+      if (isNetwork) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          const { data: tu } = user ? await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single() : { data: null } as any;
+          if (tu?.tenant_id) {
+            const clientUuid = crypto.randomUUID();
+            await enqueueSale({
+              client_uuid: clientUuid,
+              tenant_id: tu.tenant_id,
+              payload: {
+                client_uuid: clientUuid,
+                tenant_id: tu.tenant_id,
+                customer_id: selectedCustomer || null,
+                employee_id: selectedEmployee || null,
+                subtotal, tax, total,
+                amount_paid: totalPaidInBase,
+                status: isPartial && remaining > 0.01 ? "partial" : "paid",
+                created_at: new Date().toISOString(),
+                items: cart.map((it) => ({
+                  client_uuid: crypto.randomUUID(),
+                  product_id: it.productId || null,
+                  product_name: it.name, sku: it.sku || null,
+                  price: it.price, qty: it.qty, total: it.price * it.qty,
+                })),
+                payments: [],
+              },
+            });
+            toast({ title: "Venta encolada offline", description: "Se enviará al recuperar conexión." });
+            onSaleComplete();
+            onOpenChange(false);
+            setSaving(false);
+            return;
+          }
+        } catch { /* ignore */ }
+      }
+      toast({ title: "Error", description: msg, variant: "destructive" });
     } finally {
       setSaving(false);
     }
