@@ -75,6 +75,14 @@ export function POSBar() {
     });
   };
 
+  // Escáner HID / lector de códigos: busca por SKU exacto y añade al carro
+  const handleScan = useCallback((code: string) => {
+    const p = products.find((p) => p.sku?.toLowerCase() === code.toLowerCase());
+    if (p) { addToCart(p); toast.success(`+ ${p.name}`); }
+    else { toast.error(`Código no encontrado: ${code}`); }
+  }, [products]);
+  useBarcodeScanner(handleScan);
+
   const updateQty = (id: number, delta: number) => {
     setCart((prev) => prev.map((i) => (i.id === id ? { ...i, qty: i.qty + delta } : i)).filter((i) => i.qty > 0));
   };
