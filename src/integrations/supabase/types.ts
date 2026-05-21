@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           amount: number
           amount_in_base: number
+          client_uuid: string | null
           created_at: string
           currency: string
           direction: string
@@ -35,6 +36,7 @@ export type Database = {
         Insert: {
           amount: number
           amount_in_base: number
+          client_uuid?: string | null
           created_at?: string
           currency?: string
           direction: string
@@ -52,6 +54,7 @@ export type Database = {
         Update: {
           amount?: number
           amount_in_base?: number
+          client_uuid?: string | null
           created_at?: string
           currency?: string
           direction?: string
@@ -4415,6 +4418,7 @@ export type Database = {
       }
       sale_items: {
         Row: {
+          client_uuid: string | null
           created_at: string
           id: string
           notes: string | null
@@ -4427,6 +4431,7 @@ export type Database = {
           total: number
         }
         Insert: {
+          client_uuid?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -4439,6 +4444,7 @@ export type Database = {
           total?: number
         }
         Update: {
+          client_uuid?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -4610,6 +4616,7 @@ export type Database = {
           cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          client_uuid: string | null
           created_at: string
           customer_id: string | null
           employee_id: string | null
@@ -4632,6 +4639,7 @@ export type Database = {
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          client_uuid?: string | null
           created_at?: string
           customer_id?: string | null
           employee_id?: string | null
@@ -4654,6 +4662,7 @@ export type Database = {
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          client_uuid?: string | null
           created_at?: string
           customer_id?: string | null
           employee_id?: string | null
@@ -6289,6 +6298,7 @@ export type Database = {
         }
         Returns: string
       }
+      sync_offline_sale: { Args: { p_payload: Json }; Returns: string }
       validate_coupon: {
         Args: {
           p_amount: number
