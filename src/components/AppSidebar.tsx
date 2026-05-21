@@ -70,6 +70,8 @@ interface MenuGroup {
   items: MenuItem[];
 }
 
+const adminOnlyGroupLabels = new Set(["GaIA OS"]);
+
 const menuGroups: MenuGroup[] = [
   {
     label: "GaIA OS",
