@@ -538,6 +538,10 @@ const Contabilidad = () => {
               </CardContent></Card>
             )}
           </TabsContent>
+
+          <TabsContent value="reports" className="space-y-4">
+            <AccountingReports accounts={accounts as any} />
+          </TabsContent>
         </Tabs>
       </div>
 
