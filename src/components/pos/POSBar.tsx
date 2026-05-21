@@ -215,6 +215,12 @@ export function POSBar() {
       </div>
 
       <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} />
+      <ParkedSalesDialog
+        open={parkingOpen}
+        onOpenChange={setParkingOpen}
+        currentCart={cart}
+        onResume={(c) => setCart(c)}
+      />
     </div>
   );
 }
