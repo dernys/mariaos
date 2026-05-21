@@ -3016,61 +3016,251 @@ export type Database = {
           },
         ]
       }
-      payroll_runs: {
+      payroll_concepts: {
         Row: {
-          base_salary: number
-          bonus: number
+          code: string
+          concept_type: string
+          contributes_ss: boolean
           created_at: string
-          deductions: number
-          employee_id: string
-          hours_worked: number
+          default_amount: number
           id: string
-          net_pay: number
-          notes: string | null
-          paid_at: string | null
-          period_end: string
-          period_start: string
-          status: string
+          is_active: boolean
+          is_taxable: boolean
+          name: string
           tenant_id: string
         }
         Insert: {
-          base_salary?: number
-          bonus?: number
+          code: string
+          concept_type: string
+          contributes_ss?: boolean
           created_at?: string
-          deductions?: number
-          employee_id: string
-          hours_worked?: number
+          default_amount?: number
           id?: string
-          net_pay?: number
-          notes?: string | null
-          paid_at?: string | null
-          period_end: string
-          period_start: string
-          status?: string
+          is_active?: boolean
+          is_taxable?: boolean
+          name: string
           tenant_id: string
         }
         Update: {
-          base_salary?: number
-          bonus?: number
+          code?: string
+          concept_type?: string
+          contributes_ss?: boolean
           created_at?: string
-          deductions?: number
-          employee_id?: string
-          hours_worked?: number
+          default_amount?: number
           id?: string
-          net_pay?: number
-          notes?: string | null
-          paid_at?: string | null
-          period_end?: string
-          period_start?: string
-          status?: string
+          is_active?: boolean
+          is_taxable?: boolean
+          name?: string
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payroll_concepts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_concepts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_run_concepts: {
+        Row: {
+          concept_id: string | null
+          concept_type: string
+          contributes_ss: boolean
+          created_at: string
+          description: string
+          id: string
+          is_taxable: boolean
+          payroll_run_id: string
+          quantity: number
+          tenant_id: string
+          total_amount: number
+          unit_amount: number
+        }
+        Insert: {
+          concept_id?: string | null
+          concept_type: string
+          contributes_ss?: boolean
+          created_at?: string
+          description: string
+          id?: string
+          is_taxable?: boolean
+          payroll_run_id: string
+          quantity?: number
+          tenant_id: string
+          total_amount?: number
+          unit_amount?: number
+        }
+        Update: {
+          concept_id?: string | null
+          concept_type?: string
+          contributes_ss?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          is_taxable?: boolean
+          payroll_run_id?: string
+          quantity?: number
+          tenant_id?: string
+          total_amount?: number
+          unit_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_run_concepts_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_concepts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_concepts_payroll_run_id_fkey"
+            columns: ["payroll_run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_concepts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_concepts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_runs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          base_salary: number
+          bonus: number
+          bonuses_amount: number
+          created_at: string
+          deductions: number
+          employee_id: string
+          gross_salary: number
+          hours_worked: number
+          id: string
+          irpf_amount: number
+          journal_entry_id: string | null
+          net_pay: number
+          notes: string | null
+          other_deductions: number
+          overtime_amount: number
+          paid_at: string | null
+          payment_iban: string | null
+          payment_method: string
+          payslip_url: string | null
+          period_end: string
+          period_start: string
+          receipt_number: string | null
+          sepa_export_id: string | null
+          ss_company_amount: number
+          ss_worker_amount: number
+          status: string
+          taxable_base: number
+          tenant_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          base_salary?: number
+          bonus?: number
+          bonuses_amount?: number
+          created_at?: string
+          deductions?: number
+          employee_id: string
+          gross_salary?: number
+          hours_worked?: number
+          id?: string
+          irpf_amount?: number
+          journal_entry_id?: string | null
+          net_pay?: number
+          notes?: string | null
+          other_deductions?: number
+          overtime_amount?: number
+          paid_at?: string | null
+          payment_iban?: string | null
+          payment_method?: string
+          payslip_url?: string | null
+          period_end: string
+          period_start: string
+          receipt_number?: string | null
+          sepa_export_id?: string | null
+          ss_company_amount?: number
+          ss_worker_amount?: number
+          status?: string
+          taxable_base?: number
+          tenant_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          base_salary?: number
+          bonus?: number
+          bonuses_amount?: number
+          created_at?: string
+          deductions?: number
+          employee_id?: string
+          gross_salary?: number
+          hours_worked?: number
+          id?: string
+          irpf_amount?: number
+          journal_entry_id?: string | null
+          net_pay?: number
+          notes?: string | null
+          other_deductions?: number
+          overtime_amount?: number
+          paid_at?: string | null
+          payment_iban?: string | null
+          payment_method?: string
+          payslip_url?: string | null
+          period_end?: string
+          period_start?: string
+          receipt_number?: string | null
+          sepa_export_id?: string | null
+          ss_company_amount?: number
+          ss_worker_amount?: number
+          status?: string
+          taxable_base?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_payroll_sepa"
+            columns: ["sepa_export_id"]
+            isOneToOne: false
+            referencedRelation: "sepa_exports"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payroll_runs_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_runs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
           {
@@ -3082,6 +3272,63 @@ export type Database = {
           },
           {
             foreignKeyName: "payroll_runs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_tax_brackets: {
+        Row: {
+          bracket_type: string
+          country_code: string
+          created_at: string
+          fixed_amount: number
+          id: string
+          max_base: number | null
+          min_base: number
+          notes: string | null
+          rate_percent: number
+          tenant_id: string
+          year: number
+        }
+        Insert: {
+          bracket_type: string
+          country_code?: string
+          created_at?: string
+          fixed_amount?: number
+          id?: string
+          max_base?: number | null
+          min_base?: number
+          notes?: string | null
+          rate_percent?: number
+          tenant_id: string
+          year: number
+        }
+        Update: {
+          bracket_type?: string
+          country_code?: string
+          created_at?: string
+          fixed_amount?: number
+          id?: string
+          max_base?: number | null
+          min_base?: number
+          notes?: string | null
+          rate_percent?: number
+          tenant_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_tax_brackets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_tax_brackets_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
@@ -4580,6 +4827,70 @@ export type Database = {
           },
         ]
       }
+      sepa_exports: {
+        Row: {
+          bank_account_id: string | null
+          created_at: string
+          currency: string
+          generated_by: string | null
+          id: string
+          message_id: string
+          payment_count: number
+          status: string
+          tenant_id: string
+          total_amount: number
+          xml_content: string | null
+        }
+        Insert: {
+          bank_account_id?: string | null
+          created_at?: string
+          currency?: string
+          generated_by?: string | null
+          id?: string
+          message_id: string
+          payment_count?: number
+          status?: string
+          tenant_id: string
+          total_amount?: number
+          xml_content?: string | null
+        }
+        Update: {
+          bank_account_id?: string | null
+          created_at?: string
+          currency?: string
+          generated_by?: string | null
+          id?: string
+          message_id?: string
+          payment_count?: number
+          status?: string
+          tenant_id?: string
+          total_amount?: number
+          xml_content?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sepa_exports_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sepa_exports_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sepa_exports_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shift_cash_movements: {
         Row: {
           amount: number
@@ -5631,6 +5942,26 @@ export type Database = {
           hours_worked: number
         }[]
       }
+      compute_payroll_full: {
+        Args: {
+          _bonuses?: number
+          _employee_id: string
+          _other_deductions?: number
+          _period_end: string
+          _period_start: string
+        }
+        Returns: {
+          base_salary: number
+          gross_salary: number
+          hours_worked: number
+          irpf_amount: number
+          net_pay: number
+          overtime_amount: number
+          ss_company_amount: number
+          ss_worker_amount: number
+          taxable_base: number
+        }[]
+      }
       create_fiscal_year: {
         Args: { p_start_month?: number; p_tenant_id: string; p_year: number }
         Returns: string
@@ -5709,6 +6040,10 @@ export type Database = {
         Args: { p_codes: string[]; p_tenant: string }
         Returns: string
       }
+      generate_sepa_xml: {
+        Args: { _bank_account_id: string; _payroll_run_ids: string[] }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5743,9 +6078,124 @@ export type Database = {
         Args: { p_payment_id: string; p_tx_id: string }
         Returns: undefined
       }
+      my_attendance: {
+        Args: { _from?: string; _to?: string }
+        Returns: {
+          check_in: string
+          check_in_lat: number | null
+          check_in_lng: number | null
+          check_in_photo: string | null
+          check_out: string | null
+          check_out_lat: number | null
+          check_out_lng: number | null
+          check_out_photo: string | null
+          created_at: string
+          employee_id: string
+          hours_worked: number | null
+          id: string
+          notes: string | null
+          source: string
+          status: string
+          store_id: string | null
+          tenant_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "employee_attendance"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      my_employee_record: {
+        Args: never
+        Returns: {
+          email: string
+          emp_name: string
+          id: string
+          job_position: string
+          salary: number
+          tenant_id: string
+        }[]
+      }
+      my_leave_requests: {
+        Args: never
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          attachment_url: string | null
+          created_at: string
+          days: number
+          employee_id: string
+          end_date: string
+          id: string
+          leave_type: string
+          reason: string | null
+          rejection_reason: string | null
+          start_date: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "leave_requests"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      my_payslips: {
+        Args: never
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          base_salary: number
+          bonus: number
+          bonuses_amount: number
+          created_at: string
+          deductions: number
+          employee_id: string
+          gross_salary: number
+          hours_worked: number
+          id: string
+          irpf_amount: number
+          journal_entry_id: string | null
+          net_pay: number
+          notes: string | null
+          other_deductions: number
+          overtime_amount: number
+          paid_at: string | null
+          payment_iban: string | null
+          payment_method: string
+          payslip_url: string | null
+          period_end: string
+          period_start: string
+          receipt_number: string | null
+          sepa_export_id: string | null
+          ss_company_amount: number
+          ss_worker_amount: number
+          status: string
+          taxable_base: number
+          tenant_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "payroll_runs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      my_vacation_balance: {
+        Args: never
+        Returns: {
+          entitled: number
+          pending: number
+          remaining: number
+          taken: number
+        }[]
+      }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
       post_payroll_journal_entry: {
-        Args: { p_payroll_id: string }
+        Args: { _payroll_id: string }
         Returns: string
       }
       post_purchase_journal_entry: {
@@ -5827,6 +6277,10 @@ export type Database = {
         Returns: string
       }
       revert_sale_stock: { Args: { p_sale_id: string }; Returns: undefined }
+      seed_default_tax_brackets: {
+        Args: { _tenant: string; _year?: number }
+        Returns: undefined
+      }
       settle_consignment_lots: {
         Args: {
           p_method?: string
