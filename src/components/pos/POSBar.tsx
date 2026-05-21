@@ -1,13 +1,17 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, X, Beer, Wine, GlassWater, Coffee, Martini, Flame } from "lucide-react";
+import { Search, ShoppingCart, X, Beer, Wine, GlassWater, Coffee, Martini, Flame, Bookmark, ScanLine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { CartContent } from "./CartContent";
 import { PaymentDialog } from "./PaymentDialog";
+import { ParkedSalesDialog } from "./ParkedSalesDialog";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -52,6 +56,7 @@ export function POSBar() {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [cartOpen, setCartOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [parkingOpen, setParkingOpen] = useState(false);
 
   useEffect(() => {
     if (!tenantId) return;
