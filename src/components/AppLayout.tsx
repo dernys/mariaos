@@ -5,6 +5,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import { CommandPalette, CommandPaletteTrigger } from "@/components/CommandPalette";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -41,6 +42,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
               )}
             </div>
             <div className="flex items-center gap-2">
+              <OfflineBanner />
               <CommandPaletteTrigger />
               <NotificationsBell />
               <div className="h-8 w-8 rounded-full gradient-brand flex items-center justify-center text-primary-foreground text-xs font-bold font-heading ml-2">
