@@ -57,6 +57,7 @@ import InventoryIntelligence from "./pages/InventoryIntelligence";
 import Operaciones from "./pages/Operaciones";
 import Tesoreria from "./pages/Tesoreria";
 import RRHHEnterprise from "./pages/RRHHEnterprise";
+import PortalEmpleado from "./pages/PortalEmpleado";
 
 const queryClient = new QueryClient();
 
@@ -118,6 +119,7 @@ const App = () => (
               <Route path="/operaciones" element={<ProtectedRoute><Operaciones /></ProtectedRoute>} />
               <Route path="/tesoreria" element={<ProtectedRoute><Tesoreria /></ProtectedRoute>} />
               <Route path="/rrhh/operativo" element={<ProtectedRoute><RRHHEnterprise /></ProtectedRoute>} />
+              <Route path="/portal-empleado" element={<ProtectedRoute><PortalEmpleado /></ProtectedRoute>} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />

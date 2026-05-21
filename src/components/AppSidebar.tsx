@@ -70,6 +70,8 @@ interface MenuGroup {
   items: MenuItem[];
 }
 
+const adminOnlyGroupLabels = new Set(["GaIA OS"]);
+
 const menuGroups: MenuGroup[] = [
   {
     label: "GaIA OS",
@@ -130,6 +132,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Empleados", url: "/empleados", icon: UserCheck },
       { title: "RRHH", url: "/rrhh", icon: Briefcase },
       { title: "RRHH Operativo", url: "/rrhh/operativo", icon: Briefcase },
+      { title: "Portal Empleado", url: "/portal-empleado", icon: UserCheck },
       { title: "Fidelización", url: "/fidelizacion", icon: Award },
     ],
   },
@@ -215,6 +218,9 @@ export function AppSidebar() {
 
       <SidebarContent>
         {menuGroups.map((group) => {
+          if (adminOnlyGroupLabels.has(group.label) && !roles.includes("admin") && !isSuperadmin) {
+            return null;
+          }
           const visible = group.items.filter((it) => !it.types || it.types.includes(biz));
           if (visible.length === 0) return null;
           return (
