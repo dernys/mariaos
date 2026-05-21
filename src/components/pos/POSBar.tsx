@@ -119,9 +119,15 @@ export function POSBar() {
           </div>
         </div>
 
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar bebida o código..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card border-amber-500/10 focus-visible:border-amber-500/40" />
+        <div className="flex gap-2 mb-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar o escanear código..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card border-amber-500/10 focus-visible:border-amber-500/40" />
+            <ScanLine className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-500/60" />
+          </div>
+          <Button variant="outline" size="icon" onClick={() => setParkingOpen(true)} title="Ventas en espera">
+            <Bookmark className="h-4 w-4" />
+          </Button>
         </div>
 
         <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
