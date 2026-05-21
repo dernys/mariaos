@@ -16,8 +16,9 @@ import { Switch } from "@/components/ui/switch";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit2, Trash2, BookOpen, ArrowUpDown, TrendingUp, TrendingDown, DollarSign, Lock, Unlock, Download, Undo2, FolderTree, CalendarClock } from "lucide-react";
+import { Plus, Edit2, Trash2, BookOpen, ArrowUpDown, TrendingUp, TrendingDown, DollarSign, Lock, Unlock, Download, Undo2, FolderTree, CalendarClock, FileType } from "lucide-react";
 import { format } from "date-fns";
+import { AccountingReports } from "@/components/accounting/AccountingReports";
 
 interface Account {
   id: string;
