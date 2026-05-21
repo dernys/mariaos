@@ -134,15 +134,16 @@ const Turnos = () => {
 
   const closeShift = async () => {
     if (!activeShift || !closeCash) return toast.error("Ingresa el monto de cierre");
-    const { error } = await supabase.rpc("close_shift_with_summary" as any, {
+    // Cierre Z profesional: genera arqueo + asiento contable + bloqueo en una sola llamada
+    const { data, error } = await supabase.rpc("close_shift_z" as any, {
       p_shift_id: activeShift.id,
-      p_declared_cash: parseFloat(closeCash),
-      p_notes: closeNotes || null,
+      p_counted_cash: parseFloat(closeCash),
     });
     if (error) return toast.error(error.message);
-    const diff = parseFloat(closeCash) - (summary?.expected_cash || 0);
-    await logActivity({ entity_type: "shift", entity_id: activeShift.id, action: "Turno cerrado", description: `Cierre $${closeCash}, esperado $${summary?.expected_cash?.toFixed(2)}, diferencia $${diff.toFixed(2)}`, tenant_id: tenantId, performed_by: user?.id });
-    toast.success(`Turno cerrado · Diferencia: $${diff.toFixed(2)}`);
+    const diff = (data as any)?.cash_difference ?? (parseFloat(closeCash) - (summary?.expected_cash || 0));
+    const journalId = (data as any)?.journal_entry_id;
+    await logActivity({ entity_type: "shift", entity_id: activeShift.id, action: "Cierre Z", description: `Diferencia $${diff.toFixed(2)}${journalId ? ` · Asiento ${journalId.slice(0,8)}` : ""}`, tenant_id: tenantId, performed_by: user?.id });
+    toast.success(`Cierre Z generado · Diferencia: $${Number(diff).toFixed(2)}${journalId ? " · Asiento contable creado" : ""}`);
     setShowClose(false); setCloseCash(""); setCloseNotes(""); setSummary(null);
     fetchAll();
   };

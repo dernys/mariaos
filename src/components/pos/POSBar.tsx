@@ -1,13 +1,17 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, X, Beer, Wine, GlassWater, Coffee, Martini, Flame } from "lucide-react";
+import { Search, ShoppingCart, X, Beer, Wine, GlassWater, Coffee, Martini, Flame, Bookmark, ScanLine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { CartContent } from "./CartContent";
 import { PaymentDialog } from "./PaymentDialog";
+import { ParkedSalesDialog } from "./ParkedSalesDialog";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -52,6 +56,7 @@ export function POSBar() {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [cartOpen, setCartOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [parkingOpen, setParkingOpen] = useState(false);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -69,6 +74,14 @@ export function POSBar() {
       return [...prev, { id: Date.now(), name: product.name, price: product.price, qty: 1, sku: product.sku, productId: product.id }];
     });
   };
+
+  // Escáner HID / lector de códigos: busca por SKU exacto y añade al carro
+  const handleScan = useCallback((code: string) => {
+    const p = products.find((p) => p.sku?.toLowerCase() === code.toLowerCase());
+    if (p) { addToCart(p); toast.success(`+ ${p.name}`); }
+    else { toast.error(`Código no encontrado: ${code}`); }
+  }, [products]);
+  useBarcodeScanner(handleScan);
 
   const updateQty = (id: number, delta: number) => {
     setCart((prev) => prev.map((i) => (i.id === id ? { ...i, qty: i.qty + delta } : i)).filter((i) => i.qty > 0));
@@ -106,9 +119,15 @@ export function POSBar() {
           </div>
         </div>
 
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar bebida o código..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card border-amber-500/10 focus-visible:border-amber-500/40" />
+        <div className="flex gap-2 mb-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar o escanear código..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card border-amber-500/10 focus-visible:border-amber-500/40" />
+            <ScanLine className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-500/60" />
+          </div>
+          <Button variant="outline" size="icon" onClick={() => setParkingOpen(true)} title="Ventas en espera">
+            <Bookmark className="h-4 w-4" />
+          </Button>
         </div>
 
         <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
@@ -196,6 +215,12 @@ export function POSBar() {
       </div>
 
       <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} />
+      <ParkedSalesDialog
+        open={parkingOpen}
+        onOpenChange={setParkingOpen}
+        currentCart={cart}
+        onResume={(c) => setCart(c)}
+      />
     </div>
   );
 }
