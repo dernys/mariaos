@@ -217,6 +217,9 @@ export function AppSidebar() {
 
       <SidebarContent>
         {menuGroups.map((group) => {
+          if (adminOnlyGroupLabels.has(group.label) && !roles.includes("admin") && !isSuperadmin) {
+            return null;
+          }
           const visible = group.items.filter((it) => !it.types || it.types.includes(biz));
           if (visible.length === 0) return null;
           return (
