@@ -57,6 +57,7 @@ import InventoryIntelligence from "./pages/InventoryIntelligence";
 import Operaciones from "./pages/Operaciones";
 import Tesoreria from "./pages/Tesoreria";
 import RRHHEnterprise from "./pages/RRHHEnterprise";
+import PortalEmpleado from "./pages/PortalEmpleado";
 
 const queryClient = new QueryClient();
 
