@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { printThermalReceipt } from "@/lib/printReceipt";
 import { enqueueSale } from "@/lib/offline/db";
+import { usePOSSettings } from "@/hooks/usePOSSettings";
 
 interface CartItem {
   id: number;
