@@ -3546,8 +3546,11 @@ export type Database = {
           default_tax_rate_id: string | null
           id: string
           max_discount_pct: number
+          receipt_footer: string | null
+          receipt_width: number
           rounding_mode: string
           secondary_currency: string | null
+          silent_print: boolean
           tax_included: boolean
           tenant_id: string
           tip_enabled: boolean
@@ -3565,8 +3568,11 @@ export type Database = {
           default_tax_rate_id?: string | null
           id?: string
           max_discount_pct?: number
+          receipt_footer?: string | null
+          receipt_width?: number
           rounding_mode?: string
           secondary_currency?: string | null
+          silent_print?: boolean
           tax_included?: boolean
           tenant_id: string
           tip_enabled?: boolean
@@ -3584,8 +3590,11 @@ export type Database = {
           default_tax_rate_id?: string | null
           id?: string
           max_discount_pct?: number
+          receipt_footer?: string | null
+          receipt_width?: number
           rounding_mode?: string
           secondary_currency?: string | null
+          silent_print?: boolean
           tax_included?: boolean
           tenant_id?: string
           tip_enabled?: boolean
@@ -6401,8 +6410,11 @@ export type Database = {
           default_tax_rate_id: string | null
           id: string
           max_discount_pct: number
+          receipt_footer: string | null
+          receipt_width: number
           rounding_mode: string
           secondary_currency: string | null
+          silent_print: boolean
           tax_included: boolean
           tenant_id: string
           tip_enabled: boolean
