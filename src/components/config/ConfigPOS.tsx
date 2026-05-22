@@ -103,7 +103,36 @@ export function ConfigPOS() {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2"><Switch checked={local.allow_discounts} onCheckedChange={(v) => setLocal({ ...local, allow_discounts: v })} /><Label className="text-xs">Permitir descuentos</Label></div>
             <div className="flex items-center gap-2"><Switch checked={local.allow_negative_stock} onCheckedChange={(v) => setLocal({ ...local, allow_negative_stock: v })} /><Label className="text-xs">Permitir stock negativo</Label></div>
-            <div className="flex items-center gap-2"><Switch checked={local.auto_print_receipt} onCheckedChange={(v) => setLocal({ ...local, auto_print_receipt: v })} /><Label className="text-xs">Imprimir ticket auto</Label></div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <h3 className="text-sm font-heading font-semibold">Impresión de ticket</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2">
+              <Switch checked={local.auto_print_receipt} onCheckedChange={(v) => setLocal({ ...local, auto_print_receipt: v })} />
+              <Label className="text-xs">Imprimir ticket automáticamente al cerrar venta</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={local.silent_print} onCheckedChange={(v) => setLocal({ ...local, silent_print: v })} disabled={!local.auto_print_receipt} />
+              <Label className="text-xs">Impresión silenciosa (sin ventana)</Label>
+            </div>
+            <div>
+              <Label className="text-xs">Ancho del papel</Label>
+              <Select value={String(local.receipt_width)} onValueChange={(v) => setLocal({ ...local, receipt_width: (Number(v) === 58 ? 58 : 80) })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="58">58 mm</SelectItem>
+                  <SelectItem value="80">80 mm</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Mensaje de pie de ticket</Label>
+              <Input value={local.receipt_footer} onChange={(e) => setLocal({ ...local, receipt_footer: e.target.value })} />
+            </div>
           </div>
         </CardContent>
       </Card>
