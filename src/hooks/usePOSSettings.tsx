@@ -15,6 +15,9 @@ export interface POSSettings {
   max_discount_pct: number;
   allow_negative_stock: boolean;
   auto_print_receipt: boolean;
+  receipt_width: 58 | 80;
+  receipt_footer: string;
+  silent_print: boolean;
   default_currency: string;
   secondary_currency: string | null;
   default_credit_days: number;
@@ -31,6 +34,9 @@ const DEFAULTS: POSSettings = {
   max_discount_pct: 100,
   allow_negative_stock: false,
   auto_print_receipt: false,
+  receipt_width: 80,
+  receipt_footer: "¡Gracias por su compra!",
+  silent_print: false,
   default_currency: "CUP",
   secondary_currency: null,
   default_credit_days: 30,
