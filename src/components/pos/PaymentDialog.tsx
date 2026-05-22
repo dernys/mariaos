@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { printThermalReceipt } from "@/lib/printReceipt";
 import { enqueueSale } from "@/lib/offline/db";
+import { usePOSSettings } from "@/hooks/usePOSSettings";
 
 interface CartItem {
   id: number;
@@ -65,6 +66,7 @@ interface PaymentDialogProps {
 
 export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, onSaleComplete }: PaymentDialogProps) {
   const { toast } = useToast();
+  const { settings: posSettings } = usePOSSettings();
   const [payments, setPayments] = useState<PaymentLine[]>([
     { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" },
   ]);
@@ -332,26 +334,31 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         }
       }
 
-      // Imprimir ticket térmico 80mm
-      try {
-        const { data: tenantInfo } = await supabase.from("tenants").select("name").eq("id", tu?.tenant_id).maybeSingle();
-        const customerName = customers.find((c) => c.id === selectedCustomer)?.name;
-        printThermalReceipt({
-          ticketNumber: (sale as any).ticket_number || sale.id.slice(0, 8),
-          tenantName: tenantInfo?.name,
-          storeName: openShift.store_name || undefined,
-          customer: customerName,
-          date: new Date(),
-          items: cart.map((c) => ({ name: c.name, qty: c.qty, price: c.price, total: c.price * c.qty })),
-          subtotal, tax, total,
-          paid: totalPaidInBase,
-          change: totalPaidInBase > total ? totalPaidInBase - total : 0,
-          payments: paymentRows.map((p) => ({
-            method: p.method === "cash" ? "Efectivo" : p.method === "card" ? "Tarjeta" : "QR",
-            currency: p.currency, amount: p.amount,
-          })),
-        });
-      } catch (e) { console.warn("No se pudo imprimir el recibo:", e); }
+      // Imprimir ticket térmico (si está habilitado en ajustes POS)
+      if (posSettings.auto_print_receipt) {
+        try {
+          const { data: tenantInfo } = await supabase.from("tenants").select("name").eq("id", tu?.tenant_id).maybeSingle();
+          const customerName = customers.find((c) => c.id === selectedCustomer)?.name;
+          printThermalReceipt({
+            ticketNumber: (sale as any).ticket_number || sale.id.slice(0, 8),
+            tenantName: tenantInfo?.name,
+            storeName: openShift.store_name || undefined,
+            customer: customerName,
+            date: new Date(),
+            items: cart.map((c) => ({ name: c.name, qty: c.qty, price: c.price, total: c.price * c.qty })),
+            subtotal, tax, total,
+            paid: totalPaidInBase,
+            change: totalPaidInBase > total ? totalPaidInBase - total : 0,
+            payments: paymentRows.map((p) => ({
+              method: p.method === "cash" ? "Efectivo" : p.method === "card" ? "Tarjeta" : "QR",
+              currency: p.currency, amount: p.amount,
+            })),
+            footer: posSettings.receipt_footer,
+            widthMm: posSettings.receipt_width,
+            silent: posSettings.silent_print,
+          });
+        } catch (e) { console.warn("No se pudo imprimir el recibo:", e); }
+      }
 
       toast({
         title: `Ticket ${(sale as any).ticket_number || ""}`.trim(),

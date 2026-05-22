@@ -27,26 +27,66 @@ export interface ReceiptData {
   change: number;
   payments: ReceiptPayment[];
   footer?: string;
+  widthMm?: 58 | 80;
+  silent?: boolean;
 }
 
 const fmt = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function printThermalReceipt(data: ReceiptData) {
-  const win = window.open("", "_blank", "width=320,height=600");
-  if (!win) return;
+  const widthMm = data.widthMm === 58 ? 58 : 80;
+  const bodyPadding = widthMm === 58 ? "2mm" : "4mm";
+  const fontSize = widthMm === 58 ? "10px" : "11px";
+  const lgSize = widthMm === 58 ? "12px" : "14px";
+  const html = buildReceiptHTML(data, widthMm, bodyPadding, fontSize, lgSize);
 
-  const html = `<!doctype html>
-<html><head><meta charset="utf-8"/><title>Ticket ${data.ticketNumber}</title>
+  // Silent print via hidden iframe (no popup, no user interaction)
+  if (data.silent) {
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    document.body.appendChild(iframe);
+    const idoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!idoc) return;
+    idoc.open();
+    idoc.write(html);
+    idoc.close();
+    const cleanup = () => setTimeout(() => iframe.remove(), 1000);
+    iframe.onload = () => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (e) { /* ignore */ }
+      cleanup();
+    };
+    return;
+  }
+
+  // Popup window (manual print fallback)
+  const win = window.open("", "_blank", `width=${widthMm === 58 ? 240 : 320},height=600`);
+  if (!win) return;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
+function buildReceiptHTML(data: ReceiptData, widthMm: number, padding: string, fontSize: string, lgSize: string) {
+  return `<!doctype html>
+<html><head><meta charset="utf-8"/><title>Ticket ${escapeHtml(data.ticketNumber)}</title>
 <style>
-  @page { size: 80mm auto; margin: 0; }
+  @page { size: ${widthMm}mm auto; margin: 0; }
   * { box-sizing: border-box; }
   html,body { margin:0; padding:0; }
-  body { width: 80mm; font-family: 'Courier New', monospace; font-size: 11px; color:#000; padding: 4mm; }
+  body { width: ${widthMm}mm; font-family: 'Courier New', monospace; font-size: ${fontSize}; color:#000; padding: ${padding}; }
   .center { text-align:center; }
   .right { text-align:right; }
   .bold { font-weight: 700; }
-  .lg { font-size: 14px; }
-  .sm { font-size: 10px; }
+  .lg { font-size: ${lgSize}; }
+  .sm { font-size: 9px; }
   hr { border: none; border-top: 1px dashed #000; margin: 4px 0; }
   table { width:100%; border-collapse: collapse; }
   td { vertical-align: top; padding: 1px 0; }
@@ -65,28 +105,19 @@ export function printThermalReceipt(data: ReceiptData) {
   ${data.customer ? `<div class="row sm"><span>Cliente:</span><span>${escapeHtml(data.customer)}</span></div>` : ""}
   <hr/>
   <table>
-    ${data.items
-      .map(
-        (it) => `
+    ${data.items.map((it) => `
       <tr><td colspan="2" class="item-name">${escapeHtml(it.name)}</td></tr>
       <tr>
         <td class="sm">${it.qty} x ${fmt(it.price)}</td>
         <td class="right bold">${fmt(it.total)}</td>
-      </tr>`
-      )
-      .join("")}
+      </tr>`).join("")}
   </table>
   <hr/>
   <div class="row"><span>Subtotal</span><span>${fmt(data.subtotal)}</span></div>
   ${data.tax > 0 ? `<div class="row"><span>Impuesto</span><span>${fmt(data.tax)}</span></div>` : ""}
   <div class="row bold lg"><span>TOTAL</span><span>${fmt(data.total)}</span></div>
   <hr/>
-  ${data.payments
-    .map(
-      (p) =>
-        `<div class="row sm"><span>${escapeHtml(p.method)} (${escapeHtml(p.currency)})</span><span>${fmt(p.amount)}</span></div>`
-    )
-    .join("")}
+  ${data.payments.map((p) => `<div class="row sm"><span>${escapeHtml(p.method)} (${escapeHtml(p.currency)})</span><span>${fmt(p.amount)}</span></div>`).join("")}
   <div class="row"><span>Pagado</span><span>${fmt(data.paid)}</span></div>
   ${data.change > 0 ? `<div class="row bold"><span>Cambio</span><span>${fmt(data.change)}</span></div>` : ""}
   <hr/>
@@ -95,13 +126,10 @@ export function printThermalReceipt(data: ReceiptData) {
     <button onclick="window.print()">Imprimir</button>
     <button onclick="window.close()">Cerrar</button>
   </div>
-  <script>setTimeout(function(){ window.print(); }, 350);</script>
+  <script>setTimeout(function(){ try { window.focus(); window.print(); } catch(e) {} }, 300);</script>
 </body></html>`;
-
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
 }
+
 
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
