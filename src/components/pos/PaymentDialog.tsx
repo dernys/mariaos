@@ -66,6 +66,7 @@ interface PaymentDialogProps {
 
 export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, onSaleComplete }: PaymentDialogProps) {
   const { toast } = useToast();
+  const { settings: posSettings } = usePOSSettings();
   const [payments, setPayments] = useState<PaymentLine[]>([
     { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" },
   ]);
