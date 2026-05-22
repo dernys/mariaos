@@ -155,6 +155,7 @@ const menuGroups: MenuGroup[] = [
 
 const systemItems: MenuItem[] = [
   { title: "Roles y Permisos", url: "/roles", icon: Shield },
+  { title: "API & Webhooks", url: "/developers", icon: Shield },
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 

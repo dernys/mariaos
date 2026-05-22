@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,60 +7,84 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TenantProvider } from "@/hooks/useTenantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import POS from "./pages/POS";
-import Inventario from "./pages/Inventario";
-import Clientes from "./pages/Clientes";
-import Empleados from "./pages/Empleados";
-import Tiendas from "./pages/Tiendas";
-import Almacenes from "./pages/Almacenes";
-import Configuracion from "./pages/Configuracion";
-import RolesPermisos from "./pages/RolesPermisos";
-import Turnos from "./pages/Turnos";
-import Contabilidad from "./pages/Contabilidad";
-import Cocina from "./pages/Cocina";
-import Mesas from "./pages/Mesas";
-import Analytics from "./pages/Analytics";
-import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import SuperAdmin from "./pages/SuperAdmin";
-import PedidosOnline from "./pages/PedidosOnline";
-import Transferencias from "./pages/Transferencias";
-import Compras from "./pages/Compras";
-import Devoluciones from "./pages/Devoluciones";
-import Cuentas from "./pages/Cuentas";
-import Facturas from "./pages/Facturas";
-import Marketplace from "./pages/Marketplace";
-import Reportes from "./pages/Reportes";
-import Fidelizacion from "./pages/Fidelizacion";
-import RRHH from "./pages/RRHH";
-import Delivery from "./pages/Delivery";
-import Proveedores from "./pages/Proveedores";
-import ClienteDetalle from "./pages/ClienteDetalle";
-import EmpleadoDetalle from "./pages/EmpleadoDetalle";
-import ProveedorDetalle from "./pages/ProveedorDetalle";
-import VentaDetalle from "./pages/VentaDetalle";
-import Consignacion from "./pages/Consignacion";
-import TurnoDetalle from "./pages/TurnoDetalle";
-import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
-import Auditoria from "./pages/Auditoria";
-import CommandCenter from "./pages/CommandCenter";
-import Agents from "./pages/Agents";
-import AgentDetalle from "./pages/AgentDetalle";
-import Decisions from "./pages/Decisions";
-import RiskEngine from "./pages/RiskEngine";
-import BusinessMemory from "./pages/BusinessMemory";
-import Workflows from "./pages/Workflows";
-import DigitalTwin from "./pages/DigitalTwin";
-import Conteos from "./pages/Conteos";
-import InventoryIntelligence from "./pages/InventoryIntelligence";
-import Operaciones from "./pages/Operaciones";
-import Tesoreria from "./pages/Tesoreria";
-import RRHHEnterprise from "./pages/RRHHEnterprise";
-import PortalEmpleado from "./pages/PortalEmpleado";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Lazy-loaded routes (Fase I: code splitting)
+const Index = lazy(() => import("./pages/Index"));
+const POS = lazy(() => import("./pages/POS"));
+const Inventario = lazy(() => import("./pages/Inventario"));
+const Clientes = lazy(() => import("./pages/Clientes"));
+const Empleados = lazy(() => import("./pages/Empleados"));
+const Tiendas = lazy(() => import("./pages/Tiendas"));
+const Almacenes = lazy(() => import("./pages/Almacenes"));
+const Configuracion = lazy(() => import("./pages/Configuracion"));
+const RolesPermisos = lazy(() => import("./pages/RolesPermisos"));
+const Turnos = lazy(() => import("./pages/Turnos"));
+const Contabilidad = lazy(() => import("./pages/Contabilidad"));
+const Cocina = lazy(() => import("./pages/Cocina"));
+const Mesas = lazy(() => import("./pages/Mesas"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
+const PedidosOnline = lazy(() => import("./pages/PedidosOnline"));
+const Transferencias = lazy(() => import("./pages/Transferencias"));
+const Compras = lazy(() => import("./pages/Compras"));
+const Devoluciones = lazy(() => import("./pages/Devoluciones"));
+const Cuentas = lazy(() => import("./pages/Cuentas"));
+const Facturas = lazy(() => import("./pages/Facturas"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const Reportes = lazy(() => import("./pages/Reportes"));
+const Fidelizacion = lazy(() => import("./pages/Fidelizacion"));
+const RRHH = lazy(() => import("./pages/RRHH"));
+const Delivery = lazy(() => import("./pages/Delivery"));
+const Proveedores = lazy(() => import("./pages/Proveedores"));
+const ClienteDetalle = lazy(() => import("./pages/ClienteDetalle"));
+const EmpleadoDetalle = lazy(() => import("./pages/EmpleadoDetalle"));
+const ProveedorDetalle = lazy(() => import("./pages/ProveedorDetalle"));
+const VentaDetalle = lazy(() => import("./pages/VentaDetalle"));
+const Consignacion = lazy(() => import("./pages/Consignacion"));
+const TurnoDetalle = lazy(() => import("./pages/TurnoDetalle"));
+const Auditoria = lazy(() => import("./pages/Auditoria"));
+const CommandCenter = lazy(() => import("./pages/CommandCenter"));
+const Agents = lazy(() => import("./pages/Agents"));
+const AgentDetalle = lazy(() => import("./pages/AgentDetalle"));
+const Decisions = lazy(() => import("./pages/Decisions"));
+const RiskEngine = lazy(() => import("./pages/RiskEngine"));
+const BusinessMemory = lazy(() => import("./pages/BusinessMemory"));
+const Workflows = lazy(() => import("./pages/Workflows"));
+const DigitalTwin = lazy(() => import("./pages/DigitalTwin"));
+const Conteos = lazy(() => import("./pages/Conteos"));
+const InventoryIntelligence = lazy(() => import("./pages/InventoryIntelligence"));
+const Operaciones = lazy(() => import("./pages/Operaciones"));
+const Tesoreria = lazy(() => import("./pages/Tesoreria"));
+const RRHHEnterprise = lazy(() => import("./pages/RRHHEnterprise"));
+const Developers = lazy(() => import("./pages/Developers"));
+const PortalEmpleado = lazy(() => import("./pages/PortalEmpleado"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen text-sm text-muted-foreground">
+    Cargando…
+  </div>
+);
+
+const P = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>
+    <Suspense fallback={<PageLoader />}>{children}</Suspense>
+  </ProtectedRoute>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -71,58 +96,59 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
               <Route path="/" element={<Landing />} />
-              <Route path="/app" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
-              <Route path="/inventario" element={<ProtectedRoute><Inventario /></ProtectedRoute>} />
-              <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
-              <Route path="/clientes/:id" element={<ProtectedRoute><ClienteDetalle /></ProtectedRoute>} />
-              <Route path="/empleados" element={<ProtectedRoute><Empleados /></ProtectedRoute>} />
-              <Route path="/empleados/:id" element={<ProtectedRoute><EmpleadoDetalle /></ProtectedRoute>} />
-              <Route path="/proveedores" element={<ProtectedRoute><Proveedores /></ProtectedRoute>} />
-              <Route path="/proveedores/:id" element={<ProtectedRoute><ProveedorDetalle /></ProtectedRoute>} />
-              <Route path="/ventas/:id" element={<ProtectedRoute><VentaDetalle /></ProtectedRoute>} />
-              <Route path="/consignaciones" element={<ProtectedRoute><Consignacion /></ProtectedRoute>} />
-              <Route path="/tiendas" element={<ProtectedRoute><Tiendas /></ProtectedRoute>} />
-              <Route path="/almacenes" element={<ProtectedRoute><Almacenes /></ProtectedRoute>} />
-              <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
-              <Route path="/roles" element={<ProtectedRoute><RolesPermisos /></ProtectedRoute>} />
-              <Route path="/turnos" element={<ProtectedRoute><Turnos /></ProtectedRoute>} />
-              <Route path="/turnos/:id" element={<ProtectedRoute><TurnoDetalle /></ProtectedRoute>} />
-              <Route path="/contabilidad" element={<ProtectedRoute><Contabilidad /></ProtectedRoute>} />
-              <Route path="/cocina" element={<ProtectedRoute><Cocina /></ProtectedRoute>} />
-              <Route path="/mesas" element={<ProtectedRoute><Mesas /></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-              <Route path="/pedidos-online" element={<ProtectedRoute><PedidosOnline /></ProtectedRoute>} />
-              <Route path="/transferencias" element={<ProtectedRoute><Transferencias /></ProtectedRoute>} />
-              <Route path="/compras" element={<ProtectedRoute><Compras /></ProtectedRoute>} />
-              <Route path="/devoluciones" element={<ProtectedRoute><Devoluciones /></ProtectedRoute>} />
-              <Route path="/cuentas" element={<ProtectedRoute><Cuentas /></ProtectedRoute>} />
-              <Route path="/facturas" element={<ProtectedRoute><Facturas /></ProtectedRoute>} />
-              <Route path="/reportes" element={<ProtectedRoute><Reportes /></ProtectedRoute>} />
-              <Route path="/fidelizacion" element={<ProtectedRoute><Fidelizacion /></ProtectedRoute>} />
-              <Route path="/rrhh" element={<ProtectedRoute><RRHH /></ProtectedRoute>} />
-              <Route path="/delivery" element={<ProtectedRoute><Delivery /></ProtectedRoute>} />
-              <Route path="/superadmin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
-              <Route path="/auditoria" element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
-              <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
-              <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
-              <Route path="/agents/:id" element={<ProtectedRoute><AgentDetalle /></ProtectedRoute>} />
-              <Route path="/decisions" element={<ProtectedRoute><Decisions /></ProtectedRoute>} />
-              <Route path="/risk" element={<ProtectedRoute><RiskEngine /></ProtectedRoute>} />
-              <Route path="/memory" element={<ProtectedRoute><BusinessMemory /></ProtectedRoute>} />
-              <Route path="/workflows" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
-              <Route path="/digital-twin" element={<ProtectedRoute><DigitalTwin /></ProtectedRoute>} />
-              <Route path="/conteos" element={<ProtectedRoute><Conteos /></ProtectedRoute>} />
-              <Route path="/inventario/inteligencia" element={<ProtectedRoute><InventoryIntelligence /></ProtectedRoute>} />
-              <Route path="/operaciones" element={<ProtectedRoute><Operaciones /></ProtectedRoute>} />
-              <Route path="/tesoreria" element={<ProtectedRoute><Tesoreria /></ProtectedRoute>} />
-              <Route path="/rrhh/operativo" element={<ProtectedRoute><RRHHEnterprise /></ProtectedRoute>} />
-              <Route path="/portal-empleado" element={<ProtectedRoute><PortalEmpleado /></ProtectedRoute>} />
-              <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/landing" element={<Landing />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/marketplace" element={<Suspense fallback={<PageLoader />}><Marketplace /></Suspense>} />
+              <Route path="/app" element={<P><Index /></P>} />
+              <Route path="/dashboard" element={<P><Index /></P>} />
+              <Route path="/pos" element={<P><POS /></P>} />
+              <Route path="/inventario" element={<P><Inventario /></P>} />
+              <Route path="/inventario/inteligencia" element={<P><InventoryIntelligence /></P>} />
+              <Route path="/clientes" element={<P><Clientes /></P>} />
+              <Route path="/clientes/:id" element={<P><ClienteDetalle /></P>} />
+              <Route path="/empleados" element={<P><Empleados /></P>} />
+              <Route path="/empleados/:id" element={<P><EmpleadoDetalle /></P>} />
+              <Route path="/proveedores" element={<P><Proveedores /></P>} />
+              <Route path="/proveedores/:id" element={<P><ProveedorDetalle /></P>} />
+              <Route path="/ventas/:id" element={<P><VentaDetalle /></P>} />
+              <Route path="/consignaciones" element={<P><Consignacion /></P>} />
+              <Route path="/tiendas" element={<P><Tiendas /></P>} />
+              <Route path="/almacenes" element={<P><Almacenes /></P>} />
+              <Route path="/configuracion" element={<P><Configuracion /></P>} />
+              <Route path="/roles" element={<P><RolesPermisos /></P>} />
+              <Route path="/turnos" element={<P><Turnos /></P>} />
+              <Route path="/turnos/:id" element={<P><TurnoDetalle /></P>} />
+              <Route path="/contabilidad" element={<P><Contabilidad /></P>} />
+              <Route path="/cocina" element={<P><Cocina /></P>} />
+              <Route path="/mesas" element={<P><Mesas /></P>} />
+              <Route path="/analytics" element={<P><Analytics /></P>} />
+              <Route path="/pedidos-online" element={<P><PedidosOnline /></P>} />
+              <Route path="/transferencias" element={<P><Transferencias /></P>} />
+              <Route path="/compras" element={<P><Compras /></P>} />
+              <Route path="/devoluciones" element={<P><Devoluciones /></P>} />
+              <Route path="/cuentas" element={<P><Cuentas /></P>} />
+              <Route path="/facturas" element={<P><Facturas /></P>} />
+              <Route path="/reportes" element={<P><Reportes /></P>} />
+              <Route path="/fidelizacion" element={<P><Fidelizacion /></P>} />
+              <Route path="/rrhh" element={<P><RRHH /></P>} />
+              <Route path="/rrhh/operativo" element={<P><RRHHEnterprise /></P>} />
+              <Route path="/portal-empleado" element={<P><PortalEmpleado /></P>} />
+              <Route path="/delivery" element={<P><Delivery /></P>} />
+              <Route path="/superadmin" element={<P><SuperAdmin /></P>} />
+              <Route path="/auditoria" element={<P><Auditoria /></P>} />
+              <Route path="/command-center" element={<P><CommandCenter /></P>} />
+              <Route path="/agents" element={<P><Agents /></P>} />
+              <Route path="/agents/:id" element={<P><AgentDetalle /></P>} />
+              <Route path="/decisions" element={<P><Decisions /></P>} />
+              <Route path="/risk" element={<P><RiskEngine /></P>} />
+              <Route path="/memory" element={<P><BusinessMemory /></P>} />
+              <Route path="/workflows" element={<P><Workflows /></P>} />
+              <Route path="/digital-twin" element={<P><DigitalTwin /></P>} />
+              <Route path="/conteos" element={<P><Conteos /></P>} />
+              <Route path="/operaciones" element={<P><Operaciones /></P>} />
+              <Route path="/tesoreria" element={<P><Tesoreria /></P>} />
+              <Route path="/developers" element={<P><Developers /></P>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

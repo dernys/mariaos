@@ -5599,6 +5599,63 @@ export type Database = {
           },
         ]
       }
+      tenant_api_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          scopes: string[]
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          scopes?: string[]
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          scopes?: string[]
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_api_keys_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_api_keys_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_users: {
         Row: {
           created_at: string
@@ -5887,6 +5944,113 @@ export type Database = {
           },
           {
             foreignKeyName: "warehouses_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_deliveries: {
+        Row: {
+          attempts: number
+          created_at: string
+          delivered_at: string | null
+          event: string
+          id: string
+          next_attempt_at: string
+          payload: Json
+          response: string | null
+          status: string
+          status_code: number | null
+          tenant_id: string
+          webhook_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          delivered_at?: string | null
+          event: string
+          id?: string
+          next_attempt_at?: string
+          payload: Json
+          response?: string | null
+          status?: string
+          status_code?: number | null
+          tenant_id: string
+          webhook_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          delivered_at?: string | null
+          event?: string
+          id?: string
+          next_attempt_at?: string
+          payload?: Json
+          response?: string | null
+          status?: string
+          status_code?: number | null
+          tenant_id?: string
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          created_at: string
+          events: string[]
+          failure_count: number
+          id: string
+          is_active: boolean
+          last_delivery_at: string | null
+          name: string
+          secret: string
+          tenant_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          events?: string[]
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          last_delivery_at?: string | null
+          name: string
+          secret?: string
+          tenant_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          events?: string[]
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          last_delivery_at?: string | null
+          name?: string
+          secret?: string
+          tenant_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhooks_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
@@ -6216,6 +6380,10 @@ export type Database = {
           remaining: number
           taken: number
         }[]
+      }
+      enqueue_webhook_event: {
+        Args: { p_event: string; p_payload: Json; p_tenant_id: string }
+        Returns: undefined
       }
       ensure_default_accounts: {
         Args: { p_tenant_id: string }
