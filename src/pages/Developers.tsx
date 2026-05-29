@@ -22,7 +22,7 @@ function randomKey() {
   const arr = new Uint8Array(24);
   crypto.getRandomValues(arr);
   const hex = Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
-  return `gaia_${hex}`;
+  return `maria_${hex}`;
 }
 
 export default function Developers() {
@@ -205,7 +205,7 @@ export default function Developers() {
               </div>
               <div>
                 <p className="font-medium">Firma de webhooks</p>
-                <p className="text-muted-foreground">Cabecera <code>X-GaIA-Signature</code> = HMAC-SHA256(secret, body). Valida en tu servidor antes de procesar.</p>
+                <p className="text-muted-foreground">Cabecera <code>X-MarIA-Signature</code> = HMAC-SHA256(secret, body). Valida en tu servidor antes de procesar.</p>
               </div>
             </CardContent>
           </Card>

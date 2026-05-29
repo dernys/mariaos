@@ -298,7 +298,7 @@ const Marketplace = () => {
             <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
               <Store className="h-4 w-4 text-white" />
             </div>
-            <span className="font-bold text-lg text-gray-900 hidden sm:block">GaIA ERP Market</span>
+            <span className="font-bold text-lg text-gray-900 hidden sm:block">MarIA OS Market</span>
           </Link>
 
           <div className="relative flex-1 max-w-xl">

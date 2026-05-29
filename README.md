@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌿 GaIA ERP
+# 🌿 MarIA OS
 
 ### **El sistema operativo de tu negocio.**
 
@@ -16,7 +16,7 @@ Vende, gestiona, cobra, factura y entrega — desde una sola aplicación, en cua
 
 ---
 
-## 🎯 ¿Para quién es GaIA ERP?
+## 🎯 ¿Para quién es MarIA OS?
 
 | 🍔 Restaurantes | 🍹 Bares | 🛒 Retail / Empresas |
 |---|---|---|
@@ -158,7 +158,7 @@ Autenticación con email, recuperación de contraseña, roles separados y panel 
 
 ## 📲 PWA Instalable
 
-GaIA ERP es una **Progressive Web App**: se instala en escritorio, Android e iOS, funciona offline en lectura y carga al instante con caché inteligente.
+MarIA OS es una **Progressive Web App**: se instala en escritorio, Android e iOS, funciona offline en lectura y carga al instante con caché inteligente.
 
 ---
 

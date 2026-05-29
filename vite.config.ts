@@ -27,8 +27,8 @@ export default defineConfig(({ mode }) => ({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       manifest: {
-        name: "GaIA OS — Autonomous Enterprise Intelligence",
-        short_name: "GaIA OS",
+        name: "MarIA OS — Autonomous Enterprise Intelligence",
+        short_name: "MarIA OS",
         description: "Sistema operativo empresarial autónomo: POS, inventario, IA y agentes.",
         theme_color: "#0f172a",
         background_color: "#0f172a",

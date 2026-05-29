@@ -41,7 +41,7 @@ class OfflineDB extends Dexie {
   customers!: Table<CustomerSnapshot, string>;
 
   constructor() {
-    super("gaia_offline_v1");
+    super("maria_offline_v1");
     this.version(1).stores({
       pending_sales: "client_uuid, tenant_id, status, created_at",
       products: "id, tenant_id, sku",

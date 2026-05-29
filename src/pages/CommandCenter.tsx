@@ -61,7 +61,7 @@ export default function CommandCenter() {
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-2">
-              <Sparkles className="h-3 w-3" /> GaIA OS · Centro de mando autónomo
+              <Sparkles className="h-3 w-3" /> MarIA OS · Centro de mando autónomo
             </div>
             <h2 className="text-2xl font-heading font-bold tracking-tight">Sistema nervioso empresarial</h2>
             <p className="text-sm text-muted-foreground">Agentes, decisiones, riesgos y eventos en tiempo real.</p>
