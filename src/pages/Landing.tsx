@@ -9,7 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import gaiaLogo from "@/assets/gaia-logo.png";
+import mariaLogo from "@/assets/maria-logo.png";
 import heroBg from "@/assets/landing-hero-bg.jpg";
 
 import { Clock4 } from "lucide-react";
@@ -70,10 +70,10 @@ const Landing = () => {
   }, [api]);
 
   const DEMO_EMAILS: Record<string, string> = {
-    bar: "demo-bar@gaia.app",
-    restaurant: "demo-restaurante@gaia.app",
-    retail: "demo-empresa@gaia.app",
-    empresa: "demo-empresa@gaia.app",
+    bar: "demo-bar@kirabit.app",
+    restaurant: "demo-restaurante@kirabit.app",
+    retail: "demo-empresa@kirabit.app",
+    empresa: "demo-empresa@kirabit.app",
   };
 
   const startDemo = async (type: string) => {
@@ -87,7 +87,7 @@ const Landing = () => {
         password: "demo1234",
       });
       if (loginErr) throw loginErr;
-      toast.success("Demo lista. Bienvenido a GaIA.");
+      toast.success("Demo lista. Bienvenido a MarIA.");
       navigate("/app");
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo iniciar la demo");
@@ -102,8 +102,8 @@ const Landing = () => {
       <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-background/70 border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={gaiaLogo} alt="GaIA" width={36} height={36} className="h-9 w-9" decoding="async" />
-            <span className="font-heading font-bold text-lg tracking-tight">GaIA OS</span>
+            <img src={mariaLogo} alt="MarIA" width={36} height={36} className="h-9 w-9" decoding="async" />
+            <span className="font-heading font-bold text-lg tracking-tight">MarIA OS</span>
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm">
             <a href="#modulos" className="text-muted-foreground hover:text-foreground transition-colors">Módulos</a>
@@ -146,7 +146,7 @@ const Landing = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-6 animate-fade-in">
             <Sparkles className="h-3.5 w-3.5" />
-            Plataforma todo-en-uno · Construida por GaIA
+            Plataforma todo-en-uno · Construida por MarIA
           </div>
           <h1 className="font-heading font-bold text-4xl sm:text-6xl lg:text-7xl tracking-tight max-w-4xl mx-auto leading-[1.05] animate-fade-in">
             El sistema operativo de tu{" "}
@@ -183,12 +183,12 @@ const Landing = () => {
                 <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/80" />
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
                 <div className="flex-1 mx-4 h-6 rounded-md bg-background/60 border border-border/50 flex items-center justify-center text-[10px] text-muted-foreground font-mono">
-                  app.gaia.cloud / dashboard
+                  app.kirabit.cloud / dashboard
                 </div>
               </div>
               <img
                 src="/landing/modules/dashboard.png"
-                alt="Dashboard ejecutivo de GaIA con KPIs, ventas y alertas en tiempo real"
+                alt="Dashboard ejecutivo de MarIA con KPIs, ventas y alertas en tiempo real"
                 width={1600}
                 height={900}
                 fetchPriority="high"
@@ -394,13 +394,13 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Why GaIA — beneficios (reemplaza la sección de capturas duplicadas) */}
+      {/* Why MarIA — beneficios (reemplaza la sección de capturas duplicadas) */}
       <section id="beneficios" className="py-24 bg-card/40 border-y border-border relative overflow-hidden">
         <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
         <div aria-hidden className="absolute -top-32 right-1/4 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">¿Por qué GaIA?</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">¿Por qué MarIA?</p>
             <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
               Hecho para el ritmo de tu negocio
             </h2>
@@ -464,7 +464,7 @@ const Landing = () => {
                 Listo para digitalizar tu negocio
               </h2>
               <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-                Comienza hoy con GaIA. Sin instalaciones, sin servidores, sin sorpresas.
+                Comienza hoy con MarIA. Sin instalaciones, sin servidores, sin sorpresas.
               </p>
               <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
                 <Link to="/auth">
@@ -472,7 +472,7 @@ const Landing = () => {
                     Crear cuenta <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
-                <a href="mailto:hola@gaia.app">
+                <a href="mailto:hola@kirabit.app">
                   <Button size="lg" variant="outline">Hablar con ventas</Button>
                 </a>
               </div>
@@ -485,8 +485,8 @@ const Landing = () => {
       <footer className="border-t border-border py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={gaiaLogo} alt="GaIA" width={28} height={28} className="h-7 w-7" decoding="async" />
-            <span className="font-heading font-semibold text-sm">GaIA</span>
+            <img src={mariaLogo} alt="MarIA" width={28} height={28} className="h-7 w-7" decoding="async" />
+            <span className="font-heading font-semibold text-sm">MarIA</span>
             <span className="text-xs text-muted-foreground ml-2">© {new Date().getFullYear()} Todos los derechos reservados.</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">

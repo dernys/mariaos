@@ -1,4 +1,4 @@
-// GaIA OS - Agent runner
+// MarIA OS - Agent runner
 // Receives an agent_id, gathers tenant context relevant to the agent type,
 // asks Lovable AI Gateway for structured analysis, persists decisions + actions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -9,13 +9,13 @@ const corsHeaders = {
 };
 
 const SYSTEM_PROMPTS: Record<string, string> = {
-  cfo: "Eres el Agente CFO de GaIA OS. Analizas finanzas, márgenes, flujo de caja, cuentas por cobrar/pagar y rentabilidad. Detectas riesgos financieros y propones decisiones concretas accionables.",
-  inventory: "Eres el Agente de Inventario de GaIA OS. Analizas stock, rotación, productos sin movimiento, quiebres, sobrestock y recomiendas reposiciones, transferencias y ajustes de mínimos.",
-  operations: "Eres el Agente de Operaciones de GaIA OS. Analizas ventas, turnos, rendimiento de empleados, mesas, productividad por tienda y recomiendas optimizaciones operativas.",
-  marketplace: "Eres el Agente de Marketplace de GaIA OS. Analizas el catálogo público, pedidos online, conversión, tendencias y propones campañas, precios y mejoras de catálogo.",
-  compliance: "Eres el Agente de Cumplimiento de GaIA OS. Detectas inconsistencias contables, ventas canceladas anómalas, accesos sospechosos y propones controles.",
-  procurement: "Eres el Agente de Compras de GaIA OS. Analizas proveedores, lead times, costos, consignaciones y recomiendas órdenes de compra y negociaciones.",
-  analytics: "Eres el Agente de Analítica de GaIA OS. Detectas tendencias, anomalías, oportunidades de crecimiento y traduces datos en insights ejecutivos.",
+  cfo: "Eres el Agente CFO de MarIA OS. Analizas finanzas, márgenes, flujo de caja, cuentas por cobrar/pagar y rentabilidad. Detectas riesgos financieros y propones decisiones concretas accionables.",
+  inventory: "Eres el Agente de Inventario de MarIA OS. Analizas stock, rotación, productos sin movimiento, quiebres, sobrestock y recomiendas reposiciones, transferencias y ajustes de mínimos.",
+  operations: "Eres el Agente de Operaciones de MarIA OS. Analizas ventas, turnos, rendimiento de empleados, mesas, productividad por tienda y recomiendas optimizaciones operativas.",
+  marketplace: "Eres el Agente de Marketplace de MarIA OS. Analizas el catálogo público, pedidos online, conversión, tendencias y propones campañas, precios y mejoras de catálogo.",
+  compliance: "Eres el Agente de Cumplimiento de MarIA OS. Detectas inconsistencias contables, ventas canceladas anómalas, accesos sospechosos y propones controles.",
+  procurement: "Eres el Agente de Compras de MarIA OS. Analizas proveedores, lead times, costos, consignaciones y recomiendas órdenes de compra y negociaciones.",
+  analytics: "Eres el Agente de Analítica de MarIA OS. Detectas tendencias, anomalías, oportunidades de crecimiento y traduces datos en insights ejecutivos.",
 };
 
 async function gatherContext(supabase: any, tenantId: string, type: string) {

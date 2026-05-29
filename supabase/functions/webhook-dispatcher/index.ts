@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-GaIA-Event": d.event,
-          "X-GaIA-Signature": signature,
+          "X-MarIA-Event": d.event,
+          "X-MarIA-Signature": signature,
         },
         body,
         signal: AbortSignal.timeout(10_000),

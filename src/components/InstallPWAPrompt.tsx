@@ -43,7 +43,7 @@ export function InstallPWAPrompt({ variant = "card", delayMs = 600 }: Props) {
         >
           <div className="flex items-center gap-2">
             <Smartphone className="h-4 w-4" />
-            <span>Instala GaIA OS para una mejor experiencia</span>
+            <span>Instala MarIA OS para una mejor experiencia</span>
           </div>
           <div className="flex items-center gap-2">
             {!isIOS && (
@@ -80,7 +80,7 @@ export function InstallPWAPrompt({ variant = "card", delayMs = 600 }: Props) {
             <Download className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-heading font-semibold text-sm">Instala GaIA OS</h3>
+            <h3 className="font-heading font-semibold text-sm">Instala MarIA OS</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Acceso rápido, modo offline y notificaciones nativas.
             </p>

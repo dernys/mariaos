@@ -38,9 +38,9 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data?.json() ?? {};
   } catch {
-    payload = { title: "GaIA OS", body: event.data?.text() };
+    payload = { title: "MarIA OS", body: event.data?.text() };
   }
-  const title = payload.title || "GaIA OS";
+  const title = payload.title || "MarIA OS";
   event.waitUntil(
     self.registration.showNotification(title, {
       body: payload.body,

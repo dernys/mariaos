@@ -23,9 +23,9 @@ type DemoConfig = {
 const DEMOS: DemoConfig[] = [
   {
     type: "bar",
-    email: "demo-bar@gaia.app",
+    email: "demo-bar@kirabit.app",
     fullName: "Demo Bar",
-    tenantName: "Bar GaIA Demo",
+    tenantName: "Bar MarIA Demo",
     tenantSlug: "demo-bar",
     products: [
       { name: "Cerveza Cristal", sku: "BAR-001", price: 150, cost: 80, stock: 120, category: "Cervezas" },
@@ -46,9 +46,9 @@ const DEMOS: DemoConfig[] = [
   },
   {
     type: "restaurant",
-    email: "demo-restaurante@gaia.app",
+    email: "demo-restaurante@kirabit.app",
     fullName: "Demo Restaurante",
-    tenantName: "Restaurante GaIA Demo",
+    tenantName: "Restaurante MarIA Demo",
     tenantSlug: "demo-restaurante",
     products: [
       { name: "Ropa Vieja", sku: "RST-001", price: 850, cost: 320, stock: 30, category: "Platos Fuertes" },
@@ -71,9 +71,9 @@ const DEMOS: DemoConfig[] = [
   },
   {
     type: "empresa",
-    email: "demo-empresa@gaia.app",
+    email: "demo-empresa@kirabit.app",
     fullName: "Demo Empresa",
-    tenantName: "Retail GaIA Demo",
+    tenantName: "Retail MarIA Demo",
     tenantSlug: "demo-empresa",
     products: [
       { name: "Camiseta Algodón Blanca", sku: "RET-001", price: 1200, cost: 500, stock: 80, category: "Ropa" },

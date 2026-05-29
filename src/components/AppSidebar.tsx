@@ -70,11 +70,11 @@ interface MenuGroup {
   items: MenuItem[];
 }
 
-const adminOnlyGroupLabels = new Set(["GaIA OS"]);
+const adminOnlyGroupLabels = new Set(["MarIA OS"]);
 
 const menuGroups: MenuGroup[] = [
   {
-    label: "GaIA OS",
+    label: "MarIA OS",
     items: [
       { title: "Command Center", url: "/command-center", icon: Sparkles },
       { title: "Agentes IA", url: "/agents", icon: Bot },
@@ -206,7 +206,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-heading text-sm font-bold text-sidebar-primary-foreground tracking-tight">
-                GaIA OS
+                MarIA OS
               </span>
               <span className="text-[10px] text-sidebar-foreground/60">
                 {tenant?.name || "Sistema de Ventas"}
