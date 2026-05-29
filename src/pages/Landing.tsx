@@ -146,7 +146,7 @@ const Landing = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-6 animate-fade-in">
             <Sparkles className="h-3.5 w-3.5" />
-            Plataforma todo-en-uno · Construida por MarIA
+            Plataforma todo-en-uno · by Kirabit
           </div>
           <h1 className="font-heading font-bold text-4xl sm:text-6xl lg:text-7xl tracking-tight max-w-4xl mx-auto leading-[1.05] animate-fade-in">
             El sistema operativo de tu{" "}
