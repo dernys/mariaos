@@ -486,8 +486,8 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src={mariaLogo} alt="MarIA" width={28} height={28} className="h-7 w-7" decoding="async" />
-            <span className="font-heading font-semibold text-sm">MarIA</span>
-            <span className="text-xs text-muted-foreground ml-2">© {new Date().getFullYear()} Todos los derechos reservados.</span>
+            <span className="font-heading font-semibold text-sm">MarIA OS</span>
+            <span className="text-xs text-muted-foreground ml-2">© {new Date().getFullYear()} Kirabit · Todos los derechos reservados.</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <a href="#modulos" className="hover:text-foreground">Módulos</a>
