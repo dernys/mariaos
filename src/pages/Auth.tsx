@@ -152,7 +152,7 @@ const Auth = () => {
             <Zap className="h-6 w-6 text-primary-foreground" />
           </div>
           <h1 className="font-heading text-xl font-bold tracking-tight">MarIA OS</h1>
-          <p className="text-xs text-muted-foreground mt-1">Sistema de Ventas Multitienda</p>
+          <p className="text-xs text-muted-foreground mt-1">by Kirabit · Sistema de Ventas Multitienda</p>
         </div>
 
         <div className="bg-card rounded-2xl shadow-elevated border p-6">
