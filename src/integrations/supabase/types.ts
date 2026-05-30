@@ -217,6 +217,72 @@ export type Database = {
           },
         ]
       }
+      accounts_payable: {
+        Row: {
+          amount: number
+          amount_paid: number
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          party_id: string
+          party_type: string
+          source_id: string | null
+          source_type: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          amount_paid?: number
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          party_id: string
+          party_type: string
+          source_id?: string | null
+          source_type: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          amount_paid?: number
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          party_id?: string
+          party_type?: string
+          source_id?: string | null
+          source_type?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_payable_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_log: {
         Row: {
           action: string
@@ -1729,6 +1795,7 @@ export type Database = {
           phone: string | null
           photo_url: string | null
           position: string | null
+          position_id: string | null
           salary: number | null
           social_security_number: string | null
           store_id: string | null
@@ -1763,6 +1830,7 @@ export type Database = {
           phone?: string | null
           photo_url?: string | null
           position?: string | null
+          position_id?: string | null
           salary?: number | null
           social_security_number?: string | null
           store_id?: string | null
@@ -1797,6 +1865,7 @@ export type Database = {
           phone?: string | null
           photo_url?: string | null
           position?: string | null
+          position_id?: string | null
           salary?: number | null
           social_security_number?: string | null
           store_id?: string | null
@@ -1808,6 +1877,13 @@ export type Database = {
           vacation_days_per_year?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "employees_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "job_positions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "employees_store_id_fkey"
             columns: ["store_id"]
@@ -2233,6 +2309,69 @@ export type Database = {
           },
           {
             foreignKeyName: "invoices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_positions: {
+        Row: {
+          base_salary: number
+          code: string
+          created_at: string
+          department: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          level: string | null
+          max_salary: number
+          min_salary: number
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          base_salary?: number
+          code: string
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          level?: string | null
+          max_salary?: number
+          min_salary?: number
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          base_salary?: number
+          code?: string
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          level?: string | null
+          max_salary?: number
+          min_salary?: number
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_positions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_positions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
@@ -6585,6 +6724,10 @@ export type Database = {
           remaining: number
           taken: number
         }[]
+      }
+      pay_payroll: {
+        Args: { _method?: string; _notes?: string; _payroll_id: string }
+        Returns: string
       }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
       post_payroll_journal_entry: {
