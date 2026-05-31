@@ -323,7 +323,7 @@ const Turnos = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">Historial de turnos</p>
-          {!selectedShift && (
+          {stores.some((s) => !openShifts.find((os) => os.store_id === s.id)) && (
             <Button size="sm" onClick={() => setShowOpen(!showOpen)} className="gap-1 text-xs gradient-brand text-primary-foreground">
               <Plus className="h-3.5 w-3.5" /> Abrir Turno
             </Button>
@@ -332,7 +332,7 @@ const Turnos = () => {
 
         {/* Open Shift Form */}
         <AnimatePresence>
-          {showOpen && !selectedShift && (
+          {showOpen && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
               <div className="bg-card rounded-xl p-5 shadow-card border space-y-3">
                 <h3 className="font-heading font-semibold text-sm">Abrir Nuevo Turno</h3>
@@ -342,10 +342,11 @@ const Turnos = () => {
                     <Select value={openStoreId} onValueChange={setOpenStoreId}>
                       <SelectTrigger><SelectValue placeholder="Seleccionar tienda" /></SelectTrigger>
                       <SelectContent>
-                        {stores.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                        {stores.filter((s) => !openShifts.find((os) => os.store_id === s.id)).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div>
                     <Label className="text-xs">Cajero *</Label>
                     <Select value={openEmployeeId} onValueChange={setOpenEmployeeId}>
