@@ -252,10 +252,27 @@ const Empleados = () => {
           </DialogHeader>
           <div className="grid gap-3">
             <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div>
+              <Label>Clasificador de puesto</Label>
+              <Select value={form.position_id || "__none__"} onValueChange={onSelectPosition}>
+                <SelectTrigger>
+                  <SelectValue placeholder={positions.length === 0 ? "No hay puestos definidos (ir a RRHH › Puestos)" : "Seleccionar puesto"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Sin clasificar —</SelectItem>
+                  {positions.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      [{p.code}] {p.name} · ${Number(p.base_salary).toFixed(0)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Puesto</Label><Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} /></div>
+              <div><Label>Puesto (etiqueta)</Label><Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} placeholder="Auto desde clasificador" /></div>
               <div><Label>Salario</Label><Input type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} /></div>
             </div>
+
             <div><Label>Límite de crédito (fiado)</Label><Input type="number" value={form.credit_limit} onChange={(e) => setForm({ ...form, credit_limit: e.target.value })} placeholder="0 = sin límite" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Teléfono</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
