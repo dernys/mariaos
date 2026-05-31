@@ -42,7 +42,8 @@ const Turnos = () => {
   const tenantId = useTenant();
   const nav = useNavigate();
   const [shifts, setShifts] = useState<SalesShift[]>([]);
-  const [activeShift, setActiveShift] = useState<SalesShift | null>(null);
+  const [openShifts, setOpenShifts] = useState<SalesShift[]>([]);
+  const [selectedShift, setSelectedShift] = useState<SalesShift | null>(null);
   const [stores, setStores] = useState<StoreItem[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,18 +69,18 @@ const Turnos = () => {
     cash_in: number; cash_out: number; returns_cash: number; expected_cash: number;
   } | null>(null);
 
-  useEffect(() => { if (user) fetchAll(); }, [user]);
+  useEffect(() => { if (user && tenantId) fetchAll(); }, [user, tenantId]);
 
   const fetchAll = async () => {
     const [shiftRes, storeRes, empRes] = await Promise.all([
-      supabase.from("sales_shifts").select("*").eq("user_id", user!.id).order("opened_at", { ascending: false }).limit(20),
+      supabase.from("sales_shifts").select("*").eq("tenant_id", tenantId).order("opened_at", { ascending: false }).limit(50),
       supabase.from("stores").select("id, name").eq("is_active", true).order("name"),
       supabase.from("employees").select("id, name, position").eq("is_active", true).order("name"),
     ]);
     if (shiftRes.data) {
       const data = shiftRes.data as SalesShift[];
       setShifts(data);
-      setActiveShift(data.find((s) => s.status === "open") ?? null);
+      setOpenShifts(data.filter((s) => s.status === "open"));
     }
     if (storeRes.data) setStores(storeRes.data);
     if (empRes.data) setEmployees(empRes.data);
@@ -90,6 +91,7 @@ const Turnos = () => {
     if (shift.store_id) return stores.find((s) => s.id === shift.store_id)?.name || shift.store_name;
     return shift.store_name;
   };
+
 
   const getEmployeeName = (id: string | null) => employees.find((e) => e.id === id)?.name || "—";
 
@@ -121,37 +123,47 @@ const Turnos = () => {
   };
 
   const loadSummary = async () => {
-    if (!activeShift) return;
-    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: activeShift.id });
+    if (!selectedShift) return;
+    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: selectedShift.id });
     if (error) { toast.error(error.message); return; }
     if (data && (data as any[]).length) setSummary((data as any[])[0]);
   };
 
-  const openCloseDialog = async () => {
+  const openCloseDialog = async (shift: SalesShift) => {
+    setSelectedShift(shift);
+    setSummary(null);
     setShowClose(true);
-    await loadSummary();
+    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: shift.id });
+    if (error) { toast.error(error.message); return; }
+    if (data && (data as any[]).length) setSummary((data as any[])[0]);
   };
 
+  const openCashDialog = (shift: SalesShift) => {
+    setSelectedShift(shift);
+    setShowCash(true);
+  };
+
+
   const closeShift = async () => {
-    if (!activeShift || !closeCash) return toast.error("Ingresa el monto de cierre");
+    if (!selectedShift || !closeCash) return toast.error("Ingresa el monto de cierre");
     // Cierre Z profesional: genera arqueo + asiento contable + bloqueo en una sola llamada
     const { data, error } = await supabase.rpc("close_shift_z" as any, {
-      p_shift_id: activeShift.id,
+      p_shift_id: selectedShift.id,
       p_counted_cash: parseFloat(closeCash),
     });
     if (error) return toast.error(error.message);
     const diff = (data as any)?.cash_difference ?? (parseFloat(closeCash) - (summary?.expected_cash || 0));
     const journalId = (data as any)?.journal_entry_id;
-    await logActivity({ entity_type: "shift", entity_id: activeShift.id, action: "Cierre Z", description: `Diferencia $${diff.toFixed(2)}${journalId ? ` · Asiento ${journalId.slice(0,8)}` : ""}`, tenant_id: tenantId, performed_by: user?.id });
+    await logActivity({ entity_type: "shift", entity_id: selectedShift.id, action: "Cierre Z", description: `Diferencia $${diff.toFixed(2)}${journalId ? ` · Asiento ${journalId.slice(0,8)}` : ""}`, tenant_id: tenantId, performed_by: user?.id });
     toast.success(`Cierre Z generado · Diferencia: $${Number(diff).toFixed(2)}${journalId ? " · Asiento contable creado" : ""}`);
     setShowClose(false); setCloseCash(""); setCloseNotes(""); setSummary(null);
     fetchAll();
   };
 
   const submitCashMovement = async () => {
-    if (!activeShift || !cashAmount || Number(cashAmount) <= 0) return toast.error("Monto inválido");
+    if (!selectedShift || !cashAmount || Number(cashAmount) <= 0) return toast.error("Monto inválido");
     const { error } = await (supabase.from as any)("shift_cash_movements").insert({
-      tenant_id: tenantId, shift_id: activeShift.id,
+      tenant_id: tenantId, shift_id: selectedShift.id,
       movement_type: cashType, amount: parseFloat(cashAmount),
       reason: cashReason || null, performed_by: user?.id,
     });
@@ -173,44 +185,54 @@ const Turnos = () => {
   return (
     <AppLayout title="Turnos de Venta">
       <div className="space-y-4">
-        {/* Active Shift Banner */}
-        {activeShift && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-xl p-5">
-            <div className="flex items-start justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg gradient-brand flex items-center justify-center">
-                  <Play className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-heading font-semibold text-sm">Turno Activo</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {getStoreName(activeShift)} · Cajero: {getEmployeeName(activeShift.employee_id)} · {format(new Date(activeShift.opened_at), "dd MMM HH:mm", { locale: es })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <p className="text-[10px] text-muted-foreground">Caja Inicial</p>
-                  <p className="font-heading font-bold text-sm">${activeShift.opening_cash}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] text-muted-foreground">Ventas</p>
-                  <p className="font-heading font-bold text-sm text-primary">${activeShift.total_sales ?? 0}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] text-muted-foreground">Transacciones</p>
-                  <p className="font-heading font-bold text-sm">{activeShift.total_transactions ?? 0}</p>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setShowCash(true)} className="gap-1 text-xs">
-                  <DollarSign className="h-3.5 w-3.5" /> Movimiento
-                </Button>
-                <Button variant="outline" size="sm" onClick={openCloseDialog} className="gap-1 text-xs border-destructive/30 text-destructive hover:bg-destructive/10">
-                  <Square className="h-3.5 w-3.5" /> Cerrar Turno
-                </Button>
-              </div>
+        {/* Open Shifts List */}
+        {openShifts.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-heading">
+                Turnos abiertos ({openShifts.length})
+              </h3>
             </div>
-          </motion.div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {openShifts.map((sh) => (
+                <motion.div key={sh.id} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg gradient-brand flex items-center justify-center shrink-0">
+                        <Play className="h-5 w-5 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <h4 className="font-heading font-semibold text-sm">{getStoreName(sh)}</h4>
+                        <p className="text-[11px] text-muted-foreground">
+                          {getEmployeeName(sh.employee_id)} · {format(new Date(sh.opened_at), "dd MMM HH:mm", { locale: es })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground">Inicio</p>
+                        <p className="font-heading font-bold text-xs">${sh.opening_cash}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground">Ventas</p>
+                        <p className="font-heading font-bold text-xs text-primary">${sh.total_sales ?? 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-3 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => openCashDialog(sh)} className="gap-1 text-xs h-8">
+                      <DollarSign className="h-3.5 w-3.5" /> Movimiento
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => openCloseDialog(sh)} className="gap-1 text-xs h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
+                      <Square className="h-3.5 w-3.5" /> Cerrar
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         )}
+
 
         {/* Cash Movement Dialog */}
         <Dialog open={showCash} onOpenChange={setShowCash}>
@@ -249,7 +271,7 @@ const Turnos = () => {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2"><Calculator className="h-5 w-5" /> Cierre y Arqueo</DialogTitle>
-              <DialogDescription>{activeShift && `${getStoreName(activeShift)} · ${getEmployeeName(activeShift.employee_id)}`}</DialogDescription>
+              <DialogDescription>{selectedShift && `${getStoreName(selectedShift)} · ${getEmployeeName(selectedShift.employee_id)}`}</DialogDescription>
             </DialogHeader>
             {summary ? (
               <div className="space-y-3">
@@ -301,7 +323,7 @@ const Turnos = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">Historial de turnos</p>
-          {!activeShift && (
+          {stores.some((s) => !openShifts.find((os) => os.store_id === s.id)) && (
             <Button size="sm" onClick={() => setShowOpen(!showOpen)} className="gap-1 text-xs gradient-brand text-primary-foreground">
               <Plus className="h-3.5 w-3.5" /> Abrir Turno
             </Button>
@@ -310,7 +332,7 @@ const Turnos = () => {
 
         {/* Open Shift Form */}
         <AnimatePresence>
-          {showOpen && !activeShift && (
+          {showOpen && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
               <div className="bg-card rounded-xl p-5 shadow-card border space-y-3">
                 <h3 className="font-heading font-semibold text-sm">Abrir Nuevo Turno</h3>
@@ -320,10 +342,11 @@ const Turnos = () => {
                     <Select value={openStoreId} onValueChange={setOpenStoreId}>
                       <SelectTrigger><SelectValue placeholder="Seleccionar tienda" /></SelectTrigger>
                       <SelectContent>
-                        {stores.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                        {stores.filter((s) => !openShifts.find((os) => os.store_id === s.id)).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div>
                     <Label className="text-xs">Cajero *</Label>
                     <Select value={openEmployeeId} onValueChange={setOpenEmployeeId}>
