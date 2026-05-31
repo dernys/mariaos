@@ -129,10 +129,20 @@ const Turnos = () => {
     if (data && (data as any[]).length) setSummary((data as any[])[0]);
   };
 
-  const openCloseDialog = async () => {
+  const openCloseDialog = async (shift: SalesShift) => {
+    setSelectedShift(shift);
+    setSummary(null);
     setShowClose(true);
-    await loadSummary();
+    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: shift.id });
+    if (error) { toast.error(error.message); return; }
+    if (data && (data as any[]).length) setSummary((data as any[])[0]);
   };
+
+  const openCashDialog = (shift: SalesShift) => {
+    setSelectedShift(shift);
+    setShowCash(true);
+  };
+
 
   const closeShift = async () => {
     if (!selectedShift || !closeCash) return toast.error("Ingresa el monto de cierre");
