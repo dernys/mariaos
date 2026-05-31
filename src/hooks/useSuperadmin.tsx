@@ -14,12 +14,12 @@ export function useSuperadmin() {
       return;
     }
 
-    // Hydrate from cache for instant UI, then verify in background
+    // Hydrate from cache for instant UI (does NOT stop loading,
+    // so guarded routes wait for the real verification before redirecting)
     const cacheKey = `sa:${user.id}`;
     const cached = sessionStorage.getItem(cacheKey);
     if (cached !== null) {
       setIsSuperadmin(cached === "1");
-      setLoading(false);
     }
 
     try {
@@ -33,6 +33,7 @@ export function useSuperadmin() {
     }
     setLoading(false);
   }, [user]);
+
 
   useEffect(() => {
     checkSuperadmin();
