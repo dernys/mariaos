@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Edit2, Trash2, Users, History, UserCheck, Wallet, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { useTableState } from "@/hooks/useTableState";
@@ -30,6 +31,7 @@ interface Employee {
   id: string;
   name: string;
   position: string | null;
+  position_id: string | null;
   salary: number;
   phone: string | null;
   email: string | null;
@@ -37,6 +39,11 @@ interface Employee {
   hire_date: string | null;
   notes: string | null;
 }
+
+interface JobPosition {
+  id: string; code: string; name: string; base_salary: number; is_active: boolean;
+}
+
 
 interface Shift {
   id: string;
