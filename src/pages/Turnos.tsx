@@ -123,8 +123,8 @@ const Turnos = () => {
   };
 
   const loadSummary = async () => {
-    if (!activeShift) return;
-    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: activeShift.id });
+    if (!selectedShift) return;
+    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: selectedShift.id });
     if (error) { toast.error(error.message); return; }
     if (data && (data as any[]).length) setSummary((data as any[])[0]);
   };
@@ -135,25 +135,25 @@ const Turnos = () => {
   };
 
   const closeShift = async () => {
-    if (!activeShift || !closeCash) return toast.error("Ingresa el monto de cierre");
+    if (!selectedShift || !closeCash) return toast.error("Ingresa el monto de cierre");
     // Cierre Z profesional: genera arqueo + asiento contable + bloqueo en una sola llamada
     const { data, error } = await supabase.rpc("close_shift_z" as any, {
-      p_shift_id: activeShift.id,
+      p_shift_id: selectedShift.id,
       p_counted_cash: parseFloat(closeCash),
     });
     if (error) return toast.error(error.message);
     const diff = (data as any)?.cash_difference ?? (parseFloat(closeCash) - (summary?.expected_cash || 0));
     const journalId = (data as any)?.journal_entry_id;
-    await logActivity({ entity_type: "shift", entity_id: activeShift.id, action: "Cierre Z", description: `Diferencia $${diff.toFixed(2)}${journalId ? ` · Asiento ${journalId.slice(0,8)}` : ""}`, tenant_id: tenantId, performed_by: user?.id });
+    await logActivity({ entity_type: "shift", entity_id: selectedShift.id, action: "Cierre Z", description: `Diferencia $${diff.toFixed(2)}${journalId ? ` · Asiento ${journalId.slice(0,8)}` : ""}`, tenant_id: tenantId, performed_by: user?.id });
     toast.success(`Cierre Z generado · Diferencia: $${Number(diff).toFixed(2)}${journalId ? " · Asiento contable creado" : ""}`);
     setShowClose(false); setCloseCash(""); setCloseNotes(""); setSummary(null);
     fetchAll();
   };
 
   const submitCashMovement = async () => {
-    if (!activeShift || !cashAmount || Number(cashAmount) <= 0) return toast.error("Monto inválido");
+    if (!selectedShift || !cashAmount || Number(cashAmount) <= 0) return toast.error("Monto inválido");
     const { error } = await (supabase.from as any)("shift_cash_movements").insert({
-      tenant_id: tenantId, shift_id: activeShift.id,
+      tenant_id: tenantId, shift_id: selectedShift.id,
       movement_type: cashType, amount: parseFloat(cashAmount),
       reason: cashReason || null, performed_by: user?.id,
     });
@@ -176,7 +176,7 @@ const Turnos = () => {
     <AppLayout title="Turnos de Venta">
       <div className="space-y-4">
         {/* Active Shift Banner */}
-        {activeShift && (
+        {selectedShift && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-xl p-5">
             <div className="flex items-start justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
@@ -186,22 +186,22 @@ const Turnos = () => {
                 <div>
                   <h3 className="font-heading font-semibold text-sm">Turno Activo</h3>
                   <p className="text-xs text-muted-foreground">
-                    {getStoreName(activeShift)} · Cajero: {getEmployeeName(activeShift.employee_id)} · {format(new Date(activeShift.opened_at), "dd MMM HH:mm", { locale: es })}
+                    {getStoreName(selectedShift)} · Cajero: {getEmployeeName(selectedShift.employee_id)} · {format(new Date(selectedShift.opened_at), "dd MMM HH:mm", { locale: es })}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-center">
                   <p className="text-[10px] text-muted-foreground">Caja Inicial</p>
-                  <p className="font-heading font-bold text-sm">${activeShift.opening_cash}</p>
+                  <p className="font-heading font-bold text-sm">${selectedShift.opening_cash}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-[10px] text-muted-foreground">Ventas</p>
-                  <p className="font-heading font-bold text-sm text-primary">${activeShift.total_sales ?? 0}</p>
+                  <p className="font-heading font-bold text-sm text-primary">${selectedShift.total_sales ?? 0}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-[10px] text-muted-foreground">Transacciones</p>
-                  <p className="font-heading font-bold text-sm">{activeShift.total_transactions ?? 0}</p>
+                  <p className="font-heading font-bold text-sm">{selectedShift.total_transactions ?? 0}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => setShowCash(true)} className="gap-1 text-xs">
                   <DollarSign className="h-3.5 w-3.5" /> Movimiento
@@ -251,7 +251,7 @@ const Turnos = () => {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2"><Calculator className="h-5 w-5" /> Cierre y Arqueo</DialogTitle>
-              <DialogDescription>{activeShift && `${getStoreName(activeShift)} · ${getEmployeeName(activeShift.employee_id)}`}</DialogDescription>
+              <DialogDescription>{selectedShift && `${getStoreName(selectedShift)} · ${getEmployeeName(selectedShift.employee_id)}`}</DialogDescription>
             </DialogHeader>
             {summary ? (
               <div className="space-y-3">
@@ -303,7 +303,7 @@ const Turnos = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">Historial de turnos</p>
-          {!activeShift && (
+          {!selectedShift && (
             <Button size="sm" onClick={() => setShowOpen(!showOpen)} className="gap-1 text-xs gradient-brand text-primary-foreground">
               <Plus className="h-3.5 w-3.5" /> Abrir Turno
             </Button>
@@ -312,7 +312,7 @@ const Turnos = () => {
 
         {/* Open Shift Form */}
         <AnimatePresence>
-          {showOpen && !activeShift && (
+          {showOpen && !selectedShift && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
               <div className="bg-card rounded-xl p-5 shadow-card border space-y-3">
                 <h3 className="font-heading font-semibold text-sm">Abrir Nuevo Turno</h3>
