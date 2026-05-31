@@ -42,7 +42,8 @@ const Turnos = () => {
   const tenantId = useTenant();
   const nav = useNavigate();
   const [shifts, setShifts] = useState<SalesShift[]>([]);
-  const [activeShift, setActiveShift] = useState<SalesShift | null>(null);
+  const [openShifts, setOpenShifts] = useState<SalesShift[]>([]);
+  const [selectedShift, setSelectedShift] = useState<SalesShift | null>(null);
   const [stores, setStores] = useState<StoreItem[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,18 +69,18 @@ const Turnos = () => {
     cash_in: number; cash_out: number; returns_cash: number; expected_cash: number;
   } | null>(null);
 
-  useEffect(() => { if (user) fetchAll(); }, [user]);
+  useEffect(() => { if (user && tenantId) fetchAll(); }, [user, tenantId]);
 
   const fetchAll = async () => {
     const [shiftRes, storeRes, empRes] = await Promise.all([
-      supabase.from("sales_shifts").select("*").eq("user_id", user!.id).order("opened_at", { ascending: false }).limit(20),
+      supabase.from("sales_shifts").select("*").eq("tenant_id", tenantId).order("opened_at", { ascending: false }).limit(50),
       supabase.from("stores").select("id, name").eq("is_active", true).order("name"),
       supabase.from("employees").select("id, name, position").eq("is_active", true).order("name"),
     ]);
     if (shiftRes.data) {
       const data = shiftRes.data as SalesShift[];
       setShifts(data);
-      setActiveShift(data.find((s) => s.status === "open") ?? null);
+      setOpenShifts(data.filter((s) => s.status === "open"));
     }
     if (storeRes.data) setStores(storeRes.data);
     if (empRes.data) setEmployees(empRes.data);
@@ -90,6 +91,7 @@ const Turnos = () => {
     if (shift.store_id) return stores.find((s) => s.id === shift.store_id)?.name || shift.store_name;
     return shift.store_name;
   };
+
 
   const getEmployeeName = (id: string | null) => employees.find((e) => e.id === id)?.name || "—";
 
