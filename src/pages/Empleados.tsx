@@ -59,15 +59,20 @@ const Empleados = () => {
   const tenantId = useTenant();
   const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [positions, setPositions] = useState<JobPosition[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
-  const [form, setForm] = useState({ name: "", position: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: "", notes: "" });
+  const [form, setForm] = useState({ name: "", position: "", position_id: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: "", notes: "" });
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
-    const { data, error } = await supabase.from("employees").select("*").order("name");
-    if (!error && data) setEmployees(data as Employee[]);
+    const [emp, pos] = await Promise.all([
+      supabase.from("employees").select("*").order("name"),
+      (supabase.from as any)("job_positions").select("id, code, name, base_salary, is_active").eq("is_active", true).order("name"),
+    ]);
+    if (emp.data) setEmployees(emp.data as Employee[]);
+    if (pos.data) setPositions(pos.data as JobPosition[]);
     setLoading(false);
   };
 
@@ -75,22 +80,41 @@ const Empleados = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", position: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: new Date().toISOString().slice(0, 10), notes: "" });
+    setForm({ name: "", position: "", position_id: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: new Date().toISOString().slice(0, 10), notes: "" });
     setDialogOpen(true);
   };
 
   const openEdit = (e: Employee) => {
     setEditing(e);
-    setForm({ name: e.name, position: e.position || "", salary: String(e.salary), credit_limit: String((e as any).credit_limit ?? 0), phone: e.phone || "", email: e.email || "", hire_date: e.hire_date || "", notes: e.notes || "" });
+    setForm({ name: e.name, position: e.position || "", position_id: e.position_id || "", salary: String(e.salary), credit_limit: String((e as any).credit_limit ?? 0), phone: e.phone || "", email: e.email || "", hire_date: e.hire_date || "", notes: e.notes || "" });
     setDialogOpen(true);
   };
 
   const openDetail = (e: Employee) => navigate(`/empleados/${e.id}`);
 
+  // When a job position is selected, autofill the position label and suggested salary
+  const onSelectPosition = (id: string) => {
+    if (id === "__none__") {
+      setForm((f) => ({ ...f, position_id: "", position: "" }));
+      return;
+    }
+    const p = positions.find((x) => x.id === id);
+    if (!p) return;
+    setForm((f) => ({
+      ...f,
+      position_id: id,
+      position: p.name,
+      salary: f.salary === "0" || !f.salary ? String(p.base_salary) : f.salary,
+    }));
+  };
+
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
-    const payload = {
-      name: form.name.trim(), position: form.position || null, salary: parseFloat(form.salary) || 0,
+    const payload: any = {
+      name: form.name.trim(),
+      position: form.position || null,
+      position_id: form.position_id || null,
+      salary: parseFloat(form.salary) || 0,
       credit_limit: parseFloat(form.credit_limit) || 0,
       phone: form.phone || null, email: form.email || null, hire_date: form.hire_date || null,
       notes: form.notes || null, tenant_id: tenantId,
@@ -109,6 +133,7 @@ const Empleados = () => {
     setDialogOpen(false);
     fetchEmployees();
   };
+
 
   const handleDelete = async (id: string, name: string) => {
     const { error } = await supabase.from("employees").delete().eq("id", id);
