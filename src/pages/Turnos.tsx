@@ -185,44 +185,54 @@ const Turnos = () => {
   return (
     <AppLayout title="Turnos de Venta">
       <div className="space-y-4">
-        {/* Active Shift Banner */}
-        {selectedShift && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-xl p-5">
-            <div className="flex items-start justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg gradient-brand flex items-center justify-center">
-                  <Play className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-heading font-semibold text-sm">Turno Activo</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {getStoreName(selectedShift)} · Cajero: {getEmployeeName(selectedShift.employee_id)} · {format(new Date(selectedShift.opened_at), "dd MMM HH:mm", { locale: es })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <p className="text-[10px] text-muted-foreground">Caja Inicial</p>
-                  <p className="font-heading font-bold text-sm">${selectedShift.opening_cash}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] text-muted-foreground">Ventas</p>
-                  <p className="font-heading font-bold text-sm text-primary">${selectedShift.total_sales ?? 0}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] text-muted-foreground">Transacciones</p>
-                  <p className="font-heading font-bold text-sm">{selectedShift.total_transactions ?? 0}</p>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setShowCash(true)} className="gap-1 text-xs">
-                  <DollarSign className="h-3.5 w-3.5" /> Movimiento
-                </Button>
-                <Button variant="outline" size="sm" onClick={openCloseDialog} className="gap-1 text-xs border-destructive/30 text-destructive hover:bg-destructive/10">
-                  <Square className="h-3.5 w-3.5" /> Cerrar Turno
-                </Button>
-              </div>
+        {/* Open Shifts List */}
+        {openShifts.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-heading">
+                Turnos abiertos ({openShifts.length})
+              </h3>
             </div>
-          </motion.div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {openShifts.map((sh) => (
+                <motion.div key={sh.id} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg gradient-brand flex items-center justify-center shrink-0">
+                        <Play className="h-5 w-5 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <h4 className="font-heading font-semibold text-sm">{getStoreName(sh)}</h4>
+                        <p className="text-[11px] text-muted-foreground">
+                          {getEmployeeName(sh.employee_id)} · {format(new Date(sh.opened_at), "dd MMM HH:mm", { locale: es })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground">Inicio</p>
+                        <p className="font-heading font-bold text-xs">${sh.opening_cash}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground">Ventas</p>
+                        <p className="font-heading font-bold text-xs text-primary">${sh.total_sales ?? 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-3 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => openCashDialog(sh)} className="gap-1 text-xs h-8">
+                      <DollarSign className="h-3.5 w-3.5" /> Movimiento
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => openCloseDialog(sh)} className="gap-1 text-xs h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
+                      <Square className="h-3.5 w-3.5" /> Cerrar
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         )}
+
 
         {/* Cash Movement Dialog */}
         <Dialog open={showCash} onOpenChange={setShowCash}>
