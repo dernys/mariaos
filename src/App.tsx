@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TenantProvider } from "@/hooks/useTenantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -132,7 +132,7 @@ const App = () => (
               <Route path="/reportes" element={<P><Reportes /></P>} />
               <Route path="/fidelizacion" element={<P><Fidelizacion /></P>} />
               <Route path="/rrhh" element={<P><RRHH /></P>} />
-              <Route path="/rrhh/operativo" element={<P><RRHHEnterprise /></P>} />
+              <Route path="/rrhh/operativo" element={<Navigate to="/rrhh" replace />} />
               <Route path="/portal-empleado" element={<P><PortalEmpleado /></P>} />
               <Route path="/delivery" element={<P><Delivery /></P>} />
               <Route path="/superadmin" element={<P><SuperAdmin /></P>} />
