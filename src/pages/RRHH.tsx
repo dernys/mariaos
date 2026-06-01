@@ -8,29 +8,24 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import {
   Calendar, DollarSign, Plus, CheckCircle2, Briefcase, Edit2, Trash2, FileText, AlertCircle,
+  Clock, Plane, TrendingUp, LogIn, LogOut, MapPin, XCircle, Users,
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 
-interface Employee { id: string; name: string; salary: number; position_id?: string | null; }
+interface Employee { id: string; name: string; salary: number; position: string | null; department: string | null; position_id?: string | null; }
 interface Schedule { id: string; employee_id: string; day_of_week: number; start_time: string; end_time: string; is_active: boolean; employees?: { name: string }; }
 interface Payroll {
   id: string; employee_id: string; period_start: string; period_end: string;
   base_salary: number; hours_worked: number; bonus: number; deductions: number;
   net_pay: number; status: string; paid_at: string | null;
-  employees?: { name: string };
+  employees?: { name: string; position?: string | null };
 }
 interface JobPosition {
   id: string; code: string; name: string; department: string | null; level: string | null;
@@ -40,19 +35,30 @@ interface AP {
   id: string; party_id: string; source_id: string; amount: number; amount_paid: number;
   status: string; due_date: string | null; description: string;
 }
+interface Attendance { id: string; employee_id: string; check_in: string; check_out: string | null; hours_worked: number | null; check_in_lat: number | null; check_in_lng: number | null; }
+interface Leave { id: string; employee_id: string; leave_type: string; start_date: string; end_date: string; days: number; status: string; reason: string | null; }
+interface Contract { id: string; employee_id: string; contract_type: string; start_date: string; end_date: string | null; base_salary: number; status: string; }
+interface Overtime { id: string; employee_id: string; date: string; hours: number; pay_factor: number; status: string; }
 
 const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 export default function RRHH() {
   const tenantId = useTenant();
   const { toast } = useToast();
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [payrolls, setPayrolls] = useState<Payroll[]>([]);
-  const [positions, setPositions] = useState<JobPosition[]>([]);
-  const [payables, setPayables] = useState<AP[]>([]);
+  const [tab, setTab] = useState("resumen");
 
-  // Dialogs
+  // Datos compartidos
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [positions, setPositions] = useState<JobPosition[]>([]);
+  const [payrolls, setPayrolls] = useState<Payroll[]>([]);
+  const [payables, setPayables] = useState<AP[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [overtime, setOvertime] = useState<Overtime[]>([]);
+
+  // Dialog states
   const [schedDialog, setSchedDialog] = useState(false);
   const [schedForm, setSchedForm] = useState({ employee_id: "", day_of_week: "1", start_time: "09:00", end_time: "17:00" });
 
@@ -71,23 +77,43 @@ export default function RRHH() {
   const [preview, setPreview] = useState<{ hours: number; base: number; bonus: number; ded: number; gross: number; net: number } | null>(null);
   const [computing, setComputing] = useState(false);
 
+  const [selectedEmp, setSelectedEmp] = useState<string>("");
+  const [openLeave, setOpenLeave] = useState(false);
+  const [openContract, setOpenContract] = useState(false);
+  const [openOvertime, setOpenOvertime] = useState(false);
+  const [leaveForm, setLeaveForm] = useState({ employee_id: "", leave_type: "vacation", start_date: format(new Date(), "yyyy-MM-dd"), end_date: format(new Date(), "yyyy-MM-dd"), reason: "" });
+  const [contractForm, setContractForm] = useState({ employee_id: "", contract_type: "indefinite", start_date: format(new Date(), "yyyy-MM-dd"), end_date: "", base_salary: "", weekly_hours: "40" });
+  const [otForm, setOtForm] = useState({ employee_id: "", date: format(new Date(), "yyyy-MM-dd"), hours: "", pay_factor: "1.5", reason: "" });
+
   const load = async () => {
     if (!tenantId) return;
-    const [e, s, p, jp, ap] = await Promise.all([
-      supabase.from("employees").select("id,name,salary,position_id").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
+    const [e, s, p, jp, ap, att, lv, ct, ot] = await Promise.all([
+      supabase.from("employees").select("id,name,salary,position,department,position_id").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
       supabase.from("work_schedules").select("*, employees(name)").eq("tenant_id", tenantId).order("day_of_week"),
-      supabase.from("payroll_runs").select("*, employees(name)").eq("tenant_id", tenantId).order("period_end", { ascending: false }),
+      supabase.from("payroll_runs").select("*, employees(name, position)").eq("tenant_id", tenantId).order("period_end", { ascending: false }),
       (supabase.from as any)("job_positions").select("*").eq("tenant_id", tenantId).order("name"),
       (supabase.from as any)("accounts_payable").select("id, party_id, source_id, amount, amount_paid, status, due_date, description").eq("tenant_id", tenantId).eq("source_type", "payroll"),
+      supabase.from("employee_attendance").select("*").eq("tenant_id", tenantId).order("check_in", { ascending: false }).limit(100),
+      (supabase.from as any)("leave_requests").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false }),
+      (supabase.from as any)("employee_contracts").select("*").eq("tenant_id", tenantId).order("start_date", { ascending: false }),
+      (supabase.from as any)("overtime_records").select("*").eq("tenant_id", tenantId).order("date", { ascending: false }),
     ]);
     setEmployees((e.data as any) || []);
     setSchedules((s.data as any) || []);
     setPayrolls((p.data as any) || []);
     setPositions((jp.data as any) || []);
     setPayables((ap.data as any) || []);
+    setAttendance((att.data as any) || []);
+    setLeaves((lv.data as any) || []);
+    setContracts((ct.data as any) || []);
+    setOvertime((ot.data as any) || []);
+    if (!selectedEmp && e.data?.length) setSelectedEmp(e.data[0].id);
   };
 
   useEffect(() => { load(); }, [tenantId]);
+
+  const empName = (id: string) => employees.find((x) => x.id === id)?.name || "—";
+  const openShift = useMemo(() => attendance.find((a) => a.employee_id === selectedEmp && !a.check_out), [attendance, selectedEmp]);
 
   // ============= Horarios =============
   const saveSchedule = async () => {
@@ -99,7 +125,6 @@ export default function RRHH() {
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
     setSchedDialog(false); load();
   };
-
   const deleteSchedule = async (id: string) => {
     const { error } = await supabase.from("work_schedules").delete().eq("id", id);
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -166,10 +191,13 @@ export default function RRHH() {
     });
     setPayDialog(true);
   };
-
   const computePreview = async () => {
     if (!payForm.employee_id || !payForm.period_start || !payForm.period_end) {
       return toast({ title: "Faltan datos", description: "Selecciona empleado y rango", variant: "destructive" });
+    }
+    const emp = employees.find((x) => x.id === payForm.employee_id);
+    if (!emp?.position_id) {
+      return toast({ title: "Empleado sin puesto", description: "Asigna primero un puesto laboral en Empleados o en la pestaña Puestos.", variant: "destructive" });
     }
     setComputing(true);
     const { data, error } = await supabase.rpc("compute_payroll" as any, {
@@ -185,7 +213,6 @@ export default function RRHH() {
     const net = gross - ded;
     setPreview({ hours: Number(row.hours_worked) || 0, base, bonus, ded, gross, net });
   };
-
   const savePayroll = async () => {
     if (!preview) return toast({ title: "Calcula primero la nómina", variant: "destructive" });
     const { error } = await supabase.from("payroll_runs").insert({
@@ -195,23 +222,16 @@ export default function RRHH() {
       bonus: preview.bonus, deductions: preview.ded, net_pay: preview.net,
     });
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({
-      title: "Nómina generada",
-      description: `Neto: $${preview.net.toFixed(2)} · Se creó cuenta por pagar automáticamente.`,
-    });
+    toast({ title: "Nómina generada", description: `Neto: $${preview.net.toFixed(2)} · Cuenta por pagar creada.` });
     setPayDialog(false); load();
   };
-
   const payNow = async (p: Payroll) => {
     if (!confirm(`Pagar nómina de ${p.employees?.name} por $${Number(p.net_pay).toFixed(2)}?`)) return;
-    const { error } = await (supabase.rpc as any)("pay_payroll", {
-      _payroll_id: p.id, _method: "transfer", _notes: null,
-    });
+    const { error } = await (supabase.rpc as any)("pay_payroll", { _payroll_id: p.id, _method: "transfer", _notes: null });
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Pago registrado", description: "Cuenta por pagar cerrada y movimiento contable creado." });
+    toast({ title: "Pago registrado" });
     load();
   };
-
   const cancelPayroll = async (p: Payroll) => {
     if (p.status === "paid") return;
     if (!confirm("¿Anular esta nómina y su cuenta por pagar?")) return;
@@ -220,38 +240,240 @@ export default function RRHH() {
     load();
   };
 
-  // Helpers
+  // ============= Fichaje =============
+  const getGeo = (): Promise<{ lat: number | null; lng: number | null }> =>
+    new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve({ lat: null, lng: null });
+      navigator.geolocation.getCurrentPosition(
+        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => resolve({ lat: null, lng: null }),
+        { timeout: 5000 }
+      );
+    });
+  const doClockIn = async () => {
+    if (!selectedEmp) return;
+    const geo = await getGeo();
+    const { error } = await (supabase as any).rpc("clock_in", { p_employee_id: selectedEmp, p_lat: geo.lat, p_lng: geo.lng, p_source: "web" });
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: "Entrada registrada" }); load();
+  };
+  const doClockOut = async () => {
+    if (!selectedEmp) return;
+    const geo = await getGeo();
+    const { error } = await (supabase as any).rpc("clock_out", { p_employee_id: selectedEmp, p_lat: geo.lat, p_lng: geo.lng });
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: "Salida registrada" }); load();
+  };
+
+  // ============= Vacaciones / Contratos / Horas Extra =============
+  const createLeave = async () => {
+    if (!leaveForm.employee_id) return;
+    const { error } = await (supabase as any).rpc("request_leave", {
+      p_employee_id: leaveForm.employee_id, p_type: leaveForm.leave_type,
+      p_start: leaveForm.start_date, p_end: leaveForm.end_date, p_reason: leaveForm.reason || null,
+    });
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    setOpenLeave(false); load();
+  };
+  const approveLeave = async (id: string, approve: boolean) => {
+    const { error } = await (supabase as any).rpc("approve_leave", { p_leave_id: id, p_approve: approve });
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    load();
+  };
+  const createContract = async () => {
+    if (!contractForm.employee_id) return;
+    const { error } = await supabase.from("employee_contracts" as any).insert({
+      tenant_id: tenantId, employee_id: contractForm.employee_id,
+      contract_type: contractForm.contract_type, start_date: contractForm.start_date,
+      end_date: contractForm.end_date || null, base_salary: parseFloat(contractForm.base_salary) || 0,
+      weekly_hours: parseFloat(contractForm.weekly_hours) || 40,
+    });
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    setOpenContract(false); load();
+  };
+  const createOvertime = async () => {
+    if (!otForm.employee_id) return;
+    const { error } = await supabase.from("overtime_records" as any).insert({
+      tenant_id: tenantId, employee_id: otForm.employee_id, date: otForm.date,
+      hours: parseFloat(otForm.hours), pay_factor: parseFloat(otForm.pay_factor) || 1.5, reason: otForm.reason || null,
+    });
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    setOpenOvertime(false); load();
+  };
+
+  // Helpers / KPIs
   const apFor = useMemo(() => {
     const m = new Map<string, AP>();
     payables.forEach((a) => m.set(a.source_id, a));
     return m;
   }, [payables]);
-
   const pendingAP = payables.filter((a) => a.status !== "paid" && a.status !== "cancelled");
   const totalDue = pendingAP.reduce((s, a) => s + Number(a.amount) - Number(a.amount_paid), 0);
+  const empWithoutPos = employees.filter((e) => !e.position_id).length;
+  const openShiftsCount = attendance.filter((a) => !a.check_out).length;
+  const pendingLeaves = leaves.filter((l) => l.status === "pending").length;
+  const activeContracts = contracts.filter((c) => c.status === "active").length;
+  const otApproved = overtime.filter((o) => o.status === "approved").reduce((s, o) => s + Number(o.hours), 0);
+  const totalSalary = employees.reduce((s, e) => s + Number(e.salary || 0), 0);
 
   return (
     <AppLayout title="Recursos Humanos">
       <div className="space-y-6 p-4 md:p-6">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl md:text-3xl font-heading font-bold tracking-tight">Recursos Humanos</h1>
-            <p className="text-sm text-muted-foreground">Puestos, horarios, nóminas y cuentas por pagar</p>
+            <p className="text-sm text-muted-foreground">
+              Gestión integral del capital humano: puestos, fichaje, vacaciones, contratos y nóminas.
+            </p>
           </div>
-          {totalDue > 0 && (
-            <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-warning" />
-              <span>Nóminas por pagar: <span className="font-bold">${totalDue.toFixed(2)}</span> ({pendingAP.length})</span>
-            </div>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {totalDue > 0 && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-warning" />
+                <span>Por pagar: <span className="font-bold">${totalDue.toFixed(2)}</span></span>
+              </div>
+            )}
+            {empWithoutPos > 0 && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-warning" />
+                <span>{empWithoutPos} empleado(s) sin puesto</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <Tabs defaultValue="payroll">
-          <TabsList>
-            <TabsTrigger value="payroll"><DollarSign className="h-4 w-4 mr-2" />Nóminas</TabsTrigger>
-            <TabsTrigger value="positions"><Briefcase className="h-4 w-4 mr-2" />Puestos</TabsTrigger>
-            <TabsTrigger value="schedules"><Calendar className="h-4 w-4 mr-2" />Horarios</TabsTrigger>
-          </TabsList>
+        {/* KPI grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Empleados</div><div className="text-xl font-bold flex items-center gap-1"><Users className="h-4 w-4 text-primary" />{employees.length}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Puestos</div><div className="text-xl font-bold flex items-center gap-1"><Briefcase className="h-4 w-4 text-primary" />{positions.length}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">En turno</div><div className="text-xl font-bold text-success flex items-center gap-1"><Clock className="h-4 w-4" />{openShiftsCount}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Vacaciones pend.</div><div className="text-xl font-bold text-warning flex items-center gap-1"><Plane className="h-4 w-4" />{pendingLeaves}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Contratos act.</div><div className="text-xl font-bold flex items-center gap-1"><FileText className="h-4 w-4 text-primary" />{activeContracts}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Nómina mensual</div><div className="text-xl font-bold tabular-nums">${totalSalary.toLocaleString()}</div></CardContent></Card>
+        </div>
+
+        <Tabs value={tab} onValueChange={setTab}>
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <TabsList className="inline-flex w-auto">
+              <TabsTrigger value="resumen"><TrendingUp className="h-4 w-4 mr-1.5" />Resumen</TabsTrigger>
+              <TabsTrigger value="fichaje"><Clock className="h-4 w-4 mr-1.5" />Fichaje</TabsTrigger>
+              <TabsTrigger value="vacaciones"><Plane className="h-4 w-4 mr-1.5" />Vacaciones {pendingLeaves > 0 && <Badge variant="secondary" className="ml-2">{pendingLeaves}</Badge>}</TabsTrigger>
+              <TabsTrigger value="payroll"><DollarSign className="h-4 w-4 mr-1.5" />Nóminas</TabsTrigger>
+              <TabsTrigger value="positions"><Briefcase className="h-4 w-4 mr-1.5" />Puestos</TabsTrigger>
+              <TabsTrigger value="contratos"><FileText className="h-4 w-4 mr-1.5" />Contratos</TabsTrigger>
+              <TabsTrigger value="schedules"><Calendar className="h-4 w-4 mr-1.5" />Horarios</TabsTrigger>
+              <TabsTrigger value="overtime"><TrendingUp className="h-4 w-4 mr-1.5" />Horas extras</TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* ===== RESUMEN ===== */}
+          <TabsContent value="resumen" className="space-y-3">
+            <div className="grid md:grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-heading font-bold">Plantilla por departamento</h3>
+                    <Badge variant="outline">{employees.length} empleados</Badge>
+                  </div>
+                  <div className="space-y-1.5">
+                    {Object.entries(
+                      employees.reduce<Record<string, number>>((acc, e) => {
+                        const d = e.department || "Sin asignar"; acc[d] = (acc[d] || 0) + 1; return acc;
+                      }, {})
+                    ).sort((a, b) => b[1] - a[1]).map(([d, n]) => (
+                      <div key={d} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{d}</span>
+                        <span className="font-medium tabular-nums">{n}</span>
+                      </div>
+                    ))}
+                    {employees.length === 0 && <p className="text-xs text-muted-foreground">Sin empleados registrados.</p>}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 space-y-2">
+                  <h3 className="font-heading font-bold">Próximas acciones</h3>
+                  <ul className="space-y-1.5 text-sm">
+                    {empWithoutPos > 0 && <li className="flex gap-2"><AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" /><span>{empWithoutPos} empleado(s) sin puesto laboral — clasifícalos en <button onClick={() => setTab("positions")} className="underline">Puestos</button>.</span></li>}
+                    {pendingLeaves > 0 && <li className="flex gap-2"><Plane className="h-4 w-4 text-warning shrink-0 mt-0.5" /><span>{pendingLeaves} solicitud(es) de vacaciones pendientes de aprobación.</span></li>}
+                    {pendingAP.length > 0 && <li className="flex gap-2"><DollarSign className="h-4 w-4 text-warning shrink-0 mt-0.5" /><span>{pendingAP.length} nómina(s) por pagar — total <b>${totalDue.toFixed(2)}</b>.</span></li>}
+                    {empWithoutPos === 0 && pendingLeaves === 0 && pendingAP.length === 0 && (
+                      <li className="flex gap-2 text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />Todo al día.</li>
+                    )}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* ===== FICHAJE ===== */}
+          <TabsContent value="fichaje" className="space-y-3">
+            <Card><CardContent className="p-4 space-y-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+                <div className="flex-1">
+                  <Label>Empleado</Label>
+                  <Select value={selectedEmp} onValueChange={setSelectedEmp}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+                    <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}{e.position ? ` · ${e.position}` : ""}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                {openShift ? (
+                  <Button onClick={doClockOut} variant="destructive" className="gap-1"><LogOut className="h-4 w-4" /> Marcar salida</Button>
+                ) : (
+                  <Button onClick={doClockIn} className="gap-1 gradient-brand text-primary-foreground"><LogIn className="h-4 w-4" /> Marcar entrada</Button>
+                )}
+              </div>
+              {openShift && <div className="text-xs text-muted-foreground">Turno abierto desde {format(new Date(openShift.check_in), "dd/MM HH:mm")} · {openShift.check_in_lat ? <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{openShift.check_in_lat.toFixed(4)},{openShift.check_in_lng?.toFixed(4)}</span> : "sin geo"}</div>}
+            </CardContent></Card>
+
+            <Card><CardContent className="p-0 overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Entrada</TableHead><TableHead>Salida</TableHead><TableHead>Horas</TableHead><TableHead>Geo</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {attendance.slice(0, 50).map((a) => (
+                    <TableRow key={a.id}>
+                      <TableCell>{empName(a.employee_id)}</TableCell>
+                      <TableCell className="text-xs">{format(new Date(a.check_in), "dd/MM HH:mm")}</TableCell>
+                      <TableCell className="text-xs">{a.check_out ? format(new Date(a.check_out), "dd/MM HH:mm") : <Badge variant="secondary">Abierto</Badge>}</TableCell>
+                      <TableCell>{a.hours_worked ? Number(a.hours_worked).toFixed(2) : "—"}</TableCell>
+                      <TableCell>{a.check_in_lat ? <Badge variant="outline" className="gap-1"><MapPin className="h-3 w-3" /> Sí</Badge> : "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                  {attendance.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">Sin registros de fichaje</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </CardContent></Card>
+          </TabsContent>
+
+          {/* ===== VACACIONES ===== */}
+          <TabsContent value="vacaciones" className="space-y-3">
+            <div className="flex justify-end"><Button size="sm" onClick={() => setOpenLeave(true)} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-4 w-4" /> Nueva solicitud</Button></div>
+            <Card><CardContent className="p-0 overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Tipo</TableHead><TableHead>Desde</TableHead><TableHead>Hasta</TableHead><TableHead>Días</TableHead><TableHead>Estado</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {leaves.map((l) => (
+                    <TableRow key={l.id}>
+                      <TableCell>{empName(l.employee_id)}</TableCell>
+                      <TableCell><Badge variant="outline">{l.leave_type}</Badge></TableCell>
+                      <TableCell>{format(new Date(l.start_date), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{format(new Date(l.end_date), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{l.days}</TableCell>
+                      <TableCell><Badge variant={l.status === "approved" ? "default" : l.status === "rejected" ? "destructive" : "secondary"}>{l.status}</Badge></TableCell>
+                      <TableCell className="text-right">
+                        {l.status === "pending" && <div className="flex gap-1 justify-end">
+                          <Button size="sm" variant="ghost" onClick={() => approveLeave(l.id, true)}><CheckCircle2 className="h-3.5 w-3.5 text-success" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => approveLeave(l.id, false)}><XCircle className="h-3.5 w-3.5 text-destructive" /></Button>
+                        </div>}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {leaves.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">Sin solicitudes</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </CardContent></Card>
+          </TabsContent>
 
           {/* ===== NÓMINAS ===== */}
           <TabsContent value="payroll" className="space-y-3">
@@ -263,13 +485,14 @@ export default function RRHH() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Empleado</TableHead>
+                    <TableHead>Puesto</TableHead>
                     <TableHead>Período</TableHead>
-                    <TableHead className="text-right">Horas trab.</TableHead>
-                    <TableHead className="text-right">Salario base</TableHead>
+                    <TableHead className="text-right">Horas</TableHead>
+                    <TableHead className="text-right">Base</TableHead>
                     <TableHead className="text-right">Bonos</TableHead>
                     <TableHead className="text-right">Deducc.</TableHead>
-                    <TableHead className="text-right">Neto a pagar</TableHead>
-                    <TableHead>Cuenta x Pagar</TableHead>
+                    <TableHead className="text-right">Neto</TableHead>
+                    <TableHead>CxP</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -280,6 +503,7 @@ export default function RRHH() {
                     return (
                       <TableRow key={p.id}>
                         <TableCell className="font-medium">{p.employees?.name}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{p.employees?.position || "—"}</TableCell>
                         <TableCell className="text-xs">{p.period_start} → {p.period_end}</TableCell>
                         <TableCell className="text-right tabular-nums">{Number(p.hours_worked).toFixed(2)}</TableCell>
                         <TableCell className="text-right tabular-nums">${Number(p.base_salary).toFixed(2)}</TableCell>
@@ -297,24 +521,14 @@ export default function RRHH() {
                         <TableCell><Badge variant={p.status === "paid" ? "default" : "secondary"}>{p.status === "paid" ? "Pagado" : "Pendiente"}</Badge></TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-1 justify-end">
-                            {p.status !== "paid" && (
-                              <Button size="sm" variant="outline" onClick={() => payNow(p)} className="gap-1">
-                                <CheckCircle2 className="h-3 w-3" />Pagar
-                              </Button>
-                            )}
-                            {p.status !== "paid" && (
-                              <Button size="sm" variant="ghost" onClick={() => cancelPayroll(p)} className="text-destructive">
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            )}
+                            {p.status !== "paid" && <Button size="sm" variant="outline" onClick={() => payNow(p)} className="gap-1"><CheckCircle2 className="h-3 w-3" />Pagar</Button>}
+                            {p.status !== "paid" && <Button size="sm" variant="ghost" onClick={() => cancelPayroll(p)} className="text-destructive"><Trash2 className="h-3 w-3" /></Button>}
                           </div>
                         </TableCell>
                       </TableRow>
                     );
                   })}
-                  {payrolls.length === 0 && (
-                    <TableRow><TableCell colSpan={10} className="text-center text-sm text-muted-foreground py-8">Sin nóminas generadas</TableCell></TableRow>
-                  )}
+                  {payrolls.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">Sin nóminas generadas</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent></Card>
@@ -328,14 +542,9 @@ export default function RRHH() {
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Departamento</TableHead>
-                  <TableHead>Nivel</TableHead>
-                  <TableHead className="text-right">Salario base</TableHead>
-                  <TableHead className="text-right">Rango</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
+                  <TableHead>Código</TableHead><TableHead>Nombre</TableHead><TableHead>Departamento</TableHead>
+                  <TableHead>Nivel</TableHead><TableHead className="text-right">Base</TableHead>
+                  <TableHead className="text-right">Rango</TableHead><TableHead>Estado</TableHead><TableHead className="text-right">Acciones</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {positions.map((p) => (
@@ -348,11 +557,7 @@ export default function RRHH() {
                       <TableCell className="text-right tabular-nums text-xs text-muted-foreground">
                         {p.min_salary || p.max_salary ? `$${Number(p.min_salary).toFixed(0)} – $${Number(p.max_salary).toFixed(0)}` : "—"}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant={p.is_active ? "default" : "secondary"} className="cursor-pointer" onClick={() => togglePos(p)}>
-                          {p.is_active ? "Activo" : "Inactivo"}
-                        </Badge>
-                      </TableCell>
+                      <TableCell><Badge variant={p.is_active ? "default" : "secondary"} className="cursor-pointer" onClick={() => togglePos(p)}>{p.is_active ? "Activo" : "Inactivo"}</Badge></TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-1 justify-end">
                           <Button size="sm" variant="ghost" onClick={() => openPosEdit(p)}><Edit2 className="h-3 w-3" /></Button>
@@ -367,6 +572,29 @@ export default function RRHH() {
             </CardContent></Card>
           </TabsContent>
 
+          {/* ===== CONTRATOS ===== */}
+          <TabsContent value="contratos" className="space-y-3">
+            <div className="flex justify-end"><Button size="sm" onClick={() => setOpenContract(true)} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-4 w-4" /> Nuevo contrato</Button></div>
+            <Card><CardContent className="p-0 overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Tipo</TableHead><TableHead>Inicio</TableHead><TableHead>Fin</TableHead><TableHead className="text-right">Salario base</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {contracts.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell>{empName(c.employee_id)}</TableCell>
+                      <TableCell><Badge variant="outline">{c.contract_type}</Badge></TableCell>
+                      <TableCell>{format(new Date(c.start_date), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{c.end_date ? format(new Date(c.end_date), "dd/MM/yyyy") : "—"}</TableCell>
+                      <TableCell className="text-right font-mono">{Number(c.base_salary).toFixed(2)}</TableCell>
+                      <TableCell><Badge variant={c.status === "active" ? "default" : "secondary"}>{c.status}</Badge></TableCell>
+                    </TableRow>
+                  ))}
+                  {contracts.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">Sin contratos</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </CardContent></Card>
+          </TabsContent>
+
           {/* ===== HORARIOS ===== */}
           <TabsContent value="schedules" className="space-y-3">
             <div className="flex justify-end">
@@ -374,9 +602,7 @@ export default function RRHH() {
             </div>
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
-                <TableHeader><TableRow>
-                  <TableHead>Empleado</TableHead><TableHead>Día</TableHead><TableHead>Inicio</TableHead><TableHead>Fin</TableHead><TableHead className="text-right">Acciones</TableHead>
-                </TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Día</TableHead><TableHead>Inicio</TableHead><TableHead>Fin</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {schedules.map((s) => (
                     <TableRow key={s.id}>
@@ -390,6 +616,28 @@ export default function RRHH() {
                     </TableRow>
                   ))}
                   {schedules.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">Sin horarios configurados</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </CardContent></Card>
+          </TabsContent>
+
+          {/* ===== HORAS EXTRAS ===== */}
+          <TabsContent value="overtime" className="space-y-3">
+            <div className="flex justify-end"><Button size="sm" onClick={() => setOpenOvertime(true)} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-4 w-4" /> Registrar</Button></div>
+            <Card><CardContent className="p-0 overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Fecha</TableHead><TableHead>Horas</TableHead><TableHead>Factor</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {overtime.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell>{empName(o.employee_id)}</TableCell>
+                      <TableCell>{format(new Date(o.date), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{Number(o.hours).toFixed(2)}</TableCell>
+                      <TableCell>x{Number(o.pay_factor).toFixed(2)}</TableCell>
+                      <TableCell><Badge variant={o.status === "approved" || o.status === "paid" ? "default" : "secondary"}>{o.status}</Badge></TableCell>
+                    </TableRow>
+                  ))}
+                  {overtime.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">Sin registros</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent></Card>
@@ -422,7 +670,6 @@ export default function RRHH() {
           </DialogContent>
         </Dialog>
 
-        {/* ===== Puesto Dialog ===== */}
         <Dialog open={posDialog} onOpenChange={setPosDialog}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
@@ -463,7 +710,6 @@ export default function RRHH() {
           </DialogContent>
         </Dialog>
 
-        {/* ===== Nómina Dialog con preview ===== */}
         <Dialog open={payDialog} onOpenChange={setPayDialog}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
@@ -476,8 +722,15 @@ export default function RRHH() {
               <div><Label>Empleado</Label>
                 <Select value={payForm.employee_id} onValueChange={(v) => { setPreview(null); setPayForm({ ...payForm, employee_id: v }); }}>
                   <SelectTrigger><SelectValue placeholder="Selecciona empleado" /></SelectTrigger>
-                  <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{employees.map((e) => (
+                    <SelectItem key={e.id} value={e.id} disabled={!e.position_id}>
+                      {e.name}{e.position ? ` · ${e.position}` : " · sin puesto"}
+                    </SelectItem>
+                  ))}</SelectContent>
                 </Select>
+                {employees.length > 0 && empWithoutPos > 0 && (
+                  <p className="text-[11px] text-warning mt-1">⚠ Hay empleados sin puesto: asígnaselo antes de generar su nómina.</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div><Label>Desde</Label><Input type="date" value={payForm.period_start} onChange={(e) => { setPreview(null); setPayForm({ ...payForm, period_start: e.target.value }); }} /></div>
@@ -495,11 +748,9 @@ export default function RRHH() {
                   <p className="text-[10px] text-muted-foreground mt-1">Adelantos, multas, descuentos</p>
                 </div>
               </div>
-
               <Button variant="outline" size="sm" onClick={computePreview} disabled={computing} className="w-full">
                 {computing ? "Calculando..." : "Calcular nómina"}
               </Button>
-
               {preview && (
                 <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1.5">
                   <div className="flex justify-between"><span className="text-muted-foreground">Horas trabajadas</span><span className="tabular-nums">{preview.hours.toFixed(2)} h</span></div>
@@ -521,6 +772,97 @@ export default function RRHH() {
               <Button variant="outline" onClick={() => setPayDialog(false)}>Cancelar</Button>
               <Button onClick={savePayroll} disabled={!preview} className="gradient-brand text-primary-foreground">Guardar nómina</Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openLeave} onOpenChange={setOpenLeave}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Nueva solicitud de ausencia</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>Empleado</Label>
+                <Select value={leaveForm.employee_id} onValueChange={(v) => setLeaveForm({ ...leaveForm, employee_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+                  <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Tipo</Label>
+                <Select value={leaveForm.leave_type} onValueChange={(v) => setLeaveForm({ ...leaveForm, leave_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vacation">Vacaciones</SelectItem>
+                    <SelectItem value="sick">Enfermedad</SelectItem>
+                    <SelectItem value="personal">Personal</SelectItem>
+                    <SelectItem value="maternity">Maternidad</SelectItem>
+                    <SelectItem value="paternity">Paternidad</SelectItem>
+                    <SelectItem value="unpaid">Sin sueldo</SelectItem>
+                    <SelectItem value="other">Otro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>Desde</Label><Input type="date" value={leaveForm.start_date} onChange={(e) => setLeaveForm({ ...leaveForm, start_date: e.target.value })} /></div>
+                <div><Label>Hasta</Label><Input type="date" value={leaveForm.end_date} onChange={(e) => setLeaveForm({ ...leaveForm, end_date: e.target.value })} /></div>
+              </div>
+              <div><Label>Motivo</Label><Textarea value={leaveForm.reason} onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })} /></div>
+            </div>
+            <DialogFooter><Button variant="outline" onClick={() => setOpenLeave(false)}>Cancelar</Button><Button onClick={createLeave} className="gradient-brand text-primary-foreground">Solicitar</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openContract} onOpenChange={setOpenContract}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Nuevo contrato</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>Empleado</Label>
+                <Select value={contractForm.employee_id} onValueChange={(v) => setContractForm({ ...contractForm, employee_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+                  <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Tipo</Label>
+                <Select value={contractForm.contract_type} onValueChange={(v) => setContractForm({ ...contractForm, contract_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="indefinite">Indefinido</SelectItem>
+                    <SelectItem value="fixed">Fijo (con fin)</SelectItem>
+                    <SelectItem value="temporary">Temporal</SelectItem>
+                    <SelectItem value="part_time">Tiempo parcial</SelectItem>
+                    <SelectItem value="internship">Prácticas</SelectItem>
+                    <SelectItem value="freelance">Autónomo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>Inicio</Label><Input type="date" value={contractForm.start_date} onChange={(e) => setContractForm({ ...contractForm, start_date: e.target.value })} /></div>
+                <div><Label>Fin (opcional)</Label><Input type="date" value={contractForm.end_date} onChange={(e) => setContractForm({ ...contractForm, end_date: e.target.value })} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>Salario base</Label><Input type="number" step="0.01" value={contractForm.base_salary} onChange={(e) => setContractForm({ ...contractForm, base_salary: e.target.value })} /></div>
+                <div><Label>Horas semanales</Label><Input type="number" value={contractForm.weekly_hours} onChange={(e) => setContractForm({ ...contractForm, weekly_hours: e.target.value })} /></div>
+              </div>
+            </div>
+            <DialogFooter><Button variant="outline" onClick={() => setOpenContract(false)}>Cancelar</Button><Button onClick={createContract} className="gradient-brand text-primary-foreground">Crear</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openOvertime} onOpenChange={setOpenOvertime}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Registrar horas extras</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>Empleado</Label>
+                <Select value={otForm.employee_id} onValueChange={(v) => setOtForm({ ...otForm, employee_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+                  <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div><Label>Fecha</Label><Input type="date" value={otForm.date} onChange={(e) => setOtForm({ ...otForm, date: e.target.value })} /></div>
+                <div><Label>Horas</Label><Input type="number" step="0.25" value={otForm.hours} onChange={(e) => setOtForm({ ...otForm, hours: e.target.value })} /></div>
+                <div><Label>Factor</Label><Input type="number" step="0.1" value={otForm.pay_factor} onChange={(e) => setOtForm({ ...otForm, pay_factor: e.target.value })} /></div>
+              </div>
+              <div><Label>Motivo</Label><Textarea value={otForm.reason} onChange={(e) => setOtForm({ ...otForm, reason: e.target.value })} /></div>
+            </div>
+            <DialogFooter><Button variant="outline" onClick={() => setOpenOvertime(false)}>Cancelar</Button><Button onClick={createOvertime} className="gradient-brand text-primary-foreground">Registrar</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
