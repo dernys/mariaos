@@ -51,19 +51,77 @@ const categoryColors: Record<string, string> = {
 
 export function POSBar() {
   const { tenantId } = useTenantContext();
+  const cartKey = tenantId ? `pos_bar_cart_${tenantId}` : "";
   const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  // Lazy init so reload/remount restores the in-progress sale.
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem("pos_bar_cart_last") : null;
+      return raw ? (JSON.parse(raw) as CartItem[]) : [];
+    } catch { return []; }
+  });
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [cartOpen, setCartOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [parkingOpen, setParkingOpen] = useState(false);
 
+  // Tenant-scoped cart persistence: re-hydrate when tenant becomes known.
+  useEffect(() => {
+    if (!cartKey) return;
+    try {
+      const raw = localStorage.getItem(cartKey);
+      if (raw) setCart(JSON.parse(raw) as CartItem[]);
+    } catch { /* ignore */ }
+  }, [cartKey]);
+
+  // Persist cart on every change so a refresh, SW update or accidental
+  // navigation does not lose the in-progress sale.
+  useEffect(() => {
+    try {
+      if (cartKey) localStorage.setItem(cartKey, JSON.stringify(cart));
+      localStorage.setItem("pos_bar_cart_last", JSON.stringify(cart));
+    } catch { /* quota / private mode */ }
+  }, [cart, cartKey]);
+
   useEffect(() => {
     if (!tenantId) return;
-    supabase.from("products").select("id, name, price, sku, stock, category, image_url").eq("tenant_id", tenantId).eq("is_active", true).order("category").then(({ data }) => {
-      if (data) setProducts(data);
-    });
+    let cancelled = false;
+    (async () => {
+      // 1. Try network first
+      if (navigator.onLine) {
+        const { data, error } = await supabase
+          .from("products")
+          .select("id, name, price, sku, stock, category, image_url")
+          .eq("tenant_id", tenantId)
+          .eq("is_active", true)
+          .order("category");
+        if (!cancelled && data && !error) {
+          setProducts(data);
+          // Snapshot to IndexedDB so the POS keeps working offline.
+          void snapshotProducts(
+            tenantId,
+            data.map((p) => ({
+              id: p.id, tenant_id: tenantId, name: p.name, sku: p.sku,
+              price: Number(p.price), stock: Number(p.stock ?? 0),
+              category: p.category ?? null, image_url: p.image_url ?? null,
+              updated_at: Date.now(),
+            }))
+          );
+          return;
+        }
+      }
+      // 2. Fallback: offline snapshot
+      const snap = await offlineDB.products.where({ tenant_id: tenantId }).toArray();
+      if (!cancelled && snap.length) {
+        setProducts(snap.map((p) => ({
+          id: p.id, name: p.name, price: p.price, sku: p.sku,
+          stock: p.stock, category: p.category, image_url: p.image_url,
+        })));
+        toast.info("POS en modo offline — usando catálogo local");
+      }
+    })();
+    return () => { cancelled = true; };
   }, [tenantId]);
 
   const categories = useMemo(() => ["Todos", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[]], [products]);
