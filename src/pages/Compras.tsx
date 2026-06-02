@@ -291,10 +291,10 @@ export default function Compras() {
       <Tabs defaultValue="purchases" className="space-y-4">
         <TabsList>
           <TabsTrigger value="purchases">Órdenes de compra</TabsTrigger>
-          <TabsTrigger value="suppliers">Proveedores</TabsTrigger>
         </TabsList>
 
         <TabsContent value="purchases" className="space-y-4">
+
           <StatRow>
             <MiniStatCard label="Compras" value={stats.totalPurchases} icon={ShoppingCart} tone="primary" />
             <MiniStatCard label="Borradores" value={stats.pendingDraft} icon={FileText} tone={stats.pendingDraft > 0 ? "warning" : "default"} />
