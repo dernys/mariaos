@@ -1,7 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { toast } from "sonner";
 
 // PWA registration with iframe/preview guard
 const isInIframe = (() => {
