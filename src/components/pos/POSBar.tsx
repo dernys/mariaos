@@ -162,7 +162,14 @@ export function POSBar() {
     return ms && mc;
   }), [products, search, activeCategory]);
 
-  const handleSaleComplete = () => { setCart([]); setCartOpen(false); };
+  const handleSaleComplete = () => {
+    setCart([]);
+    setCartOpen(false);
+    try {
+      if (cartKey) localStorage.removeItem(cartKey);
+      localStorage.removeItem("pos_bar_cart_last");
+    } catch { /* ignore */ }
+  };
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
