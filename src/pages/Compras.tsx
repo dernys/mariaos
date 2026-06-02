@@ -291,10 +291,10 @@ export default function Compras() {
       <Tabs defaultValue="purchases" className="space-y-4">
         <TabsList>
           <TabsTrigger value="purchases">Órdenes de compra</TabsTrigger>
-          <TabsTrigger value="suppliers">Proveedores</TabsTrigger>
         </TabsList>
 
         <TabsContent value="purchases" className="space-y-4">
+
           <StatRow>
             <MiniStatCard label="Compras" value={stats.totalPurchases} icon={ShoppingCart} tone="primary" />
             <MiniStatCard label="Borradores" value={stats.pendingDraft} icon={FileText} tone={stats.pendingDraft > 0 ? "warning" : "default"} />
@@ -403,58 +403,6 @@ export default function Compras() {
             </Table>
             <TablePagination page={purchasesTable.page} pageSize={purchasesTable.pageSize} total={purchasesTable.total}
               onPageChange={purchasesTable.setPage} onPageSizeChange={purchasesTable.setPageSize} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="suppliers" className="space-y-4">
-          <StatRow>
-            <MiniStatCard label="Proveedores" value={suppliers.length} icon={Truck} tone="primary" />
-            <MiniStatCard label="Con saldo" value={suppliers.filter((s) => Number(s.balance || 0) > 0).length} icon={Wallet} tone="warning" />
-            <MiniStatCard label="Total por pagar" value={`$${suppliers.reduce((a, s) => a + Math.max(0, Number(s.balance) || 0), 0).toLocaleString()}`} icon={DollarSign} tone="destructive" />
-          </StatRow>
-
-          <TableToolbar
-            search={suppliersTable.search}
-            onSearchChange={suppliersTable.setSearch}
-            searchPlaceholder="Buscar proveedor..."
-            filters={[{
-              key: "debt", label: "Saldo", value: suppliersTable.filters.debt || "__all__",
-              onChange: (v) => suppliersTable.setFilter("debt", v),
-              options: [{ value: "with", label: "Con saldo" }, { value: "without", label: "Sin saldo" }],
-            }]}
-            rightSlot={
-              <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpenSup(true)}>
-                <Plus className="h-3.5 w-3.5" /> Nuevo Proveedor
-              </Button>
-            }
-          />
-
-          <div className="bg-card rounded-xl shadow-card border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Nombre</TableHead>
-                  <TableHead className="text-xs">Teléfono</TableHead>
-                  <TableHead className="text-xs">Email</TableHead>
-                  <TableHead className="text-xs">Saldo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {suppliersTable.paged.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell className="text-xs font-medium">{s.name}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{s.phone || "—"}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{s.email || "—"}</TableCell>
-                    <TableCell className="text-xs font-heading font-bold">${Number(s.balance || 0).toFixed(2)}</TableCell>
-                  </TableRow>
-                ))}
-                {suppliersTable.total === 0 && (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-xs text-muted-foreground">Sin proveedores</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-            <TablePagination page={suppliersTable.page} pageSize={suppliersTable.pageSize} total={suppliersTable.total}
-              onPageChange={suppliersTable.setPage} onPageSizeChange={suppliersTable.setPageSize} />
           </div>
         </TabsContent>
       </Tabs>
