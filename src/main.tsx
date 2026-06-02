@@ -23,17 +23,16 @@ if (isInIframe || isPreviewHost) {
     // so a live POS sale never gets interrupted by a forced reload.
     const updateSW = registerSW({
       immediate: true,
-      onNeedRefresh() {
+      async onNeedRefresh() {
+        const { toast } = await import("sonner");
         toast("Nueva versión disponible", {
           description: "Aplicar ahora puede cerrar ventanas abiertas.",
           duration: Infinity,
-          action: {
-            label: "Actualizar",
-            onClick: () => updateSW(true),
-          },
+          action: { label: "Actualizar", onClick: () => updateSW(true) },
         });
       },
-      onOfflineReady() {
+      async onOfflineReady() {
+        const { toast } = await import("sonner");
         toast.success("Listo para usar sin conexión");
       },
     });
