@@ -10,6 +10,7 @@ import { ParkedSalesDialog } from "./ParkedSalesDialog";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineDB, snapshotProducts } from "@/lib/offline/db";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { toast } from "sonner";
 
