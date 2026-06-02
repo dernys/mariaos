@@ -122,7 +122,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Devoluciones", url: "/devoluciones", icon: Undo2 },
       { title: "Facturas", url: "/facturas", icon: FileText },
       { title: "Cuentas (CxC/CxP)", url: "/cuentas", icon: Wallet },
-      { title: "Consignaciones", url: "/consignaciones", icon: Package },
+      { title: "Consignaciones", url: "/consignaciones", icon: Package, types: ["empresa"] },
     ],
   },
   {
@@ -145,9 +145,9 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Online",
     items: [
-      { title: "Pedidos Online", url: "/pedidos-online", icon: ShoppingBag },
-      { title: "Delivery", url: "/delivery", icon: Bike },
-      { title: "Marketplace", url: "/marketplace", icon: Globe },
+      { title: "Pedidos Online", url: "/pedidos-online", icon: ShoppingBag, types: ["restaurante", "restaurant", "bar", "empresa"] },
+      { title: "Delivery", url: "/delivery", icon: Bike, types: ["restaurante", "restaurant", "bar", "empresa"] },
+      { title: "Marketplace", url: "/marketplace", icon: Globe, types: ["empresa"] },
     ],
   },
 ];
