@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { toast } from "sonner";
 
 // PWA registration with iframe/preview guard
 const isInIframe = (() => {
@@ -18,7 +19,25 @@ if (isInIframe || isPreviewHost) {
   }
 } else if ("serviceWorker" in navigator) {
   import("virtual:pwa-register").then(({ registerSW }) => {
-    registerSW({ immediate: true });
+    // registerType=prompt + sw without auto skipWaiting:
+    // an update is staged but NOT applied until the user accepts,
+    // so a live POS sale never gets interrupted by a forced reload.
+    const updateSW = registerSW({
+      immediate: true,
+      onNeedRefresh() {
+        toast("Nueva versión disponible", {
+          description: "Aplicar ahora puede cerrar ventanas abiertas.",
+          duration: Infinity,
+          action: {
+            label: "Actualizar",
+            onClick: () => updateSW(true),
+          },
+        });
+      },
+      onOfflineReady() {
+        toast.success("Listo para usar sin conexión");
+      },
+    });
   }).catch(() => {});
 }
 

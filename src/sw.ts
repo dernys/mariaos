@@ -6,7 +6,11 @@ import { ExpirationPlugin } from "workbox-expiration";
 
 declare const self: ServiceWorkerGlobalScope;
 
-self.skipWaiting();
+// Do NOT auto-skipWaiting: would force a page reload on every deploy
+// (losing POS cart, open dialogs, etc.). Wait for an explicit user action.
+self.addEventListener("message", (event) => {
+  if ((event.data as any)?.type === "SKIP_WAITING") self.skipWaiting();
+});
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
