@@ -139,6 +139,10 @@ export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, par
         </DialogHeader>
 
         <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Desglose del pago</Label>
+            <Badge variant="outline" className="text-[10px]">{lines.length} {lines.length === 1 ? "línea" : "líneas"}</Badge>
+          </div>
           {lines.map((l, idx) => (
             <div key={l.id} className="grid grid-cols-12 gap-2 items-end p-2 border rounded-lg">
               <div className="col-span-4">
@@ -184,8 +188,9 @@ export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, par
             </div>
           ))}
           <Button variant="outline" size="sm" onClick={addLine} className="gap-1 text-xs w-full">
-            <Plus className="h-3 w-3" /> Agregar línea
+            <Plus className="h-3 w-3" /> Desglosar (agregar método / moneda)
           </Button>
+
 
           <div className="flex items-center justify-between p-2 rounded-lg bg-muted text-xs">
             <span>Total convertido (base):</span>
