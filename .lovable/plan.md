@@ -1,113 +1,149 @@
-# Auditoría ERP/POS GaIA OS — Estado actual y plan de cierre
 
-## 1. Estado actual (resumen de auditoría)
+# Auditoría integral y rearquitectura — MarIA OS
 
-### Módulos sólidos (✅ funcionales end-to-end)
-- **POS adaptativo** (Bar / Restaurante / Empresa) con turnos obligatorios, multi-pago, multi-moneda, devoluciones, cancelaciones con motivo, propinas, cupones.
-- **Inventario**: stock por ubicación (`product_stock`), `inventory_movements` con kardex, transferencias entre tiendas/almacenes, compras + consignación, conteos físicos, recetas con descuento automático, alertas de stock bajo (`notify_low_stock`).
-- **Cuentas/Tesorería**: `account_payments` con triggers que actualizan saldos de clientes/empleados/proveedores y estado de ventas/compras; conciliación bancaria; SEPA XML; previsión de tesorería.
-- **Contabilidad**: plan contable configurable (ES PGC / MX SAT / NIIF), periodos contables, asientos manuales con validación de partida doble, asientos automáticos (venta, compra, nómina, devolución).
-- **RRHH**: expediente digital, contratos, documentos en bucket privado, fichaje con geo + foto, vacaciones, horas extra, nómina con tramos IRPF/SS, recibo PDF, SEPA, portal del empleado.
-- **Marketplace + tienda online**, delivery con zonas/repartidores, fidelización con tiers, facturación con series y CUFE/XML.
-- **Multitenant** con `is_tenant_member` + `is_superadmin` en todas las RLS, selector de contexto para superadmin.
-- **Agentes IA / Command Center / Workflows / Digital Twin / Inventory Intelligence**.
+> Documento de auditoría + roadmap. **No ejecuto cambios hasta aprobación**. Cada fase se aprueba antes de implementarse para no romper multi-tenant, RLS, contabilidad, inventario, marketplace, delivery ni analytics.
 
-### Brechas críticas detectadas (🔴)
-1. **Offline-first NO existe realmente**. Hay un `sw.ts` y PWA instalable, pero:
-   - No hay IndexedDB local para ventas/inventario.
-   - No hay cola de sincronización ni resolución de conflictos.
-   - Una venta sin red **se pierde** (el POS llama directo a `supabase.from(...).insert`).
-   - Apagón a mitad de turno = pérdida de operaciones.
-2. **Cierre de turno automático "1-click"** existe (`calculate_shift_summary`) pero **no genera asiento contable** ni PDF de arqueo, ni dispara cierre fiscal del día.
-3. **Dashboard ejecutivo real**: hay `/analytics` y `/reportes`, pero faltan KPIs consolidados multi-tienda, comparativas, horarios pico, predicción de reposición conectada al motor `inventory-intelligence`.
-4. **Códigos de barras / escáner**: no hay lectura por cámara ni atajo de teclado HID en POS.
-5. **Ventas suspendidas / parking** (dejar venta en espera y retomar) no implementado en POS Empresa/Bar (solo restaurante vía mesas).
-6. **Productos favoritos** por cajero/turno: no existe.
-7. **Impresión de ticket** (`printReceipt.ts`) existe pero no se invoca al cerrar venta en todos los variants.
-8. **Vencimientos / lotes**: hay `consignment_lots` pero no `product_lots` generales con FEFO ni alertas de caducidad.
-9. **Ajustes/pérdidas/roturas**: el tipo de movimiento existe en `inventory_movements` pero no hay UI dedicada para registrarlos rápidamente.
-10. **Reportes exportables**: `exportData.ts` exporta CSV; falta PDF de cierre Z, libro diario, libro mayor, balance de comprobación, estado de resultados.
-11. **Auditoría**: existe `activity_log` pero no se escribe consistentemente desde todos los flujos (ej. cambios de precio, ediciones de productos).
-12. **Concurrencia y rendimiento**: queries del POS no usan paginación virtual; con miles de productos el grid se degrada.
-13. **CUP/USD/EUR**: hay multi-moneda pero **no hay tabla de tasas históricas** — los reportes históricos se distorsionan cuando cambia la tasa.
+---
 
-## 2. Plan priorizado (10 fases ejecutables)
+## 1. Estado actual (auditoría)
 
-```text
-FASE A — Resiliencia ante apagón (CRÍTICA)
-  A1 Cola offline con IndexedDB (Dexie) para ventas + pagos
-  A2 Worker de sincronización con reintentos + backoff exponencial
-  A3 Detector online/offline + banner persistente + contador de pendientes
-  A4 Idempotencia server-side (client_uuid en sales/account_payments)
-  A5 Snapshot local de productos/precios/stock para POS offline
+### 1.1 Inventario del sistema
+- **53 páginas** en `src/pages/`, **41 migraciones** SQL, ~30 funciones SECURITY DEFINER, 11 edge functions.
+- Verticales soportados: `bar`, `restaurant`, `empresa` (sin BR localizado).
+- Multi-tenant funcional vía `tenants` + `tenant_users` + `is_tenant_member()` + `is_superadmin()` en RLS.
 
-FASE B — POS profesional completo
-  B1 Escáner de códigos (cámara + HID) + búsqueda por SKU/EAN
-  B2 Ventas suspendidas (parking) en Bar y Empresa
-  B3 Favoritos por cajero (tabla user_pos_favorites)
-  B4 Impresión automática ticket 58/80mm al cerrar venta
-  B5 Atajos de teclado (F1 cobrar, F2 buscar, F3 cliente, etc.)
+### 1.2 Flujos que SÍ funcionan end-to-end ✅
+| Flujo | Trigger / función |
+|---|---|
+| Venta POS → asiento contable | `trg_post_sale_journal` → `post_sale_journal_entry` |
+| Venta crédito → balance cliente/empleado | `apply_sale_credit_balance` |
+| Cobro / pago → balance + actualiza venta/compra | `register_account_payment` + `apply_account_payment_balance` |
+| Compra recibida → stock + asiento | `receive_purchase` + `trg_post_purchase_journal` |
+| Cierre de turno → arqueo | `calculate_shift_summary` |
+| Devolución con restock | `process_sale_return` |
+| Transferencia entre almacenes | `receive_stock_transfer` |
+| Fidelización auto al pagar | `trg_auto_award_loyalty` |
+| Sync offline POS idempotente | `sync_offline_sale` (client_uuid) |
 
-FASE C — Cierre Z automático profesional
-  C1 RPC close_shift_z: arqueo + asiento contable + PDF + bloqueo
-  C2 PDF cierre Z con desglose por método, cajero, IVA, devoluciones
-  C3 Email automático al dueño con resumen del día
-  C4 Comparativa vs día anterior y promedio 7d
+### 1.3 Problemas detectados 🔴
 
-FASE D — Inventario inteligente avanzado
-  D1 Tabla product_lots con FEFO + alertas de caducidad
-  D2 UI rápida de ajustes/mermas/roturas con foto y motivo
-  D3 Reposición sugerida (consumo medio + lead time + stock seguridad)
-  D4 ABC analysis automático mensual
+**Críticos (rompen integridad):**
+1. **`process_sale_stock` no se llama si el turno no tiene `store_id`** → ventas sin descuento de stock. (Ya identificado en blueprint anterior — sigue sin parche.)
+2. **Nómina no genera CxP** del empleado: `post_payroll_journal_entry` saltea cuando falta plan contable, y no llama `register_account_payment('employee', …, direction='out')`. `employees.balance` queda en 0.
+3. **CxC / CxP sin desglose por moneda real**: `account_payments` guarda `amount_in_base` pero `customers.balance / suppliers.balance / employees.balance` son escalares — no hay vista por moneda origen ni reevaluación por diferencia de cambio.
+4. **`process_sale_stock` ambigüedad de columnas** ya corregida; revisar que `compute_payroll_full` no tenga el mismo patrón en `hours_worked` (alias de columna vs variable). Confirmado: la función actual usa variables `_hours` — OK. Pero el reporte del usuario seguía apareciendo; raíz probable: vista o función auxiliar de payroll que aún referencia `hours_worked` sin calificar.
+5. **`tenants.business_type`** acepta strings libres (`restaurant`, `restaurante`, `bar`, `empresa`). El sidebar y POS hacen comparaciones por string — riesgo de divergencia. Falta enum.
+6. **`suppliers` no está en types generados** → casts `(as any)` en frontend.
 
-FASE E — Dashboard ejecutivo
-  E1 KPIs consolidados multi-tienda en /index
-  E2 Horarios pico (heatmap por hora/día)
-  E3 Top productos, top clientes, productos sin movimiento
-  E4 Comparativa entre tiendas + drill-down
+**Altos:**
+7. **Dashboard sin Realtime** — KPIs estáticos hasta refresh.
+8. **`RRHHEnterprise.tsx` es código muerto** (no enrutado).
+9. **Sidebar**: `Almacenes`, `Transferencias`, `Tiendas`, `Operaciones` no tienen filtro `types` — aparecen en bares donde no aplican igual.
+10. **Marketplace** permite pedidos sin cuenta (`upsert_customer_for_online_order` crea cliente fantasma con `'Cliente Marketplace'`).
+11. **Delivery**: no hay tabla `delivery_drivers` con documentos/licencia/vehículo, ni estados (`available`, `picking`, `in_route`…), ni tracking GPS, ni clasificación bronce/plata/oro.
+12. **Recetas / BOM**: tablas existen pero no hay descuento automático por receta al cerrar venta de plato preparado en restaurante (sólo descuenta el producto vendido).
+13. **No hay `cost_centers`** ni dimensión analítica en `journal_entry_lines`.
+14. **No hay `budgets`** (presupuestos por sucursal/departamento/mes).
+15. **Plan contable**: sólo `es_pgc`, `mx_sat`, `niif_generic`. Faltan **`cu_onat` y `br_sped`**.
+16. **Multimoneda**: `exchange_rates` existe pero no se reevalúan balances; asientos no almacenan `(currency_origin, fx_rate, base_currency)` consistentemente en cada línea.
+17. **Auditoría**: `activity_log` registra eventos puntuales, pero **no captura `old_value` / `new_value` ni IP / device** sistemáticamente.
 
-FASE F — Reportes contables exportables PDF
-  F1 Libro diario PDF
-  F2 Libro mayor por cuenta PDF
-  F3 Balance de comprobación PDF
-  F4 Estado de resultados + Balance general PDF
+**Medios:**
+18. Duplicidad: `RRHH.tsx` y `RRHHEnterprise.tsx`; pestaña "Proveedores" eliminada de Compras pero quedan helpers sin uso.
+19. Tablas con poco uso aparente: `ai_agents` aprovisionada por trigger pero pocos lugares la consumen; `decisions`, `digital_twin`, `risk_engine` — requieren auditoría de uso real.
+20. `RRHH` flujo: `compute_payroll_full` usa fallback fijo (15% IRPF, 6.35% SS, 29.8% SS empresa) si no hay brackets — correcto para ES pero **inválido para CU/BR**.
 
-FASE G — Multi-moneda histórica
-  G1 Tabla exchange_rates_history con vigencia por fecha
-  G2 Recalculo de reportes usando tasa de la fecha de operación
+---
 
-FASE H — Auditoría universal
-  H1 Trigger genérico audit_log en tablas críticas (products, prices, employees, sales)
-  H2 Vista /auditoria con filtros y export
+## 2. Principios de rearquitectura
 
-FASE I — Rendimiento
-  I1 Virtualización del grid POS (>1000 productos)
-  I2 Índices en (tenant_id, created_at) en sales/movements
-  I3 React Query con staleTime + invalidación selectiva
-  I4 Lazy import por ruta de páginas pesadas (Agents, DigitalTwin, etc.)
+1. **Toda operación de negocio genera 5 movimientos** (cuando aplique):
+   `operativo → financiero (tesorería) → contable (asiento) → analítico (KPI realtime) → auditoría (old/new)`.
+2. **Una sola fuente de verdad por dominio**: stock = `product_stock` + `inventory_movements`; deuda = `account_payments` agregado; contabilidad = `journal_entries`.
+3. **Idempotencia y trazabilidad**: todo flujo asíncrono usa `client_uuid` o `reference_(type,id)`.
+4. **Multi-tenant + RLS estricto** vía `is_tenant_member()`; nada de `auth.uid()` en CHECKs.
+5. **Multimoneda en origen**: cada movimiento guarda `(currency, amount, fx_rate, amount_base)`; conversión sólo para reporting.
+6. **Vertical-aware**: enum `business_type` + matriz módulo×vertical centralizada (no strings dispersos en sidebar).
 
-FASE J — Escalabilidad / API externa
-  J1 Edge function pública /api/v1/* con API keys por tenant
-  J2 Webhooks de eventos (sale.created, stock.low, shift.closed)
-  J3 Rate limiting básico
-```
+---
 
-## 3. Recomendación de ejecución
+## 3. Roadmap por fases (cada fase = 1 PR aprobable)
 
-El alcance total equivale a **8-12 sesiones de trabajo**. Propongo arrancar **inmediatamente por Fase A (resiliencia offline)** porque es el mayor riesgo operativo en Cuba — un apagón hoy pierde ventas. Luego B (POS pro) y C (cierre Z automático) que son los que más tiempo ahorran al dueño cada día.
+### Fase 0 — Saneamiento (no rompe nada) 🔴
+- Crear enum `business_type` (`bar`,`restaurant`,`empresa`) + migración de datos existentes; remplazar comparaciones por string.
+- Añadir `suppliers` y tablas faltantes a tipos generados (vía migración trivial / `select`).
+- Filtros `types` en sidebar para Almacenes / Transferencias / Tiendas / Operaciones.
+- Eliminar `RRHHEnterprise.tsx` y código muerto verificado.
+- Auditar `compute_payroll_full` y cualquier vista/función con `hours_worked` no calificado; calificar con alias.
 
-## 4. Detalles técnicos (Fase A — primera entrega)
+### Fase 1 — Integridad de flujos críticos 🔴
+- **Stock siempre se descuenta**: `process_sale_stock` recibe fallback `location_type='tenant'`, `location_id=tenant_id` cuando turno no tiene store; añadir `location_type='virtual'` para no romper FK.
+- **Nómina genera CxP**: al cerrar nómina, `register_account_payment('employee', emp_id, net_pay, direction='out', reference=('payroll', payroll_id))` si `paid_at` es null deja pendiente; cuando se paga, registra el cobro.
+- **Recetas descuentan ingredientes**: trigger `process_sale_recipe_consumption` por cada `sale_item` con receta activa (sólo restaurant/bar).
+- **Dashboard realtime**: suscripción a `sales`, `purchases`, `account_payments`, `inventory_movements` filtradas por tenant.
 
-- `bun add dexie` → wrapper en `src/lib/offline/db.ts` con stores: `pending_sales`, `pending_payments`, `product_snapshot`, `customer_snapshot`.
-- Hook `useOfflineQueue` que intercepta inserts del POS: si `navigator.onLine === false` o el `insert` falla con red, encola; si online, intenta enviar y en éxito limpia.
-- Migration: añadir `client_uuid uuid unique` a `sales`, `account_payments`, `sale_items` para idempotencia. RPC `sync_offline_sale(payload jsonb)` que hace upsert por `client_uuid`.
-- Service Worker (`src/sw.ts`) ya en NetworkFirst; añadir registro de `BackgroundSync` (fallback a polling cada 30s si el navegador no lo soporta — Safari iOS).
-- UI: badge persistente "📡 N operaciones pendientes" en `AppLayout`, con detalle clickeable.
+### Fase 2 — Contabilidad empresarial 🟠
+- **Centros de costo**: tabla `cost_centers` + columna `cost_center_id` en `journal_entry_lines` y `sales`/`purchases`.
+- **Presupuestos**: `budgets` + `budget_lines` por cuenta/CC/mes; vista de ejecución vs real.
+- **Estado de Resultados / Balance / Flujo de Caja** parametrizables por estructura (no hardcoded).
+- **Reversión de asientos** ya existe; añadir **ajustes de cierre** + **asientos recurrentes**.
+- **Plan `cu_onat`** (ONAT Cuba) y **`br_sped`** (SPED Brasil) en `import_chart_template`.
+- **Diario / Mayor / Sumas y saldos** como reports SQL parametrizados (no recalcular en cliente).
 
-## 5. Qué necesito confirmar antes de codificar
+### Fase 3 — Multimoneda real 🟠
+- `exchange_rates(tenant_id, from_currency, to_currency, rate, valid_from)` con histórico.
+- `account_payments` y `journal_entry_lines` guardan `(currency, amount, fx_rate)` siempre.
+- Vista materializada `party_balance_by_currency` para CxC/CxP desglosados.
+- Función `revalue_fx(date)` que genera asiento de diferencia de cambio.
 
-1. ¿Arranco por **Fase A (offline)** o prefieres otro orden?
-2. ¿Apruebas añadir dependencia **Dexie** (~25 KB gz) para IndexedDB?
-3. ¿Cierre Z (Fase C) debe **bloquear** edición posterior del turno o solo dejar registro?
+### Fase 4 — Restaurantes / Bares profesional 🟠
+- **Recetas compuestas** (semielaborados): `recipe_items` puede referenciar otra receta.
+- **Variantes** (`product_variants` + modificadores con delta de costo/precio e impacto inventario).
+- **Combos** con BOM propio (`combo_items` → productos o recetas).
+- **Escandallo**: vista `recipe_costing` con costo alimento, costo bebida, margen, %.
 
-Confirma y ejecuto Fase A completa en la siguiente respuesta.
+### Fase 5 — Marketplace v2 🟡
+- Forzar `auth.user` en checkout (sin guest checkout).
+- Catálogo público con `stock_disponible` (= stock − reservas) y ETA.
+- Geolocalización: `customer_addresses(lat,lng)` + función `nearest_store(lat,lng)`.
+- Recomendaciones: SQL básico (productos co-comprados) + hook para Lovable AI.
+
+### Fase 6 — Delivery tipo Uber 🟡
+- `delivery_drivers` (documentos, licencia, vehículo, seguro, estado validación).
+- `driver_status` enum + `driver_locations` (lat,lng,heading,speed,ts) con Realtime.
+- Asignación automática por cercanía (función + edge function).
+- Clasificación: vista `driver_tier` calculada por entregas/tiempo/rating/incidencias.
+- Dashboard mapa con `mapbox-gl` o `leaflet`.
+
+### Fase 7 — Auditoría y seguridad 🟠
+- Trigger genérico `audit_trigger()` en tablas críticas (`sales`,`purchases`,`payroll_runs`,`accounting_*`,`products`,`customers`,`suppliers`,`employees`) que escribe en `audit_log(table, op, old, new, user, ip, ua, ts)`.
+- IP/UA capturados desde edge function `audit-logs` (ya existe — extender).
+- 2FA opcional vía Supabase MFA (no romper login actual).
+
+### Fase 8 — Analytics realtime + QA 🟡
+- Migrar Dashboard, Reportes, InventoryIntelligence a TanStack Query + canales Realtime.
+- Suite Vitest mínima para funciones críticas (`process_sale_stock`, `register_account_payment`, `compute_payroll_full`).
+- Playwright E2E: venta POS → asiento, compra → stock, nómina → CxP.
+
+---
+
+## 4. Informe QA final (entregable al cierre)
+
+Al terminar cada fase produzco un `AUDIT_REPORT_FASE_N.md` con:
+1. Problemas resueltos.
+2. Tests pasados / fallidos.
+3. Migraciones aplicadas.
+4. RLS validada por tabla.
+5. Riesgos residuales.
+6. Pendiente para la siguiente fase.
+
+---
+
+## 5. Decisiones que necesito de ti antes de empezar
+
+1. **¿Por qué fase empezamos?** Recomiendo **Fase 0 + Fase 1** juntas (saneamiento + integridad crítica) — es el bloque que cierra los bugs reales sin meter scope nuevo.
+2. **País prioritario** para el plan contable nuevo: ¿Cuba (`cu_onat`) o Brasil (`br_sped`) primero?
+3. **Delivery con mapas**: ¿Mapbox (requiere `MAPBOX_TOKEN`) o Leaflet+OSM (gratis, menos pulido)?
+4. **Marketplace**: ¿forzamos cuenta obligatoria ya, o mantenemos guest checkout opcional durante migración?
+
+Respóndeme esos 4 puntos y arranco con la fase elegida (una sola fase por iteración, con migración + código + verificación).
