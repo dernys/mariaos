@@ -6743,6 +6743,17 @@ export type Database = {
         Args: { p_return_id: string }
         Returns: string
       }
+      process_recipe_consumption: {
+        Args: {
+          p_location_id: string
+          p_location_type: string
+          p_product_id: string
+          p_qty: number
+          p_sale_id: string
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
       process_sale_return: {
         Args: {
           p_location_id: string

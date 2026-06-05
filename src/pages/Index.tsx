@@ -64,51 +64,71 @@ const Dashboard = () => {
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [recent, setRecent] = useState<SaleRow[]>([]);
 
+  const loadData = useMemo(() => async (tid: string) => {
+    const today = startOfDay();
+    const yesterday = addDays(today, -1);
+    const sevenAgo = addDays(today, -6);
+    const thirtyAgo = addDays(today, -29);
+
+    const [salesRes, items30Res, lowRes, storesRes, custRes, recentRes] = await Promise.all([
+      supabase.from("sales").select("id,total,status,created_at,store_id,customer_id")
+        .eq("tenant_id", tid).gte("created_at", sevenAgo.toISOString())
+        .neq("status","cancelled").order("created_at",{ascending:false}),
+      supabase.from("sale_items").select("product_id,product_name,qty,total,created_at,sale:sales!inner(tenant_id,status,created_at)")
+        .gte("created_at", thirtyAgo.toISOString()),
+      supabase.from("products").select("id,name,stock,min_stock").eq("tenant_id", tid)
+        .eq("is_active", true).gt("min_stock", 0).limit(200),
+      supabase.from("stores").select("id,name").eq("tenant_id", tid),
+      supabase.from("customers").select("id,name").eq("tenant_id", tid).limit(500),
+      supabase.from("sales").select("id,total,status,created_at,store_id,customer_id")
+        .eq("tenant_id", tid).order("created_at",{ascending:false}).limit(8),
+    ]);
+
+    const sales = (salesRes.data ?? []) as SaleRow[];
+    const yest = sales.filter(s => new Date(s.created_at) >= yesterday && new Date(s.created_at) < today);
+    const tod = sales.filter(s => new Date(s.created_at) >= today);
+    setSales7d(sales);
+    setSalesToday(tod);
+    setSalesYesterday(yest);
+
+    const allItems = ((items30Res.data ?? []) as any[]).filter(r => r.sale?.tenant_id === tid && r.sale?.status !== "cancelled");
+    setItems30d(allItems);
+    setItemsToday(allItems.filter(r => new Date(r.created_at) >= today));
+
+    const low = ((lowRes.data ?? []) as ProductLow[]).filter(p => p.stock <= p.min_stock).slice(0, 6);
+    setLowStock(low);
+    setStores((storesRes.data ?? []) as StoreRow[]);
+    setCustomers((custRes.data ?? []) as CustomerRow[]);
+    setRecent((recentRes.data ?? []) as SaleRow[]);
+  }, []);
+
   useEffect(() => {
     if (!tenantId) return;
     let alive = true;
-    (async () => {
-      setLoading(true);
-      const today = startOfDay();
-      const yesterday = addDays(today, -1);
-      const sevenAgo = addDays(today, -6);
-      const thirtyAgo = addDays(today, -29);
-
-      const [salesRes, items30Res, lowRes, storesRes, custRes, recentRes] = await Promise.all([
-        supabase.from("sales").select("id,total,status,created_at,store_id,customer_id")
-          .eq("tenant_id", tenantId).gte("created_at", sevenAgo.toISOString())
-          .neq("status","cancelled").order("created_at",{ascending:false}),
-        supabase.from("sale_items").select("product_id,product_name,qty,total,created_at,sale:sales!inner(tenant_id,status,created_at)")
-          .gte("created_at", thirtyAgo.toISOString()),
-        supabase.from("products").select("id,name,stock,min_stock").eq("tenant_id", tenantId)
-          .eq("is_active", true).gt("min_stock", 0).limit(200),
-        supabase.from("stores").select("id,name").eq("tenant_id", tenantId),
-        supabase.from("customers").select("id,name").eq("tenant_id", tenantId).limit(500),
-        supabase.from("sales").select("id,total,status,created_at,store_id,customer_id")
-          .eq("tenant_id", tenantId).order("created_at",{ascending:false}).limit(8),
-      ]);
-
+    let debounce: ReturnType<typeof setTimeout> | null = null;
+    const refresh = () => {
       if (!alive) return;
-      const sales = (salesRes.data ?? []) as SaleRow[];
-      const yest = sales.filter(s => new Date(s.created_at) >= yesterday && new Date(s.created_at) < today);
-      const tod = sales.filter(s => new Date(s.created_at) >= today);
-      setSales7d(sales);
-      setSalesToday(tod);
-      setSalesYesterday(yest);
+      if (debounce) clearTimeout(debounce);
+      debounce = setTimeout(() => { if (alive) loadData(tenantId); }, 400);
+    };
 
-      const allItems = ((items30Res.data ?? []) as any[]).filter(r => r.sale?.tenant_id === tenantId && r.sale?.status !== "cancelled");
-      setItems30d(allItems);
-      setItemsToday(allItems.filter(r => new Date(r.created_at) >= today));
+    setLoading(true);
+    loadData(tenantId).finally(() => { if (alive) setLoading(false); });
 
-      const low = ((lowRes.data ?? []) as ProductLow[]).filter(p => p.stock <= p.min_stock).slice(0, 6);
-      setLowStock(low);
-      setStores((storesRes.data ?? []) as StoreRow[]);
-      setCustomers((custRes.data ?? []) as CustomerRow[]);
-      setRecent((recentRes.data ?? []) as SaleRow[]);
-      setLoading(false);
-    })();
-    return () => { alive = false; };
-  }, [tenantId]);
+    // Realtime: cualquier venta, pago o movimiento de inventario refresca el dashboard
+    const channel = supabase
+      .channel(`dashboard:${tenantId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sales", filter: `tenant_id=eq.${tenantId}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "account_payments", filter: `tenant_id=eq.${tenantId}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "inventory_movements", filter: `tenant_id=eq.${tenantId}` }, refresh)
+      .subscribe();
+
+    return () => {
+      alive = false;
+      if (debounce) clearTimeout(debounce);
+      supabase.removeChannel(channel);
+    };
+  }, [tenantId, loadData]);
 
   // KPIs
   const totalToday = useMemo(() => salesToday.reduce((s,x)=>s+Number(x.total||0),0), [salesToday]);
