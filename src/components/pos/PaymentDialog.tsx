@@ -322,11 +322,13 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         if (payErr) throw payErr;
       }
 
-      if (openShift.store_id && cart.some((c) => c.productId)) {
+      if (cart.some((c) => c.productId)) {
+        // Si no hay tienda asignada al turno, usar el tenant como ubicación virtual.
+        const useStore = !!openShift.store_id;
         const { error: stockErr } = await supabase.rpc("process_sale_stock", {
           p_sale_id: sale.id,
-          p_location_type: "store",
-          p_location_id: openShift.store_id,
+          p_location_type: useStore ? "store" : "tenant",
+          p_location_id: useStore ? openShift.store_id : (tu?.tenant_id as string),
         });
         if (stockErr) {
           console.error("Stock RPC error:", stockErr);
