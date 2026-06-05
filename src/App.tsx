@@ -59,7 +59,7 @@ const Conteos = lazy(() => import("./pages/Conteos"));
 const InventoryIntelligence = lazy(() => import("./pages/InventoryIntelligence"));
 const Operaciones = lazy(() => import("./pages/Operaciones"));
 const Tesoreria = lazy(() => import("./pages/Tesoreria"));
-const RRHHEnterprise = lazy(() => import("./pages/RRHHEnterprise"));
+
 const Developers = lazy(() => import("./pages/Developers"));
 const PortalEmpleado = lazy(() => import("./pages/PortalEmpleado"));
 
