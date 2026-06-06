@@ -147,3 +147,20 @@ Al terminar cada fase produzco un `AUDIT_REPORT_FASE_N.md` con:
 4. **Marketplace**: ¿forzamos cuenta obligatoria ya, o mantenemos guest checkout opcional durante migración?
 
 Respóndeme esos 4 puntos y arranco con la fase elegida (una sola fase por iteración, con migración + código + verificación).
+
+---
+
+## ✅ Fase 2 completada (2026-06-06)
+
+**Migración:**
+- Tablas: `cost_centers`, `budgets`, `budget_lines` (con RLS por tenant y Realtime).
+- Columna `cost_center_id` añadida a `journal_entry_lines`, `sales`, `purchases`.
+- Vistas con `security_invoker`: `trial_balance_view`, `general_ledger_view`, `budget_execution_view`.
+- Plantilla contable **`cu_onat`** (Cuba — ONAT) añadida a `import_chart_template` con catálogo MIPYMES/TCP (cajas multimoneda CUP/USD/EUR/MLC, ONAT tributos, impuesto fuerza de trabajo 5%, etc.).
+
+**Frontend:**
+- `CostCentersTab` — CRUD jerárquico de centros de costo.
+- `BudgetsTab` — presupuestos con líneas mensuales por cuenta+CC, ejecución vs real con KPIs y variación.
+- Pestañas integradas en `Contabilidad.tsx`; opción Cuba-ONAT añadida al selector de plantillas.
+
+**Próxima:** Fase 3 — Multimoneda real (exchange_rates histórico, revalue_fx, party_balance_by_currency).

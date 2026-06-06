@@ -135,6 +135,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "accounting_accounts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "trial_balance_view"
+            referencedColumns: ["account_id"]
+          },
+          {
             foreignKeyName: "accounting_accounts_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -520,6 +527,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bank_accounts_accounting_account_id_fkey"
+            columns: ["accounting_account_id"]
+            isOneToOne: false
+            referencedRelation: "trial_balance_view"
+            referencedColumns: ["account_id"]
+          },
+          {
             foreignKeyName: "bank_accounts_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -746,6 +760,145 @@ export type Database = {
           },
           {
             foreignKeyName: "bank_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_lines: {
+        Row: {
+          account_id: string
+          amount: number
+          budget_id: string
+          cost_center_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          period_month: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          amount?: number
+          budget_id: string
+          cost_center_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          period_month: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          budget_id?: string
+          cost_center_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          period_month?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trial_balance_view"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "budget_lines_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_lines_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_lines_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_lines_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budgets: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          period_type: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          period_type?: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          period_type?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budgets_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
@@ -1051,6 +1204,73 @@ export type Database = {
             columns: ["lot_id"]
             isOneToOne: false
             referencedRelation: "consignment_lots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cost_centers: {
+        Row: {
+          code: string
+          created_at: string
+          department: string | null
+          id: string
+          is_active: boolean
+          manager_employee_id: string | null
+          name: string
+          notes: string | null
+          parent_id: string | null
+          store_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          department?: string | null
+          id?: string
+          is_active?: boolean
+          manager_employee_id?: string | null
+          name: string
+          notes?: string | null
+          parent_id?: string | null
+          store_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          department?: string | null
+          id?: string
+          is_active?: boolean
+          manager_employee_id?: string | null
+          name?: string
+          notes?: string | null
+          parent_id?: string | null
+          store_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cost_centers_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cost_centers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cost_centers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2459,8 +2679,22 @@ export type Database = {
             foreignKeyName: "journal_entries_reversed_by_fkey"
             columns: ["reversed_by"]
             isOneToOne: false
+            referencedRelation: "general_ledger_view"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversed_by_fkey"
+            columns: ["reversed_by"]
+            isOneToOne: false
             referencedRelation: "journal_entries"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reverses_fkey"
+            columns: ["reverses"]
+            isOneToOne: false
+            referencedRelation: "general_ledger_view"
+            referencedColumns: ["entry_id"]
           },
           {
             foreignKeyName: "journal_entries_reverses_fkey"
@@ -2488,6 +2722,7 @@ export type Database = {
       journal_entry_lines: {
         Row: {
           account_id: string
+          cost_center_id: string | null
           created_at: string
           credit: number
           debit: number
@@ -2497,6 +2732,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          cost_center_id?: string | null
           created_at?: string
           credit?: number
           debit?: number
@@ -2506,6 +2742,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          cost_center_id?: string | null
           created_at?: string
           credit?: number
           debit?: number
@@ -2520,6 +2757,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounting_accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trial_balance_view"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "general_ledger_view"
+            referencedColumns: ["entry_id"]
           },
           {
             foreignKeyName: "journal_entry_lines_entry_id_fkey"
@@ -3474,6 +3732,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_runs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "general_ledger_view"
+            referencedColumns: ["entry_id"]
           },
           {
             foreignKeyName: "payroll_runs_journal_entry_id_fkey"
@@ -4447,6 +4712,7 @@ export type Database = {
       purchases: {
         Row: {
           amount_paid: number
+          cost_center_id: string | null
           created_at: string
           created_by: string | null
           destination_id: string | null
@@ -4469,6 +4735,7 @@ export type Database = {
         }
         Insert: {
           amount_paid?: number
+          cost_center_id?: string | null
           created_at?: string
           created_by?: string | null
           destination_id?: string | null
@@ -4491,6 +4758,7 @@ export type Database = {
         }
         Update: {
           amount_paid?: number
+          cost_center_id?: string | null
           created_at?: string
           created_by?: string | null
           destination_id?: string | null
@@ -4512,6 +4780,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "purchases_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchases_supplier_id_fkey"
             columns: ["supplier_id"]
@@ -4891,6 +5166,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           client_uuid: string | null
+          cost_center_id: string | null
           created_at: string
           customer_id: string | null
           employee_id: string | null
@@ -4914,6 +5190,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           client_uuid?: string | null
+          cost_center_id?: string | null
           created_at?: string
           customer_id?: string | null
           employee_id?: string | null
@@ -4937,6 +5214,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           client_uuid?: string | null
+          cost_center_id?: string | null
           created_at?: string
           customer_id?: string | null
           employee_id?: string | null
@@ -4955,6 +5233,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sales_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sales_customer_id_fkey"
             columns: ["customer_id"]
@@ -6305,6 +6590,142 @@ export type Database = {
       }
     }
     Views: {
+      budget_execution_view: {
+        Row: {
+          account_code: string | null
+          account_id: string | null
+          account_name: string | null
+          account_type: string | null
+          actual: number | null
+          budget_id: string | null
+          budget_name: string | null
+          budgeted: number | null
+          cost_center_code: string | null
+          cost_center_id: string | null
+          cost_center_name: string | null
+          period_month: number | null
+          tenant_id: string | null
+          variance: number | null
+          year: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trial_balance_view"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "budget_lines_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_lines_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_lines_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_lines_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      general_ledger_view: {
+        Row: {
+          account_code: string | null
+          account_id: string | null
+          account_name: string | null
+          cost_center_code: string | null
+          cost_center_id: string | null
+          cost_center_name: string | null
+          credit: number | null
+          date: string | null
+          debit: number | null
+          entry_description: string | null
+          entry_id: string | null
+          entry_number: string | null
+          fiscal_year_id: string | null
+          line_description: string | null
+          line_id: string | null
+          period_id: string | null
+          status: string | null
+          tenant_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trial_balance_view"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores_public: {
         Row: {
           accepts_delivery: boolean | null
@@ -6379,6 +6800,51 @@ export type Database = {
           slug?: string | null
         }
         Relationships: []
+      }
+      trial_balance_view: {
+        Row: {
+          account_id: string | null
+          balance: number | null
+          code: string | null
+          fiscal_year_id: string | null
+          name: string | null
+          nature: string | null
+          period_id: string | null
+          tenant_id: string | null
+          total_credit: number | null
+          total_debit: number | null
+          type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_accounts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_accounts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       v_replenishment_suggestions: {
         Row: {

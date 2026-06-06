@@ -16,9 +16,11 @@ import { Switch } from "@/components/ui/switch";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit2, Trash2, BookOpen, ArrowUpDown, TrendingUp, TrendingDown, DollarSign, Lock, Unlock, Download, Undo2, FolderTree, CalendarClock, FileType } from "lucide-react";
+import { Plus, Edit2, Trash2, BookOpen, ArrowUpDown, TrendingUp, TrendingDown, DollarSign, Lock, Unlock, Download, Undo2, FolderTree, CalendarClock, FileType, Building2, Wallet } from "lucide-react";
 import { format } from "date-fns";
 import { AccountingReports } from "@/components/accounting/AccountingReports";
+import { CostCentersTab } from "@/components/accounting/CostCentersTab";
+import { BudgetsTab } from "@/components/accounting/BudgetsTab";
 
 interface Account {
   id: string;
@@ -379,6 +381,8 @@ const Contabilidad = () => {
             <TabsTrigger value="accounts">Plan de Cuentas</TabsTrigger>
             <TabsTrigger value="entries">Asientos</TabsTrigger>
             <TabsTrigger value="periods">Ejercicios y Períodos</TabsTrigger>
+            <TabsTrigger value="cost_centers"><Building2 className="h-3.5 w-3.5 mr-1" />Centros de Costo</TabsTrigger>
+            <TabsTrigger value="budgets"><Wallet className="h-3.5 w-3.5 mr-1" />Presupuestos</TabsTrigger>
             <TabsTrigger value="reports"><FileType className="h-3.5 w-3.5 mr-1" />Reportes</TabsTrigger>
           </TabsList>
 
@@ -539,6 +543,14 @@ const Contabilidad = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="cost_centers" className="space-y-4">
+            <CostCentersTab />
+          </TabsContent>
+
+          <TabsContent value="budgets" className="space-y-4">
+            <BudgetsTab />
+          </TabsContent>
+
           <TabsContent value="reports" className="space-y-4">
             <AccountingReports accounts={accounts as any} />
           </TabsContent>
@@ -601,6 +613,7 @@ const Contabilidad = () => {
           <Select value={templateChoice} onValueChange={setTemplateChoice}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="cu_onat">Cuba - ONAT (MIPYMES / TCP)</SelectItem>
               <SelectItem value="es_pgc">España - PGC PYMES</SelectItem>
               <SelectItem value="mx_sat">México - SAT</SelectItem>
               <SelectItem value="niif_generic">NIIF (genérico LATAM)</SelectItem>
