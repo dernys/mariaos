@@ -381,6 +381,8 @@ const Contabilidad = () => {
             <TabsTrigger value="accounts">Plan de Cuentas</TabsTrigger>
             <TabsTrigger value="entries">Asientos</TabsTrigger>
             <TabsTrigger value="periods">Ejercicios y Períodos</TabsTrigger>
+            <TabsTrigger value="cost_centers"><Building2 className="h-3.5 w-3.5 mr-1" />Centros de Costo</TabsTrigger>
+            <TabsTrigger value="budgets"><Wallet className="h-3.5 w-3.5 mr-1" />Presupuestos</TabsTrigger>
             <TabsTrigger value="reports"><FileType className="h-3.5 w-3.5 mr-1" />Reportes</TabsTrigger>
           </TabsList>
 
