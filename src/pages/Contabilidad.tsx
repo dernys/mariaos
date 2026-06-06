@@ -601,6 +601,7 @@ const Contabilidad = () => {
           <Select value={templateChoice} onValueChange={setTemplateChoice}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="cu_onat">Cuba - ONAT (MIPYMES / TCP)</SelectItem>
               <SelectItem value="es_pgc">España - PGC PYMES</SelectItem>
               <SelectItem value="mx_sat">México - SAT</SelectItem>
               <SelectItem value="niif_generic">NIIF (genérico LATAM)</SelectItem>
