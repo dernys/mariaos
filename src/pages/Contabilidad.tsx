@@ -543,6 +543,14 @@ const Contabilidad = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="cost_centers" className="space-y-4">
+            <CostCentersTab />
+          </TabsContent>
+
+          <TabsContent value="budgets" className="space-y-4">
+            <BudgetsTab />
+          </TabsContent>
+
           <TabsContent value="reports" className="space-y-4">
             <AccountingReports accounts={accounts as any} />
           </TabsContent>
