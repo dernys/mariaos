@@ -361,7 +361,6 @@ Deno.serve(async (req) => {
               tenant_id: tenantId,
               name: t.name,
               capacity: t.capacity,
-              zone: t.zone || null,
               status: "available",
               position_x: (i % 4) * 120,
               position_y: Math.floor(i / 4) * 120,
