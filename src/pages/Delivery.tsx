@@ -18,7 +18,7 @@ import { DeliveryMap } from "@/components/delivery/DeliveryMap";
 
 
 interface Zone { id: string; name: string; fee: number; estimated_minutes: number; is_active: boolean; }
-interface Rider { id: string; name: string; phone: string | null; vehicle: string | null; is_available: boolean; is_active: boolean; }
+interface Rider { id: string; name: string; phone: string | null; vehicle: string | null; is_available: boolean; is_active: boolean; tier?: string; rating?: number; total_deliveries?: number; vehicle_plate?: string | null; license_number?: string | null; license_expiry?: string | null; insurance_expiry?: string | null; }
 interface Assignment { id: string; status: string; assigned_at: string; online_order_id: string; rider_id: string | null; delivery_riders?: { name: string }; online_orders?: { customer_name: string; total: number; delivery_address: string | null }; }
 interface Order { id: string; customer_name: string; total: number; status: string; delivery_address: string | null; delivery_type: string; }
 
