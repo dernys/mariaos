@@ -74,11 +74,27 @@ export default function Delivery() {
 
   const saveRider = async () => {
     const { error } = await supabase.from("delivery_riders").insert({
-      tenant_id: tenantId, name: riderForm.name, phone: riderForm.phone || null, vehicle: riderForm.vehicle,
-    });
+      tenant_id: tenantId,
+      name: riderForm.name,
+      phone: riderForm.phone || null,
+      vehicle: riderForm.vehicle,
+      tier: riderForm.tier,
+      document_id: riderForm.document_id || null,
+      license_number: riderForm.license_number || null,
+      license_expiry: riderForm.license_expiry || null,
+      vehicle_plate: riderForm.vehicle_plate || null,
+      vehicle_brand: riderForm.vehicle_brand || null,
+      vehicle_model: riderForm.vehicle_model || null,
+      insurance_provider: riderForm.insurance_provider || null,
+      insurance_policy: riderForm.insurance_policy || null,
+      insurance_expiry: riderForm.insurance_expiry || null,
+    } as any);
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    setRiderDialog(false); setRiderForm({ name: "", phone: "", vehicle: "moto" }); load();
+    setRiderDialog(false);
+    setRiderForm({ name: "", phone: "", vehicle: "moto", tier: "standard", document_id: "", license_number: "", license_expiry: "", vehicle_plate: "", vehicle_brand: "", vehicle_model: "", insurance_provider: "", insurance_policy: "", insurance_expiry: "" });
+    load();
   };
+
 
   const toggleRider = async (id: string, available: boolean) => {
     await supabase.from("delivery_riders").update({ is_available: available }).eq("id", id); load();
