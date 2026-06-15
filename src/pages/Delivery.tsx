@@ -242,24 +242,67 @@ export default function Delivery() {
         </Dialog>
 
         <Dialog open={riderDialog} onOpenChange={setRiderDialog}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Nuevo repartidor</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div><Label>Nombre</Label><Input value={riderForm.name} onChange={e => setRiderForm({ ...riderForm, name: e.target.value })} /></div>
-              <div><Label>Teléfono</Label><Input value={riderForm.phone} onChange={e => setRiderForm({ ...riderForm, phone: e.target.value })} /></div>
-              <div><Label>Vehículo</Label>
-                <Select value={riderForm.vehicle} onValueChange={v => setRiderForm({ ...riderForm, vehicle: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="moto">Moto</SelectItem><SelectItem value="bici">Bicicleta</SelectItem>
-                    <SelectItem value="auto">Auto</SelectItem><SelectItem value="caminando">A pie</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Nombre *</Label><Input value={riderForm.name} onChange={e => setRiderForm({ ...riderForm, name: e.target.value })} /></div>
+                <div><Label>Teléfono</Label><Input value={riderForm.phone} onChange={e => setRiderForm({ ...riderForm, phone: e.target.value })} /></div>
+                <div><Label>Documento (CI/DNI)</Label><Input value={riderForm.document_id} onChange={e => setRiderForm({ ...riderForm, document_id: e.target.value })} /></div>
+                <div><Label>Tier</Label>
+                  <Select value={riderForm.tier} onValueChange={v => setRiderForm({ ...riderForm, tier: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="vip">VIP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Licencia</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Número de licencia</Label><Input value={riderForm.license_number} onChange={e => setRiderForm({ ...riderForm, license_number: e.target.value })} /></div>
+                  <div><Label>Vence</Label><Input type="date" value={riderForm.license_expiry} onChange={e => setRiderForm({ ...riderForm, license_expiry: e.target.value })} /></div>
+                </div>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Vehículo</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Tipo</Label>
+                    <Select value={riderForm.vehicle} onValueChange={v => setRiderForm({ ...riderForm, vehicle: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="moto">Moto</SelectItem>
+                        <SelectItem value="bici">Bicicleta</SelectItem>
+                        <SelectItem value="auto">Auto</SelectItem>
+                        <SelectItem value="caminando">A pie</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Placa</Label><Input value={riderForm.vehicle_plate} onChange={e => setRiderForm({ ...riderForm, vehicle_plate: e.target.value })} /></div>
+                  <div><Label>Marca</Label><Input value={riderForm.vehicle_brand} onChange={e => setRiderForm({ ...riderForm, vehicle_brand: e.target.value })} /></div>
+                  <div><Label>Modelo</Label><Input value={riderForm.vehicle_model} onChange={e => setRiderForm({ ...riderForm, vehicle_model: e.target.value })} /></div>
+                </div>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Seguro</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div><Label>Aseguradora</Label><Input value={riderForm.insurance_provider} onChange={e => setRiderForm({ ...riderForm, insurance_provider: e.target.value })} /></div>
+                  <div><Label>Póliza</Label><Input value={riderForm.insurance_policy} onChange={e => setRiderForm({ ...riderForm, insurance_policy: e.target.value })} /></div>
+                  <div><Label>Vence</Label><Input type="date" value={riderForm.insurance_expiry} onChange={e => setRiderForm({ ...riderForm, insurance_expiry: e.target.value })} /></div>
+                </div>
               </div>
             </div>
             <DialogFooter><Button onClick={saveRider}>Guardar</Button></DialogFooter>
           </DialogContent>
         </Dialog>
+
+
 
         <Dialog open={!!assignDialog} onOpenChange={v => !v && setAssignDialog(null)}>
           <DialogContent>
