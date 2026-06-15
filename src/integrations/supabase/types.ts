@@ -3234,7 +3234,7 @@ export type Database = {
           tenant_id: string | null
           total: number
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -3253,7 +3253,7 @@ export type Database = {
           tenant_id?: string | null
           total?: number
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -3272,7 +3272,7 @@ export type Database = {
           tenant_id?: string | null
           total?: number
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -7193,6 +7193,19 @@ export type Database = {
       }
       pay_payroll: {
         Args: { _method?: string; _notes?: string; _payroll_id: string }
+        Returns: string
+      }
+      place_online_order: {
+        Args: {
+          p_customer_email: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_delivery_address: string
+          p_delivery_type: string
+          p_items: Json
+          p_notes: string
+          p_tenant_id: string
+        }
         Returns: string
       }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
