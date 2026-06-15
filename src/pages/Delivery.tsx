@@ -124,9 +124,11 @@ export default function Delivery() {
         <Tabs defaultValue="active">
           <TabsList>
             <TabsTrigger value="active"><Truck className="h-4 w-4 mr-2" />Activos</TabsTrigger>
+            <TabsTrigger value="map"><MapIcon className="h-4 w-4 mr-2" />Mapa GPS</TabsTrigger>
             <TabsTrigger value="riders"><Bike className="h-4 w-4 mr-2" />Repartidores</TabsTrigger>
             <TabsTrigger value="zones"><MapPin className="h-4 w-4 mr-2" />Zonas</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="active" className="space-y-4">
             <Card>
