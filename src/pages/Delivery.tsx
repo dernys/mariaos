@@ -37,7 +37,7 @@ export default function Delivery() {
   const [zoneDialog, setZoneDialog] = useState(false);
   const [zoneForm, setZoneForm] = useState({ name: "", fee: "0", estimated_minutes: "30" });
   const [riderDialog, setRiderDialog] = useState(false);
-  const [riderForm, setRiderForm] = useState({ name: "", phone: "", vehicle: "moto" });
+  const [riderForm, setRiderForm] = useState({ name: "", phone: "", vehicle: "moto", tier: "standard", document_id: "", license_number: "", license_expiry: "", vehicle_plate: "", vehicle_brand: "", vehicle_model: "", insurance_provider: "", insurance_policy: "", insurance_expiry: "" });
   const [assignDialog, setAssignDialog] = useState<Order | null>(null);
   const [assignForm, setAssignForm] = useState({ rider_id: "", zone_id: "" });
 
