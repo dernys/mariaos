@@ -227,10 +227,14 @@ export type Database = {
       accounts_payable: {
         Row: {
           amount: number
+          amount_in_base: number | null
           amount_paid: number
+          amount_paid_in_base: number
           created_at: string
+          currency: string
           description: string
           due_date: string | null
+          exchange_rate: number
           id: string
           notes: string | null
           party_id: string
@@ -243,10 +247,14 @@ export type Database = {
         }
         Insert: {
           amount: number
+          amount_in_base?: number | null
           amount_paid?: number
+          amount_paid_in_base?: number
           created_at?: string
+          currency?: string
           description: string
           due_date?: string | null
+          exchange_rate?: number
           id?: string
           notes?: string | null
           party_id: string
@@ -259,10 +267,14 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_in_base?: number | null
           amount_paid?: number
+          amount_paid_in_base?: number
           created_at?: string
+          currency?: string
           description?: string
           due_date?: string | null
+          exchange_rate?: number
           id?: string
           notes?: string | null
           party_id?: string
@@ -2505,6 +2517,7 @@ export type Database = {
           customer_tax_id: string | null
           email_sent_at: string | null
           email_sent_to: string | null
+          exchange_rate: number
           id: string
           invoice_number: string
           issue_date: string
@@ -2526,6 +2539,7 @@ export type Database = {
           tax_rate_id: string | null
           tenant_id: string
           total: number
+          total_in_base: number | null
           transmission_status: string
           transmitted_at: string | null
           updated_at: string
@@ -2549,6 +2563,7 @@ export type Database = {
           customer_tax_id?: string | null
           email_sent_at?: string | null
           email_sent_to?: string | null
+          exchange_rate?: number
           id?: string
           invoice_number: string
           issue_date?: string
@@ -2570,6 +2585,7 @@ export type Database = {
           tax_rate_id?: string | null
           tenant_id: string
           total?: number
+          total_in_base?: number | null
           transmission_status?: string
           transmitted_at?: string | null
           updated_at?: string
@@ -2593,6 +2609,7 @@ export type Database = {
           customer_tax_id?: string | null
           email_sent_at?: string | null
           email_sent_to?: string | null
+          exchange_rate?: number
           id?: string
           invoice_number?: string
           issue_date?: string
@@ -2614,6 +2631,7 @@ export type Database = {
           tax_rate_id?: string | null
           tenant_id?: string
           total?: number
+          total_in_base?: number | null
           transmission_status?: string
           transmitted_at?: string | null
           updated_at?: string
@@ -4837,8 +4855,10 @@ export type Database = {
           cost_center_id: string | null
           created_at: string
           created_by: string | null
+          currency: string
           destination_id: string | null
           destination_type: string
+          exchange_rate: number
           id: string
           invoice_number: string | null
           is_consignment: boolean
@@ -4853,6 +4873,7 @@ export type Database = {
           tax_rate_id: string | null
           tenant_id: string | null
           total: number
+          total_in_base: number | null
           updated_at: string
         }
         Insert: {
@@ -4860,8 +4881,10 @@ export type Database = {
           cost_center_id?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           destination_id?: string | null
           destination_type?: string
+          exchange_rate?: number
           id?: string
           invoice_number?: string | null
           is_consignment?: boolean
@@ -4876,6 +4899,7 @@ export type Database = {
           tax_rate_id?: string | null
           tenant_id?: string | null
           total?: number
+          total_in_base?: number | null
           updated_at?: string
         }
         Update: {
@@ -4883,8 +4907,10 @@ export type Database = {
           cost_center_id?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           destination_id?: string | null
           destination_type?: string
+          exchange_rate?: number
           id?: string
           invoice_number?: string | null
           is_consignment?: boolean
@@ -4899,6 +4925,7 @@ export type Database = {
           tax_rate_id?: string | null
           tenant_id?: string | null
           total?: number
+          total_in_base?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -5290,8 +5317,10 @@ export type Database = {
           client_uuid: string | null
           cost_center_id: string | null
           created_at: string
+          currency: string
           customer_id: string | null
           employee_id: string | null
+          exchange_rate: number
           id: string
           notes: string | null
           shift_id: string | null
@@ -5304,6 +5333,7 @@ export type Database = {
           ticket_number: string | null
           ticket_series: string | null
           total: number
+          total_in_base: number | null
           updated_at: string
         }
         Insert: {
@@ -5314,8 +5344,10 @@ export type Database = {
           client_uuid?: string | null
           cost_center_id?: string | null
           created_at?: string
+          currency?: string
           customer_id?: string | null
           employee_id?: string | null
+          exchange_rate?: number
           id?: string
           notes?: string | null
           shift_id?: string | null
@@ -5328,6 +5360,7 @@ export type Database = {
           ticket_number?: string | null
           ticket_series?: string | null
           total?: number
+          total_in_base?: number | null
           updated_at?: string
         }
         Update: {
@@ -5338,8 +5371,10 @@ export type Database = {
           client_uuid?: string | null
           cost_center_id?: string | null
           created_at?: string
+          currency?: string
           customer_id?: string | null
           employee_id?: string | null
+          exchange_rate?: number
           id?: string
           notes?: string | null
           shift_id?: string | null
@@ -5352,6 +5387,7 @@ export type Database = {
           ticket_number?: string | null
           ticket_series?: string | null
           total?: number
+          total_in_base?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -6892,6 +6928,34 @@ export type Database = {
           },
         ]
       }
+      party_balance_by_currency: {
+        Row: {
+          currency: string | null
+          earliest_due: string | null
+          open_balance: number | null
+          open_balance_in_base: number | null
+          open_documents: number | null
+          party_id: string | null
+          party_type: string | null
+          tenant_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_payable_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores_public: {
         Row: {
           accepts_delivery: boolean | null
@@ -7207,6 +7271,10 @@ export type Database = {
       generate_sepa_xml: {
         Args: { _bank_account_id: string; _payroll_run_ids: string[] }
         Returns: string
+      }
+      get_exchange_rate: {
+        Args: { p_currency: string; p_date?: string; p_tenant: string }
+        Returns: number
       }
       has_role: {
         Args: {
