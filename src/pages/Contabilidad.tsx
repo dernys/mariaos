@@ -347,6 +347,7 @@ const Contabilidad = () => {
   useEffect(() => {
     const sec = SECTIONS.find((s) => s.value === section);
     if (sec && !sec.subs.includes(subTab)) setSubTab(sec.subs[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
   return (
