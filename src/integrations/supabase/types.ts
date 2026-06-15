@@ -1599,37 +1599,85 @@ export type Database = {
       }
       delivery_riders: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          document_id: string | null
           employee_id: string | null
           id: string
+          insurance_expiry: string | null
+          insurance_policy: string | null
+          insurance_provider: string | null
           is_active: boolean
           is_available: boolean
+          license_expiry: string | null
+          license_number: string | null
           name: string
+          notes: string | null
           phone: string | null
+          rating: number
           tenant_id: string
+          tier: string
+          total_deliveries: number
+          user_id: string | null
           vehicle: string | null
+          vehicle_brand: string | null
+          vehicle_model: string | null
+          vehicle_plate: string | null
+          vehicle_year: number | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          document_id?: string | null
           employee_id?: string | null
           id?: string
+          insurance_expiry?: string | null
+          insurance_policy?: string | null
+          insurance_provider?: string | null
           is_active?: boolean
           is_available?: boolean
+          license_expiry?: string | null
+          license_number?: string | null
           name: string
+          notes?: string | null
           phone?: string | null
+          rating?: number
           tenant_id: string
+          tier?: string
+          total_deliveries?: number
+          user_id?: string | null
           vehicle?: string | null
+          vehicle_brand?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+          vehicle_year?: number | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          document_id?: string | null
           employee_id?: string | null
           id?: string
+          insurance_expiry?: string | null
+          insurance_policy?: string | null
+          insurance_provider?: string | null
           is_active?: boolean
           is_available?: boolean
+          license_expiry?: string | null
+          license_number?: string | null
           name?: string
+          notes?: string | null
           phone?: string | null
+          rating?: number
           tenant_id?: string
+          tier?: string
+          total_deliveries?: number
+          user_id?: string | null
           vehicle?: string | null
+          vehicle_brand?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+          vehicle_year?: number | null
         }
         Relationships: [
           {
@@ -1693,6 +1741,80 @@ export type Database = {
           },
           {
             foreignKeyName: "delivery_zones_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_locations: {
+        Row: {
+          accuracy: number | null
+          assignment_id: string | null
+          battery: number | null
+          created_at: string
+          heading: number | null
+          id: string
+          latitude: number
+          longitude: number
+          recorded_at: string
+          rider_id: string
+          speed: number | null
+          tenant_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          assignment_id?: string | null
+          battery?: number | null
+          created_at?: string
+          heading?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          recorded_at?: string
+          rider_id: string
+          speed?: number | null
+          tenant_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          assignment_id?: string | null
+          battery?: number | null
+          created_at?: string
+          heading?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          recorded_at?: string
+          rider_id?: string
+          speed?: number | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_locations_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_locations_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_riders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_locations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_locations_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
@@ -6646,6 +6768,50 @@ export type Database = {
           },
           {
             foreignKeyName: "budget_lines_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_last_location: {
+        Row: {
+          accuracy: number | null
+          assignment_id: string | null
+          battery: number | null
+          heading: number | null
+          latitude: number | null
+          longitude: number | null
+          recorded_at: string | null
+          rider_id: string | null
+          speed: number | null
+          tenant_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_locations_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_locations_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_riders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_locations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_locations_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"

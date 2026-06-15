@@ -1,0 +1,1 @@
+ALTER VIEW public.driver_last_location SET (security_invoker = true);

@@ -13,10 +13,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { MapPin, Bike, Truck, Plus } from "lucide-react";
+import { MapPin, Bike, Truck, Plus, Map as MapIcon } from "lucide-react";
+import { DeliveryMap } from "@/components/delivery/DeliveryMap";
+
 
 interface Zone { id: string; name: string; fee: number; estimated_minutes: number; is_active: boolean; }
-interface Rider { id: string; name: string; phone: string | null; vehicle: string | null; is_available: boolean; is_active: boolean; }
+interface Rider { id: string; name: string; phone: string | null; vehicle: string | null; is_available: boolean; is_active: boolean; tier?: string; rating?: number; total_deliveries?: number; vehicle_plate?: string | null; license_number?: string | null; license_expiry?: string | null; insurance_expiry?: string | null; }
 interface Assignment { id: string; status: string; assigned_at: string; online_order_id: string; rider_id: string | null; delivery_riders?: { name: string }; online_orders?: { customer_name: string; total: number; delivery_address: string | null }; }
 interface Order { id: string; customer_name: string; total: number; status: string; delivery_address: string | null; delivery_type: string; }
 
@@ -35,7 +37,7 @@ export default function Delivery() {
   const [zoneDialog, setZoneDialog] = useState(false);
   const [zoneForm, setZoneForm] = useState({ name: "", fee: "0", estimated_minutes: "30" });
   const [riderDialog, setRiderDialog] = useState(false);
-  const [riderForm, setRiderForm] = useState({ name: "", phone: "", vehicle: "moto" });
+  const [riderForm, setRiderForm] = useState({ name: "", phone: "", vehicle: "moto", tier: "standard", document_id: "", license_number: "", license_expiry: "", vehicle_plate: "", vehicle_brand: "", vehicle_model: "", insurance_provider: "", insurance_policy: "", insurance_expiry: "" });
   const [assignDialog, setAssignDialog] = useState<Order | null>(null);
   const [assignForm, setAssignForm] = useState({ rider_id: "", zone_id: "" });
 
@@ -72,11 +74,27 @@ export default function Delivery() {
 
   const saveRider = async () => {
     const { error } = await supabase.from("delivery_riders").insert({
-      tenant_id: tenantId, name: riderForm.name, phone: riderForm.phone || null, vehicle: riderForm.vehicle,
-    });
+      tenant_id: tenantId,
+      name: riderForm.name,
+      phone: riderForm.phone || null,
+      vehicle: riderForm.vehicle,
+      tier: riderForm.tier,
+      document_id: riderForm.document_id || null,
+      license_number: riderForm.license_number || null,
+      license_expiry: riderForm.license_expiry || null,
+      vehicle_plate: riderForm.vehicle_plate || null,
+      vehicle_brand: riderForm.vehicle_brand || null,
+      vehicle_model: riderForm.vehicle_model || null,
+      insurance_provider: riderForm.insurance_provider || null,
+      insurance_policy: riderForm.insurance_policy || null,
+      insurance_expiry: riderForm.insurance_expiry || null,
+    } as any);
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    setRiderDialog(false); setRiderForm({ name: "", phone: "", vehicle: "moto" }); load();
+    setRiderDialog(false);
+    setRiderForm({ name: "", phone: "", vehicle: "moto", tier: "standard", document_id: "", license_number: "", license_expiry: "", vehicle_plate: "", vehicle_brand: "", vehicle_model: "", insurance_provider: "", insurance_policy: "", insurance_expiry: "" });
+    load();
   };
+
 
   const toggleRider = async (id: string, available: boolean) => {
     await supabase.from("delivery_riders").update({ is_available: available }).eq("id", id); load();
@@ -106,9 +124,11 @@ export default function Delivery() {
         <Tabs defaultValue="active">
           <TabsList>
             <TabsTrigger value="active"><Truck className="h-4 w-4 mr-2" />Activos</TabsTrigger>
+            <TabsTrigger value="map"><MapIcon className="h-4 w-4 mr-2" />Mapa GPS</TabsTrigger>
             <TabsTrigger value="riders"><Bike className="h-4 w-4 mr-2" />Repartidores</TabsTrigger>
             <TabsTrigger value="zones"><MapPin className="h-4 w-4 mr-2" />Zonas</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="active" className="space-y-4">
             <Card>
@@ -156,15 +176,30 @@ export default function Delivery() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="map" className="space-y-4">
+            <Card>
+              <CardHeader><CardTitle>Mapa GPS en tiempo real</CardTitle></CardHeader>
+              <CardContent>
+                <DeliveryMap tenantId={tenantId} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="riders" className="space-y-4">
             <div className="flex justify-end"><Button onClick={() => setRiderDialog(true)}><Plus className="h-4 w-4 mr-2" />Nuevo</Button></div>
             <Card><CardContent className="pt-6">
               <Table>
-                <TableHeader><TableRow><TableHead>Nombre</TableHead><TableHead>Teléfono</TableHead><TableHead>Vehículo</TableHead><TableHead>Disponible</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Nombre</TableHead><TableHead>Teléfono</TableHead><TableHead>Vehículo</TableHead><TableHead>Placa</TableHead><TableHead>Tier</TableHead><TableHead>★</TableHead><TableHead>Entregas</TableHead><TableHead>Disponible</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {riders.map(r => (
                     <TableRow key={r.id}>
-                      <TableCell>{r.name}</TableCell><TableCell>{r.phone}</TableCell><TableCell>{r.vehicle}</TableCell>
+                      <TableCell className="font-medium">{r.name}</TableCell>
+                      <TableCell>{r.phone}</TableCell>
+                      <TableCell>{r.vehicle}</TableCell>
+                      <TableCell className="text-xs">{r.vehicle_plate || "—"}</TableCell>
+                      <TableCell><Badge variant={r.tier === "premium" ? "default" : "secondary"}>{r.tier || "standard"}</Badge></TableCell>
+                      <TableCell>{Number(r.rating || 5).toFixed(1)}</TableCell>
+                      <TableCell>{r.total_deliveries || 0}</TableCell>
                       <TableCell><Switch checked={r.is_available} onCheckedChange={v => toggleRider(r.id, v)} /></TableCell>
                     </TableRow>
                   ))}
@@ -172,6 +207,8 @@ export default function Delivery() {
               </Table>
             </CardContent></Card>
           </TabsContent>
+
+
 
           <TabsContent value="zones" className="space-y-4">
             <div className="flex justify-end"><Button onClick={() => setZoneDialog(true)}><Plus className="h-4 w-4 mr-2" />Nueva zona</Button></div>
@@ -205,24 +242,67 @@ export default function Delivery() {
         </Dialog>
 
         <Dialog open={riderDialog} onOpenChange={setRiderDialog}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Nuevo repartidor</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div><Label>Nombre</Label><Input value={riderForm.name} onChange={e => setRiderForm({ ...riderForm, name: e.target.value })} /></div>
-              <div><Label>Teléfono</Label><Input value={riderForm.phone} onChange={e => setRiderForm({ ...riderForm, phone: e.target.value })} /></div>
-              <div><Label>Vehículo</Label>
-                <Select value={riderForm.vehicle} onValueChange={v => setRiderForm({ ...riderForm, vehicle: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="moto">Moto</SelectItem><SelectItem value="bici">Bicicleta</SelectItem>
-                    <SelectItem value="auto">Auto</SelectItem><SelectItem value="caminando">A pie</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Nombre *</Label><Input value={riderForm.name} onChange={e => setRiderForm({ ...riderForm, name: e.target.value })} /></div>
+                <div><Label>Teléfono</Label><Input value={riderForm.phone} onChange={e => setRiderForm({ ...riderForm, phone: e.target.value })} /></div>
+                <div><Label>Documento (CI/DNI)</Label><Input value={riderForm.document_id} onChange={e => setRiderForm({ ...riderForm, document_id: e.target.value })} /></div>
+                <div><Label>Tier</Label>
+                  <Select value={riderForm.tier} onValueChange={v => setRiderForm({ ...riderForm, tier: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="vip">VIP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Licencia</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Número de licencia</Label><Input value={riderForm.license_number} onChange={e => setRiderForm({ ...riderForm, license_number: e.target.value })} /></div>
+                  <div><Label>Vence</Label><Input type="date" value={riderForm.license_expiry} onChange={e => setRiderForm({ ...riderForm, license_expiry: e.target.value })} /></div>
+                </div>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Vehículo</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Tipo</Label>
+                    <Select value={riderForm.vehicle} onValueChange={v => setRiderForm({ ...riderForm, vehicle: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="moto">Moto</SelectItem>
+                        <SelectItem value="bici">Bicicleta</SelectItem>
+                        <SelectItem value="auto">Auto</SelectItem>
+                        <SelectItem value="caminando">A pie</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Placa</Label><Input value={riderForm.vehicle_plate} onChange={e => setRiderForm({ ...riderForm, vehicle_plate: e.target.value })} /></div>
+                  <div><Label>Marca</Label><Input value={riderForm.vehicle_brand} onChange={e => setRiderForm({ ...riderForm, vehicle_brand: e.target.value })} /></div>
+                  <div><Label>Modelo</Label><Input value={riderForm.vehicle_model} onChange={e => setRiderForm({ ...riderForm, vehicle_model: e.target.value })} /></div>
+                </div>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Seguro</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div><Label>Aseguradora</Label><Input value={riderForm.insurance_provider} onChange={e => setRiderForm({ ...riderForm, insurance_provider: e.target.value })} /></div>
+                  <div><Label>Póliza</Label><Input value={riderForm.insurance_policy} onChange={e => setRiderForm({ ...riderForm, insurance_policy: e.target.value })} /></div>
+                  <div><Label>Vence</Label><Input type="date" value={riderForm.insurance_expiry} onChange={e => setRiderForm({ ...riderForm, insurance_expiry: e.target.value })} /></div>
+                </div>
               </div>
             </div>
             <DialogFooter><Button onClick={saveRider}>Guardar</Button></DialogFooter>
           </DialogContent>
         </Dialog>
+
+
 
         <Dialog open={!!assignDialog} onOpenChange={v => !v && setAssignDialog(null)}>
           <DialogContent>
