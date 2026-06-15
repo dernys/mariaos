@@ -176,15 +176,30 @@ export default function Delivery() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="map" className="space-y-4">
+            <Card>
+              <CardHeader><CardTitle>Mapa GPS en tiempo real</CardTitle></CardHeader>
+              <CardContent>
+                <DeliveryMap tenantId={tenantId} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="riders" className="space-y-4">
             <div className="flex justify-end"><Button onClick={() => setRiderDialog(true)}><Plus className="h-4 w-4 mr-2" />Nuevo</Button></div>
             <Card><CardContent className="pt-6">
               <Table>
-                <TableHeader><TableRow><TableHead>Nombre</TableHead><TableHead>Teléfono</TableHead><TableHead>Vehículo</TableHead><TableHead>Disponible</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Nombre</TableHead><TableHead>Teléfono</TableHead><TableHead>Vehículo</TableHead><TableHead>Placa</TableHead><TableHead>Tier</TableHead><TableHead>★</TableHead><TableHead>Entregas</TableHead><TableHead>Disponible</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {riders.map(r => (
                     <TableRow key={r.id}>
-                      <TableCell>{r.name}</TableCell><TableCell>{r.phone}</TableCell><TableCell>{r.vehicle}</TableCell>
+                      <TableCell className="font-medium">{r.name}</TableCell>
+                      <TableCell>{r.phone}</TableCell>
+                      <TableCell>{r.vehicle}</TableCell>
+                      <TableCell className="text-xs">{r.vehicle_plate || "—"}</TableCell>
+                      <TableCell><Badge variant={r.tier === "premium" ? "default" : "secondary"}>{r.tier || "standard"}</Badge></TableCell>
+                      <TableCell>{Number(r.rating || 5).toFixed(1)}</TableCell>
+                      <TableCell>{r.total_deliveries || 0}</TableCell>
                       <TableCell><Switch checked={r.is_available} onCheckedChange={v => toggleRider(r.id, v)} /></TableCell>
                     </TableRow>
                   ))}
@@ -192,6 +207,8 @@ export default function Delivery() {
               </Table>
             </CardContent></Card>
           </TabsContent>
+
+
 
           <TabsContent value="zones" className="space-y-4">
             <div className="flex justify-end"><Button onClick={() => setZoneDialog(true)}><Plus className="h-4 w-4 mr-2" />Nueva zona</Button></div>
