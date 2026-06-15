@@ -34,6 +34,10 @@ import {
   Workflow,
   GitBranch,
   Sparkles,
+  ChevronRight,
+  ListTree,
+  ClipboardList,
+  Utensils,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -50,19 +54,29 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarHeader,
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 type BizType = "restaurante" | "restaurant" | "bar" | "empresa";
+
+interface MenuChild {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+}
 
 interface MenuItem {
   title: string;
   url: string;
   icon: typeof LayoutDashboard;
-  /** If set, only show for these business types. Undefined = show always */
   types?: BizType[];
+  children?: MenuChild[];
 }
 
 interface MenuGroup {
@@ -106,6 +120,7 @@ const menuGroups: MenuGroup[] = [
     label: "Inventario",
     items: [
       { title: "Productos", url: "/inventario", icon: Package },
+      { title: "Recetas", url: "/recetas", icon: Utensils, types: ["restaurante", "restaurant", "bar"] },
       { title: "Inteligencia", url: "/inventario/inteligencia", icon: Brain },
       { title: "Conteos físicos", url: "/conteos", icon: Shield },
       { title: "Almacenes", url: "/almacenes", icon: Warehouse, types: ["empresa"] },
@@ -138,7 +153,16 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Finanzas",
     items: [
-      { title: "Contabilidad", url: "/contabilidad", icon: BookOpen },
+      {
+        title: "Contabilidad",
+        url: "/contabilidad",
+        icon: BookOpen,
+        children: [
+          { title: "Plan Contable", url: "/contabilidad/plan", icon: ListTree },
+          { title: "Operación", url: "/contabilidad/operacion", icon: ClipboardList },
+          { title: "Análisis", url: "/contabilidad/analisis", icon: BarChart3 },
+        ],
+      },
       { title: "Tesorería", url: "/tesoreria", icon: Wallet },
     ],
   },
@@ -179,21 +203,63 @@ export function AppSidebar() {
         .toUpperCase()
     : "??";
 
-  const renderItem = (item: MenuItem) => (
-    <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-        <NavLink
-          to={item.url}
-          end={item.url === "/"}
-          className="transition-colors"
-          activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-        >
-          <item.icon className="h-4 w-4" />
-          {!collapsed && <span>{item.title}</span>}
-        </NavLink>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
+  const renderItem = (item: MenuItem) => {
+    if (item.children && item.children.length > 0) {
+      const parentActive = isActive(item.url);
+      return (
+        <Collapsible key={item.title} defaultOpen={parentActive} className="group/collapsible">
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton isActive={parentActive} tooltip={item.title} className="w-full">
+                <item.icon className="h-4 w-4" />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">{item.title}</span>
+                    <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  </>
+                )}
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            {!collapsed && (
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {item.children.map((c) => (
+                    <SidebarMenuSubItem key={c.url}>
+                      <SidebarMenuSubButton asChild isActive={location.pathname === c.url}>
+                        <NavLink
+                          to={c.url}
+                          className="transition-colors"
+                          activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                        >
+                          <c.icon className="h-3.5 w-3.5" />
+                          <span>{c.title}</span>
+                        </NavLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            )}
+          </SidebarMenuItem>
+        </Collapsible>
+      );
+    }
+    return (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+          <NavLink
+            to={item.url}
+            end={item.url === "/"}
+            className="transition-colors"
+            activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+          >
+            <item.icon className="h-4 w-4" />
+            {!collapsed && <span>{item.title}</span>}
+          </NavLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  };
 
   return (
     <Sidebar collapsible="icon">
