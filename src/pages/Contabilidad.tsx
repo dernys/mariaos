@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
@@ -62,14 +63,18 @@ const Contabilidad = () => {
   const { user } = useAuth();
   const tenantId = useTenant();
   const { toast } = useToast();
+  const { section: sectionParam } = useParams<{ section?: string }>();
+  const navigate = useNavigate();
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [fiscalYears, setFiscalYears] = useState<FiscalYear[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
 
-  const [section, setSection] = useState("plan");
-  const [subTab, setSubTab] = useState("accounts");
+  const validSection = SECTIONS.find((s) => s.value === sectionParam)?.value || "plan";
+  const section = validSection;
+  const setSection = (v: string) => navigate(`/contabilidad/${v}`);
+  const [subTab, setSubTab] = useState(SECTIONS.find((s) => s.value === validSection)!.subs[0]);
 
   // Account dialog
   const [accDialogOpen, setAccDialogOpen] = useState(false);
@@ -342,6 +347,7 @@ const Contabilidad = () => {
   useEffect(() => {
     const sec = SECTIONS.find((s) => s.value === section);
     if (sec && !sec.subs.includes(subTab)) setSubTab(sec.subs[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
   return (

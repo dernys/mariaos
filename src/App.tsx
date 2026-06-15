@@ -62,6 +62,7 @@ const Tesoreria = lazy(() => import("./pages/Tesoreria"));
 
 const Developers = lazy(() => import("./pages/Developers"));
 const PortalEmpleado = lazy(() => import("./pages/PortalEmpleado"));
+const Recetas = lazy(() => import("./pages/Recetas"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,6 +121,8 @@ const App = () => (
               <Route path="/turnos" element={<P><Turnos /></P>} />
               <Route path="/turnos/:id" element={<P><TurnoDetalle /></P>} />
               <Route path="/contabilidad" element={<P><Contabilidad /></P>} />
+              <Route path="/contabilidad/:section" element={<P><Contabilidad /></P>} />
+              <Route path="/recetas" element={<P><Recetas /></P>} />
               <Route path="/cocina" element={<P><Cocina /></P>} />
               <Route path="/mesas" element={<P><Mesas /></P>} />
               <Route path="/analytics" element={<P><Analytics /></P>} />
