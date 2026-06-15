@@ -13,7 +13,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { MapPin, Bike, Truck, Plus } from "lucide-react";
+import { MapPin, Bike, Truck, Plus, Map as MapIcon } from "lucide-react";
+import { DeliveryMap } from "@/components/delivery/DeliveryMap";
+
 
 interface Zone { id: string; name: string; fee: number; estimated_minutes: number; is_active: boolean; }
 interface Rider { id: string; name: string; phone: string | null; vehicle: string | null; is_available: boolean; is_active: boolean; }
