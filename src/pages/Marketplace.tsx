@@ -219,39 +219,19 @@ const Marketplace = () => {
 
     setSubmitting(true);
     try {
-      // Create one order per tenant
+      // Crear un pedido por tenant usando la RPC atómica con validación de stock real
       for (const [tenantId, items] of Object.entries(cartByTenant)) {
-        const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-        const { data: order, error: orderErr } = await supabase.from("online_orders").insert({
-          tenant_id: tenantId,
-          user_id: user.id,
-          customer_name: checkoutForm.name.trim(),
-          customer_email: checkoutForm.email.trim() || null,
-          customer_phone: checkoutForm.phone.trim(),
-          delivery_type: checkoutForm.delivery_type,
-          delivery_address: checkoutForm.delivery_type === "delivery" ? checkoutForm.address.trim() : null,
-          subtotal,
-          total: subtotal,
-          notes: checkoutForm.notes.trim() || null,
-        } as any).select("id").single();
-
-        if (orderErr) throw orderErr;
-
-        const orderItems = items.map(i => ({
-          order_id: order.id,
-          product_id: i.id,
-          product_name: i.name,
-          qty: i.qty,
-          price: i.price,
-          total: i.price * i.qty,
-        }));
-        const { error: itemsErr } = await supabase.from("online_order_items").insert(orderItems as any);
-        if (itemsErr) throw itemsErr;
-
-        // Decrement online_stock
-        for (const item of items) {
-          await supabase.from("products").update({ online_stock: item.online_stock - item.qty } as any).eq("id", item.id);
-        }
+        const { error: rpcErr } = await supabase.rpc("place_online_order" as any, {
+          p_tenant_id: tenantId,
+          p_items: items.map(i => ({ product_id: i.id, qty: i.qty })),
+          p_customer_name: checkoutForm.name.trim(),
+          p_customer_phone: checkoutForm.phone.trim(),
+          p_customer_email: checkoutForm.email.trim() || null,
+          p_delivery_type: checkoutForm.delivery_type,
+          p_delivery_address: checkoutForm.delivery_type === "delivery" ? checkoutForm.address.trim() : null,
+          p_notes: checkoutForm.notes.trim() || null,
+        });
+        if (rpcErr) throw rpcErr;
       }
 
       setOrderSuccess(true);
@@ -264,6 +244,7 @@ const Marketplace = () => {
       setSubmitting(false);
     }
   };
+
 
   const bizIcon = (type: string) => {
     if (type === "restaurante") return "🍽️";
