@@ -7196,6 +7196,10 @@ export type Database = {
         Returns: string
       }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
+      post_payment_journal_entry: {
+        Args: { p_payment_id: string }
+        Returns: string
+      }
       post_payroll_journal_entry: {
         Args: { _payroll_id: string }
         Returns: string
@@ -7291,6 +7295,10 @@ export type Database = {
           p_start: string
           p_type: string
         }
+        Returns: string
+      }
+      resolve_account_by_role: {
+        Args: { p_role: string; p_tenant: string }
         Returns: string
       }
       resolve_period: {
