@@ -824,6 +824,303 @@ export type Database = {
           },
         ]
       }
+      br_esocial_events: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          created_by: string | null
+          employee_id: string | null
+          esocial_response: Json
+          event_code: string
+          id: string
+          protocol: string | null
+          receipt: string | null
+          reference_period: string | null
+          reject_reason: string | null
+          rejected_at: string | null
+          sent_at: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+          xml_payload: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string | null
+          esocial_response?: Json
+          event_code: string
+          id?: string
+          protocol?: string | null
+          receipt?: string | null
+          reference_period?: string | null
+          reject_reason?: string | null
+          rejected_at?: string | null
+          sent_at?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          xml_payload?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string | null
+          esocial_response?: Json
+          event_code?: string
+          id?: string
+          protocol?: string | null
+          receipt?: string | null
+          reference_period?: string | null
+          reject_reason?: string | null
+          rejected_at?: string | null
+          sent_at?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          xml_payload?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "br_esocial_events_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      br_nfe_documents: {
+        Row: {
+          authorized_at: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          chave_acesso: string | null
+          cnpj_recipient: string | null
+          cofins_amount: number
+          created_at: string
+          created_by: string | null
+          danfe_url: string | null
+          emitted_at: string | null
+          ibge_municipio_recipient: string | null
+          icms_amount: number
+          id: string
+          invoice_id: string | null
+          ipi_amount: number
+          iss_amount: number
+          model: string
+          number: number | null
+          pis_amount: number
+          protocolo_autorizacao: string | null
+          sale_id: string | null
+          sefaz_response: Json
+          series: string
+          status: string
+          tenant_id: string
+          total: number
+          uf_emitter: string
+          uf_recipient: string | null
+          updated_at: string
+          xml_payload: string | null
+        }
+        Insert: {
+          authorized_at?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          chave_acesso?: string | null
+          cnpj_recipient?: string | null
+          cofins_amount?: number
+          created_at?: string
+          created_by?: string | null
+          danfe_url?: string | null
+          emitted_at?: string | null
+          ibge_municipio_recipient?: string | null
+          icms_amount?: number
+          id?: string
+          invoice_id?: string | null
+          ipi_amount?: number
+          iss_amount?: number
+          model?: string
+          number?: number | null
+          pis_amount?: number
+          protocolo_autorizacao?: string | null
+          sale_id?: string | null
+          sefaz_response?: Json
+          series?: string
+          status?: string
+          tenant_id: string
+          total?: number
+          uf_emitter: string
+          uf_recipient?: string | null
+          updated_at?: string
+          xml_payload?: string | null
+        }
+        Update: {
+          authorized_at?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          chave_acesso?: string | null
+          cnpj_recipient?: string | null
+          cofins_amount?: number
+          created_at?: string
+          created_by?: string | null
+          danfe_url?: string | null
+          emitted_at?: string | null
+          ibge_municipio_recipient?: string | null
+          icms_amount?: number
+          id?: string
+          invoice_id?: string | null
+          ipi_amount?: number
+          iss_amount?: number
+          model?: string
+          number?: number | null
+          pis_amount?: number
+          protocolo_autorizacao?: string | null
+          sale_id?: string | null
+          sefaz_response?: Json
+          series?: string
+          status?: string
+          tenant_id?: string
+          total?: number
+          uf_emitter?: string
+          uf_recipient?: string | null
+          updated_at?: string
+          xml_payload?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "br_nfe_documents_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "br_nfe_documents_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "br_nfe_documents_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_ar_aging"
+            referencedColumns: ["sale_id"]
+          },
+        ]
+      }
+      br_sped_exports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_hash: string | null
+          file_url: string | null
+          fiscal_year: number
+          generated_at: string | null
+          id: string
+          layout: string
+          payload: Json
+          period_end: string
+          period_start: string
+          status: string
+          tenant_id: string
+          total_records: number
+          transmitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_hash?: string | null
+          file_url?: string | null
+          fiscal_year: number
+          generated_at?: string | null
+          id?: string
+          layout: string
+          payload?: Json
+          period_end: string
+          period_start: string
+          status?: string
+          tenant_id: string
+          total_records?: number
+          transmitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_hash?: string | null
+          file_url?: string | null
+          fiscal_year?: number
+          generated_at?: string | null
+          id?: string
+          layout?: string
+          payload?: Json
+          period_end?: string
+          period_start?: string
+          status?: string
+          tenant_id?: string
+          total_records?: number
+          transmitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      br_tax_jurisdictions: {
+        Row: {
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          ibge_municipio: string | null
+          id: string
+          kind: string
+          notes: string | null
+          rate: number
+          reduction_pct: number
+          service_code: string | null
+          tenant_id: string | null
+          uf_from: string | null
+          uf_to: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          ibge_municipio?: string | null
+          id?: string
+          kind: string
+          notes?: string | null
+          rate?: number
+          reduction_pct?: number
+          service_code?: string | null
+          tenant_id?: string | null
+          uf_from?: string | null
+          uf_to?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          ibge_municipio?: string | null
+          id?: string
+          kind?: string
+          notes?: string | null
+          rate?: number
+          reduction_pct?: number
+          service_code?: string | null
+          tenant_id?: string | null
+          uf_from?: string | null
+          uf_to?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       budget_lines: {
         Row: {
           account_id: string
@@ -7950,6 +8247,19 @@ export type Database = {
         Returns: undefined
       }
       award_loyalty_points: { Args: { p_sale_id: string }; Returns: number }
+      br_generate_nfe: { Args: { p_sale_id: string }; Returns: string }
+      br_generate_sped_ecd: {
+        Args: { p_fiscal_year: number; p_tenant_id: string }
+        Returns: string
+      }
+      br_get_icms_rate: {
+        Args: { p_uf_from: string; p_uf_to: string }
+        Returns: number
+      }
+      br_get_iss_rate: {
+        Args: { p_ibge: string; p_service?: string }
+        Returns: number
+      }
       calculate_shift_summary: { Args: { p_shift_id: string }; Returns: Json }
       cancel_sale: {
         Args: { p_reason: string; p_sale_id: string }
