@@ -8,36 +8,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { InstallPWAPrompt } from "@/components/InstallPWAPrompt";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 type AuthView = "login" | "register" | "forgot";
 
-const translateAuthError = (msg: string): string => {
+const translateAuthError = (msg: string, t: (k: string) => string): string => {
   const m = msg.toLowerCase();
-  if (m.includes("invalid login") || m.includes("invalid credentials")) return "Correo o contraseña incorrectos";
-  if (m.includes("email not confirmed")) return "Debes confirmar tu correo antes de ingresar";
-  if (m.includes("user already registered") || m.includes("already been registered")) return "Este correo ya está registrado";
-  if (m.includes("password should be at least")) return "La contraseña debe tener al menos 6 caracteres";
-  if (m.includes("pwned") || m.includes("compromised") || m.includes("hibp")) return "Esta contraseña apareció en filtraciones de seguridad. Elige otra.";
-  if (m.includes("rate limit") || m.includes("too many")) return "Demasiados intentos. Espera unos minutos.";
-  if (m.includes("network") || m.includes("fetch")) return "Error de conexión. Verifica tu internet.";
+  if (m.includes("invalid login") || m.includes("invalid credentials")) return t("auth.errors.invalidCredentials");
+  if (m.includes("email not confirmed")) return t("auth.errors.emailNotConfirmed");
+  if (m.includes("user already registered") || m.includes("already been registered")) return t("auth.errors.alreadyRegistered");
+  if (m.includes("password should be at least")) return t("auth.errors.passwordTooShort");
+  if (m.includes("pwned") || m.includes("compromised") || m.includes("hibp")) return t("auth.errors.passwordPwned");
+  if (m.includes("rate limit") || m.includes("too many")) return t("auth.errors.rateLimit");
+  if (m.includes("network") || m.includes("fetch")) return t("auth.errors.network");
   return msg;
 };
 
-const passwordStrength = (pwd: string): { score: number; label: string; color: string } => {
+const passwordStrength = (pwd: string): { score: number; color: string } => {
   let score = 0;
   if (pwd.length >= 8) score++;
   if (pwd.length >= 12) score++;
   if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
   if (/\d/.test(pwd)) score++;
   if (/[^A-Za-z0-9]/.test(pwd)) score++;
-  const labels = ["Muy débil", "Débil", "Aceptable", "Buena", "Fuerte", "Excelente"];
   const colors = ["bg-destructive", "bg-destructive", "bg-warning", "bg-warning", "bg-success", "bg-success"];
-  return { score, label: labels[score], color: colors[score] };
+  return { score, color: colors[score] };
 };
 
 const Auth = () => {
   const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [view, setView] = useState<AuthView>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,17 +47,13 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Redirect when already authenticated
   useEffect(() => {
     if (authLoading || !session) return;
-
     const checkAndRedirect = async () => {
       try {
-        // Use cache for instant redirect
         const cached = sessionStorage.getItem(`sa:${session.user.id}`);
         if (cached === "1") return navigate("/superadmin", { replace: true });
         if (cached === "0") return navigate("/app", { replace: true });
-
         const { data } = await supabase.functions.invoke("check-superadmin");
         const isSA = !!data?.is_superadmin;
         sessionStorage.setItem(`sa:${session.user.id}`, isSA ? "1" : "0");
@@ -64,7 +62,6 @@ const Auth = () => {
         navigate("/app", { replace: true });
       }
     };
-
     checkAndRedirect();
   }, [session, authLoading, navigate]);
 
@@ -73,32 +70,30 @@ const Auth = () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
     if (error) {
-      toast.error(translateAuthError(error.message));
+      toast.error(translateAuthError(error.message, t));
       setLoading(false);
     } else {
-      toast.success("Bienvenido de vuelta");
+      toast.success(t("auth.welcome"));
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordStrength(password).score < 2) {
-      return toast.error("Usa una contraseña más segura (mín. 8 caracteres con mayúsculas y números)");
+      return toast.error(t("auth.weakPwd"));
     }
     setLoading(true);
     const cleanEmail = email.trim().toLowerCase();
 
-    // Try superadmin registration first (auto-confirms email)
     try {
       const { data, error: fnError } = await supabase.functions.invoke("register-superadmin", {
         body: { email: cleanEmail, password, full_name: fullName },
       });
-
       if (!fnError && data?.success) {
-        toast.success("¡Cuenta de superadmin creada! Iniciando sesión...");
+        toast.success(t("auth.welcome"));
         const { error: loginError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (loginError) {
-          toast.error(translateAuthError(loginError.message));
+          toast.error(translateAuthError(loginError.message, t));
           setLoading(false);
         }
         return;
@@ -112,8 +107,8 @@ const Auth = () => {
       password,
       options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
     });
-    if (error) toast.error(translateAuthError(error.message));
-    else toast.success("Cuenta creada. Revisa tu correo para confirmar.");
+    if (error) toast.error(translateAuthError(error.message, t));
+    else toast.success(t("auth.accountCreated"));
     setLoading(false);
   };
 
@@ -123,14 +118,13 @@ const Auth = () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) toast.error(translateAuthError(error.message));
-    else toast.success("Correo de recuperación enviado.");
+    if (error) toast.error(translateAuthError(error.message, t));
+    else toast.success(t("auth.resetSent"));
     setLoading(false);
   };
 
   const pwdStrength = useMemo(() => passwordStrength(password), [password]);
 
-  // Show spinner while checking auth state
   if (authLoading || session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -146,81 +140,57 @@ const Auth = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm"
       >
-        {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="h-12 w-12 rounded-xl gradient-brand flex items-center justify-center mb-3">
             <Zap className="h-6 w-6 text-primary-foreground" />
           </div>
           <h1 className="font-heading text-xl font-bold tracking-tight">MarIA OS</h1>
-          <p className="text-xs text-muted-foreground mt-1">by Kirabit · Sistema de Ventas Multitienda</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("auth.tagline")}</p>
         </div>
 
         <div className="bg-card rounded-2xl shadow-elevated border p-6">
           {view === "login" && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="text-center mb-4">
-                <h2 className="font-heading font-semibold text-lg">Iniciar Sesión</h2>
-                <p className="text-xs text-muted-foreground mt-1">Ingresa tus credenciales</p>
+                <h2 className="font-heading font-semibold text-lg">{t("auth.login")}</h2>
+                <p className="text-xs text-muted-foreground mt-1">{t("auth.loginSubtitle")}</p>
               </div>
 
               <div className="space-y-3">
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-9"
-                    required
-                  />
+                  <Input type="email" placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9" required />
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Contraseña"
+                    placeholder={t("auth.password")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-9 pr-9"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
               <div className="text-right">
-                <button
-                  type="button"
-                  onClick={() => setView("forgot")}
-                  className="text-xs text-primary hover:underline"
-                >
-                  ¿Olvidaste tu contraseña?
+                <button type="button" onClick={() => setView("forgot")} className="text-xs text-primary hover:underline">
+                  {t("auth.forgotLink")}
                 </button>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-10"
-                disabled={loading}
-              >
-                {loading ? "Ingresando..." : "Ingresar"}
+              <Button type="submit" className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-10" disabled={loading}>
+                {loading ? t("auth.submitLoading") : t("auth.submitLogin")}
               </Button>
 
               <p className="text-center text-xs text-muted-foreground">
-                ¿No tienes cuenta?{" "}
-                <button
-                  type="button"
-                  onClick={() => setView("register")}
-                  className="text-primary font-medium hover:underline"
-                >
-                  Regístrate
+                {t("auth.noAccount")}{" "}
+                <button type="button" onClick={() => setView("register")} className="text-primary font-medium hover:underline">
+                  {t("auth.doRegister")}
                 </button>
               </p>
             </form>
@@ -229,49 +199,31 @@ const Auth = () => {
           {view === "register" && (
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="text-center mb-4">
-                <h2 className="font-heading font-semibold text-lg">Crear Cuenta</h2>
-                <p className="text-xs text-muted-foreground mt-1">Completa tus datos</p>
+                <h2 className="font-heading font-semibold text-lg">{t("auth.register")}</h2>
+                <p className="text-xs text-muted-foreground mt-1">{t("auth.registerSubtitle")}</p>
               </div>
 
               <div className="space-y-3">
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Nombre completo"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-9"
-                    required
-                  />
+                  <Input type="text" placeholder={t("auth.fullName")} value={fullName} onChange={(e) => setFullName(e.target.value)} className="pl-9" required />
                 </div>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-9"
-                    required
-                  />
+                  <Input type="email" placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9" required />
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Contraseña (mín. 6 caracteres)"
+                    placeholder={t("auth.passwordMin")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-9 pr-9"
                     required
                     minLength={6}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
@@ -282,27 +234,19 @@ const Auth = () => {
                         <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i < pwdStrength.score ? pwdStrength.color : "bg-muted"}`} />
                       ))}
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Seguridad: <span className="font-medium">{pwdStrength.label}</span></p>
+                    <p className="text-[10px] text-muted-foreground">{t("auth.security")}: <span className="font-medium">{t(`auth.strength.${pwdStrength.score}`)}</span></p>
                   </div>
                 )}
               </div>
 
-              <Button
-                type="submit"
-                className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-10"
-                disabled={loading}
-              >
-                {loading ? "Creando cuenta..." : "Crear Cuenta"}
+              <Button type="submit" className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-10" disabled={loading}>
+                {loading ? t("auth.submitRegisterLoading") : t("auth.submitRegister")}
               </Button>
 
               <p className="text-center text-xs text-muted-foreground">
-                ¿Ya tienes cuenta?{" "}
-                <button
-                  type="button"
-                  onClick={() => setView("login")}
-                  className="text-primary font-medium hover:underline"
-                >
-                  Inicia sesión
+                {t("auth.hasAccount")}{" "}
+                <button type="button" onClick={() => setView("login")} className="text-primary font-medium hover:underline">
+                  {t("auth.doLogin")}
                 </button>
               </p>
             </form>
@@ -310,45 +254,31 @@ const Auth = () => {
 
           {view === "forgot" && (
             <form onSubmit={handleForgot} className="space-y-4">
-              <button
-                type="button"
-                onClick={() => setView("login")}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-2"
-              >
-                <ArrowLeft className="h-3 w-3" /> Volver
+              <button type="button" onClick={() => setView("login")} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-2">
+                <ArrowLeft className="h-3 w-3" /> {t("common.back")}
               </button>
 
               <div className="text-center mb-4">
-                <h2 className="font-heading font-semibold text-lg">Recuperar Contraseña</h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Te enviaremos un enlace de recuperación
-                </p>
+                <h2 className="font-heading font-semibold text-lg">{t("auth.forgot")}</h2>
+                <p className="text-xs text-muted-foreground mt-1">{t("auth.forgotSubtitle")}</p>
               </div>
 
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="correo@ejemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-9"
-                  required
-                />
+                <Input type="email" placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9" required />
               </div>
 
-              <Button
-                type="submit"
-                className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-10"
-                disabled={loading}
-              >
-                {loading ? "Enviando..." : "Enviar Enlace"}
+              <Button type="submit" className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-10" disabled={loading}>
+                {loading ? t("auth.sending") : t("auth.sendLink")}
               </Button>
             </form>
           )}
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col gap-2">
+          <div className="rounded-xl border bg-card/50 p-1">
+            <LanguageSwitcher />
+          </div>
           <InstallPWAPrompt />
         </div>
       </motion.div>

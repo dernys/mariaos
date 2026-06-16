@@ -6,6 +6,7 @@ import { CommandPalette, CommandPaletteTrigger } from "@/components/CommandPalet
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { useLocale } from "@/hooks/useLocale";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ interface AppLayoutProps {
 export function AppLayout({ children, title }: AppLayoutProps) {
   const { profile } = useAuth();
   useGlobalShortcuts();
+  useLocale();
 
   const initials = profile?.full_name
     ? profile.full_name

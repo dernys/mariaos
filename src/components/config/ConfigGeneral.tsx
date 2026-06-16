@@ -8,7 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Save, Globe, Loader2 } from "lucide-react";
+import { Save, Globe, Loader2, Languages } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/hooks/useLocale";
+import { SUPPORTED_LOCALES, type AppLocale } from "@/i18n";
 
 const SETTINGS_KEYS = [
   { key: "business_name", label: "Nombre del Negocio", category: "general" },
@@ -35,6 +38,8 @@ interface AccountingProfile {
 export function ConfigGeneral() {
   const tenantId = useTenant();
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { locale, setUserLocale, setTenantLocale } = useLocale();
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -43,6 +48,7 @@ export function ConfigGeneral() {
   const [profileCode, setProfileCode] = useState<string>("");
   const [currentProfile, setCurrentProfile] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
+  const [tenantLocale, setTenantLocaleState] = useState<AppLocale>("es");
 
   useEffect(() => {
     if (!tenantId) return;
@@ -56,11 +62,12 @@ export function ConfigGeneral() {
     (supabase as any).from("accounting_profiles").select("*").eq("active", true).then(({ data }: any) => {
       if (data) setProfiles(data);
     });
-    (supabase as any).from("tenants").select("country_code, accounting_profile_code").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
+    (supabase as any).from("tenants").select("country_code, accounting_profile_code, default_locale").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
       if (data) {
         setCountryCode(data.country_code || "CU");
         setProfileCode(data.accounting_profile_code || "");
         setCurrentProfile(data.accounting_profile_code || null);
+        if (data.default_locale) setTenantLocaleState(data.default_locale as AppLocale);
       }
     });
   }, [tenantId]);
@@ -109,8 +116,51 @@ export function ConfigGeneral() {
   const selectedProfile = profiles.find((p) => p.code === profileCode);
   const countryLabel = (c: string) => (({ CU: "Cuba", BR: "Brasil", XX: "Genérico / Internacional" } as any)[c] || c);
 
+  const handleSaveTenantLocale = async (loc: AppLocale) => {
+    setTenantLocaleState(loc);
+    await setTenantLocale(loc);
+    toast({ title: t("settings.languageSection.saved") });
+  };
+
   return (
     <div className="space-y-4 max-w-2xl">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Languages className="h-4 w-4 text-primary" /> {t("settings.languageSection.title")}
+          </CardTitle>
+          <CardDescription>{t("settings.languageSection.description")}</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">{t("settings.languageSection.tenantLocale")}</Label>
+              <Select value={tenantLocale} onValueChange={(v) => handleSaveTenantLocale(v as AppLocale)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SUPPORTED_LOCALES.map((l) => (
+                    <SelectItem key={l.code} value={l.code}>{l.flag} {l.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground mt-1">{t("settings.languageSection.tenantLocaleHelp")}</p>
+            </div>
+            <div>
+              <Label className="text-xs">{t("settings.languageSection.userLocale")}</Label>
+              <Select value={locale} onValueChange={(v) => setUserLocale(v as AppLocale)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SUPPORTED_LOCALES.map((l) => (
+                    <SelectItem key={l.code} value={l.code}>{l.flag} {l.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground mt-1">{t("settings.languageSection.userLocaleHelp")}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">

@@ -10,6 +10,7 @@ interface TenantInfo {
   email: string | null;
   phone: string | null;
   address: string | null;
+  default_locale: string | null;
 }
 
 interface TenantContextType {
