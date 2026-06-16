@@ -1573,6 +1573,231 @@ export type Database = {
           },
         ]
       }
+      cu_cost_sheet_items: {
+        Row: {
+          category: string
+          cost_sheet_id: string
+          created_at: string
+          description: string
+          id: string
+          product_id: string | null
+          quantity: number
+          tenant_id: string
+          total: number
+          unit: string | null
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          cost_sheet_id: string
+          created_at?: string
+          description: string
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          tenant_id: string
+          total?: number
+          unit?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cost_sheet_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          tenant_id?: string
+          total?: number
+          unit?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cu_cost_sheet_items_cost_sheet_id_fkey"
+            columns: ["cost_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "cu_cost_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cu_cost_sheet_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cu_cost_sheet_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_replenishment_suggestions"
+            referencedColumns: ["product_id"]
+          },
+        ]
+      }
+      cu_cost_sheets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          indirect_cost: number
+          is_active: boolean
+          labor_cost: number
+          margin_pct: number
+          name: string
+          notes: string | null
+          other_cost: number
+          packaging_cost: number
+          product_id: string | null
+          raw_materials_cost: number
+          suggested_price: number
+          tenant_id: string
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          indirect_cost?: number
+          is_active?: boolean
+          labor_cost?: number
+          margin_pct?: number
+          name: string
+          notes?: string | null
+          other_cost?: number
+          packaging_cost?: number
+          product_id?: string | null
+          raw_materials_cost?: number
+          suggested_price?: number
+          tenant_id: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          indirect_cost?: number
+          is_active?: boolean
+          labor_cost?: number
+          margin_pct?: number
+          name?: string
+          notes?: string | null
+          other_cost?: number
+          packaging_cost?: number
+          product_id?: string | null
+          raw_materials_cost?: number
+          suggested_price?: number
+          tenant_id?: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cu_cost_sheets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cu_cost_sheets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_replenishment_suggestions"
+            referencedColumns: ["product_id"]
+          },
+        ]
+      }
+      cu_tax_declarations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          declaration_type: string
+          deductible_expenses: number
+          file_url: string | null
+          fiscal_year: number
+          id: string
+          notes: string | null
+          paid_at: string | null
+          payload: Json
+          period_id: string | null
+          period_label: string
+          status: string
+          submitted_at: string | null
+          tax_due: number
+          tax_rate: number
+          taxable_base: number
+          tenant_id: string
+          total_expenses: number
+          total_income: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          declaration_type: string
+          deductible_expenses?: number
+          file_url?: string | null
+          fiscal_year: number
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payload?: Json
+          period_id?: string | null
+          period_label: string
+          status?: string
+          submitted_at?: string | null
+          tax_due?: number
+          tax_rate?: number
+          taxable_base?: number
+          tenant_id: string
+          total_expenses?: number
+          total_income?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          declaration_type?: string
+          deductible_expenses?: number
+          file_url?: string | null
+          fiscal_year?: number
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payload?: Json
+          period_id?: string | null
+          period_label?: string
+          status?: string
+          submitted_at?: string | null
+          tax_due?: number
+          tax_rate?: number
+          taxable_base?: number
+          tenant_id?: string
+          total_expenses?: number
+          total_income?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cu_tax_declarations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       currencies: {
         Row: {
           code: string
@@ -7818,6 +8043,15 @@ export type Database = {
           p_notes?: string
           p_payments?: Json
           p_tax_rate?: number
+          p_tenant_id: string
+        }
+        Returns: string
+      }
+      cu_calculate_cost_sheet: { Args: { p_sheet_id: string }; Returns: number }
+      cu_generate_tax_declaration: {
+        Args: {
+          p_declaration_type: string
+          p_period_id: string
           p_tenant_id: string
         }
         Returns: string
