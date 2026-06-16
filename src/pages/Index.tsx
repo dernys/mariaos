@@ -49,11 +49,12 @@ const PIE_COLORS = ["hsl(160,84%,39%)", "hsl(170,70%,45%)", "hsl(217,91%,60%)", 
 
 function startOfDay(d = new Date()) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
 function addDays(d: Date, n: number) {
-  const { t } = useTranslation(); const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+  const x = new Date(d); x.setDate(x.getDate()+n); return x; }
 function fmtCurrency(n: number) { return `$${(n||0).toLocaleString("es-CU", { maximumFractionDigits: 2 })}`; }
 function pct(part: number, total: number) { return total > 0 ? Math.round((part/total)*100) : 0; }
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const [loading, setLoading] = useState(true);
   const [salesToday, setSalesToday] = useState<SaleRow[]>([]);

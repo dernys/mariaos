@@ -43,7 +43,6 @@ interface Transfer {
 }
 
 const statusBadge = (s: string) => {
-  const { t } = useTranslation();
   const map: Record<string, string> = {
     requested: "bg-warning/10 text-warning",
     approved: "bg-primary/10 text-primary",
@@ -62,6 +61,7 @@ const statusBadge = (s: string) => {
 };
 
 export default function Transferencias() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { user } = useAuth();
   const { toast } = useToast();
