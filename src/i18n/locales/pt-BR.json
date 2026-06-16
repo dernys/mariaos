@@ -147,5 +147,80 @@
       "userLocaleHelp": "Sua preferência pessoal tem prioridade sobre a da empresa.",
       "saved": "Idioma atualizado"
     }
+  },
+  "modules": {
+    "pos": {
+      "title": "PDV",
+      "titleBar": "Bar / Comandas",
+      "titleRestaurant": "Restaurante / Mesas"
+    },
+    "inventory": {
+      "title": "Estoque",
+      "tabs": {
+        "products": "Produtos",
+        "stock": "Estoque por local",
+        "kardex": "Kardex",
+        "movements": "Movimentações"
+      },
+      "header": "Estoque de produtos",
+      "searchProduct": "Buscar produto…",
+      "newProduct": "Novo produto",
+      "registerMovement": "Registrar movimentação",
+      "movementReason": "Motivo da movimentação"
+    },
+    "purchases": {
+      "title": "Compras",
+      "tabs": {
+        "purchases": "Ordens de compra",
+        "suppliers": "Fornecedores"
+      },
+      "header": "Ordens de compra",
+      "newPurchase": "Nova compra",
+      "createPurchase": "Criar Compra",
+      "receive": "Receber",
+      "cancelOrder": "Cancelar",
+      "registerPayment": "Registrar pagamento"
+    },
+    "suppliers": {
+      "title": "Fornecedores",
+      "header": "Fornecedores",
+      "newSupplier": "Novo fornecedor",
+      "history": "Detalhes e histórico",
+      "payBalance": "Pagar saldo",
+      "payTitle": "Pagar fornecedor"
+    },
+    "customers": {
+      "title": "Clientes",
+      "header": "Clientes",
+      "newCustomer": "Novo cliente",
+      "history": "Histórico"
+    },
+    "invoices": {
+      "title": "Notas fiscais",
+      "header": "Notas emitidas",
+      "settings": "Configurações",
+      "goPos": "Ir ao PDV",
+      "quickIssue": "Emissão rápida",
+      "issue": "Emitir nota",
+      "issueAction": "Emitir",
+      "chooseSale": "Escolher venda…",
+      "downloadPdf": "Baixar PDF",
+      "downloadXml": "Baixar XML",
+      "transmit": "Transmitir eletronicamente",
+      "sendEmail": "Enviar por e-mail",
+      "voidInvoice": "Cancelar"
+    },
+    "returns": {
+      "title": "Devoluções",
+      "tabs": {
+        "new": "Registrar devolução",
+        "history": "Histórico"
+      },
+      "searchTicket": "Buscar por nº do ticket…",
+      "process": "Processar devolução",
+      "reason": "Motivo",
+      "reasonPlaceholder": "Defeituoso, mudança de ideia…",
+      "submit": "Registrar devolução"
+    }
   }
 }
