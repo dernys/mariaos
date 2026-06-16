@@ -238,7 +238,10 @@ export default function Compras() {
           items_count: valid.length,
         },
       });
+      // Fire-and-forget: trigger reactive workflows
+      supabase.functions.invoke("workflow-runner").catch(() => {});
     } catch (e) { console.warn("business_events emit failed", e); }
+
 
     toast({ title: "Compra creada", description: code });
     setOpen(false); resetForm(); fetchAll();

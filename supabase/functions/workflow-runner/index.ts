@@ -1,12 +1,11 @@
 // MarIA OS - Workflow runner
 // Processes unprocessed rows from public.business_events and triggers matching
-// workflows for that tenant. Designed to be invoked on a cron schedule.
+// workflows for that tenant.
 //
-// Public endpoint (no JWT) — must be called either:
-//  1) From pg_cron via net.http_post with the project anon key (server-side), or
-//  2) Manually by a superadmin tool.
-// It verifies the caller using the WORKFLOW_RUNNER_SECRET header OR a valid JWT
-// belonging to a superadmin.
+// Auth modes:
+//  1) Cron / superadmin: x-runner-secret header == WORKFLOW_RUNNER_SECRET, or
+//     a valid superadmin JWT. Processes ALL tenants' pending events.
+//  2) Tenant user JWT: processes only events for tenants the user belongs to.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -18,7 +17,6 @@ const MAX_EVENTS = 200;
 
 function eventMatchesTrigger(ev: any, trigger: any): boolean {
   if (!trigger || typeof trigger !== "object") return false;
-  // trigger shape: { event_type: "sale.completed" | "*", source?: "pos" | "*" }
   const t = trigger.event_type ?? trigger.type ?? "*";
   if (t !== "*" && t !== ev.event_type) return false;
   if (trigger.source && trigger.source !== "*" && trigger.source !== ev.source) return false;
@@ -34,45 +32,61 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const runnerSecret = Deno.env.get("WORKFLOW_RUNNER_SECRET") ?? "";
 
-    // --- Auth: either x-runner-secret matches, or caller is a superadmin via JWT ---
     const providedSecret = req.headers.get("x-runner-secret") ?? "";
     const authHeader = req.headers.get("Authorization") ?? "";
-    let authorized = !!runnerSecret && providedSecret === runnerSecret;
 
-    if (!authorized && authHeader.startsWith("Bearer ")) {
+    let mode: "global" | "user" | null = null;
+    let allowedTenantIds: string[] | null = null; // null = no scope (global)
+
+    const admin = createClient(supabaseUrl, serviceKey);
+
+    if (runnerSecret && providedSecret === runnerSecret) {
+      mode = "global";
+    } else if (authHeader.startsWith("Bearer ")) {
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
       const { data: userRes } = await userClient.auth.getUser();
       if (userRes?.user) {
-        const admin0 = createClient(supabaseUrl, serviceKey);
-        const { data: sa } = await admin0.from("superadmins").select("user_id").eq("user_id", userRes.user.id).maybeSingle();
-        if (sa) authorized = true;
+        const userId = userRes.user.id;
+        const { data: sa } = await admin.from("superadmins").select("user_id").eq("user_id", userId).maybeSingle();
+        if (sa) {
+          mode = "global";
+        } else {
+          const { data: memberships } = await admin
+            .from("tenant_users")
+            .select("tenant_id")
+            .eq("user_id", userId);
+          allowedTenantIds = (memberships ?? []).map((m: any) => m.tenant_id);
+          if (allowedTenantIds.length > 0) mode = "user";
+        }
       }
     }
 
-    if (!authorized) {
+    if (!mode) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const admin = createClient(supabaseUrl, serviceKey);
-
-    // 1) Pull a batch of unprocessed events
-    const { data: events, error: evErr } = await admin
+    // 1) Pull a batch of unprocessed events, scoped by mode
+    let query = admin
       .from("business_events")
       .select("*")
       .eq("processed", false)
       .order("created_at", { ascending: true })
       .limit(MAX_EVENTS);
 
+    if (mode === "user" && allowedTenantIds) {
+      query = query.in("tenant_id", allowedTenantIds);
+    }
+
+    const { data: events, error: evErr } = await query;
     if (evErr) throw evErr;
 
     const processedIds: string[] = [];
     const triggered: Array<{ event_id: string; workflow_id: string }> = [];
 
-    // 2) Group events by tenant; load each tenant's enabled workflows once
     const byTenant = new Map<string, any[]>();
     (events ?? []).forEach((e: any) => {
       const arr = byTenant.get(e.tenant_id) ?? [];
@@ -133,6 +147,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true,
+      mode,
       processed: processedIds.length,
       triggered: triggered.length,
       details: triggered,
