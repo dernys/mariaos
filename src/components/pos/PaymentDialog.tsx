@@ -12,6 +12,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { printThermalReceipt } from "@/lib/printReceipt";
 import { enqueueSale } from "@/lib/offline/db";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
+import { useTranslation } from "react-i18next";
 
 interface CartItem {
   id: number;
@@ -65,6 +66,7 @@ interface PaymentDialogProps {
 }
 
 export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, onSaleComplete }: PaymentDialogProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { settings: posSettings } = usePOSSettings();
   const [payments, setPayments] = useState<PaymentLine[]>([
@@ -168,14 +170,14 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
   const handleSubmit = async () => {
     if (!isPartial && remaining > 0.01) {
-      toast({ title: "Error", description: "El monto pagado no cubre el total. Activa pago parcial o ajusta los montos.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("pos.payment.errors.notCovered"), variant: "destructive" });
       return;
     }
 
     // Validate card payments have required fields
     for (const p of payments) {
       if (p.method === "card" && (!p.card_last_four || !p.card_holder)) {
-        toast({ title: "Error", description: "Los pagos con tarjeta requieren titular y últimos 4 dígitos.", variant: "destructive" });
+        toast({ title: t("common.error"), description: t("pos.payment.errors.cardFields"), variant: "destructive" });
         return;
       }
     }
@@ -183,7 +185,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No autenticado");
+      if (!user) throw new Error(t("pos.payment.errors.notAuthenticated"));
 
       const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single();
 
@@ -199,8 +201,8 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
       if (!openShift) {
         toast({
-          title: "Sin turno abierto",
-          description: "Debes abrir un turno en /turnos antes de cobrar.",
+          title: t("pos.payment.errors.noShift"),
+          description: t("pos.payment.errors.noShiftDesc"),
           variant: "destructive",
         });
         setSaving(false);
@@ -209,7 +211,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
       // Validación: pago parcial requiere cliente o empleado para registrar la deuda
       if (isPartial && remaining > 0.01 && !selectedCustomer && !selectedEmployee) {
-        toast({ title: "Cliente o empleado requerido", description: "Para dejar saldo pendiente debes asociar un cliente o empleado.", variant: "destructive" });
+        toast({ title: t("pos.payment.errors.partyRequired"), description: t("pos.payment.errors.partyRequiredDesc"), variant: "destructive" });
         setSaving(false);
         return;
       }
@@ -223,7 +225,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           const newBalance = Number(party.balance || 0) + remaining;
           const limit = Number(party.credit_limit || 0);
           if (limit > 0 && newBalance > limit) {
-            toast({ title: "Límite de crédito excedido", description: `Deuda resultante $${newBalance.toFixed(2)} supera el límite $${limit.toFixed(2)}.`, variant: "destructive" });
+            toast({ title: t("pos.payment.errors.creditExceeded"), description: t("pos.payment.errors.creditExceededDesc", { newBalance: newBalance.toFixed(2), limit: limit.toFixed(2) }), variant: "destructive" });
             setSaving(false);
             return;
           }
@@ -279,8 +281,8 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       if (!navigator.onLine && tu?.tenant_id) {
         await enqueueSale({ client_uuid: clientUuid, tenant_id: tu.tenant_id, payload: offlinePayload });
         toast({
-          title: "Venta guardada offline",
-          description: "Se sincronizará automáticamente al recuperar conexión.",
+          title: t("pos.payment.toasts.savedOffline"),
+          description: t("pos.payment.toasts.savedOfflineDesc"),
         });
         onSaleComplete();
         onOpenChange(false);
@@ -332,7 +334,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         });
         if (stockErr) {
           console.error("Stock RPC error:", stockErr);
-          toast({ title: "Aviso", description: "Venta registrada pero el descuento de stock falló: " + stockErr.message });
+          toast({ title: t("pos.payment.errors.stockWarn"), description: t("pos.payment.errors.stockWarnDesc", { msg: stockErr.message }) });
         }
       }
 
@@ -387,7 +389,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
       toast({
         title: `Ticket ${(sale as any).ticket_number || ""}`.trim(),
-        description: status === "partial" ? `Pendiente: $${remaining.toFixed(2)} CUP` : "Pago completo registrado",
+        description: status === "partial" ? t("pos.payment.toasts.pendingAmount", { amount: remaining.toFixed(2) }) : t("pos.payment.toasts.fullPaid"),
       });
 
       onSaleComplete();
@@ -423,7 +425,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                 payments: [],
               },
             });
-            toast({ title: "Venta encolada offline", description: "Se enviará al recuperar conexión." });
+            toast({ title: t("pos.payment.toasts.queuedOffline"), description: t("pos.payment.toasts.queuedOfflineDesc") });
             onSaleComplete();
             onOpenChange(false);
             setSaving(false);
@@ -431,7 +433,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           }
         } catch { /* ignore */ }
       }
-      toast({ title: "Error", description: msg, variant: "destructive" });
+      toast({ title: t("common.error"), description: msg, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -447,21 +449,21 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-heading">Procesar Cobro</DialogTitle>
+          <DialogTitle className="font-heading">{t("pos.payment.title")}</DialogTitle>
           <DialogDescription>
-            Total a cobrar: <span className="font-bold text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+            {t("pos.payment.totalToCharge")}: <span className="font-bold text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Party type toggle (cliente XOR empleado) */}
           <div className="space-y-2">
-            <Label className="text-xs">Asociar venta a</Label>
+            <Label className="text-xs">{t("pos.payment.associateWith")}</Label>
             <div className="grid grid-cols-3 gap-2">
               {([
-                { v: "none", label: "Sin asociar" },
-                { v: "customer", label: "Cliente" },
-                { v: "employee", label: "Empleado" },
+                { v: "none", label: t("pos.payment.noAssociate") },
+                { v: "customer", label: t("pos.payment.customer") },
+                { v: "employee", label: t("pos.payment.employee") },
               ] as const).map((opt) => (
                 <button
                   key={opt.v}
@@ -477,17 +479,17 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
             </div>
             {partyType !== "none" && (
               <Select value={selectedParty} onValueChange={setSelectedParty}>
-                <SelectTrigger><SelectValue placeholder={partyType === "customer" ? "Seleccionar cliente" : "Seleccionar empleado"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={partyType === "customer" ? t("pos.payment.selectCustomer") : t("pos.payment.selectEmployee")} /></SelectTrigger>
                 <SelectContent>
                   <div className="p-2">
-                    <Input placeholder="Buscar..." value={partySearch} onChange={(e) => setPartySearch(e.target.value)} className="h-8 text-xs" />
+                    <Input placeholder={t("pos.payment.searchPlaceholder")} value={partySearch} onChange={(e) => setPartySearch(e.target.value)} className="h-8 text-xs" />
                   </div>
                   {filteredParties.map((p: any) => (
                     <SelectItem key={p.id} value={p.id}>
                       <div className="flex items-center gap-2">
                         <span>{p.name}</span>
                         {partyType === "customer" && p.balance > 0 && (
-                          <Badge variant="destructive" className="text-[10px] px-1">Deuda: ${p.balance}</Badge>
+                          <Badge variant="destructive" className="text-[10px] px-1">{t("pos.payment.debtBadge")}: ${p.balance}</Badge>
                         )}
                         {partyType === "employee" && p.position && (
                           <span className="text-[10px] text-muted-foreground">({p.position})</span>
@@ -525,20 +527,20 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                       className="h-4 w-4 rounded border-input"
                     />
                     <Label htmlFor="partial" className="text-xs cursor-pointer">
-                      Permitir pago parcial / fiado
-                      {(selectedCustomer || selectedEmployee) && <span className="ml-1 text-primary">(activo automáticamente)</span>}
+                      {t("pos.payment.allowPartial")}
+                      {(selectedCustomer || selectedEmployee) && <span className="ml-1 text-primary">{t("pos.payment.autoActive")}</span>}
                     </Label>
                   </div>
                   {isPartial && remaining > 0.01 && (
                     <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning">
-                      Saldo: ${remaining.toFixed(2)}
+                      {t("pos.payment.balance")}: ${remaining.toFixed(2)}
                     </Badge>
                   )}
                 </div>
                 {party && (
                   <div className={`text-[10px] flex items-center justify-between rounded px-2 py-1 ${overLimit ? "bg-destructive/10 text-destructive" : "bg-muted/40 text-muted-foreground"}`}>
-                    <span>Deuda actual: <b>${curBal.toFixed(2)}</b> {limit > 0 && <>· Límite: <b>${limit.toFixed(2)}</b> · Disponible: <b>${(available ?? 0).toFixed(2)}</b></>}{limit === 0 && <> · Sin límite configurado</>}</span>
-                    {overLimit && <span className="font-semibold">Excede límite</span>}
+                    <span>{t("pos.payment.currentDebt")}: <b>${curBal.toFixed(2)}</b> {limit > 0 && <>· {t("pos.payment.limit")}: <b>${limit.toFixed(2)}</b> · {t("pos.payment.available")}: <b>${(available ?? 0).toFixed(2)}</b></>}{limit === 0 && <> · {t("pos.payment.noLimit")}</>}</span>
+                    {overLimit && <span className="font-semibold">{t("pos.payment.overLimit")}</span>}
                   </div>
                 )}
               </div>
@@ -548,9 +550,9 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           {/* Payment Lines */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-heading font-semibold">Métodos de Pago</Label>
+              <Label className="text-sm font-heading font-semibold">{t("pos.payment.methods")}</Label>
               <Button type="button" variant="outline" size="sm" onClick={addPaymentLine} className="text-xs gap-1">
-                <Plus className="h-3 w-3" /> Agregar
+                <Plus className="h-3 w-3" /> {t("pos.payment.add")}
               </Button>
             </div>
 
@@ -570,7 +572,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                         {m === "cash" && <Banknote className="h-3 w-3" />}
                         {m === "card" && <CreditCard className="h-3 w-3" />}
                         {m === "qr" && <QrCode className="h-3 w-3" />}
-                        {m === "cash" ? "Efectivo" : m === "card" ? "Tarjeta" : "QR"}
+                        {m === "cash" ? t("pos.payment.cash") : m === "card" ? t("pos.payment.card") : t("pos.payment.qr")}
                       </button>
                     ))}
                   </div>
@@ -583,7 +585,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <Label className="text-[10px]">Moneda</Label>
+                    <Label className="text-[10px]">{t("pos.payment.currency")}</Label>
                     <Select value={p.currency} onValueChange={(v) => updatePayment(idx, "currency", v)}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -594,7 +596,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-[10px]">Monto</Label>
+                    <Label className="text-[10px]">{t("pos.payment.amount")}</Label>
                     <Input
                       type="number"
                       className="h-8 text-xs"
@@ -604,7 +606,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                     />
                   </div>
                   <div>
-                    <Label className="text-[10px]">Tasa de cambio</Label>
+                    <Label className="text-[10px]">{t("pos.payment.exchangeRate")}</Label>
                     <Input
                       type="number"
                       className="h-8 text-xs"
@@ -616,14 +618,14 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
                 {p.currency !== "CUP" && parseFloat(p.amount) > 0 && (
                   <p className="text-[10px] text-muted-foreground">
-                    Equivale a ${((parseFloat(p.amount) || 0) * (parseFloat(p.exchange_rate) || 1)).toLocaleString()} CUP
+                    {t("pos.payment.equivalent")} ${((parseFloat(p.amount) || 0) * (parseFloat(p.exchange_rate) || 1)).toLocaleString()} CUP
                   </p>
                 )}
 
                 {p.method === "card" && (
                   <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/50">
                     <div>
-                      <Label className="text-[10px]">Últimos 4 dígitos *</Label>
+                      <Label className="text-[10px]">{t("pos.payment.lastFour")} *</Label>
                       <Input
                         className="h-8 text-xs"
                         maxLength={4}
@@ -633,21 +635,21 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                       />
                     </div>
                     <div>
-                      <Label className="text-[10px]">Titular *</Label>
+                      <Label className="text-[10px]">{t("pos.payment.holder")} *</Label>
                       <Input
                         className="h-8 text-xs"
                         value={p.card_holder}
                         onChange={(e) => updatePayment(idx, "card_holder", e.target.value)}
-                        placeholder="Nombre"
+                        placeholder={t("pos.payment.holderPh")}
                       />
                     </div>
                     <div>
-                      <Label className="text-[10px]">Descripción</Label>
+                      <Label className="text-[10px]">{t("pos.payment.descriptionField")}</Label>
                       <Input
                         className="h-8 text-xs"
                         value={p.card_description}
                         onChange={(e) => updatePayment(idx, "card_description", e.target.value)}
-                        placeholder="Visa, Mastercard..."
+                        placeholder={t("pos.payment.descriptionPh")}
                       />
                     </div>
                   </div>
@@ -664,7 +666,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                       />
                     </div>
                     <p className="text-[10px] text-muted-foreground text-center">
-                      Escanea el código QR para completar el pago de{" "}
+                      {t("pos.payment.qrScan")}{" "}
                       <span className="font-semibold">{parseFloat(p.amount) || 0} {p.currency}</span>
                     </p>
                     <Button
@@ -675,7 +677,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                       onClick={() => copyQrData(idx, getQrPaymentData(p, remaining > 0 ? remaining : total))}
                     >
                       {qrCopied === idx ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                      {qrCopied === idx ? "Copiado" : "Copiar datos"}
+                      {qrCopied === idx ? t("pos.payment.copied") : t("pos.payment.copyData")}
                     </Button>
                   </div>
                 )}
@@ -686,22 +688,22 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           {/* Summary */}
           <div className="bg-muted/60 rounded-lg p-3 space-y-1 text-xs">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Total venta</span>
+              <span className="text-muted-foreground">{t("pos.payment.saleTotal")}</span>
               <span className="font-heading font-semibold">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Pagado</span>
+              <span className="text-muted-foreground">{t("pos.payment.paid")}</span>
               <span className="font-heading font-semibold text-primary">${totalPaidInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
             </div>
             {remaining > 0.01 && (
               <div className="flex justify-between text-destructive">
-                <span>Pendiente</span>
+                <span>{t("pos.payment.pending")}</span>
                 <span className="font-heading font-bold">${remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
               </div>
             )}
             {remaining <= 0 && totalPaidInBase > total && (
               <div className="flex justify-between text-primary">
-                <span>Cambio</span>
+                <span>{t("pos.payment.change")}</span>
                 <span className="font-heading font-bold">${Math.abs(remaining).toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
               </div>
             )}
@@ -712,9 +714,9 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
             disabled={saving || (!(isPartial && (selectedCustomer || selectedEmployee)) && payments.every((p) => !parseFloat(p.amount)))}
             className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-11"
           >
-            {saving ? "Procesando..." : isPartial && remaining > 0.01
-              ? (totalPaidInBase > 0 ? `Cobrar Parcial $${totalPaidInBase.toFixed(2)} CUP` : `Dejar Fiado $${total.toFixed(2)} CUP`)
-              : `Cobrar $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP`}
+            {saving ? t("pos.payment.processing") : isPartial && remaining > 0.01
+              ? (totalPaidInBase > 0 ? `${t("pos.payment.chargePartial")} $${totalPaidInBase.toFixed(2)} CUP` : `${t("pos.payment.leaveCredit")} $${total.toFixed(2)} CUP`)
+              : `${t("pos.cart.charge")} $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP`}
           </Button>
         </div>
       </DialogContent>

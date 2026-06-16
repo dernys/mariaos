@@ -78,9 +78,9 @@ interface Movement {
 }
 
 const statusConfig = (stock: number, min: number) => {
-  if (stock <= 0) return { label: "Sin stock", className: "bg-destructive/10 text-destructive" };
-  if (stock <= min) return { label: "Stock bajo", className: "bg-warning/10 text-warning" };
-  return { label: "En stock", className: "bg-success/10 text-success" };
+  if (stock <= 0) return { label: "outOfStock", className: "bg-destructive/10 text-destructive" };
+  if (stock <= min) return { label: "lowStock", className: "bg-warning/10 text-warning" };
+  return { label: "inStock", className: "bg-success/10 text-success" };
 };
 
 const Inventario = () => {
@@ -143,7 +143,7 @@ const Inventario = () => {
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.sku.trim()) {
-      toast({ title: "Error", description: "Nombre y SKU son obligatorios", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("modules.inventory.errors.nameSkuRequired"), variant: "destructive" });
       return;
     }
     const payload = {
@@ -159,23 +159,23 @@ const Inventario = () => {
     if (editing) {
       const { error } = await supabase.from("products").update(payload).eq("id", editing.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-      await logActivity({ entity_type: "product", entity_id: editing.id, action: "Producto actualizado", description: `Se actualizó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Producto actualizado" });
+      await logActivity({ entity_type: "product", entity_id: editing.id, action: t("modules.inventory.activity.updated"), description: t("modules.inventory.activity.updatedDesc", { name: payload.name }), tenant_id: tenantId, performed_by: user?.id });
+      toast({ title: t("modules.inventory.toasts.productUpdated") });
     } else {
       const { data, error } = await supabase.from("products").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       if (data) {
-        await logActivity({ entity_type: "product", entity_id: data.id, action: "Producto creado", description: `Se creó ${payload.name} (${payload.sku})`, tenant_id: tenantId, performed_by: user?.id });
+        await logActivity({ entity_type: "product", entity_id: data.id, action: t("modules.inventory.activity.created"), description: t("modules.inventory.activity.createdDesc", { name: payload.name, sku: payload.sku }), tenant_id: tenantId, performed_by: user?.id });
         // Log initial stock as movement
         if (payload.stock > 0) {
           await supabase.from("inventory_movements").insert({
             product_id: data.id, warehouse_id: payload.warehouse_id, movement_type: "entry",
             quantity: payload.stock, previous_stock: 0, new_stock: payload.stock,
-            reason: "Stock inicial", tenant_id: tenantId, performed_by: user?.id,
+            reason: t("modules.inventory.activity.initialStock"), tenant_id: tenantId, performed_by: user?.id,
           });
         }
       }
-      toast({ title: "Producto creado" });
+      toast({ title: t("modules.inventory.toasts.productCreated") });
     }
     setDialogOpen(false);
     fetchData();
@@ -184,8 +184,8 @@ const Inventario = () => {
   const handleDelete = async (p: Product) => {
     const { error } = await supabase.from("products").delete().eq("id", p.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    await logActivity({ entity_type: "product", entity_id: p.id, action: "Producto eliminado", description: `Se eliminó ${p.name}`, tenant_id: tenantId, performed_by: user?.id });
-    toast({ title: "Producto eliminado" });
+    await logActivity({ entity_type: "product", entity_id: p.id, action: t("modules.inventory.activity.deleted"), description: t("modules.inventory.activity.deletedDesc", { name: p.name }), tenant_id: tenantId, performed_by: user?.id });
+    toast({ title: t("modules.inventory.toasts.productDeleted") });
     fetchData();
   };
 
@@ -198,11 +198,11 @@ const Inventario = () => {
   const handleMovement = async () => {
     if (!selectedProduct) return;
     const qty = parseInt(movForm.quantity) || 0;
-    if (qty <= 0) { toast({ title: "Error", description: "Cantidad debe ser mayor a 0", variant: "destructive" }); return; }
+    if (qty <= 0) { toast({ title: t("common.error"), description: t("modules.inventory.errors.qtyGtZero"), variant: "destructive" }); return; }
 
     const isEntry = movForm.type === "entry";
     const newStock = isEntry ? selectedProduct.stock + qty : selectedProduct.stock - qty;
-    if (newStock < 0) { toast({ title: "Error", description: "No hay suficiente stock", variant: "destructive" }); return; }
+    if (newStock < 0) { toast({ title: t("common.error"), description: t("modules.inventory.errors.notEnoughStock"), variant: "destructive" }); return; }
 
     const { error: movErr } = await supabase.from("inventory_movements").insert({
       product_id: selectedProduct.id, warehouse_id: selectedProduct.warehouse_id,
@@ -214,12 +214,12 @@ const Inventario = () => {
     await supabase.from("products").update({ stock: newStock }).eq("id", selectedProduct.id);
     await logActivity({
       entity_type: "product", entity_id: selectedProduct.id,
-      action: isEntry ? "Entrada de inventario" : "Salida de inventario",
+      action: isEntry ? t("modules.inventory.activity.entry") : t("modules.inventory.activity.exit"),
       description: `${isEntry ? "+" : "-"}${qty} unidades. ${movForm.reason || ""}`.trim(),
       tenant_id: tenantId, performed_by: user?.id,
     });
 
-    toast({ title: `Movimiento registrado: ${isEntry ? "+" : "-"}${qty}` });
+    toast({ title: `${t("modules.inventory.toasts.movementRegistered")}: ${isEntry ? "+" : "-"}${qty}` });
     setMovementDialogOpen(false);
     fetchData();
   };
@@ -264,8 +264,8 @@ const Inventario = () => {
   const getWarehouseName = (id: string | null) => warehouses.find((w) => w.id === id)?.name || "—";
   const getLocationName = (type?: string | null, id?: string | null) => {
     if (!id) return "—";
-    if (type === "warehouse") return warehouses.find((w) => w.id === id)?.name || "Almacén";
-    if (type === "store") return stores.find((s) => s.id === id)?.name || "Tienda";
+    if (type === "warehouse") return warehouses.find((w) => w.id === id)?.name || t("modules.inventory.locationType.warehouse");
+    if (type === "store") return stores.find((s) => s.id === id)?.name || t("modules.inventory.locationType.store");
     return "—";
   };
 
@@ -293,37 +293,37 @@ const Inventario = () => {
 
         <TabsContent value="products" className="space-y-4">
           <StatRow>
-            <MiniStatCard label="Productos" value={stats.total} icon={Package} tone="primary" />
-            <MiniStatCard label="Sin stock" value={stats.out} icon={AlertTriangle} tone={stats.out > 0 ? "destructive" : "default"} />
-            <MiniStatCard label="Stock bajo" value={stats.low} icon={Layers} tone={stats.low > 0 ? "warning" : "default"} />
-            <MiniStatCard label="Valor inventario" value={`$${stats.value.toLocaleString()}`} icon={DollarSign} tone="success" />
+            <MiniStatCard label={t("modules.inventory.products")} value={stats.total} icon={Package} tone="primary" />
+            <MiniStatCard label={t("modules.inventory.outOfStock")} value={stats.out} icon={AlertTriangle} tone={stats.out > 0 ? "destructive" : "default"} />
+            <MiniStatCard label={t("modules.inventory.lowStock")} value={stats.low} icon={Layers} tone={stats.low > 0 ? "warning" : "default"} />
+            <MiniStatCard label={t("modules.inventory.inventoryValue")} value={`$${stats.value.toLocaleString()}`} icon={DollarSign} tone="success" />
           </StatRow>
 
           <TableToolbar
             search={productTable.search}
             onSearchChange={productTable.setSearch}
-            searchPlaceholder="Buscar producto o SKU..."
+            searchPlaceholder={t("modules.inventory.searchPlaceholder")}
             filters={[
-              { key: "status", label: "Estado", value: productTable.filters.status || "__all__",
+              { key: "status", label: t("modules.inventory.filterStatus"), value: productTable.filters.status || "__all__",
                 onChange: (v) => productTable.setFilter("status", v),
                 options: [
-                  { value: "ok", label: "En stock" },
-                  { value: "low", label: "Stock bajo" },
-                  { value: "out", label: "Sin stock" },
-                  { value: "online", label: "Online" },
+                  { value: "ok", label: t("modules.inventory.inStock") },
+                  { value: "low", label: t("modules.inventory.lowStock") },
+                  { value: "out", label: t("modules.inventory.outOfStock") },
+                  { value: "online", label: t("modules.inventory.onlineBadge") },
                 ]},
-              { key: "category", label: "Categoría", value: productTable.filters.category || "__all__",
+              { key: "category", label: t("modules.inventory.filterCategory"), value: productTable.filters.category || "__all__",
                 onChange: (v) => productTable.setFilter("category", v),
                 options: categoryOptions },
-              { key: "warehouse", label: "Almacén", value: productTable.filters.warehouse || "__all__",
+              { key: "warehouse", label: t("modules.inventory.filterWarehouse"), value: productTable.filters.warehouse || "__all__",
                 onChange: (v) => productTable.setFilter("warehouse", v),
                 options: warehouseOptions },
-              { key: "price_range", label: "Precio", value: productTable.filters.price_range || "__all__",
+              { key: "price_range", label: t("modules.inventory.filterPrice"), value: productTable.filters.price_range || "__all__",
                 onChange: (v) => productTable.setFilter("price_range", v),
                 options: [
-                  { value: "lt100", label: "< $100" },
-                  { value: "100_500", label: "$100 - $500" },
-                  { value: "gt500", label: "> $500" },
+                  { value: "lt100", label: t("modules.inventory.priceRange.lt100") },
+                  { value: "100_500", label: t("modules.inventory.priceRange.mid") },
+                  { value: "gt500", label: t("modules.inventory.priceRange.gt500") },
                 ]},
             ]}
             rightSlot={
@@ -343,7 +343,7 @@ const Inventario = () => {
                   ]}
                 />
                 <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground h-9">
-                  <Plus className="h-3.5 w-3.5" /> Nuevo Producto
+                  <Plus className="h-3.5 w-3.5" /> {t("modules.inventory.newProductBtn")}
                 </Button>
               </>
             }
@@ -353,15 +353,15 @@ const Inventario = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">SKU</TableHead>
-                  <TableHead className="text-xs">Producto</TableHead>
-                  <TableHead className="text-xs">Stock</TableHead>
-                  <TableHead className="text-xs">Mínimo</TableHead>
-                  <TableHead className="text-xs hidden sm:table-cell">Precio</TableHead>
-                  <TableHead className="text-xs hidden md:table-cell">Costo</TableHead>
-                  <TableHead className="text-xs hidden lg:table-cell">Almacén</TableHead>
-                  <TableHead className="text-xs">Estado</TableHead>
-                  <TableHead className="text-xs w-28">Acciones</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.sku")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.product")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.stock")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.min")}</TableHead>
+                  <TableHead className="text-xs hidden sm:table-cell">{t("modules.inventory.table.price")}</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell">{t("modules.inventory.table.cost")}</TableHead>
+                  <TableHead className="text-xs hidden lg:table-cell">{t("modules.inventory.table.warehouse")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.status")}</TableHead>
+                  <TableHead className="text-xs w-28">{t("modules.inventory.table.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -380,7 +380,7 @@ const Inventario = () => {
                             </div>
                           )}
                           <span>{item.name}</span>
-                          {item.is_online && <Badge variant="outline" className="ml-1 text-[9px] bg-emerald-50 text-emerald-600 border-emerald-200"><Globe className="h-2.5 w-2.5 mr-0.5" />Online</Badge>}
+                          {item.is_online && <Badge variant="outline" className="ml-1 text-[9px] bg-emerald-50 text-emerald-600 border-emerald-200"><Globe className="h-2.5 w-2.5 mr-0.5" />{t("modules.inventory.onlineBadge")}</Badge>}
                         </div>
                       </TableCell>
                       <TableCell className="text-xs font-heading font-bold">{item.stock}</TableCell>
@@ -389,7 +389,7 @@ const Inventario = () => {
                       <TableCell className="text-xs text-muted-foreground hidden md:table-cell">${item.cost}</TableCell>
                       <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">{getWarehouseName(item.warehouse_id)}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`text-[10px] ${status.className}`}>{status.label}</Badge>
+                        <Badge variant="outline" className={`text-[10px] ${status.className}`}>{t(`modules.inventory.${status.label}`)}</Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
@@ -411,7 +411,7 @@ const Inventario = () => {
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                      {loading ? t("common.loading") : "No hay productos"}
+                      {loading ? t("common.loading") : t("modules.inventory.table.empty")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -427,13 +427,13 @@ const Inventario = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Fecha</TableHead>
-                  <TableHead className="text-xs">Producto</TableHead>
-                  <TableHead className="text-xs">Tipo</TableHead>
-                  <TableHead className="text-xs">Cantidad</TableHead>
-                  <TableHead className="text-xs">Stock Anterior</TableHead>
-                  <TableHead className="text-xs">Stock Nuevo</TableHead>
-                  <TableHead className="text-xs hidden sm:table-cell">Razón</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.date")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.product")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.type")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.qty")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.previousStock")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.newStock")}</TableHead>
+                  <TableHead className="text-xs hidden sm:table-cell">{t("modules.inventory.table.reason")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -445,7 +445,7 @@ const Inventario = () => {
                     <TableCell className="text-xs font-medium">{getProductName(m.product_id)}</TableCell>
                     <TableCell>
                       <Badge variant={m.movement_type === "entry" ? "default" : "destructive"} className="text-[10px]">
-                        {m.movement_type === "entry" ? "Entrada" : m.movement_type === "exit" ? "Salida" : m.movement_type}
+                        {m.movement_type === "entry" ? t("modules.inventory.movementType.entry") : m.movement_type === "exit" ? t("modules.inventory.movementType.exit") : m.movement_type}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs font-heading font-bold">
@@ -458,7 +458,7 @@ const Inventario = () => {
                 ))}
                 {movements.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-xs">Sin movimientos</TableCell>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-xs">{t("modules.inventory.table.noMovements")}</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -475,11 +475,11 @@ const Inventario = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">SKU</TableHead>
-                  <TableHead className="text-xs">Producto</TableHead>
-                  <TableHead className="text-xs">Tipo</TableHead>
-                  <TableHead className="text-xs">Ubicación</TableHead>
-                  <TableHead className="text-xs">Stock</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.sku")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.product")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.type")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.location")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.stock")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -487,13 +487,13 @@ const Inventario = () => {
                   <TableRow key={r.id}>
                     <TableCell className="text-xs font-heading font-semibold">{r.sku}</TableCell>
                     <TableCell className="text-xs">{r.productName}</TableCell>
-                    <TableCell><Badge variant="outline" className="text-[10px]">{r.location_type === "warehouse" ? "Almacén" : "Tienda"}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className="text-[10px]">{r.location_type === "warehouse" ? t("modules.inventory.locationType.warehouse") : t("modules.inventory.locationType.store")}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">{r.locationName}</TableCell>
                     <TableCell className="text-xs font-heading font-bold">{r.stock}</TableCell>
                   </TableRow>
                 ))}
                 {stockRows.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-xs text-muted-foreground">Sin stock registrado por ubicación</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-xs text-muted-foreground">{t("modules.inventory.table.noStockLocation")}</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
@@ -502,9 +502,9 @@ const Inventario = () => {
 
         <TabsContent value="kardex" className="space-y-4">
           <div className="max-w-md">
-            <Label className="text-xs">Producto</Label>
+            <Label className="text-xs">{t("modules.inventory.kardex.productLabel")}</Label>
             <Select value={kardexProductId} onValueChange={setKardexProductId}>
-              <SelectTrigger><SelectValue placeholder="Selecciona un producto" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("modules.inventory.kardex.selectProduct")} /></SelectTrigger>
               <SelectContent>
                 {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>)}
               </SelectContent>
@@ -514,13 +514,13 @@ const Inventario = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Fecha</TableHead>
-                  <TableHead className="text-xs">Tipo</TableHead>
-                  <TableHead className="text-xs">Ubicación</TableHead>
-                  <TableHead className="text-xs">Cantidad</TableHead>
-                  <TableHead className="text-xs">Anterior</TableHead>
-                  <TableHead className="text-xs">Nuevo</TableHead>
-                  <TableHead className="text-xs">Razón</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.date")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.type")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.location")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.qty")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.previous")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.new")}</TableHead>
+                  <TableHead className="text-xs">{t("modules.inventory.table.reason")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -536,7 +536,7 @@ const Inventario = () => {
                   </TableRow>
                 ))}
                 {(!kardexProductId || kardexMovements.length === 0) && (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-xs text-muted-foreground">{kardexProductId ? "Sin movimientos para este producto" : "Selecciona un producto para ver su historial"}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-xs text-muted-foreground">{kardexProductId ? t("modules.inventory.table.noMovementsProduct") : t("modules.inventory.table.selectProductHistory")}</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
@@ -548,21 +548,21 @@ const Inventario = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
-            <DialogDescription>Ingresa los datos del producto</DialogDescription>
+            <DialogTitle>{editing ? t("modules.inventory.dialog.editProduct") : t("modules.inventory.dialog.newProduct")}</DialogTitle>
+            <DialogDescription>{t("modules.inventory.dialog.enterData")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div><Label>{t("modules.inventory.dialog.name")} *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
               <div><Label>SKU *</Label><Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></div>
             </div>
-            <div><Label>Descripción</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+            <div><Label>{t("modules.inventory.dialog.description")}</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Categoría</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
+              <div><Label>{t("modules.inventory.dialog.category")}</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
               <div>
-                <Label>Almacén</Label>
+                <Label>{t("modules.inventory.table.warehouse")}</Label>
                 <Select value={form.warehouse_id} onValueChange={(v) => setForm({ ...form, warehouse_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("modules.inventory.dialog.warehouseSelect")} /></SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}
                   </SelectContent>
@@ -570,15 +570,15 @@ const Inventario = () => {
               </div>
             </div>
             <div className="grid grid-cols-4 gap-3">
-              <div><Label>Precio</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
-              <div><Label>Costo</Label><Input type="number" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} /></div>
-              <div><Label>Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} /></div>
-              <div><Label>Mínimo</Label><Input type="number" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
+              <div><Label>{t("modules.inventory.table.price")}</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
+              <div><Label>{t("modules.inventory.table.cost")}</Label><Input type="number" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} /></div>
+              <div><Label>{t("modules.inventory.table.stock")}</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} /></div>
+              <div><Label>{t("modules.inventory.table.min")}</Label><Input type="number" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
             </div>
             {/* Imagen del producto (siempre disponible para POS) */}
             <div className="border rounded-lg p-3 space-y-2 bg-muted/30">
-              <Label className="text-sm font-medium">Imagen del producto</Label>
-              <p className="text-[11px] text-muted-foreground">Se muestra en el POS y en el marketplace</p>
+              <Label className="text-sm font-medium">{t("modules.inventory.dialog.image")}</Label>
+              <p className="text-[11px] text-muted-foreground">{t("modules.inventory.dialog.imageHint")}</p>
               <div className="flex items-start gap-3">
                 {form.image_url ? (
                   <img src={form.image_url} alt="preview" className="h-20 w-20 rounded-lg object-cover border" />
@@ -591,7 +591,7 @@ const Inventario = () => {
                   <Input
                     value={form.image_url}
                     onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                    placeholder="https://... o sube un archivo"
+                    placeholder={t("modules.inventory.dialog.imageUrlPlaceholder")}
                   />
                   <div className="flex items-center gap-2">
                     <Input
@@ -604,15 +604,15 @@ const Inventario = () => {
                         const ext = file.name.split(".").pop() || "jpg";
                         const path = `${tenantId}/${Date.now()}.${ext}`;
                         const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
-                        if (error) { toast({ title: "Error subiendo imagen", description: error.message, variant: "destructive" }); return; }
+                        if (error) { toast({ title: t("modules.inventory.errors.uploadImage"), description: error.message, variant: "destructive" }); return; }
                         const { data } = supabase.storage.from("product-images").getPublicUrl(path);
                         setForm((f) => ({ ...f, image_url: data.publicUrl }));
-                        toast({ title: "Imagen subida" });
+                        toast({ title: t("modules.inventory.toasts.imageUploaded") });
                       }}
                     />
                     {form.image_url && (
                       <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, image_url: "" })}>
-                        Quitar
+                        {t("modules.inventory.dialog.remove")}
                       </Button>
                     )}
                   </div>
@@ -624,18 +624,18 @@ const Inventario = () => {
             <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm font-medium">Venta Online</Label>
-                  <p className="text-[11px] text-muted-foreground">Publicar este producto en el marketplace</p>
+                  <Label className="text-sm font-medium">{t("modules.inventory.dialog.onlineSale")}</Label>
+                  <p className="text-[11px] text-muted-foreground">{t("modules.inventory.dialog.onlineSaleHint")}</p>
                 </div>
                 <Switch checked={form.is_online} onCheckedChange={(v) => setForm({ ...form, is_online: v })} />
               </div>
               {form.is_online && (
                 <>
-                  <div><Label>Stock Online</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
+                  <div><Label>{t("modules.inventory.dialog.onlineStock")}</Label><Input type="number" value={form.online_stock} onChange={(e) => setForm({ ...form, online_stock: e.target.value })} /></div>
                   <div className="flex items-center justify-between pt-1">
                     <div>
-                      <Label className="text-xs">Disponible para delivery</Label>
-                      <p className="text-[10px] text-muted-foreground">Si está desactivado, solo se ofrece para recogida</p>
+                      <Label className="text-xs">{t("modules.inventory.dialog.deliverable")}</Label>
+                      <p className="text-[10px] text-muted-foreground">{t("modules.inventory.dialog.deliverableHint")}</p>
                     </div>
                     <Switch checked={form.is_deliverable} onCheckedChange={(v) => setForm({ ...form, is_deliverable: v })} />
                   </div>
@@ -644,8 +644,8 @@ const Inventario = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} className="gradient-brand text-primary-foreground">Guardar</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("modules.inventory.dialog.cancel")}</Button>
+            <Button onClick={handleSave} className="gradient-brand text-primary-foreground">{t("modules.inventory.dialog.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -654,28 +654,28 @@ const Inventario = () => {
       <Dialog open={movementDialogOpen} onOpenChange={setMovementDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Movimiento de Inventario</DialogTitle>
-            <DialogDescription>{selectedProduct?.name} — Stock actual: {selectedProduct?.stock}</DialogDescription>
+            <DialogTitle>{t("modules.inventory.dialog.movement")}</DialogTitle>
+            <DialogDescription>{selectedProduct?.name} — {t("modules.inventory.dialog.currentStock")}: {selectedProduct?.stock}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div>
-              <Label>Tipo</Label>
+              <Label>{t("modules.inventory.table.type")}</Label>
               <Select value={movForm.type} onValueChange={(v) => setMovForm({ ...movForm, type: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="entry">Entrada</SelectItem>
-                  <SelectItem value="exit">Salida</SelectItem>
-                  <SelectItem value="adjustment">Ajuste</SelectItem>
-                  <SelectItem value="transfer">Transferencia</SelectItem>
+                  <SelectItem value="entry">{t("modules.inventory.movementType.entry")}</SelectItem>
+                  <SelectItem value="exit">{t("modules.inventory.movementType.exit")}</SelectItem>
+                  <SelectItem value="adjustment">{t("modules.inventory.movementType.adjustment")}</SelectItem>
+                  <SelectItem value="transfer">{t("modules.inventory.movementType.transfer")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Cantidad</Label><Input type="number" value={movForm.quantity} onChange={(e) => setMovForm({ ...movForm, quantity: e.target.value })} /></div>
-            <div><Label>Razón</Label><Input value={movForm.reason} onChange={(e) => setMovForm({ ...movForm, reason: e.target.value })} placeholder="Motivo del movimiento" /></div>
+            <div><Label>{t("modules.inventory.table.qty")}</Label><Input type="number" value={movForm.quantity} onChange={(e) => setMovForm({ ...movForm, quantity: e.target.value })} /></div>
+            <div><Label>{t("modules.inventory.table.reason")}</Label><Input value={movForm.reason} onChange={(e) => setMovForm({ ...movForm, reason: e.target.value })} placeholder={t("modules.inventory.dialog.movementReasonPh")} /></div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setMovementDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleMovement} className="gradient-brand text-primary-foreground">Registrar</Button>
+            <Button variant="outline" onClick={() => setMovementDialogOpen(false)}>{t("modules.inventory.dialog.cancel")}</Button>
+            <Button onClick={handleMovement} className="gradient-brand text-primary-foreground">{t("modules.inventory.dialog.register")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
