@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useAgent } from "@/hooks/useAgent";
 import { motion } from "framer-motion";
 import { Activity, AlertTriangle, ArrowRightLeft, ClipboardCheck, Plus, Sparkles, Store, Warehouse, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,15 +54,17 @@ const Operaciones = () => {
     setRuns(runRes.data || []);
   };
 
+  const { invoke } = useAgent();
   const runOptimizer = async () => {
     if (!tenantId) return;
     setLoading(true);
-    const { data, error } = await supabase.functions.invoke("logistics-optimizer", { body: { tenant_id: tenantId } });
+    const { data, error } = await invoke<Insights>("logistics-optimizer", { tenant_id: tenantId }, { notify: false });
     setLoading(false);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    setInsights(data as Insights);
+    if (error) { toast({ title: "Error", description: error, variant: "destructive" }); return; }
+    if (data) setInsights(data);
     toast({ title: "Análisis logístico actualizado" });
   };
+
 
   useEffect(() => { load(); }, []);
   useEffect(() => { if (tenantId) runOptimizer(); }, [tenantId]);

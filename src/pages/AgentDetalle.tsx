@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AGENT_DEFINITIONS } from "@/lib/agents";
 import { ArrowLeft, Bot, Loader2, PlayCircle, Brain, Activity, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { useAgent } from "@/hooks/useAgent";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -43,15 +44,18 @@ export default function AgentDetalle() {
     if (error) toast.error(error.message); else load();
   };
 
+  const { invoke } = useAgent();
   const run = async () => {
     setRunning(true);
-    try {
-      const { error, data } = await supabase.functions.invoke("agent-runner", { body: { agent_id: id } });
-      if (error) throw error;
-      toast.success(`Análisis completado · ${data?.recommendations?.length ?? 0} recomendaciones`);
-      load();
-    } catch (e: any) { toast.error(e?.message ?? "Error"); } finally { setRunning(false); }
+    const { data, error, correlationId, validationOk } = await invoke("agent-runner", { agent_id: id }, { notify: false });
+    setRunning(false);
+    if (error) { toast.error(error); return; }
+    toast.success(`Análisis completado · ${(data as any)?.recommendations?.length ?? 0} recomendaciones`, {
+      description: `cid: ${correlationId.slice(0, 8)}${validationOk === false ? " · validación parcial" : ""}`,
+    });
+    load();
   };
+
 
   if (!agent) return <AppLayout title="Agente"><div className="text-sm text-muted-foreground">Cargando...</div></AppLayout>;
 

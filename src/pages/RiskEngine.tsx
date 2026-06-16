@@ -10,10 +10,13 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
+import { useAgent } from "@/hooks/useAgent";
+
 export default function RiskEngine() {
   const { tenantId } = useTenantContext();
   const [items, setItems] = useState<any[]>([]);
-  const [scanning, setScanning] = useState(false);
+  const { invoke, isRunning } = useAgent();
+  const scanning = isRunning("risk-scanner");
 
   const load = async () => {
     if (!tenantId) return;
@@ -24,15 +27,13 @@ export default function RiskEngine() {
 
   const scan = async () => {
     if (!tenantId) return;
-    setScanning(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("risk-scanner", { body: { tenant_id: tenantId } });
-      if (error) throw error;
-      toast.success(`Escaneo completado · ${data?.created ?? 0} alertas nuevas`);
+    const { data, error } = await invoke("risk-scanner", { tenant_id: tenantId });
+    if (!error) {
+      toast.success(`Escaneo completado · ${(data as any)?.created ?? 0} alertas nuevas`);
       load();
-    } catch (e: any) { toast.error(e?.message ?? "Error"); }
-    finally { setScanning(false); }
+    }
   };
+
 
   const resolve = async (id: string) => {
     await supabase.from("risk_alerts").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("id", id);

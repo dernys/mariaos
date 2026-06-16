@@ -10,6 +10,8 @@ import { Activity, TrendingDown, TrendingUp, RefreshCw, Brain, AlertTriangle } f
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useToast } from "@/hooks/use-toast";
+import { useAgent } from "@/hooks/useAgent";
+
 
 interface Baseline {
   revenue30d: number;
@@ -34,6 +36,8 @@ export default function DigitalTwin() {
   const [priceChange, setPriceChange] = useState(0);
   const [costChange, setCostChange] = useState(0);
   const [demandChange, setDemandChange] = useState(0);
+  const { invoke } = useAgent();
+
 
   const loadBaseline = async () => {
     if (!tenantId) return;
@@ -73,16 +77,11 @@ export default function DigitalTwin() {
 
   const loadIntelligence = async () => {
     if (!tenantId) return;
-    try {
-      const { data, error } = await supabase.functions.invoke("inventory-intelligence", {
-        body: { tenant_id: tenantId, mode: "all" },
-      });
-      if (error) throw error;
-      setIntel(data ?? null);
-    } catch (e: any) {
-      console.warn("inventory-intelligence error", e);
-    }
+    const { data, error } = await invoke<Intelligence>("inventory-intelligence", { tenant_id: tenantId, mode: "all" }, { notify: false });
+    if (error) { console.warn("inventory-intelligence error", error); return; }
+    setIntel(data ?? null);
   };
+
 
   useEffect(() => {
     if (!tenantId) return;
