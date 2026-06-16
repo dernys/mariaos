@@ -2580,6 +2580,73 @@ export type Database = {
           },
         ]
       }
+      general_ledger: {
+        Row: {
+          account_id: string
+          closing_balance: number
+          created_at: string
+          credit_total: number
+          currency: string
+          debit_total: number
+          id: string
+          opening_balance: number
+          period_id: string
+          rebuilt_at: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          closing_balance?: number
+          created_at?: string
+          credit_total?: number
+          currency?: string
+          debit_total?: number
+          id?: string
+          opening_balance?: number
+          period_id: string
+          rebuilt_at?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          closing_balance?: number
+          created_at?: string
+          credit_total?: number
+          currency?: string
+          debit_total?: number
+          id?: string
+          opening_balance?: number
+          period_id?: string
+          rebuilt_at?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_ledger_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_ledger_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trial_balance_view"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "general_ledger_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           created_at: string
@@ -2877,6 +2944,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sales"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_ar_aging"
+            referencedColumns: ["sale_id"]
           },
           {
             foreignKeyName: "invoices_tax_rate_id_fkey"
@@ -5129,6 +5203,13 @@ export type Database = {
             referencedRelation: "purchases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "purchase_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "v_ap_aging"
+            referencedColumns: ["purchase_id"]
+          },
         ]
       }
       purchases: {
@@ -5444,6 +5525,13 @@ export type Database = {
             referencedRelation: "sales"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_ar_aging"
+            referencedColumns: ["sale_id"]
+          },
         ]
       }
       sale_payments: {
@@ -5493,6 +5581,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sales"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_payments_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_ar_aging"
+            referencedColumns: ["sale_id"]
           },
         ]
       }
@@ -5587,6 +5682,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sales"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_ar_aging"
+            referencedColumns: ["sale_id"]
           },
         ]
       }
@@ -6429,6 +6531,7 @@ export type Database = {
       }
       tax_rates: {
         Row: {
+          code: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -6438,6 +6541,7 @@ export type Database = {
           tenant_id: string | null
         }
         Insert: {
+          code?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -6447,6 +6551,7 @@ export type Database = {
           tenant_id?: string | null
         }
         Update: {
+          code?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -7419,6 +7524,137 @@ export type Database = {
           },
         ]
       }
+      v_ap_aging: {
+        Row: {
+          balance: number | null
+          days_old: number | null
+          invoice_date: string | null
+          invoice_number: string | null
+          purchase_id: string | null
+          supplier_id: string | null
+          supplier_name: string | null
+          tenant_id: string | null
+          total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_ar_aging: {
+        Row: {
+          balance: number | null
+          customer_id: string | null
+          customer_name: string | null
+          days_old: number | null
+          invoice_date: string | null
+          invoice_number: string | null
+          sale_id: string | null
+          tenant_id: string | null
+          total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_balance_sheet: {
+        Row: {
+          closing_balance: number | null
+          code: string | null
+          name: string | null
+          period_id: string | null
+          tenant_id: string | null
+          type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_ledger_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_cash_flow: {
+        Row: {
+          code: string | null
+          credit: number | null
+          debit: number | null
+          entry_date: string | null
+          name: string | null
+          net_change: number | null
+          period_id: string | null
+          tenant_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_income_statement: {
+        Row: {
+          amount: number | null
+          code: string | null
+          name: string | null
+          period_id: string | null
+          tenant_id: string | null
+          type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_ledger_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_replenishment_suggestions: {
         Row: {
           avg_daily_consumption: number | null
@@ -7443,6 +7679,29 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_trial_balance: {
+        Row: {
+          closing_balance: number | null
+          code: string | null
+          credit_total: number | null
+          debit_total: number | null
+          name: string | null
+          nature: string | null
+          opening_balance: number | null
+          period_id: string | null
+          tenant_id: string | null
+          type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_ledger_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
             referencedColumns: ["id"]
           },
         ]
@@ -7493,7 +7752,11 @@ export type Database = {
       }
       close_accounting_period: {
         Args: { p_period_id: string }
-        Returns: undefined
+        Returns: boolean
+      }
+      close_fiscal_year: {
+        Args: { p_fiscal_year_id: string }
+        Returns: boolean
       }
       close_shift_with_summary: {
         Args: { p_declared_cash: number; p_notes?: string; p_shift_id: string }
@@ -7835,6 +8098,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      rebuild_general_ledger: { Args: { p_period_id: string }; Returns: number }
       receive_purchase: { Args: { p_purchase_id: string }; Returns: undefined }
       receive_purchase_consignment: {
         Args: { p_purchase_id: string }
