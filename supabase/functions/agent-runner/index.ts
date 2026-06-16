@@ -2,6 +2,22 @@
 // Receives an agent_id, gathers tenant context relevant to the agent type,
 // asks Lovable AI Gateway for structured analysis, persists decisions + actions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { z } from "https://esm.sh/zod@3.23.8";
+
+// --- Zod schema for LLM structured output ---
+const RecommendationSchema = z.object({
+  title: z.string().min(1).max(200),
+  rationale: z.string().max(2000).optional().default(""),
+  priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+  requires_approval: z.boolean().optional().default(true),
+});
+const AgentOutputSchema = z.object({
+  summary: z.string().min(1).max(1000),
+  insights: z.array(z.string().max(500)).max(20).default([]),
+  recommendations: z.array(RecommendationSchema).max(10).default([]),
+});
+type AgentOutput = z.infer<typeof AgentOutputSchema>;
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
