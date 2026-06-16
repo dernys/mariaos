@@ -15,7 +15,6 @@ import { Copy, Trash2, Plus } from "lucide-react";
 const ALL_EVENTS = ["sale.created", "shift.closed", "stock.low"];
 
 async function sha256Hex(s: string) {
-  const { t } = useTranslation();
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -28,6 +27,7 @@ function randomKey() {
 }
 
 export default function Developers() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const [keys, setKeys] = useState<any[]>([]);
   const [webhooks, setWebhooks] = useState<any[]>([]);

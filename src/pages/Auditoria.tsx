@@ -53,7 +53,6 @@ const ENTITY_ROUTES: Record<string, (id: string) => string> = {
 };
 
 function actionIcon(action: string) {
-  const { t } = useTranslation();
   const a = action.toLowerCase();
   if (a.includes("cancel") || a.includes("anul") || a.includes("delet") || a.includes("elim")) return <Trash2 className="h-3 w-3" />;
   if (a.includes("crea") || a.includes("alta") || a.includes("nuev") || a.includes("regist")) return <Plus className="h-3 w-3" />;
@@ -72,6 +71,7 @@ function actionVariant(action: string): "default" | "destructive" | "secondary" 
 }
 
 export default function Auditoria() {
+  const { t } = useTranslation();
   const { isSuperadmin, loading: saLoading } = useSuperadmin();
   const navigate = useNavigate();
   const [logs, setLogs] = useState<AuditLog[]>([]);
