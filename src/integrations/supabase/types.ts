@@ -1101,6 +1101,82 @@ export type Database = {
           },
         ]
       }
+      combo_items: {
+        Row: {
+          child_product_id: string
+          combo_product_id: string
+          created_at: string
+          id: string
+          is_optional: boolean
+          note: string | null
+          quantity: number
+          tenant_id: string
+        }
+        Insert: {
+          child_product_id: string
+          combo_product_id: string
+          created_at?: string
+          id?: string
+          is_optional?: boolean
+          note?: string | null
+          quantity?: number
+          tenant_id: string
+        }
+        Update: {
+          child_product_id?: string
+          combo_product_id?: string
+          created_at?: string
+          id?: string
+          is_optional?: boolean
+          note?: string | null
+          quantity?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combo_items_child_product_id_fkey"
+            columns: ["child_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combo_items_child_product_id_fkey"
+            columns: ["child_product_id"]
+            isOneToOne: false
+            referencedRelation: "v_replenishment_suggestions"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "combo_items_combo_product_id_fkey"
+            columns: ["combo_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combo_items_combo_product_id_fkey"
+            columns: ["combo_product_id"]
+            isOneToOne: false
+            referencedRelation: "v_replenishment_suggestions"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "combo_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combo_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consignment_lots: {
         Row: {
           created_at: string
@@ -4287,28 +4363,34 @@ export type Database = {
           created_at: string
           id: string
           ingredient_id: string
+          note: string | null
           product_id: string
           quantity: number
           tenant_id: string | null
           unit: string
+          waste_pct: number
         }
         Insert: {
           created_at?: string
           id?: string
           ingredient_id: string
+          note?: string | null
           product_id: string
           quantity?: number
           tenant_id?: string | null
           unit?: string
+          waste_pct?: number
         }
         Update: {
           created_at?: string
           id?: string
           ingredient_id?: string
+          note?: string | null
           product_id?: string
           quantity?: number
           tenant_id?: string | null
           unit?: string
+          waste_pct?: number
         }
         Relationships: [
           {
@@ -4601,8 +4683,10 @@ export type Database = {
           image_url: string | null
           images: Json
           is_active: boolean
+          is_combo: boolean
           is_deliverable: boolean | null
           is_online: boolean
+          is_semi_finished: boolean
           max_stock: number | null
           min_stock: number
           name: string
@@ -4630,8 +4714,10 @@ export type Database = {
           image_url?: string | null
           images?: Json
           is_active?: boolean
+          is_combo?: boolean
           is_deliverable?: boolean | null
           is_online?: boolean
+          is_semi_finished?: boolean
           max_stock?: number | null
           min_stock?: number
           name: string
@@ -4659,8 +4745,10 @@ export type Database = {
           image_url?: string | null
           images?: Json
           is_active?: boolean
+          is_combo?: boolean
           is_deliverable?: boolean | null
           is_online?: boolean
+          is_semi_finished?: boolean
           max_stock?: number | null
           min_stock?: number
           name?: string
@@ -6955,6 +7043,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recipe_costing: {
+        Row: {
+          margin: number | null
+          margin_pct: number | null
+          name: string | null
+          price: number | null
+          product_id: string | null
+          tenant_id: string | null
+          unit_cost: number | null
+        }
+        Relationships: []
       }
       stores_public: {
         Row: {
