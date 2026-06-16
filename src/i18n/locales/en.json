@@ -722,6 +722,111 @@
       "registered": "Payment registered",
       "registeredDesc": "Total: {{total}} (base)",
       "invalidAmount": "Invalid amount"
+    },
+    "bar": {
+      "header": "Service Bar",
+      "productsCount": "{{n}} products",
+      "searchPh": "Search or scan code...",
+      "parkedTitle": "Parked sales",
+      "noProducts": "No products",
+      "lowStockBadge": "Low",
+      "account": "Tab",
+      "clientAccount": "Customer Tab",
+      "itemsCount": "{{n}} items",
+      "taxLabel": "Tax ({{rate}}%)",
+      "offlineToast": "POS offline — using local catalog",
+      "codeNotFound": "Code not found: {{code}}"
+    },
+    "restaurantView": {
+      "header": "Order",
+      "dishesCount": "{{n}} dishes",
+      "noTable": "No table",
+      "waiterPh": "Waiter...",
+      "orderNotesPh": "Order notes...",
+      "menu": "Menu",
+      "tables": "Tables",
+      "searchDish": "Search menu dish...",
+      "noDishes": "No dishes available",
+      "serviceLabel": "Service ({{rate}}%)",
+      "sendToCash": "Send to Cashier",
+      "sendToKitchen": "Send to Kitchen",
+      "kitchen": "Kitchen",
+      "split": "Split",
+      "orderSent": "Order sent",
+      "orderSentDesc": "{{n}} dishes sent to kitchen",
+      "orderError": "Could not create the order",
+      "splitDone": "Bill split",
+      "splitDoneDesc": "{{n}} bills generated",
+      "orderTitle": "Order"
+    },
+    "empresa": {
+      "searchPh": "Search product or SKU...",
+      "noProducts": "No products",
+      "cart": "Cart",
+      "saleCart": "Sale Cart",
+      "unitsBadge": "{{n}} u",
+      "itemsCount": "{{n}} items"
+    },
+    "floor": {
+      "status": {
+        "free": "Free",
+        "occupied": "Occupied",
+        "served": "Served",
+        "waiting_bill": "Waiting bill"
+      },
+      "statusCount": "{{label}}: {{n}}",
+      "noTables": "No tables configured"
+    },
+    "kitchen": {
+      "tabs": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready"
+      },
+      "noTable": "No table",
+      "waiterLabel": "Waiter: {{name}}",
+      "startPrep": "Start preparing",
+      "markReady": "Mark as ready",
+      "delivered": "Delivered",
+      "emptyPending": "No pending orders",
+      "emptyPreparing": "No orders in preparation",
+      "emptyReady": "No ready orders",
+      "toasts": {
+        "preparing": "Preparing",
+        "ready": "Ready to serve!",
+        "delivered": "Delivered",
+        "updated": "Order updated"
+      }
+    },
+    "tableOrders": {
+      "empty": "No active orders",
+      "active": "Active orders ({{n}})",
+      "waiter": "Waiter: {{name}}",
+      "status": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "delivered": "Delivered"
+      }
+    },
+    "shift": {
+      "bar": {
+        "title": "Open the bar to start charging",
+        "sub": "You need an open shift to log tabs, split bills and reconcile the cash drawer."
+      },
+      "restaurant": {
+        "title": "Start the dining-room shift",
+        "sub": "To take orders, send to the kitchen and charge tables, an active shift assigned to a cashier is required first."
+      },
+      "empresa": {
+        "title": "Open a sales shift",
+        "sub": "The POS requires an open shift to record sales, deduct inventory and keep cash-drawer traceability."
+      },
+      "openNow": "Open shift now",
+      "footer": "Only one open shift per user. Closing it triggers the automatic cash count.",
+      "active": "Active shift",
+      "since": "since {{time}}",
+      "view": "View shift"
     }
   }
 }

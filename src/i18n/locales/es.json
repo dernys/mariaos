@@ -722,6 +722,111 @@
       "registered": "Pago registrado",
       "registeredDesc": "Total: {{total}} (base)",
       "invalidAmount": "Monto inválido"
+    },
+    "bar": {
+      "header": "Barra de Servicio",
+      "productsCount": "{{n}} productos",
+      "searchPh": "Buscar o escanear código...",
+      "parkedTitle": "Ventas en espera",
+      "noProducts": "No hay productos",
+      "lowStockBadge": "Bajo",
+      "account": "Cuenta",
+      "clientAccount": "Cuenta del Cliente",
+      "itemsCount": "{{n}} artículos",
+      "taxLabel": "Impuesto ({{rate}}%)",
+      "offlineToast": "POS en modo offline — usando catálogo local",
+      "codeNotFound": "Código no encontrado: {{code}}"
+    },
+    "restaurantView": {
+      "header": "Comanda",
+      "dishesCount": "{{n}} platos",
+      "noTable": "Sin mesa",
+      "waiterPh": "Mesero...",
+      "orderNotesPh": "Notas de la orden...",
+      "menu": "Menú",
+      "tables": "Mesas",
+      "searchDish": "Buscar plato del menú...",
+      "noDishes": "No hay platos disponibles",
+      "serviceLabel": "Servicio ({{rate}}%)",
+      "sendToCash": "Enviar a Caja",
+      "sendToKitchen": "Enviar a Cocina",
+      "kitchen": "Cocina",
+      "split": "Dividir",
+      "orderSent": "Comanda enviada",
+      "orderSentDesc": "{{n}} platos enviados a cocina",
+      "orderError": "No se pudo crear la orden",
+      "splitDone": "Cuenta dividida",
+      "splitDoneDesc": "{{n}} cuentas generadas",
+      "orderTitle": "Comanda"
+    },
+    "empresa": {
+      "searchPh": "Buscar producto o SKU...",
+      "noProducts": "No hay productos",
+      "cart": "Carrito",
+      "saleCart": "Carrito de Venta",
+      "unitsBadge": "{{n}} uds",
+      "itemsCount": "{{n}} artículos"
+    },
+    "floor": {
+      "status": {
+        "free": "Libre",
+        "occupied": "Ocupada",
+        "served": "Servida",
+        "waiting_bill": "Esperando cuenta"
+      },
+      "statusCount": "{{label}}: {{n}}",
+      "noTables": "No hay mesas configuradas"
+    },
+    "kitchen": {
+      "tabs": {
+        "pending": "Pendientes",
+        "preparing": "Preparando",
+        "ready": "Listos"
+      },
+      "noTable": "Sin mesa",
+      "waiterLabel": "Mesero: {{name}}",
+      "startPrep": "Comenzar preparación",
+      "markReady": "Marcar como listo",
+      "delivered": "Entregado",
+      "emptyPending": "No hay órdenes pendientes",
+      "emptyPreparing": "No hay órdenes en preparación",
+      "emptyReady": "No hay órdenes listas",
+      "toasts": {
+        "preparing": "En preparación",
+        "ready": "¡Listo para servir!",
+        "delivered": "Entregado",
+        "updated": "Orden actualizada"
+      }
+    },
+    "tableOrders": {
+      "empty": "Sin órdenes activas",
+      "active": "Órdenes activas ({{n}})",
+      "waiter": "Mesero: {{name}}",
+      "status": {
+        "pending": "Pendiente",
+        "preparing": "Preparando",
+        "ready": "Listo",
+        "delivered": "Entregado"
+      }
+    },
+    "shift": {
+      "bar": {
+        "title": "Abre la barra para empezar a cobrar",
+        "sub": "Necesitas un turno abierto para registrar consumos, dividir cuentas y cuadrar la caja al cierre."
+      },
+      "restaurant": {
+        "title": "Inicia el turno del salón",
+        "sub": "Para tomar comandas, enviar a cocina y cobrar mesas, primero debe haber un turno activo asignado a un cajero."
+      },
+      "empresa": {
+        "title": "Abre un turno de venta",
+        "sub": "El POS exige un turno abierto para registrar ventas, descontar inventario y dejar trazabilidad de la caja."
+      },
+      "openNow": "Abrir turno ahora",
+      "footer": "Solo un turno abierto por usuario. Al cerrarlo se hace el arqueo automático.",
+      "active": "Turno activo",
+      "since": "desde {{time}}",
+      "view": "Ver turno"
     }
   }
 }
