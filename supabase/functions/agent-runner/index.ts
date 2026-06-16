@@ -2,6 +2,22 @@
 // Receives an agent_id, gathers tenant context relevant to the agent type,
 // asks Lovable AI Gateway for structured analysis, persists decisions + actions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { z } from "https://esm.sh/zod@3.23.8";
+
+// --- Zod schema for LLM structured output ---
+const RecommendationSchema = z.object({
+  title: z.string().min(1).max(200),
+  rationale: z.string().max(2000).optional().default(""),
+  priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+  requires_approval: z.boolean().optional().default(true),
+});
+const AgentOutputSchema = z.object({
+  summary: z.string().min(1).max(1000),
+  insights: z.array(z.string().max(500)).max(20).default([]),
+  recommendations: z.array(RecommendationSchema).max(10).default([]),
+});
+type AgentOutput = z.infer<typeof AgentOutputSchema>;
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -150,8 +166,39 @@ Deno.serve(async (req) => {
 
     const aiJson = await aiRes.json();
     const raw = aiJson.choices?.[0]?.message?.content ?? "{}";
-    let parsed: any = {};
-    try { parsed = typeof raw === "string" ? JSON.parse(raw) : raw; } catch { parsed = { summary: String(raw), insights: [], recommendations: [] }; }
+    const correlationId = crypto.randomUUID();
+
+    // --- Parse + Zod validate ---
+    let rawParsed: unknown;
+    try { rawParsed = typeof raw === "string" ? JSON.parse(raw) : raw; }
+    catch { rawParsed = { summary: String(raw), insights: [], recommendations: [] }; }
+
+    const validation = AgentOutputSchema.safeParse(rawParsed);
+    let parsed: AgentOutput;
+    let validation_errors: any = null;
+    if (validation.success) {
+      parsed = validation.data;
+    } else {
+      validation_errors = validation.error.flatten();
+      console.warn("agent-runner: LLM output failed Zod validation", validation_errors);
+      // Best-effort fallback so we still persist *something* auditable
+      const r: any = rawParsed ?? {};
+      parsed = {
+        summary: typeof r.summary === "string" ? r.summary.slice(0, 1000) : `Análisis de ${agent.name}`,
+        insights: Array.isArray(r.insights) ? r.insights.filter((x: any) => typeof x === "string").slice(0, 20) : [],
+        recommendations: Array.isArray(r.recommendations)
+          ? r.recommendations
+              .filter((x: any) => x && typeof x.title === "string")
+              .slice(0, 10)
+              .map((x: any) => ({
+                title: String(x.title).slice(0, 200),
+                rationale: typeof x.rationale === "string" ? x.rationale.slice(0, 2000) : "",
+                priority: ["low", "medium", "high", "critical"].includes(x.priority) ? x.priority : "medium",
+                requires_approval: x.requires_approval !== false,
+              }))
+          : [],
+      };
+    }
 
     // Persist decision
     const { data: decision } = await admin
@@ -159,9 +206,9 @@ Deno.serve(async (req) => {
       .insert({
         tenant_id: agent.tenant_id,
         agent_id: agent.id,
-        title: parsed.summary?.slice(0, 120) ?? `Análisis de ${agent.name}`,
-        context: ctx,
-        recommendation: parsed,
+        title: parsed.summary.slice(0, 120),
+        context: { ...ctx, correlation_id: correlationId },
+        recommendation: { ...parsed, validation_errors },
         reasoning: parsed.summary,
         status: "pending",
       })
@@ -169,24 +216,48 @@ Deno.serve(async (req) => {
       .single();
 
     // Persist actions for each recommendation
-    const recs = Array.isArray(parsed.recommendations) ? parsed.recommendations : [];
+    const recs = parsed.recommendations;
     if (recs.length > 0) {
       await admin.from("agent_actions").insert(
-        recs.map((r: any) => ({
+        recs.map((r) => ({
           tenant_id: agent.tenant_id,
           agent_id: agent.id,
-          action_type: r.title?.slice(0, 80) ?? "recommendation",
+          action_type: r.title.slice(0, 80),
           status: agent.autonomy_level === "autonomous" ? "executed" : "pending",
           requires_approval: r.requires_approval !== false,
-          payload: r,
+          payload: { ...r, correlation_id: correlationId, decision_id: decision?.id },
         }))
       );
+    }
+
+    // --- Persist into business_memory (long-term tenant knowledge) ---
+    try {
+      await admin.from("business_memory").insert({
+        tenant_id: agent.tenant_id,
+        topic: `agent:${agent.type}`,
+        summary: parsed.summary.slice(0, 500),
+        details: {
+          agent_id: agent.id,
+          agent_name: agent.name,
+          insights: parsed.insights,
+          recommendation_count: recs.length,
+          priorities: recs.map((r) => r.priority),
+          context_snapshot: ctx,
+          correlation_id: correlationId,
+          had_validation_errors: !!validation_errors,
+          generated_at: new Date().toISOString(),
+        },
+        source_decision_id: decision?.id ?? null,
+      });
+    } catch (memErr) {
+      console.warn("business_memory insert failed", memErr);
     }
 
     // Update agent metrics
     const metrics = (agent.metrics ?? {}) as any;
     metrics.runs = (metrics.runs ?? 0) + 1;
     metrics.last_recommendations = recs.length;
+    metrics.last_validation_ok = !validation_errors;
     await admin.from("ai_agents").update({ last_run_at: new Date().toISOString(), metrics }).eq("id", agent.id);
 
     // Emit business event
@@ -194,12 +265,26 @@ Deno.serve(async (req) => {
       tenant_id: agent.tenant_id,
       source: `agent:${agent.type}`,
       event_type: "agent.analysis.completed",
-      payload: { agent_id: agent.id, decision_id: decision?.id, recommendations: recs.length },
+      payload: {
+        agent_id: agent.id,
+        decision_id: decision?.id,
+        recommendations: recs.length,
+        correlation_id: correlationId,
+        validation_ok: !validation_errors,
+      },
     });
 
-    return new Response(JSON.stringify({ ok: true, decision, recommendations: recs }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({
+      ok: true,
+      decision,
+      recommendations: recs,
+      correlation_id: correlationId,
+      validation_ok: !validation_errors,
+      validation_errors,
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json", "x-correlation-id": correlationId },
     });
+
   } catch (e) {
     console.error("agent-runner error", e);
     return new Response(JSON.stringify({ error: (e as Error).message }), {
