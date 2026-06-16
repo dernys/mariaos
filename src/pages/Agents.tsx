@@ -54,16 +54,17 @@ export default function Agents() {
     if (error) toast.error(error.message); else load();
   };
 
+  const { invoke } = useAgent();
+
   const runAgent = async (agent: any) => {
     setRunning(agent.id);
-    try {
-      const { error, data } = await supabase.functions.invoke("agent-runner", { body: { agent_id: agent.id } });
-      if (error) throw error;
-      toast.success(`Análisis completado · ${data?.recommendations?.length ?? 0} recomendaciones`);
-      load();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Error ejecutando agente");
-    } finally { setRunning(null); }
+    const { data, error, correlationId } = await invoke("agent-runner", { agent_id: agent.id }, { notify: false });
+    setRunning(null);
+    if (error) { toast.error(error); return; }
+    toast.success(`Análisis completado · ${(data as any)?.recommendations?.length ?? 0} recomendaciones`, {
+      description: `cid: ${correlationId.slice(0, 8)}`,
+    });
+    load();
   };
 
   const runAll = async () => {
@@ -72,15 +73,14 @@ export default function Agents() {
     setBulkBusy(true);
     let ok = 0;
     for (const a of active) {
-      try {
-        await supabase.functions.invoke("agent-runner", { body: { agent_id: a.id } });
-        ok++;
-      } catch (e) { /* continue */ }
+      const { error } = await invoke("agent-runner", { agent_id: a.id }, { notify: false });
+      if (!error) ok++;
     }
     toast.success(`${ok}/${active.length} agentes ejecutados`);
     await load();
     setBulkBusy(false);
   };
+
 
   return (
     <AppLayout title="Agentes IA">
