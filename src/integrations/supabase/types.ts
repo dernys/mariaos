@@ -2296,6 +2296,76 @@ export type Database = {
           },
         ]
       }
+      delivery_commissions: {
+        Row: {
+          assignment_id: string | null
+          base_amount: number
+          commission_amount: number
+          commission_pct: number
+          created_at: string
+          currency: string
+          id: string
+          online_order_id: string | null
+          paid_at: string | null
+          rider_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          base_amount?: number
+          commission_amount?: number
+          commission_pct?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          online_order_id?: string | null
+          paid_at?: string | null
+          rider_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string | null
+          base_amount?: number
+          commission_amount?: number
+          commission_pct?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          online_order_id?: string | null
+          paid_at?: string | null
+          rider_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_commissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_commissions_online_order_id_fkey"
+            columns: ["online_order_id"]
+            isOneToOne: false
+            referencedRelation: "online_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_commissions_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_riders: {
         Row: {
           avatar_url: string | null
@@ -8246,6 +8316,14 @@ export type Database = {
         Args: { p_approve: boolean; p_leave_id: string; p_reason?: string }
         Returns: undefined
       }
+      auto_match_bank_transaction: {
+        Args: { p_tx_id: string }
+        Returns: string
+      }
+      auto_reconcile_bank_account: {
+        Args: { p_bank_account_id: string }
+        Returns: number
+      }
       award_loyalty_points: { Args: { p_sale_id: string }; Returns: number }
       br_generate_nfe: { Args: { p_sale_id: string }; Returns: string }
       br_generate_sped_ecd: {
@@ -8287,6 +8365,10 @@ export type Database = {
       }
       close_accounting_period: {
         Args: { p_period_id: string }
+        Returns: boolean
+      }
+      close_bank_reconciliation: {
+        Args: { p_reconciliation_id: string }
         Returns: boolean
       }
       close_fiscal_year: {
