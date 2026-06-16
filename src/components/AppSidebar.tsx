@@ -45,6 +45,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSuperadmin } from "@/hooks/useSuperadmin";
 import { TenantSelector } from "@/components/TenantSelector";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import {
   Sidebar,
   SidebarContent,
@@ -66,13 +68,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 type BizType = "restaurante" | "restaurant" | "bar" | "empresa";
 
 interface MenuChild {
-  title: string;
+  titleKey: string;
   url: string;
   icon: typeof LayoutDashboard;
 }
 
 interface MenuItem {
-  title: string;
+  titleKey: string;
   url: string;
   icon: typeof LayoutDashboard;
   types?: BizType[];
@@ -80,106 +82,106 @@ interface MenuItem {
 }
 
 interface MenuGroup {
-  label: string;
+  labelKey: string;
   items: MenuItem[];
 }
 
-const adminOnlyGroupLabels = new Set(["MarIA OS"]);
+const adminOnlyGroupKeys = new Set(["mariaos"]);
 
 const menuGroups: MenuGroup[] = [
   {
-    label: "MarIA OS",
+    labelKey: "mariaos",
     items: [
-      { title: "Command Center", url: "/command-center", icon: Sparkles },
-      { title: "Agentes IA", url: "/agents", icon: Bot },
-      { title: "Decisiones", url: "/decisions", icon: Brain },
-      { title: "Riesgos", url: "/risk", icon: ShieldAlert },
-      { title: "Memoria", url: "/memory", icon: GitBranch },
-      { title: "Digital Twin", url: "/digital-twin", icon: Workflow },
-      { title: "Workflows", url: "/workflows", icon: Workflow },
+      { titleKey: "commandCenter", url: "/command-center", icon: Sparkles },
+      { titleKey: "agents", url: "/agents", icon: Bot },
+      { titleKey: "decisions", url: "/decisions", icon: Brain },
+      { titleKey: "risks", url: "/risk", icon: ShieldAlert },
+      { titleKey: "memory", url: "/memory", icon: GitBranch },
+      { titleKey: "digitalTwin", url: "/digital-twin", icon: Workflow },
+      { titleKey: "workflows", url: "/workflows", icon: Workflow },
     ],
   },
   {
-    label: "General",
+    labelKey: "general",
     items: [
-      { title: "Dashboard", url: "/", icon: LayoutDashboard },
-      { title: "Analytics", url: "/analytics", icon: BarChart3 },
-      { title: "Reportes & BI", url: "/reportes", icon: PieChart },
+      { titleKey: "dashboard", url: "/", icon: LayoutDashboard },
+      { titleKey: "analytics", url: "/analytics", icon: BarChart3 },
+      { titleKey: "reports", url: "/reportes", icon: PieChart },
     ],
   },
   {
-    label: "Operaciones",
+    labelKey: "operations",
     items: [
-      { title: "Punto de Venta", url: "/pos", icon: Monitor },
-      { title: "Mapa de Mesas", url: "/mesas", icon: MapPin, types: ["restaurante", "restaurant", "bar"] },
-      { title: "Cocina (KDS)", url: "/cocina", icon: ChefHat, types: ["restaurante", "restaurant", "bar"] },
-      { title: "Turnos", url: "/turnos", icon: Clock },
+      { titleKey: "pos", url: "/pos", icon: Monitor },
+      { titleKey: "tables", url: "/mesas", icon: MapPin, types: ["restaurante", "restaurant", "bar"] },
+      { titleKey: "kitchen", url: "/cocina", icon: ChefHat, types: ["restaurante", "restaurant", "bar"] },
+      { titleKey: "shifts", url: "/turnos", icon: Clock },
     ],
   },
   {
-    label: "Inventario",
+    labelKey: "inventory",
     items: [
-      { title: "Productos", url: "/inventario", icon: Package },
-      { title: "Recetas", url: "/recetas", icon: Utensils, types: ["restaurante", "restaurant", "bar"] },
-      { title: "Inteligencia", url: "/inventario/inteligencia", icon: Brain },
-      { title: "Conteos físicos", url: "/conteos", icon: Shield },
-      { title: "Almacenes", url: "/almacenes", icon: Warehouse, types: ["empresa"] },
-      { title: "Tiendas", url: "/tiendas", icon: Store, types: ["empresa"] },
-      { title: "Operaciones", url: "/operaciones", icon: Workflow, types: ["empresa"] },
-      { title: "Transferencias", url: "/transferencias", icon: ArrowRightLeft, types: ["empresa"] },
+      { titleKey: "products", url: "/inventario", icon: Package },
+      { titleKey: "recipes", url: "/recetas", icon: Utensils, types: ["restaurante", "restaurant", "bar"] },
+      { titleKey: "intelligence", url: "/inventario/inteligencia", icon: Brain },
+      { titleKey: "counts", url: "/conteos", icon: Shield },
+      { titleKey: "warehouses", url: "/almacenes", icon: Warehouse, types: ["empresa"] },
+      { titleKey: "stores", url: "/tiendas", icon: Store, types: ["empresa"] },
+      { titleKey: "operationsItem", url: "/operaciones", icon: Workflow, types: ["empresa"] },
+      { titleKey: "transfers", url: "/transferencias", icon: ArrowRightLeft, types: ["empresa"] },
     ],
   },
   {
-    label: "Compras y Ventas",
+    labelKey: "purchasesSales",
     items: [
-      { title: "Compras", url: "/compras", icon: ShoppingCart },
-      { title: "Proveedores", url: "/proveedores", icon: Truck },
-      { title: "Devoluciones", url: "/devoluciones", icon: Undo2 },
-      { title: "Facturas", url: "/facturas", icon: FileText },
-      { title: "Cuentas (CxC/CxP)", url: "/cuentas", icon: Wallet },
-      { title: "Consignaciones", url: "/consignaciones", icon: Package, types: ["empresa"] },
+      { titleKey: "purchases", url: "/compras", icon: ShoppingCart },
+      { titleKey: "suppliers", url: "/proveedores", icon: Truck },
+      { titleKey: "returns", url: "/devoluciones", icon: Undo2 },
+      { titleKey: "invoices", url: "/facturas", icon: FileText },
+      { titleKey: "accounts", url: "/cuentas", icon: Wallet },
+      { titleKey: "consignments", url: "/consignaciones", icon: Package, types: ["empresa"] },
     ],
   },
   {
-    label: "Personas",
+    labelKey: "people",
     items: [
-      { title: "Clientes", url: "/clientes", icon: Users },
-      { title: "Empleados", url: "/empleados", icon: UserCheck },
-      { title: "Recursos Humanos", url: "/rrhh", icon: Briefcase },
-      { title: "Portal Empleado", url: "/portal-empleado", icon: UserCheck },
-      { title: "Fidelización", url: "/fidelizacion", icon: Award },
+      { titleKey: "customers", url: "/clientes", icon: Users },
+      { titleKey: "employees", url: "/empleados", icon: UserCheck },
+      { titleKey: "hr", url: "/rrhh", icon: Briefcase },
+      { titleKey: "employeePortal", url: "/portal-empleado", icon: UserCheck },
+      { titleKey: "loyalty", url: "/fidelizacion", icon: Award },
     ],
   },
   {
-    label: "Finanzas",
+    labelKey: "finance",
     items: [
       {
-        title: "Contabilidad",
+        titleKey: "accounting",
         url: "/contabilidad",
         icon: BookOpen,
         children: [
-          { title: "Plan Contable", url: "/contabilidad/plan", icon: ListTree },
-          { title: "Operación", url: "/contabilidad/operacion", icon: ClipboardList },
-          { title: "Análisis", url: "/contabilidad/analisis", icon: BarChart3 },
+          { titleKey: "chartOfAccounts", url: "/contabilidad/plan", icon: ListTree },
+          { titleKey: "operationAcc", url: "/contabilidad/operacion", icon: ClipboardList },
+          { titleKey: "analysis", url: "/contabilidad/analisis", icon: BarChart3 },
         ],
       },
-      { title: "Tesorería", url: "/tesoreria", icon: Wallet },
+      { titleKey: "treasury", url: "/tesoreria", icon: Wallet },
     ],
   },
   {
-    label: "Online",
+    labelKey: "online",
     items: [
-      { title: "Pedidos Online", url: "/pedidos-online", icon: ShoppingBag, types: ["restaurante", "restaurant", "bar", "empresa"] },
-      { title: "Delivery", url: "/delivery", icon: Bike, types: ["restaurante", "restaurant", "bar", "empresa"] },
-      { title: "Marketplace", url: "/marketplace", icon: Globe, types: ["empresa"] },
+      { titleKey: "onlineOrders", url: "/pedidos-online", icon: ShoppingBag, types: ["restaurante", "restaurant", "bar", "empresa"] },
+      { titleKey: "delivery", url: "/delivery", icon: Bike, types: ["restaurante", "restaurant", "bar", "empresa"] },
+      { titleKey: "marketplace", url: "/marketplace", icon: Globe, types: ["empresa"] },
     ],
   },
 ];
 
 const systemItems: MenuItem[] = [
-  { title: "Roles y Permisos", url: "/roles", icon: Shield },
-  { title: "API & Webhooks", url: "/developers", icon: Shield },
-  { title: "Configuración", url: "/configuracion", icon: Settings },
+  { titleKey: "roles", url: "/roles", icon: Shield },
+  { titleKey: "developers", url: "/developers", icon: Shield },
+  { titleKey: "settings", url: "/configuracion", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -189,6 +191,7 @@ export function AppSidebar() {
   const { profile, roles, signOut } = useAuth();
   const { isSuperadmin } = useSuperadmin();
   const { tenant, allTenants, businessType } = useTenantContext();
+  const { t } = useTranslation();
   const biz = (businessType || "empresa") as BizType;
 
   const isActive = (path: string) =>
@@ -204,17 +207,18 @@ export function AppSidebar() {
     : "??";
 
   const renderItem = (item: MenuItem) => {
+    const title = t(`nav.items.${item.titleKey}`);
     if (item.children && item.children.length > 0) {
       const parentActive = isActive(item.url);
       return (
-        <Collapsible key={item.title} defaultOpen={parentActive} className="group/collapsible">
+        <Collapsible key={item.titleKey} defaultOpen={parentActive} className="group/collapsible">
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton isActive={parentActive} tooltip={item.title} className="w-full">
+              <SidebarMenuButton isActive={parentActive} tooltip={title} className="w-full">
                 <item.icon className="h-4 w-4" />
                 {!collapsed && (
                   <>
-                    <span className="flex-1 text-left">{item.title}</span>
+                    <span className="flex-1 text-left">{title}</span>
                     <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </>
                 )}
@@ -232,7 +236,7 @@ export function AppSidebar() {
                           activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                         >
                           <c.icon className="h-3.5 w-3.5" />
-                          <span>{c.title}</span>
+                          <span>{t(`nav.items.${c.titleKey}`)}</span>
                         </NavLink>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
@@ -245,8 +249,8 @@ export function AppSidebar() {
       );
     }
     return (
-      <SidebarMenuItem key={item.title}>
-        <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+      <SidebarMenuItem key={item.titleKey}>
+        <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={title}>
           <NavLink
             to={item.url}
             end={item.url === "/"}
@@ -254,7 +258,7 @@ export function AppSidebar() {
             activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
           >
             <item.icon className="h-4 w-4" />
-            {!collapsed && <span>{item.title}</span>}
+            {!collapsed && <span>{title}</span>}
           </NavLink>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -274,7 +278,7 @@ export function AppSidebar() {
                 MarIA OS
               </span>
               <span className="text-[10px] text-sidebar-foreground/60">
-                {tenant?.name || "Sistema de Ventas"}
+                {tenant?.name || "Sistema"}
               </span>
             </div>
           )}
@@ -284,15 +288,15 @@ export function AppSidebar() {
 
       <SidebarContent>
         {menuGroups.map((group) => {
-          if (adminOnlyGroupLabels.has(group.label) && !roles.includes("admin") && !isSuperadmin) {
+          if (adminOnlyGroupKeys.has(group.labelKey) && !roles.includes("admin") && !isSuperadmin) {
             return null;
           }
           const visible = group.items.filter((it) => !it.types || it.types.includes(biz));
           if (visible.length === 0) return null;
           return (
-            <SidebarGroup key={group.label}>
+            <SidebarGroup key={group.labelKey}>
               <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
-                {group.label}
+                {t(`nav.groups.${group.labelKey}`)}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>{visible.map(renderItem)}</SidebarMenu>
@@ -303,7 +307,7 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
-            Sistema
+            {t("nav.groups.system")}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>{systemItems.map(renderItem)}</SidebarMenu>
@@ -313,23 +317,23 @@ export function AppSidebar() {
         {isSuperadmin && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
-              Super Admin
+              {t("nav.groups.superadmin")}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/superadmin")} tooltip="Super Admin">
+                  <SidebarMenuButton asChild isActive={isActive("/superadmin")} tooltip={t("nav.items.tenantManagement")}>
                     <NavLink to="/superadmin" className="transition-colors" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                       <Crown className="h-4 w-4" />
-                      {!collapsed && <span>Gestión Empresas</span>}
+                      {!collapsed && <span>{t("nav.items.tenantManagement")}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/auditoria")} tooltip="Auditoría">
+                  <SidebarMenuButton asChild isActive={isActive("/auditoria")} tooltip={t("nav.items.audit")}>
                     <NavLink to="/auditoria" className="transition-colors" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                       <Shield className="h-4 w-4" />
-                      {!collapsed && <span>Auditoría</span>}
+                      {!collapsed && <span>{t("nav.items.audit")}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -340,7 +344,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4">
-        {!collapsed && (
+        {!collapsed ? (
           <div className="space-y-2">
             <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent p-3">
               <div className="h-8 w-8 rounded-full gradient-brand flex items-center justify-center text-primary-foreground text-xs font-bold font-heading shrink-0">
@@ -348,21 +352,24 @@ export function AppSidebar() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-sidebar-accent-foreground truncate">
-                  {profile?.full_name ?? "Usuario"}
+                  {profile?.full_name ?? t("common.user")}
                 </p>
                 <p className="text-[10px] text-sidebar-foreground/50">
-                  {roles.length > 0 ? roles.join(", ") : "Sin rol"}
+                  {roles.length > 0 ? roles.join(", ") : t("common.noRole")}
                 </p>
               </div>
             </div>
+            <LanguageSwitcher />
             <button
               onClick={signOut}
               className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
             >
               <LogOut className="h-3.5 w-3.5" />
-              Cerrar Sesión
+              {t("common.logout")}
             </button>
           </div>
+        ) : (
+          <LanguageSwitcher collapsed />
         )}
       </SidebarFooter>
     </Sidebar>

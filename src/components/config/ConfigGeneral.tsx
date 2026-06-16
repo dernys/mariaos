@@ -8,7 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Save, Globe, Loader2 } from "lucide-react";
+import { Save, Globe, Loader2, Languages } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/hooks/useLocale";
+import { SUPPORTED_LOCALES, type AppLocale } from "@/i18n";
 
 const SETTINGS_KEYS = [
   { key: "business_name", label: "Nombre del Negocio", category: "general" },
@@ -35,6 +38,8 @@ interface AccountingProfile {
 export function ConfigGeneral() {
   const tenantId = useTenant();
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { locale, setUserLocale, setTenantLocale } = useLocale();
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -43,6 +48,7 @@ export function ConfigGeneral() {
   const [profileCode, setProfileCode] = useState<string>("");
   const [currentProfile, setCurrentProfile] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
+  const [tenantLocale, setTenantLocaleState] = useState<AppLocale>("es");
 
   useEffect(() => {
     if (!tenantId) return;
@@ -56,11 +62,12 @@ export function ConfigGeneral() {
     (supabase as any).from("accounting_profiles").select("*").eq("active", true).then(({ data }: any) => {
       if (data) setProfiles(data);
     });
-    (supabase as any).from("tenants").select("country_code, accounting_profile_code").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
+    (supabase as any).from("tenants").select("country_code, accounting_profile_code, default_locale").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
       if (data) {
         setCountryCode(data.country_code || "CU");
         setProfileCode(data.accounting_profile_code || "");
         setCurrentProfile(data.accounting_profile_code || null);
+        if (data.default_locale) setTenantLocaleState(data.default_locale as AppLocale);
       }
     });
   }, [tenantId]);
