@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AGENT_DEFINITIONS } from "@/lib/agents";
 import { Bot, ExternalLink, Loader2, PlayCircle, Sparkles, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { useAgent } from "@/hooks/useAgent";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
