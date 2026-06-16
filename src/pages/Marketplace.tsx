@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface MarketProduct {
   id: string;
@@ -56,6 +57,7 @@ interface CartItem extends MarketProduct {
 }
 
 const Marketplace = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -102,10 +104,10 @@ const Marketplace = () => {
   }, []);
 
   const requestLocation = () => {
-    if (!navigator.geolocation) { toast({ title: "Geolocalización no disponible", variant: "destructive" }); return; }
+    if (!navigator.geolocation) { toast({ title: t("marketplace.toasts.geoUnavailable"), variant: "destructive" }); return; }
     navigator.geolocation.getCurrentPosition(
-      (p) => { setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }); toast({ title: "Ubicación detectada" }); },
-      (err) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+      (p) => { setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }); toast({ title: t("marketplace.toasts.locationDetected") }); },
+      (err) => toast({ title: t("common.error"), description: err.message, variant: "destructive" }),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
@@ -163,7 +165,7 @@ const Marketplace = () => {
 
   const addToCart = (p: MarketProduct) => {
     if (!user) {
-      toast({ title: "Inicia sesión", description: "Necesitas una cuenta para comprar", variant: "destructive" });
+      toast({ title: t("marketplace.toasts.loginRequired"), description: t("marketplace.toasts.needAccount"), variant: "destructive" });
       navigate("/auth");
       return;
     }
@@ -171,14 +173,14 @@ const Marketplace = () => {
       const existing = prev.find(i => i.id === p.id);
       if (existing) {
         if (existing.qty >= p.online_stock) {
-          toast({ title: "Stock máximo alcanzado", variant: "destructive" });
+          toast({ title: t("marketplace.toasts.stockMax"), variant: "destructive" });
           return prev;
         }
         return prev.map(i => i.id === p.id ? { ...i, qty: i.qty + 1 } : i);
       }
       return [...prev, { ...p, qty: 1, tenantName: tenantMap[p.tenant_id]?.name || "" }];
     });
-    toast({ title: "Agregado al carrito", description: p.name });
+    toast({ title: t("marketplace.toasts.addedToCart"), description: p.name });
   };
 
   const updateQty = (id: string, delta: number) => {
@@ -209,11 +211,11 @@ const Marketplace = () => {
   const handleCheckout = async () => {
     if (!user) return;
     if (!checkoutForm.name.trim() || !checkoutForm.phone.trim()) {
-      toast({ title: "Error", description: "Nombre y teléfono son obligatorios", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("marketplace.toasts.nameOrPhone"), variant: "destructive" });
       return;
     }
     if (checkoutForm.delivery_type === "delivery" && !checkoutForm.address.trim()) {
-      toast({ title: "Error", description: "La dirección es obligatoria para delivery", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("marketplace.toasts.addressRequired"), variant: "destructive" });
       return;
     }
 
@@ -239,7 +241,7 @@ const Marketplace = () => {
       setCheckoutMode(false);
       setCartOpen(false);
     } catch (err: any) {
-      toast({ title: "Error al crear pedido", description: err.message, variant: "destructive" });
+      toast({ title: t("marketplace.toasts.orderError"), description: err.message, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -259,11 +261,11 @@ const Marketplace = () => {
           <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
             <Check className="h-8 w-8 text-emerald-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">¡Pedido realizado!</h2>
-          <p className="text-gray-500">Tu pedido ha sido enviado a los negocios. Te contactarán para coordinar la {checkoutForm.delivery_type === "delivery" ? "entrega" : "recogida"}.</p>
+          <h2 className="text-2xl font-bold text-gray-900">{t("marketplace.orderPlacedTitle")}</h2>
+          <p className="text-gray-500">{t("marketplace.orderPlacedMsg", { action: checkoutForm.delivery_type === "delivery" ? t("marketplace.actionDelivery") : t("marketplace.actionPickup") })}</p>
           <div className="flex gap-3 justify-center pt-4">
-            <Button variant="outline" onClick={() => setOrderSuccess(false)}>Seguir comprando</Button>
-            <Button onClick={() => navigate("/")} className="bg-emerald-600 hover:bg-emerald-700 text-white">Ir al inicio</Button>
+            <Button variant="outline" onClick={() => setOrderSuccess(false)}>{t("marketplace.keepShopping")}</Button>
+            <Button onClick={() => navigate("/")} className="bg-emerald-600 hover:bg-emerald-700 text-white">{t("marketplace.goHome")}</Button>
           </div>
         </motion.div>
       </div>
@@ -279,13 +281,13 @@ const Marketplace = () => {
             <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
               <Store className="h-4 w-4 text-white" />
             </div>
-            <span className="font-bold text-lg text-gray-900 hidden sm:block">MarIA OS Market</span>
+            <span className="font-bold text-lg text-gray-900 hidden sm:block">{t("marketplace.brand")}</span>
           </Link>
 
           <div className="relative flex-1 max-w-xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Buscar productos, negocios..."
+              placeholder={t("marketplace.searchPlaceholder")}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9 bg-gray-50 border-gray-200 rounded-full"
@@ -296,10 +298,10 @@ const Marketplace = () => {
             {!user && (
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="rounded-full text-xs hidden sm:inline-flex">
-                  Iniciar sesión
+                  {t("marketplace.login")}
                 </Button>
                 <Button size="sm" onClick={() => navigate("/auth?view=register")} className="rounded-full text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                  Crear cuenta
+                  {t("marketplace.createAccount")}
                 </Button>
               </>
             )}
@@ -315,7 +317,7 @@ const Marketplace = () => {
               <SheetContent className="w-full sm:max-w-md flex flex-col">
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
-                    <ShoppingCart className="h-5 w-5" /> Carrito ({cartCount})
+                    <ShoppingCart className="h-5 w-5" /> {t("marketplace.cart")} ({cartCount})
                   </SheetTitle>
                 </SheetHeader>
 
@@ -325,7 +327,7 @@ const Marketplace = () => {
                       {cart.length === 0 && (
                         <div className="text-center py-12 text-gray-400">
                           <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                          <p>Tu carrito está vacío</p>
+                          <p>{t("marketplace.cartEmpty")}</p>
                         </div>
                       )}
                       {Object.entries(cartByTenant).map(([tid, items]) => (
@@ -354,11 +356,11 @@ const Marketplace = () => {
                     {cart.length > 0 && (
                       <div className="border-t pt-4 space-y-3">
                         <div className="flex justify-between text-lg font-bold">
-                          <span>Total</span>
+                          <span>{t("marketplace.total")}</span>
                           <span className="text-emerald-600">${cartTotal.toFixed(2)}</span>
                         </div>
                         <Button onClick={() => setCheckoutMode(true)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-full">
-                          Continuar al pedido <ChevronRight className="h-4 w-4 ml-1" />
+                          {t("marketplace.continueOrder")} <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </div>
                     )}
@@ -366,43 +368,43 @@ const Marketplace = () => {
                 ) : (
                   <div className="flex-1 overflow-y-auto py-4 space-y-4">
                     <button onClick={() => setCheckoutMode(false)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900">
-                      <ArrowLeft className="h-4 w-4" /> Volver al carrito
+                      <ArrowLeft className="h-4 w-4" /> {t("marketplace.backToCart")}
                     </button>
                     <div className="space-y-3">
-                      <div><Label>Nombre *</Label><Input value={checkoutForm.name} onChange={e => setCheckoutForm(f => ({ ...f, name: e.target.value }))} placeholder="Tu nombre completo" /></div>
-                      <div><Label>Teléfono *</Label><Input value={checkoutForm.phone} onChange={e => setCheckoutForm(f => ({ ...f, phone: e.target.value }))} placeholder="+53 5555 5555" /></div>
-                      <div><Label>Email</Label><Input type="email" value={checkoutForm.email} onChange={e => setCheckoutForm(f => ({ ...f, email: e.target.value }))} placeholder="tu@email.com" /></div>
+                      <div><Label>{t("marketplace.name")} *</Label><Input value={checkoutForm.name} onChange={e => setCheckoutForm(f => ({ ...f, name: e.target.value }))} placeholder={t("marketplace.fullNamePh")} /></div>
+                      <div><Label>{t("marketplace.phone")} *</Label><Input value={checkoutForm.phone} onChange={e => setCheckoutForm(f => ({ ...f, phone: e.target.value }))} placeholder={t("marketplace.phonePh")} /></div>
+                      <div><Label>{t("marketplace.email")}</Label><Input type="email" value={checkoutForm.email} onChange={e => setCheckoutForm(f => ({ ...f, email: e.target.value }))} placeholder={t("marketplace.emailPh")} /></div>
                       <div>
-                        <Label>Tipo de entrega</Label>
+                        <Label>{t("marketplace.deliveryType")}</Label>
                         <div className="grid grid-cols-2 gap-2 mt-1">
                           <button
                             onClick={() => setCheckoutForm(f => ({ ...f, delivery_type: "pickup" }))}
                             className={`p-3 rounded-xl border-2 text-center text-sm transition-all ${checkoutForm.delivery_type === "pickup" ? "border-emerald-500 bg-emerald-50" : "border-gray-200"}`}
                           >
                             <Building2 className="h-5 w-5 mx-auto mb-1" />
-                            Recogida
+                            {t("marketplace.pickup")}
                           </button>
                           <button
                             onClick={() => setCheckoutForm(f => ({ ...f, delivery_type: "delivery" }))}
                             className={`p-3 rounded-xl border-2 text-center text-sm transition-all ${checkoutForm.delivery_type === "delivery" ? "border-emerald-500 bg-emerald-50" : "border-gray-200"}`}
                           >
                             <Truck className="h-5 w-5 mx-auto mb-1" />
-                            Delivery
+                            {t("marketplace.delivery")}
                           </button>
                         </div>
                       </div>
                       {checkoutForm.delivery_type === "delivery" && (
-                        <div><Label>Dirección de entrega *</Label><Textarea value={checkoutForm.address} onChange={e => setCheckoutForm(f => ({ ...f, address: e.target.value }))} placeholder="Calle, número, municipio..." /></div>
+                        <div><Label>{t("marketplace.deliveryAddress")} *</Label><Textarea value={checkoutForm.address} onChange={e => setCheckoutForm(f => ({ ...f, address: e.target.value }))} placeholder={t("marketplace.deliveryAddressPh")} /></div>
                       )}
-                      <div><Label>Notas</Label><Textarea value={checkoutForm.notes} onChange={e => setCheckoutForm(f => ({ ...f, notes: e.target.value }))} placeholder="Instrucciones especiales..." /></div>
+                      <div><Label>{t("marketplace.notes")}</Label><Textarea value={checkoutForm.notes} onChange={e => setCheckoutForm(f => ({ ...f, notes: e.target.value }))} placeholder={t("marketplace.notesPh")} /></div>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
+                      <span>{t("marketplace.total")}</span>
                       <span className="text-emerald-600">${cartTotal.toFixed(2)}</span>
                     </div>
                     <Button onClick={handleCheckout} disabled={submitting} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-full">
-                      {submitting ? "Procesando..." : "Confirmar Pedido"}
+                      {submitting ? t("marketplace.processing") : t("marketplace.confirmOrder")}
                     </Button>
                   </div>
                 )}
@@ -417,9 +419,9 @@ const Marketplace = () => {
         <div className="max-w-7xl mx-auto px-4 py-12 sm:py-16">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-2xl mx-auto">
             <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Descubre lo mejor de <span className="text-emerald-600">tu ciudad</span>
+              {t("marketplace.heroTitle")} <span className="text-emerald-600">{t("marketplace.heroAccent")}</span>
             </h1>
-            <p className="text-gray-500 text-lg">Restaurantes, bares y negocios locales. Pide online y recoge o recibe en tu puerta.</p>
+            <p className="text-gray-500 text-lg">{t("marketplace.heroSubtitle")}</p>
           </motion.div>
         </div>
       </section>
@@ -429,18 +431,18 @@ const Marketplace = () => {
         <div className="flex items-center gap-2 flex-wrap">
           {userPos ? (
             <Badge variant="outline" className="gap-1 bg-emerald-50 border-emerald-200 text-emerald-700">
-              <MapPin className="h-3 w-3" /> Ubicación detectada · ordenando por cercanía
+              <MapPin className="h-3 w-3" /> {t("marketplace.locationDetected")}
             </Badge>
           ) : (
             <Button size="sm" variant="outline" onClick={requestLocation} className="h-8 text-xs gap-1 rounded-full">
-              <MapPin className="h-3.5 w-3.5" /> Usar mi ubicación
+              <MapPin className="h-3.5 w-3.5" /> {t("marketplace.useLocation")}
             </Button>
           )}
           {userPos && (
             <Select value={maxDistance ? String(maxDistance) : "all"} onValueChange={(v) => setMaxDistance(v === "all" ? null : parseFloat(v))}>
-              <SelectTrigger className="w-[160px] h-8 text-xs rounded-full"><SelectValue placeholder="Distancia" /></SelectTrigger>
+              <SelectTrigger className="w-[160px] h-8 text-xs rounded-full"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Cualquier distancia</SelectItem>
+                <SelectItem value="all">{t("marketplace.distanceAny")}</SelectItem>
                 <SelectItem value="2">≤ 2 km</SelectItem>
                 <SelectItem value="5">≤ 5 km</SelectItem>
                 <SelectItem value="10">≤ 10 km</SelectItem>
@@ -452,7 +454,7 @@ const Marketplace = () => {
             onClick={() => setDeliveryOnly((v) => !v)}
             className={`h-8 px-3 rounded-full text-xs font-medium border transition-all ${deliveryOnly ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-600 border-gray-200 hover:bg-emerald-50"}`}
           >
-            <Truck className="h-3 w-3 inline mr-1" /> Solo delivery
+            <Truck className="h-3 w-3 inline mr-1" /> {t("marketplace.deliveryOnly")}
           </button>
         </div>
       </div>
@@ -465,7 +467,7 @@ const Marketplace = () => {
             className={`cursor-pointer transition-all ${selectedCategory === "all" ? "bg-emerald-600 text-white" : "hover:bg-emerald-50"}`}
             onClick={() => setSelectedCategory("all")}
           >
-            Todos
+            {t("common.all")}
           </Badge>
           {categories.map(cat => (
             <Badge
@@ -480,10 +482,10 @@ const Marketplace = () => {
           <Separator orientation="vertical" className="h-6 mx-2 hidden sm:block" />
           <Select value={selectedTenant} onValueChange={setSelectedTenant}>
             <SelectTrigger className="w-[180px] h-8 text-xs rounded-full">
-              <SelectValue placeholder="Todos los negocios" />
+              <SelectValue placeholder={t("marketplace.allBusinesses")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los negocios</SelectItem>
+              <SelectItem value="all">{t("marketplace.allBusinesses")}</SelectItem>
               {tenants.map(t => (
                 <SelectItem key={t.id} value={t.id}>{bizIcon(t.business_type)} {t.name}{userPos && tenantDistances[t.id] ? ` · ${tenantDistances[t.id]!.dist.toFixed(1)} km` : ""}</SelectItem>
               ))}
@@ -502,8 +504,8 @@ const Marketplace = () => {
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
             <Package className="h-16 w-16 mx-auto mb-4 opacity-30" />
-            <h3 className="text-xl font-medium text-gray-600">No hay productos disponibles</h3>
-            <p className="text-sm mt-1">Prueba cambiando los filtros</p>
+            <h3 className="text-xl font-medium text-gray-600">{t("marketplace.noProducts")}</h3>
+            <p className="text-sm mt-1">{t("marketplace.tryFilters")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -553,9 +555,9 @@ const Marketplace = () => {
                         </Button>
                       </div>
                       <div className="flex items-center justify-between gap-1">
-                        <p className="text-[10px] text-gray-400">{p.online_stock} disponibles</p>
+                        <p className="text-[10px] text-gray-400">{p.online_stock} {t("marketplace.available")}</p>
                         {p.is_deliverable === false && (
-                          <span className="text-[9px] text-amber-600 font-medium">Solo recogida</span>
+                          <span className="text-[9px] text-amber-600 font-medium">{t("marketplace.pickupOnly")}</span>
                         )}
                       </div>
                     </div>
@@ -578,7 +580,7 @@ const Marketplace = () => {
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg h-12 text-base"
           >
             <ShoppingCart className="h-5 w-5 mr-2" />
-            Ver carrito ({cartCount}) — ${cartTotal.toFixed(2)}
+            {t("marketplace.viewCart")} ({cartCount}) — ${cartTotal.toFixed(2)}
           </Button>
         </motion.div>
       )}
