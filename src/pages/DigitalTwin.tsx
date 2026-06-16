@@ -77,16 +77,11 @@ export default function DigitalTwin() {
 
   const loadIntelligence = async () => {
     if (!tenantId) return;
-    try {
-      const { data, error } = await supabase.functions.invoke("inventory-intelligence", {
-        body: { tenant_id: tenantId, mode: "all" },
-      });
-      if (error) throw error;
-      setIntel(data ?? null);
-    } catch (e: any) {
-      console.warn("inventory-intelligence error", e);
-    }
+    const { data, error } = await invoke<Intelligence>("inventory-intelligence", { tenant_id: tenantId, mode: "all" }, { notify: false });
+    if (error) { console.warn("inventory-intelligence error", error); return; }
+    setIntel(data ?? null);
   };
+
 
   useEffect(() => {
     if (!tenantId) return;
