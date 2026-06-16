@@ -4,20 +4,21 @@ import { POSBar } from "@/components/pos/POSBar";
 import { POSRestaurant } from "@/components/pos/POSRestaurant";
 import { POSEmpresa } from "@/components/pos/POSEmpresa";
 import { ShiftRequiredGate } from "@/components/pos/ShiftRequiredGate";
+import { useTranslation } from "react-i18next";
 
 const POS = () => {
   const { businessType, loading } = useTenantContext();
+  const { t } = useTranslation();
 
-  const titles: Record<string, string> = {
-    bar: "Barra — Punto de Venta",
-    restaurant: "Restaurante — Punto de Venta",
-    restaurante: "Restaurante — Punto de Venta",
-    empresa: "Punto de Venta",
+  const titleFor = (bt: string) => {
+    if (bt === "bar") return `${t("modules.pos.titleBar")} — ${t("modules.pos.title")}`;
+    if (bt === "restaurant" || bt === "restaurante") return `${t("modules.pos.titleRestaurant")} — ${t("modules.pos.title")}`;
+    return t("modules.pos.title");
   };
 
   if (loading) {
     return (
-      <AppLayout title="Punto de Venta">
+      <AppLayout title={t("modules.pos.title")}>
         <div className="flex items-center justify-center h-64">
           <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
         </div>
@@ -31,7 +32,7 @@ const POS = () => {
     : "empresa";
 
   return (
-    <AppLayout title={titles[businessType] || "Punto de Venta"}>
+    <AppLayout title={titleFor(businessType)}>
       <ShiftRequiredGate variant={variant}>
         {variant === "bar" && <POSBar />}
         {variant === "restaurant" && <POSRestaurant />}
@@ -42,3 +43,4 @@ const POS = () => {
 };
 
 export default POS;
+

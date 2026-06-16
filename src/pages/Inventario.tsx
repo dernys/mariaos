@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2, Globe, AlertTriangle, DollarSign, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,7 @@ interface Movement {
 }
 
 const statusConfig = (stock: number, min: number) => {
+  const { t } = useTranslation();
   if (stock <= 0) return { label: "Sin stock", className: "bg-destructive/10 text-destructive" };
   if (stock <= min) return { label: "Stock bajo", className: "bg-warning/10 text-warning" };
   return { label: "En stock", className: "bg-success/10 text-success" };
@@ -280,13 +282,13 @@ const Inventario = () => {
   const kardexMovements = kardexProductId ? movements.filter((m) => m.product_id === kardexProductId) : [];
 
   return (
-    <AppLayout title="Inventario">
+    <AppLayout title={t("modules.inventory.title")}>
       <Tabs defaultValue="products" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="products">Productos</TabsTrigger>
-          <TabsTrigger value="stock">Stock por ubicación</TabsTrigger>
-          <TabsTrigger value="kardex">Kardex</TabsTrigger>
-          <TabsTrigger value="movements">Movimientos</TabsTrigger>
+          <TabsTrigger value="products">{t("modules.inventory.tabs.products")}</TabsTrigger>
+          <TabsTrigger value="stock">{t("modules.inventory.tabs.stock")}</TabsTrigger>
+          <TabsTrigger value="kardex">{t("modules.inventory.tabs.kardex")}</TabsTrigger>
+          <TabsTrigger value="movements">{t("modules.inventory.tabs.movements")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
@@ -329,7 +331,7 @@ const Inventario = () => {
                 <ExportButton
                   rows={productTable.filtered}
                   filename="inventario"
-                  title="Inventario de productos"
+                  title={t("modules.inventory.header")}
                   columns={[
                     { key: "sku", label: "SKU" },
                     { key: "name", label: "Producto" },
@@ -467,7 +469,7 @@ const Inventario = () => {
         <TabsContent value="stock" className="space-y-4">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar producto..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder={t("modules.inventory.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>

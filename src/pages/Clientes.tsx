@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -48,6 +49,7 @@ interface Sale {
 import { useNavigate } from "react-router-dom";
 
 const Clientes = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const tenantId = useTenant();
   const navigate = useNavigate();
@@ -123,7 +125,7 @@ const Clientes = () => {
   });
 
   return (
-    <AppLayout title="Clientes">
+    <AppLayout title={t("modules.customers.title")}>
       <div className="space-y-4">
         <StatRow>
           <MiniStatCard label="Clientes" value={customers.length} icon={UsersIcon} tone="primary" />
@@ -156,7 +158,7 @@ const Clientes = () => {
                 ]}
               />
               <Button onClick={openNew} size="sm" className="gradient-brand text-primary-foreground gap-2 h-9">
-                <Plus className="h-4 w-4" /> Nuevo
+                <Plus className="h-4 w-4" /> {t("modules.customers.newCustomer")}
               </Button>
             </>
           }
@@ -188,7 +190,7 @@ const Clientes = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <button onClick={() => openDetail(c)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Historial">
+                      <button onClick={() => openDetail(c)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title={t("modules.customers.history")}>
                         <History className="h-3.5 w-3.5" />
                       </button>
                       <button onClick={() => openEdit(c)} className="p-1.5 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>

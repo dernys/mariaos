@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,7 @@ interface Invoice {
 }
 
 const Facturas = () => {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,7 +172,7 @@ const Facturas = () => {
   });
 
   return (
-    <AppLayout title="Facturas">
+    <AppLayout title={t("modules.invoices.title")}>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
         <MiniStatCard label="Facturas" value={invoices.length} icon={FileText} />
         <MiniStatCard label="Emitidas" value={issued.length} tone="success" />
@@ -181,19 +183,19 @@ const Facturas = () => {
 
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-          <h2 className="text-lg font-semibold">Facturas emitidas</h2>
+          <h2 className="text-lg font-semibold">{t("modules.invoices.header")}</h2>
           <div className="flex gap-2 flex-wrap">
             <Button onClick={() => setSettingsOpen(true)} size="sm" variant="outline" className="gap-1">
               <Settings className="h-4 w-4" /> Facturación electrónica
             </Button>
             <Button onClick={() => nav("/pos")} size="sm" variant="outline" className="gap-1">
-              <ShoppingCart className="h-4 w-4" /> Ir al POS
+              <ShoppingCart className="h-4 w-4" /> {t("modules.invoices.goPos")}
             </Button>
             <Button onClick={() => setQuickOpen(true)} size="sm" variant="outline" className="gap-1">
               <Plus className="h-4 w-4" /> Venta rápida
             </Button>
             <Button onClick={openIssue} size="sm" className="gap-1">
-              <Plus className="h-4 w-4" /> Emitir factura
+              <Plus className="h-4 w-4" /> {t("modules.invoices.issue")}
             </Button>
           </div>
         </div>
@@ -285,27 +287,27 @@ const Facturas = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-1 justify-end">
-                      <Button size="icon" variant="ghost" title="Descargar PDF" onClick={() => downloadPdf(inv.id)}>
+                      <Button size="icon" variant="ghost" title={t("modules.invoices.downloadPdf")} onClick={() => downloadPdf(inv.id)}>
                         <Download className="h-4 w-4" />
                       </Button>
                       {inv.xml_content && (
-                        <Button size="icon" variant="ghost" title="Descargar XML" onClick={() => downloadXml(inv)}>
+                        <Button size="icon" variant="ghost" title={t("modules.invoices.downloadXml")} onClick={() => downloadXml(inv)}>
                           <Code2 className="h-4 w-4" />
                         </Button>
                       )}
                       {inv.status === "issued" && tStatus !== "transmitted" && (
-                        <Button size="icon" variant="ghost" title="Transmitir electrónicamente"
+                        <Button size="icon" variant="ghost" title={t("modules.invoices.transmit")}
                           disabled={transmittingId === inv.id} onClick={() => transmit(inv.id)}>
                           <Send className={`h-4 w-4 ${transmittingId === inv.id ? "animate-pulse" : ""}`} />
                         </Button>
                       )}
                       {inv.customer_email && inv.status === "issued" && (
-                        <Button size="icon" variant="ghost" title="Enviar por email" onClick={() => sendEmail(inv.id)}>
+                        <Button size="icon" variant="ghost" title={t("modules.invoices.sendEmail")} onClick={() => sendEmail(inv.id)}>
                           <Mail className="h-4 w-4" />
                         </Button>
                       )}
                       {inv.status === "issued" && (
-                        <Button size="icon" variant="ghost" title="Anular" onClick={() => cancelInvoice(inv.id)}>
+                        <Button size="icon" variant="ghost" title={t("modules.invoices.voidInvoice")} onClick={() => cancelInvoice(inv.id)}>
                           <Ban className="h-4 w-4 text-destructive" />
                         </Button>
                       )}
@@ -326,7 +328,7 @@ const Facturas = () => {
           <div className="space-y-3">
             <Label>Selecciona una venta cobrada sin factura</Label>
             <Select value={selectedSale} onValueChange={setSelectedSale}>
-              <SelectTrigger><SelectValue placeholder="Elegir venta..." /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("modules.invoices.chooseSale")} /></SelectTrigger>
               <SelectContent>
                 {pendingSales.map((s: any) => (
                   <SelectItem key={s.id} value={s.id}>
@@ -341,7 +343,7 @@ const Facturas = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIssueOpen(false)}>Cancelar</Button>
-            <Button onClick={issueInvoice} disabled={!selectedSale}>Emitir</Button>
+            <Button onClick={issueInvoice} disabled={!selectedSale}>{t("modules.invoices.issueAction")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
