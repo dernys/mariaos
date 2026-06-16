@@ -362,10 +362,31 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         } catch (e) { console.warn("No se pudo imprimir el recibo:", e); }
       }
 
+      // --- Emit business event for reactive workflows / agents ---
+      try {
+        await supabase.from("business_events").insert({
+          tenant_id: tu?.tenant_id as string,
+          source: "pos",
+          event_type: "sale.completed",
+          payload: {
+            sale_id: sale.id,
+            ticket_number: (sale as any).ticket_number ?? null,
+            total, subtotal, tax,
+            amount_paid: totalPaidInBase,
+            status,
+            customer_id: selectedCustomer || null,
+            store_id: openShift.store_id || null,
+            shift_id: openShift.id,
+            items_count: cart.length,
+          },
+        });
+      } catch (e) { console.warn("business_events emit failed", e); }
+
       toast({
         title: `Ticket ${(sale as any).ticket_number || ""}`.trim(),
         description: status === "partial" ? `Pendiente: $${remaining.toFixed(2)} CUP` : "Pago completo registrado",
       });
+
       onSaleComplete();
       onOpenChange(false);
     } catch (err: any) {
