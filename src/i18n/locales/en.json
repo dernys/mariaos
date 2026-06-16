@@ -386,6 +386,86 @@
       "reason": "Reason",
       "reasonPlaceholder": "Defective, changed mind…",
       "submit": "Register return"
+    },
+    "treasury": {
+      "title": "Treasury",
+      "subtitle": "Banks, reconciliation and cash flow forecast",
+      "stats": {
+        "totalBalance": "Total balance",
+        "unmatched": "Unmatched",
+        "income30": "Income 30d",
+        "payments30": "Payments 30d"
+      },
+      "tabs": {
+        "accounts": "Accounts",
+        "movements": "Movements",
+        "forecast": "Forecast"
+      },
+      "actions": {
+        "newAccount": "New account",
+        "newMovement": "New movement",
+        "schedule": "Schedule",
+        "cancel": "Cancel",
+        "create": "Create"
+      },
+      "accounts": {
+        "name": "Name",
+        "bank": "Bank",
+        "account": "Account",
+        "currency": "Currency",
+        "balance": "Balance",
+        "empty": "No bank accounts",
+        "accountNumber": "Account No.",
+        "dialogTitle": "New bank account"
+      },
+      "movements": {
+        "date": "Date",
+        "description": "Description",
+        "ref": "Ref",
+        "amount": "Amount",
+        "status": "Status",
+        "empty": "No movements",
+        "dialogTitle": "New bank movement",
+        "dialogDesc": "Record a statement line",
+        "selectAccount": "Select...",
+        "accountLabel": "Account",
+        "typeLabel": "Type",
+        "reference": "Reference"
+      },
+      "directions": {
+        "in": "Inflow",
+        "out": "Outflow",
+        "income": "Income",
+        "payment": "Payment"
+      },
+      "statuses": {
+        "matched": "Matched",
+        "unmatched": "Unmatched",
+        "ignored": "Ignored",
+        "pending": "Pending"
+      },
+      "forecast": {
+        "due": "Due",
+        "type": "Type",
+        "category": "Category",
+        "description": "Description",
+        "amount": "Amount",
+        "status": "Status",
+        "empty": "No forecasts",
+        "dialogTitle": "Schedule movement",
+        "categoryPlaceholder": "rent, payroll, VAT..."
+      },
+      "match": {
+        "title": "Reconcile movement",
+        "amount": "Amount",
+        "date": "Date",
+        "type": "Type",
+        "method": "Method",
+        "reconciled": "Reconciled"
+      },
+      "errors": {
+        "generic": "Error"
+      }
     }
   },
   "empty": {
