@@ -106,6 +106,16 @@ Deno.serve(async (req) => {
     const { data: agent, error: agentErr } = await admin.from("ai_agents").select("*").eq("id", agent_id).single();
     if (agentErr || !agent) throw new Error("agent not found");
 
+    // --- Authorization: ensure user belongs to the agent's tenant (or is superadmin) ---
+    const [{ data: membership }, { data: superadmin }] = await Promise.all([
+      admin.from("tenant_users").select("tenant_id").eq("tenant_id", agent.tenant_id).eq("user_id", userRes.user.id).maybeSingle(),
+      admin.from("superadmins").select("user_id").eq("user_id", userRes.user.id).maybeSingle(),
+    ]);
+    if (!membership && !superadmin) {
+      return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+
     const ctx = await gatherContext(admin, agent.tenant_id, agent.type);
 
     const system = SYSTEM_PROMPTS[agent.type] ?? "Eres un agente de IA empresarial.";
