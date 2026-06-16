@@ -380,7 +380,10 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
             items_count: cart.length,
           },
         });
+        // Fire-and-forget: trigger reactive workflows
+        supabase.functions.invoke("workflow-runner").catch(() => {});
       } catch (e) { console.warn("business_events emit failed", e); }
+
 
       toast({
         title: `Ticket ${(sale as any).ticket_number || ""}`.trim(),
