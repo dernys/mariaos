@@ -40,7 +40,6 @@ interface PaymentMethodRow { id: string; name: string; type: string; }
 interface CurrencyRow { id: string; code: string; exchange_rate: number; is_base: boolean; }
 
 const statusBadge = (s: string) => {
-  const { t } = useTranslation();
   const m: Record<string, { c: string; l: string }> = {
     draft: { c: "bg-warning/10 text-warning", l: "Borrador" },
     received: { c: "bg-success/10 text-success", l: "Recibida" },
@@ -50,6 +49,7 @@ const statusBadge = (s: string) => {
 };
 
 export default function Compras() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { user } = useAuth();
   const { toast } = useToast();

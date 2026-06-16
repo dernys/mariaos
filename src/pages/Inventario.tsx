@@ -78,13 +78,13 @@ interface Movement {
 }
 
 const statusConfig = (stock: number, min: number) => {
-  const { t } = useTranslation();
   if (stock <= 0) return { label: "Sin stock", className: "bg-destructive/10 text-destructive" };
   if (stock <= min) return { label: "Stock bajo", className: "bg-warning/10 text-warning" };
   return { label: "En stock", className: "bg-success/10 text-success" };
 };
 
 const Inventario = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const tenantId = useTenant();
   const { toast } = useToast();
