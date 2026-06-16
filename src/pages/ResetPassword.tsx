@@ -7,21 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
-    // Check for recovery type in hash
     const hash = window.location.hash;
     if (!hash.includes("type=recovery")) {
-      toast.error("Enlace de recuperación inválido.");
+      toast.error(t("resetPassword.invalidLink"));
       navigate("/auth");
     }
-  }, [navigate]);
+  }, [navigate, t]);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +30,7 @@ const ResetPassword = () => {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) toast.error(error.message);
     else {
-      toast.success("Contraseña actualizada correctamente.");
+      toast.success(t("resetPassword.success"));
       navigate("/app");
     }
     setLoading(false);
@@ -46,7 +47,7 @@ const ResetPassword = () => {
           <div className="h-12 w-12 rounded-xl gradient-brand flex items-center justify-center mb-3">
             <Zap className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="font-heading text-xl font-bold tracking-tight">Nueva Contraseña</h1>
+          <h1 className="font-heading text-xl font-bold tracking-tight">{t("resetPassword.title")}</h1>
         </div>
 
         <div className="bg-card rounded-2xl shadow-elevated border p-6">
@@ -55,7 +56,7 @@ const ResetPassword = () => {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type={showPassword ? "text" : "password"}
-                placeholder="Nueva contraseña (mín. 6 caracteres)"
+                placeholder={t("resetPassword.placeholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-9 pr-9"
@@ -75,7 +76,7 @@ const ResetPassword = () => {
               className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-10"
               disabled={loading}
             >
-              {loading ? "Actualizando..." : "Actualizar Contraseña"}
+              {loading ? t("resetPassword.loading") : t("resetPassword.submit")}
             </Button>
           </form>
         </div>
