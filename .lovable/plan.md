@@ -1,166 +1,145 @@
 
-# Auditoría integral y rearquitectura — MarIA OS
+# Financial Core MarIA OS — Plan de Rediseño
 
-> Documento de auditoría + roadmap. **No ejecuto cambios hasta aprobación**. Cada fase se aprueba antes de implementarse para no romper multi-tenant, RLS, contabilidad, inventario, marketplace, delivery ni analytics.
+## 0. Diagnóstico del estado actual
 
----
+Tras revisar los bloques A–F ya implementados y el schema actual (104 tablas), este es el balance:
 
-## 1. Estado actual (auditoría)
+### Lo que ya está bien
+- **Asientos automáticos parciales**: ventas (COGS), cobros, compras, nómina ya generan `journal_entries` vía triggers (Bloque B).
+- **Multimoneda real**: columnas `currency`, `exchange_rate`, `total_in_base` en `sales`, `purchases`, `invoices`, `accounts_payable`; función `get_exchange_rate()`; vista `party_balance_by_currency` (Bloque E).
+- **Auditoría genérica**: `audit_trigger()` aplicado a 12 tablas críticas.
+- **Centros de costo y presupuestos**: tablas `cost_centers`, `budgets`, `budget_lines` existen; UI en `CostCentersTab` y `BudgetsTab`.
+- **Recetas y combos**: `process_recipe_consumption` recursivo con merma y semielaborados (Bloque F).
+- **CxC/CxP**: `accounts_payable`, `account_payments`, `sale_payments` operativos.
+- **Marketplace + Delivery**: catálogo público, pedidos, repartidores, GPS realtime (Bloques C–D).
 
-### 1.1 Inventario del sistema
-- **53 páginas** en `src/pages/`, **41 migraciones** SQL, ~30 funciones SECURITY DEFINER, 11 edge functions.
-- Verticales soportados: `bar`, `restaurant`, `empresa` (sin BR localizado).
-- Multi-tenant funcional vía `tenants` + `tenant_users` + `is_tenant_member()` + `is_superadmin()` en RLS.
-
-### 1.2 Flujos que SÍ funcionan end-to-end ✅
-| Flujo | Trigger / función |
-|---|---|
-| Venta POS → asiento contable | `trg_post_sale_journal` → `post_sale_journal_entry` |
-| Venta crédito → balance cliente/empleado | `apply_sale_credit_balance` |
-| Cobro / pago → balance + actualiza venta/compra | `register_account_payment` + `apply_account_payment_balance` |
-| Compra recibida → stock + asiento | `receive_purchase` + `trg_post_purchase_journal` |
-| Cierre de turno → arqueo | `calculate_shift_summary` |
-| Devolución con restock | `process_sale_return` |
-| Transferencia entre almacenes | `receive_stock_transfer` |
-| Fidelización auto al pagar | `trg_auto_award_loyalty` |
-| Sync offline POS idempotente | `sync_offline_sale` (client_uuid) |
-
-### 1.3 Problemas detectados 🔴
-
-**Críticos (rompen integridad):**
-1. **`process_sale_stock` no se llama si el turno no tiene `store_id`** → ventas sin descuento de stock. (Ya identificado en blueprint anterior — sigue sin parche.)
-2. **Nómina no genera CxP** del empleado: `post_payroll_journal_entry` saltea cuando falta plan contable, y no llama `register_account_payment('employee', …, direction='out')`. `employees.balance` queda en 0.
-3. **CxC / CxP sin desglose por moneda real**: `account_payments` guarda `amount_in_base` pero `customers.balance / suppliers.balance / employees.balance` son escalares — no hay vista por moneda origen ni reevaluación por diferencia de cambio.
-4. **`process_sale_stock` ambigüedad de columnas** ya corregida; revisar que `compute_payroll_full` no tenga el mismo patrón en `hours_worked` (alias de columna vs variable). Confirmado: la función actual usa variables `_hours` — OK. Pero el reporte del usuario seguía apareciendo; raíz probable: vista o función auxiliar de payroll que aún referencia `hours_worked` sin calificar.
-5. **`tenants.business_type`** acepta strings libres (`restaurant`, `restaurante`, `bar`, `empresa`). El sidebar y POS hacen comparaciones por string — riesgo de divergencia. Falta enum.
-6. **`suppliers` no está en types generados** → casts `(as any)` en frontend.
-
-**Altos:**
-7. **Dashboard sin Realtime** — KPIs estáticos hasta refresh.
-8. **`RRHHEnterprise.tsx` es código muerto** (no enrutado).
-9. **Sidebar**: `Almacenes`, `Transferencias`, `Tiendas`, `Operaciones` no tienen filtro `types` — aparecen en bares donde no aplican igual.
-10. **Marketplace** permite pedidos sin cuenta (`upsert_customer_for_online_order` crea cliente fantasma con `'Cliente Marketplace'`).
-11. **Delivery**: no hay tabla `delivery_drivers` con documentos/licencia/vehículo, ni estados (`available`, `picking`, `in_route`…), ni tracking GPS, ni clasificación bronce/plata/oro.
-12. **Recetas / BOM**: tablas existen pero no hay descuento automático por receta al cerrar venta de plato preparado en restaurante (sólo descuenta el producto vendido).
-13. **No hay `cost_centers`** ni dimensión analítica en `journal_entry_lines`.
-14. **No hay `budgets`** (presupuestos por sucursal/departamento/mes).
-15. **Plan contable**: sólo `es_pgc`, `mx_sat`, `niif_generic`. Faltan **`cu_onat` y `br_sped`**.
-16. **Multimoneda**: `exchange_rates` existe pero no se reevalúan balances; asientos no almacenan `(currency_origin, fx_rate, base_currency)` consistentemente en cada línea.
-17. **Auditoría**: `activity_log` registra eventos puntuales, pero **no captura `old_value` / `new_value` ni IP / device** sistemáticamente.
-
-**Medios:**
-18. Duplicidad: `RRHH.tsx` y `RRHHEnterprise.tsx`; pestaña "Proveedores" eliminada de Compras pero quedan helpers sin uso.
-19. Tablas con poco uso aparente: `ai_agents` aprovisionada por trigger pero pocos lugares la consumen; `decisions`, `digital_twin`, `risk_engine` — requieren auditoría de uso real.
-20. `RRHH` flujo: `compute_payroll_full` usa fallback fijo (15% IRPF, 6.35% SS, 29.8% SS empresa) si no hay brackets — correcto para ES pero **inválido para CU/BR**.
+### Bugs y vacíos detectados
+1. **No hay event bus**: cada módulo dispara triggers SQL directos a `journal_entries`. Cualquier nuevo módulo debe replicar lógica. **Falta capa única `post_financial_event()`**.
+2. **No hay perfiles regionales**: el plan de cuentas, impuestos y reportes están codificados en `accounting_accounts` por tenant sin referenciar país/régimen. **Falta tabla `accounting_profiles` y `tenants.accounting_profile_id`**.
+3. **Sin libro mayor materializado**: la balanza se calcula on-the-fly desde `journal_entry_lines`, lento y sin saldos por período.
+4. **Sin cierre mensual/anual real**: `accounting_periods` y `fiscal_years` existen pero no hay función `close_period()` que bloquee asientos ni genere asiento de cierre de resultados.
+5. **Flujo de caja inexistente**: no hay vista ni reporte `cash_flow_statement`.
+6. **Conciliación bancaria incompleta**: `bank_reconciliations` existe pero sin función de matching automático contra `journal_entry_lines`.
+7. **Cuba/Brasil no parametrizados**: no hay plantillas de plan de cuentas cubano/brasileño, ni configuración SPED/ECD/ECF/eSocial/NF-e.
+8. **Delivery sin asiento de comisión**: entregas completadas no generan asiento de gasto por comisión al repartidor.
+9. **Marketplace**: ya exige registro para confirmar (Bloque C) ✓. Falta validar que cada pedido confirmado dispare evento financiero al pagar.
+10. **Devoluciones**: `sale_returns` no dispara reverso de COGS ni de impuestos.
+11. **Fidelización**: `loyalty_movements` no genera asiento de pasivo por puntos emitidos.
+12. **Dashboard financiero no realtime**: no hay subscripción a `journal_entries` en `Contabilidad.tsx`.
 
 ---
 
-## 2. Principios de rearquitectura
+## 1. Arquitectura propuesta
 
-1. **Toda operación de negocio genera 5 movimientos** (cuando aplique):
-   `operativo → financiero (tesorería) → contable (asiento) → analítico (KPI realtime) → auditoría (old/new)`.
-2. **Una sola fuente de verdad por dominio**: stock = `product_stock` + `inventory_movements`; deuda = `account_payments` agregado; contabilidad = `journal_entries`.
-3. **Idempotencia y trazabilidad**: todo flujo asíncrono usa `client_uuid` o `reference_(type,id)`.
-4. **Multi-tenant + RLS estricto** vía `is_tenant_member()`; nada de `auth.uid()` en CHECKs.
-5. **Multimoneda en origen**: cada movimiento guarda `(currency, amount, fx_rate, amount_base)`; conversión sólo para reporting.
-6. **Vertical-aware**: enum `business_type` + matriz módulo×vertical centralizada (no strings dispersos en sidebar).
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  Módulos operativos                                         │
+│  POS · Ventas · Devoluciones · Compras · Inventario ·       │
+│  Nómina · RRHH · Delivery · Marketplace · Fidelización ·    │
+│  Recetas · Impuestos                                        │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ INSERT financial_events (event_type, payload)
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Financial Event Bus  (tabla financial_events + dispatcher) │
+│  - status: pending | posted | failed                        │
+│  - retry, idempotencia por (source_table, source_id, type)  │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ post_financial_event(event_id)
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Financial Core                                             │
+│  ┌────────────────┐  ┌──────────────────┐                   │
+│  │ Posting Rules  │◄─┤ Accounting       │                   │
+│  │ por perfil país│  │ Profile (CU/BR)  │                   │
+│  └────────┬───────┘  └──────────────────┘                   │
+│           ▼                                                 │
+│  journal_entries + journal_entry_lines (+cost_center, fx)   │
+│  → general_ledger (mayor materializado)                     │
+│  → trial_balance, income_statement, balance_sheet,          │
+│    cash_flow, ar_aging, ap_aging                            │
+└─────────────────────────────────────────────────────────────┘
+```
 
----
+### Bloque G — Event Bus + Posting Rules (migración 1)
+- `financial_events(id, tenant_id, event_type, source_table, source_id, payload jsonb, status, error, posted_journal_id, created_at)` con UNIQUE(source_table, source_id, event_type) para idempotencia.
+- `posting_rules(id, profile_id, event_type, debit_account_code, credit_account_code, amount_expr, condition)` configurable por perfil contable.
+- Función `post_financial_event(event_id)`: lee la regla del perfil del tenant, crea asiento, marca evento `posted`.
+- Refactor de triggers existentes: en lugar de insertar directo en `journal_entries`, insertan en `financial_events`. Un job (o trigger AFTER INSERT) llama a `post_financial_event`.
 
-## 3. Roadmap por fases (cada fase = 1 PR aprobable)
+### Bloque H — Perfiles regionales (migración 2)
+- `accounting_profiles(id, country_code, regime, name, base_currency, functional_currency, chart_template, fiscal_calendar jsonb, costing_method, regulatory_exports jsonb)`.
+- `tenants.accounting_profile_id` FK.
+- Seed: `CU-General`, `CU-MIPYME`, `BR-LucroReal`, `BR-LucroPresumido`, `BR-SimplesNacional`.
+- `chart_of_accounts_templates` con plantillas:
+  - **Cuba**: NCIF (Normas Cubanas de Información Financiera) — clases 1 Activo, 2 Pasivo, 3 Patrimonio, 4 Ingresos, 5 Gastos, 6 Costos, 7 Cuentas de orden.
+  - **Brasil**: Plano Referencial SPED-ECD (ECD).
+- Función `apply_accounting_profile(tenant_id, profile_id)` que materializa cuentas + reglas + impuestos.
 
-### Fase 0 — Saneamiento (no rompe nada) 🔴
-- Crear enum `business_type` (`bar`,`restaurant`,`empresa`) + migración de datos existentes; remplazar comparaciones por string.
-- Añadir `suppliers` y tablas faltantes a tipos generados (vía migración trivial / `select`).
-- Filtros `types` en sidebar para Almacenes / Transferencias / Tiendas / Operaciones.
-- Eliminar `RRHHEnterprise.tsx` y código muerto verificado.
-- Auditar `compute_payroll_full` y cualquier vista/función con `hours_worked` no calificado; calificar con alias.
+### Bloque I — Cierre, Mayor materializado, Reportes (migración 3)
+- `general_ledger(account_id, period_id, opening_debit, opening_credit, period_debit, period_credit, closing_balance)`.
+- Función `recompute_ledger(tenant_id, period_id)`.
+- Función `close_period(period_id)`: bloquea asientos (`accounting_periods.status='closed'`), valida balance=0, recalcula mayor.
+- Función `close_fiscal_year(year_id)`: cierre de cuentas de resultado, asiento a Utilidad del Ejercicio.
+- Vistas: `v_trial_balance`, `v_income_statement`, `v_balance_sheet`, `v_cash_flow`, `v_ar_aging`, `v_ap_aging`.
 
-### Fase 1 — Integridad de flujos críticos 🔴
-- **Stock siempre se descuenta**: `process_sale_stock` recibe fallback `location_type='tenant'`, `location_id=tenant_id` cuando turno no tiene store; añadir `location_type='virtual'` para no romper FK.
-- **Nómina genera CxP**: al cerrar nómina, `register_account_payment('employee', emp_id, net_pay, direction='out', reference=('payroll', payroll_id))` si `paid_at` es null deja pendiente; cuando se paga, registra el cobro.
-- **Recetas descuentan ingredientes**: trigger `process_sale_recipe_consumption` por cada `sale_item` con receta activa (sólo restaurant/bar).
-- **Dashboard realtime**: suscripción a `sales`, `purchases`, `account_payments`, `inventory_movements` filtradas por tenant.
+### Bloque J — Cuba específico (migración 4)
+- Plantilla NCIF completa.
+- Tablas `cu_tax_declarations` (DJ-08, DJ-09, ONAT), `cu_cost_sheets` (fichas de costo).
+- Impuestos: ONAT, Impuesto sobre Ventas, Impuesto sobre Utilidades, Contribución a la Seguridad Social.
+- Doble moneda CUP/MLC con tipo de cambio diario.
+- Exportador a TXT/PDF de declaraciones ONAT.
 
-### Fase 2 — Contabilidad empresarial 🟠
-- **Centros de costo**: tabla `cost_centers` + columna `cost_center_id` en `journal_entry_lines` y `sales`/`purchases`.
-- **Presupuestos**: `budgets` + `budget_lines` por cuenta/CC/mes; vista de ejecución vs real.
-- **Estado de Resultados / Balance / Flujo de Caja** parametrizables por estructura (no hardcoded).
-- **Reversión de asientos** ya existe; añadir **ajustes de cierre** + **asientos recurrentes**.
-- **Plan `cu_onat`** (ONAT Cuba) y **`br_sped`** (SPED Brasil) en `import_chart_template`.
-- **Diario / Mayor / Sumas y saldos** como reports SQL parametrizados (no recalcular en cliente).
+### Bloque K — Brasil específico (migración 5)
+- Plantilla SPED-ECD.
+- Tablas `br_sped_exports`, `br_nfe_documents`, `br_eSocial_events`.
+- Motor tributario por estado/municipio: `br_tax_rates(state, municipio, tax_type, rate)`.
+- Documentos fiscais: NF-e, NFC-e, NFS-e (estructura XML SEFAZ).
+- Exportadores: ECD, ECF, EFD-Contribuições, EFD-ICMS/IPI, eSocial.
 
-### Fase 3 — Multimoneda real 🟠
-- `exchange_rates(tenant_id, from_currency, to_currency, rate, valid_from)` con histórico.
-- `account_payments` y `journal_entry_lines` guardan `(currency, amount, fx_rate)` siempre.
-- Vista materializada `party_balance_by_currency` para CxC/CxP desglosados.
-- Función `revalue_fx(date)` que genera asiento de diferencia de cambio.
+### Bloque L — Conciliación, Flujo de caja, Delivery, Devoluciones (migración 6)
+- `reconcile_bank_statement(statement_id)`: matching automático por monto+fecha±3d contra `journal_entry_lines`.
+- Trigger en `delivery_assignments` con `status='completed'` → `financial_events` (gasto por comisión).
+- Trigger en `sale_returns` → reverso COGS, impuestos y cobro.
+- Trigger en `loyalty_movements` → pasivo por puntos emitidos.
 
-### Fase 4 — Restaurantes / Bares profesional 🟠
-- **Recetas compuestas** (semielaborados): `recipe_items` puede referenciar otra receta.
-- **Variantes** (`product_variants` + modificadores con delta de costo/precio e impacto inventario).
-- **Combos** con BOM propio (`combo_items` → productos o recetas).
-- **Escandallo**: vista `recipe_costing` con costo alimento, costo bebida, margen, %.
-
-### Fase 5 — Marketplace v2 🟡
-- Forzar `auth.user` en checkout (sin guest checkout).
-- Catálogo público con `stock_disponible` (= stock − reservas) y ETA.
-- Geolocalización: `customer_addresses(lat,lng)` + función `nearest_store(lat,lng)`.
-- Recomendaciones: SQL básico (productos co-comprados) + hook para Lovable AI.
-
-### Fase 6 — Delivery tipo Uber 🟡
-- `delivery_drivers` (documentos, licencia, vehículo, seguro, estado validación).
-- `driver_status` enum + `driver_locations` (lat,lng,heading,speed,ts) con Realtime.
-- Asignación automática por cercanía (función + edge function).
-- Clasificación: vista `driver_tier` calculada por entregas/tiempo/rating/incidencias.
-- Dashboard mapa con `mapbox-gl` o `leaflet`.
-
-### Fase 7 — Auditoría y seguridad 🟠
-- Trigger genérico `audit_trigger()` en tablas críticas (`sales`,`purchases`,`payroll_runs`,`accounting_*`,`products`,`customers`,`suppliers`,`employees`) que escribe en `audit_log(table, op, old, new, user, ip, ua, ts)`.
-- IP/UA capturados desde edge function `audit-logs` (ya existe — extender).
-- 2FA opcional vía Supabase MFA (no romper login actual).
-
-### Fase 8 — Analytics realtime + QA 🟡
-- Migrar Dashboard, Reportes, InventoryIntelligence a TanStack Query + canales Realtime.
-- Suite Vitest mínima para funciones críticas (`process_sale_stock`, `register_account_payment`, `compute_payroll_full`).
-- Playwright E2E: venta POS → asiento, compra → stock, nómina → CxP.
-
----
-
-## 4. Informe QA final (entregable al cierre)
-
-Al terminar cada fase produzco un `AUDIT_REPORT_FASE_N.md` con:
-1. Problemas resueltos.
-2. Tests pasados / fallidos.
-3. Migraciones aplicadas.
-4. RLS validada por tabla.
-5. Riesgos residuales.
-6. Pendiente para la siguiente fase.
+### Bloque M — Realtime UI Financiera
+- `ALTER PUBLICATION supabase_realtime ADD TABLE journal_entries`.
+- En `Contabilidad.tsx` y `AccountingReports.tsx`: subscripción a `journal_entries` para refrescar reportes en vivo.
+- Selector de perfil contable en Configuración → Empresa.
 
 ---
 
-## 5. Decisiones que necesito de ti antes de empezar
+## 2. Plan de ejecución por turnos
 
-1. **¿Por qué fase empezamos?** Recomiendo **Fase 0 + Fase 1** juntas (saneamiento + integridad crítica) — es el bloque que cierra los bugs reales sin meter scope nuevo.
-2. **País prioritario** para el plan contable nuevo: ¿Cuba (`cu_onat`) o Brasil (`br_sped`) primero?
-3. **Delivery con mapas**: ¿Mapbox (requiere `MAPBOX_TOKEN`) o Leaflet+OSM (gratis, menos pulido)?
-4. **Marketplace**: ¿forzamos cuenta obligatoria ya, o mantenemos guest checkout opcional durante migración?
+Implementación en 6 migraciones secuenciales. Cada bloque incluye:
+- migración SQL completa
+- actualización de tipos TS
+- ajustes mínimos de UI cuando aplique
 
-Respóndeme esos 4 puntos y arranco con la fase elegida (una sola fase por iteración, con migración + código + verificación).
+1. **Bloque G** — Event bus + posting_rules + refactor triggers existentes.
+2. **Bloque H** — accounting_profiles + chart templates + seed CU/BR.
+3. **Bloque I** — general_ledger + cierre + vistas de reportes.
+4. **Bloque J** — Perfil Cuba completo (NCIF, ONAT, fichas de costo).
+5. **Bloque K** — Perfil Brasil completo (SPED, NF-e, eSocial, ICMS/ISS).
+6. **Bloque L** — Conciliación auto + devoluciones + delivery + fidelización.
+7. **Bloque M** — Realtime + selector de perfil en UI.
+
+## 3. Detalles técnicos
+
+- Idempotencia: `financial_events` con UNIQUE(source_table, source_id, event_type) evita doble contabilización.
+- FX: cada evento captura `exchange_rate` al momento; reposting respeta tasa histórica.
+- RLS: todas las nuevas tablas con `tenant_id` y políticas vía `tenant_users`.
+- GRANT explícito: `authenticated` + `service_role` en cada CREATE TABLE.
+- Auditoría: `audit_trigger()` se extiende a `financial_events`, `posting_rules`, `general_ledger`, `accounting_profiles`.
+- Performance: `general_ledger` indexado por (tenant_id, period_id, account_id); reportes leen del mayor materializado, no del diario.
+- Migración no destructiva: los triggers existentes (Bloque B) se reemplazan, pero los asientos ya contabilizados quedan intactos.
+
+## 4. Confirmación esperada al cierre
+
+Al terminar los 7 bloques, todo módulo operativo (POS, compras, nómina, inventario, marketplace, delivery, fidelización, devoluciones, recetas) escribirá en `financial_events`, el bus despachará al motor contable con reglas del perfil del tenant, y los reportes (libro diario, mayor, balanza, ER, BG, flujo de caja, CxC, CxP) leerán del mayor materializado en realtime — todo parametrizado por país/régimen sin reglas hardcoded.
 
 ---
 
-## ✅ Fase 2 completada (2026-06-06)
-
-**Migración:**
-- Tablas: `cost_centers`, `budgets`, `budget_lines` (con RLS por tenant y Realtime).
-- Columna `cost_center_id` añadida a `journal_entry_lines`, `sales`, `purchases`.
-- Vistas con `security_invoker`: `trial_balance_view`, `general_ledger_view`, `budget_execution_view`.
-- Plantilla contable **`cu_onat`** (Cuba — ONAT) añadida a `import_chart_template` con catálogo MIPYMES/TCP (cajas multimoneda CUP/USD/EUR/MLC, ONAT tributos, impuesto fuerza de trabajo 5%, etc.).
-
-**Frontend:**
-- `CostCentersTab` — CRUD jerárquico de centros de costo.
-- `BudgetsTab` — presupuestos con líneas mensuales por cuenta+CC, ejecución vs real con KPIs y variación.
-- Pestañas integradas en `Contabilidad.tsx`; opción Cuba-ONAT añadida al selector de plantillas.
-
-**Próxima:** Fase 3 — Multimoneda real (exchange_rates histórico, revalue_fx, party_balance_by_currency).
+¿Apruebas este plan? Empiezo por el **Bloque G (Event Bus + Posting Rules)** en cuanto digas.

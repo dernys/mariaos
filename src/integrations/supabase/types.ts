@@ -2371,6 +2371,66 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_events: {
+        Row: {
+          amount: number
+          amount_in_base: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          error: string | null
+          event_date: string
+          event_type: string
+          exchange_rate: number
+          id: string
+          payload: Json
+          posted_at: string | null
+          posted_journal_id: string | null
+          source_id: string
+          source_table: string
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          amount?: number
+          amount_in_base?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          error?: string | null
+          event_date?: string
+          event_type: string
+          exchange_rate?: number
+          id?: string
+          payload?: Json
+          posted_at?: string | null
+          posted_journal_id?: string | null
+          source_id: string
+          source_table: string
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          amount_in_base?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          error?: string | null
+          event_date?: string
+          event_type?: string
+          exchange_rate?: number
+          id?: string
+          payload?: Json
+          posted_at?: string | null
+          posted_journal_id?: string | null
+          source_id?: string
+          source_table?: string
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       fiscal_years: {
         Row: {
           closed_at: string | null
@@ -4220,6 +4280,51 @@ export type Database = {
           tip_enabled?: boolean
           tip_percentages?: number[]
           tip_required?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      posting_rules: {
+        Row: {
+          active: boolean
+          amount_field: string
+          condition_expr: string | null
+          created_at: string
+          credit_account_code: string
+          debit_account_code: string
+          description: string
+          event_type: string
+          id: string
+          profile_code: string | null
+          sequence: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount_field?: string
+          condition_expr?: string | null
+          created_at?: string
+          credit_account_code: string
+          debit_account_code: string
+          description: string
+          event_type: string
+          id?: string
+          profile_code?: string | null
+          sequence?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount_field?: string
+          condition_expr?: string | null
+          created_at?: string
+          credit_account_code?: string
+          debit_account_code?: string
+          description?: string
+          event_type?: string
+          id?: string
+          profile_code?: string | null
+          sequence?: number
           updated_at?: string
         }
         Relationships: []
@@ -7542,6 +7647,7 @@ export type Database = {
         }
         Returns: string
       }
+      post_financial_event: { Args: { p_event_id: string }; Returns: string }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
       post_payment_journal_entry: {
         Args: { p_payment_id: string }
@@ -7646,6 +7752,10 @@ export type Database = {
       }
       resolve_account_by_role: {
         Args: { p_role: string; p_tenant: string }
+        Returns: string
+      }
+      resolve_account_id: {
+        Args: { p_code: string; p_tenant_id: string }
         Returns: string
       }
       resolve_period: {
