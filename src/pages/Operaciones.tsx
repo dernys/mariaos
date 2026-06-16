@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useAgent } from "@/hooks/useAgent";
 import { motion } from "framer-motion";
 import { Activity, AlertTriangle, ArrowRightLeft, ClipboardCheck, Plus, Sparkles, Store, Warehouse, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
