@@ -27,20 +27,20 @@ export default function InventoryIntelligence() {
   const { toast } = useToast();
   const [data, setData] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
+  const { invoke } = useAgent();
 
   const run = async () => {
     if (!tenantId) return;
     setLoading(true);
-    const { data: res, error } = await supabase.functions.invoke("inventory-intelligence", {
-      body: { tenant_id: tenantId, mode: "all" },
-    });
+    const { data: res, error } = await invoke<Result>("inventory-intelligence", { tenant_id: tenantId, mode: "all" }, { notify: false });
     setLoading(false);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error, variant: "destructive" });
       return;
     }
-    setData(res as Result);
+    if (res) setData(res);
   };
+
 
   useEffect(() => { if (tenantId) run(); }, [tenantId]);
 
