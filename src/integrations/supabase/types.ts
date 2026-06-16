@@ -224,6 +224,51 @@ export type Database = {
           },
         ]
       }
+      accounting_profiles: {
+        Row: {
+          active: boolean
+          base_currency: string
+          code: string
+          costing_method: string
+          country_code: string
+          created_at: string
+          description: string | null
+          fiscal_calendar: Json
+          functional_currency: string
+          name: string
+          regime: string
+          regulatory_exports: Json
+        }
+        Insert: {
+          active?: boolean
+          base_currency?: string
+          code: string
+          costing_method?: string
+          country_code: string
+          created_at?: string
+          description?: string | null
+          fiscal_calendar?: Json
+          functional_currency?: string
+          name: string
+          regime: string
+          regulatory_exports?: Json
+        }
+        Update: {
+          active?: boolean
+          base_currency?: string
+          code?: string
+          costing_method?: string
+          country_code?: string
+          created_at?: string
+          description?: string | null
+          fiscal_calendar?: Json
+          functional_currency?: string
+          name?: string
+          regime?: string
+          regulatory_exports?: Json
+        }
+        Relationships: []
+      }
       accounts_payable: {
         Row: {
           amount: number
@@ -1039,6 +1084,50 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "business_decisions"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      chart_account_templates: {
+        Row: {
+          code: string
+          id: string
+          is_header: boolean
+          name: string
+          nature: string
+          parent_code: string | null
+          profile_code: string
+          sort_order: number
+          type: string
+        }
+        Insert: {
+          code: string
+          id?: string
+          is_header?: boolean
+          name: string
+          nature: string
+          parent_code?: string | null
+          profile_code: string
+          sort_order?: number
+          type: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          is_header?: boolean
+          name?: string
+          nature?: string
+          parent_code?: string | null
+          profile_code?: string
+          sort_order?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_account_templates_profile_code_fkey"
+            columns: ["profile_code"]
+            isOneToOne: false
+            referencedRelation: "accounting_profiles"
+            referencedColumns: ["code"]
           },
         ]
       }
@@ -6383,6 +6472,41 @@ export type Database = {
           },
         ]
       }
+      tax_templates: {
+        Row: {
+          code: string
+          id: string
+          name: string
+          profile_code: string
+          rate: number
+          type: string
+        }
+        Insert: {
+          code: string
+          id?: string
+          name: string
+          profile_code: string
+          rate?: number
+          type?: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          name?: string
+          profile_code?: string
+          rate?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_templates_profile_code_fkey"
+            columns: ["profile_code"]
+            isOneToOne: false
+            referencedRelation: "accounting_profiles"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       tenant_api_keys: {
         Row: {
           created_at: string
@@ -6481,8 +6605,10 @@ export type Database = {
       }
       tenants: {
         Row: {
+          accounting_profile_code: string | null
           address: string | null
           business_type: string
+          country_code: string | null
           created_at: string
           email: string | null
           id: string
@@ -6495,8 +6621,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accounting_profile_code?: string | null
           address?: string | null
           business_type?: string
+          country_code?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -6509,8 +6637,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accounting_profile_code?: string | null
           address?: string | null
           business_type?: string
+          country_code?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -6522,7 +6652,15 @@ export type Database = {
           slug?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tenants_accounting_profile_code_fkey"
+            columns: ["accounting_profile_code"]
+            isOneToOne: false
+            referencedRelation: "accounting_profiles"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       ticket_counters: {
         Row: {
@@ -7314,6 +7452,10 @@ export type Database = {
       allocate_consignment_for_sale: {
         Args: { p_sale_id: string }
         Returns: undefined
+      }
+      apply_accounting_profile: {
+        Args: { p_profile_code: string; p_tenant_id: string }
+        Returns: number
       }
       apply_coupon_to_sale: {
         Args: { p_coupon_id: string; p_discount: number; p_sale_id: string }
