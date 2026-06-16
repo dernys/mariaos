@@ -13,6 +13,7 @@ import { SplitBillDialog } from "./SplitBillDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface Product {
   id: string;
@@ -53,6 +54,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export function POSRestaurant() {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
@@ -122,7 +124,7 @@ export function POSRestaurant() {
     const { data: order, error } = await supabase.from("kitchen_orders").insert({
       tenant_id: tenantId,
       table_id: selectedTableId,
-      table_name: selectedTableName || "Sin mesa",
+      table_name: selectedTableName || t("pos.restaurantView.noTable"),
       status: "pending",
       priority: "normal",
       waiter_name: waiterName || null,
@@ -130,7 +132,7 @@ export function POSRestaurant() {
     }).select("id").single();
 
     if (error || !order) {
-      toast({ title: "Error", description: "No se pudo crear la orden", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("pos.restaurantView.orderError"), variant: "destructive" });
       return;
     }
 
@@ -152,7 +154,7 @@ export function POSRestaurant() {
       }).eq("id", selectedTableId);
     }
 
-    toast({ title: "Comanda enviada", description: `${cart.length} platos enviados a cocina` });
+    toast({ title: t("pos.restaurantView.orderSent"), description: t("pos.restaurantView.orderSentDesc", { n: cart.length }) });
     setOrderNotes("");
   };
 
@@ -182,9 +184,9 @@ export function POSRestaurant() {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <UtensilsCrossed className="h-5 w-5 text-rose-400" />
-              <h2 className="font-heading font-bold text-sm">Comanda</h2>
+              <h2 className="font-heading font-bold text-sm">{t("pos.restaurantView.orderTitle")}</h2>
               <Badge variant="outline" className="text-[10px] border-rose-500/30 text-rose-400">
-                {products.length} platos
+                {t("pos.restaurantView.dishesCount", { n: products.length })}
               </Badge>
             </div>
             {selectedTableName && (
@@ -199,7 +201,7 @@ export function POSRestaurant() {
               onChange={(e) => setWaiterName(e.target.value)}
               className="h-7 rounded-md bg-background/50 border border-rose-500/20 text-xs px-2 min-w-[120px]"
             >
-              <option value="">Mesero...</option>
+              <option value="">{t("pos.restaurantView.waiterPh")}</option>
               {employees.map((e) => (
                 <option key={e.id} value={e.name}>{e.name}</option>
               ))}
@@ -208,7 +210,7 @@ export function POSRestaurant() {
               type="text"
               value={orderNotes}
               onChange={(e) => setOrderNotes(e.target.value)}
-              placeholder="Notas de la orden..."
+              placeholder={t("pos.restaurantView.orderNotesPh")}
               className="h-7 rounded-md bg-background/50 border border-rose-500/20 text-xs px-2 flex-1 min-w-[100px]"
             />
           </div>
@@ -218,10 +220,10 @@ export function POSRestaurant() {
         <Tabs value={posView} onValueChange={(v) => setPosView(v as "menu" | "tables")} className="mb-3">
           <TabsList className="w-full">
             <TabsTrigger value="menu" className="flex-1 text-xs gap-1.5">
-              <UtensilsCrossed className="h-3.5 w-3.5" /> Menú
+              <UtensilsCrossed className="h-3.5 w-3.5" /> {t("pos.restaurantView.menu")}
             </TabsTrigger>
             <TabsTrigger value="tables" className="flex-1 text-xs gap-1.5">
-              <MapPin className="h-3.5 w-3.5" /> Mesas
+              <MapPin className="h-3.5 w-3.5" /> {t("pos.restaurantView.tables")}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -234,16 +236,17 @@ export function POSRestaurant() {
           <>
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar plato del menú..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card border-rose-500/10 focus-visible:border-rose-500/40" />
+              <Input placeholder={t("pos.restaurantView.searchDish")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card border-rose-500/10 focus-visible:border-rose-500/40" />
             </div>
 
             <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
               {categories.map((cat) => {
                 const Icon = categoryIcons[cat];
+                const label = cat === "Todos" ? t("common.all") : cat;
                 return (
                   <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${activeCategory === cat ? "bg-rose-500 text-white shadow-md shadow-rose-500/25" : "bg-muted text-muted-foreground hover:bg-rose-500/10 hover:text-rose-400"}`}>
                     {Icon && <Icon className="h-3 w-3" />}
-                    {cat}
+                    {label}
                   </button>
                 );
               })}
@@ -253,7 +256,7 @@ export function POSRestaurant() {
               {filtered.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
                   <UtensilsCrossed className="h-10 w-10 mb-2 opacity-20" />
-                  <p className="text-sm">No hay platos disponibles</p>
+                  <p className="text-sm">{t("pos.restaurantView.noDishes")}</p>
                 </div>
               )}
 
@@ -336,18 +339,18 @@ export function POSRestaurant() {
             <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl shadow-elevated border-t max-h-[85vh] flex flex-col">
               <div className="flex items-center justify-between p-4 border-b">
                 <div>
-                  <h2 className="font-heading font-semibold text-sm">🍽️ Comanda {selectedTableName && `— ${selectedTableName}`}</h2>
-                  <p className="text-[10px] text-muted-foreground">{totalItems} platos</p>
+                  <h2 className="font-heading font-semibold text-sm">🍽️ {t("pos.restaurantView.orderTitle")} {selectedTableName && `— ${selectedTableName}`}</h2>
+                  <p className="text-[10px] text-muted-foreground">{t("pos.restaurantView.dishesCount", { n: totalItems })}</p>
                 </div>
                 <button onClick={() => setCartOpen(false)} className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"><X className="h-4 w-4" /></button>
               </div>
-              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel="Servicio (10%)" checkoutLabel="Enviar a Caja" extraActions={
+              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={t("pos.restaurantView.sendToCash")} extraActions={
                 <div className="flex gap-2 mb-2">
                   <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
-                    <Send className="h-3 w-3" /> Enviar a Cocina
+                    <Send className="h-3 w-3" /> {t("pos.restaurantView.sendToKitchen")}
                   </Button>
                   <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
-                    <SplitSquareVertical className="h-3 w-3" /> Dividir
+                    <SplitSquareVertical className="h-3 w-3" /> {t("pos.restaurantView.split")}
                   </Button>
                 </div>
               } />
@@ -359,23 +362,23 @@ export function POSRestaurant() {
       {/* Desktop Cart */}
       <div className="hidden lg:flex w-80 xl:w-96 bg-card rounded-xl shadow-card border flex-col shrink-0">
         <div className="p-4 border-b bg-gradient-to-r from-rose-500/10 to-transparent">
-          <h2 className="font-heading font-semibold text-sm">🍽️ Comanda {selectedTableName && `— ${selectedTableName}`}</h2>
-          <p className="text-[10px] text-muted-foreground">{totalItems} platos • ${subtotal.toLocaleString()} CUP</p>
+          <h2 className="font-heading font-semibold text-sm">🍽️ {t("pos.restaurantView.orderTitle")} {selectedTableName && `— ${selectedTableName}`}</h2>
+          <p className="text-[10px] text-muted-foreground">{t("pos.restaurantView.dishesCount", { n: totalItems })} • ${subtotal.toLocaleString()} CUP</p>
         </div>
-        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel="Servicio (10%)" checkoutLabel="Enviar a Caja" extraActions={
+        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={t("pos.restaurantView.sendToCash")} extraActions={
           <div className="flex gap-2 mb-2">
             <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
-              <Send className="h-3 w-3" /> Cocina
+              <Send className="h-3 w-3" /> {t("pos.restaurantView.kitchen")}
             </Button>
             <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
-              <SplitSquareVertical className="h-3 w-3" /> Dividir
+              <SplitSquareVertical className="h-3 w-3" /> {t("pos.restaurantView.split")}
             </Button>
           </div>
         } />
       </div>
 
       <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} />
-      <SplitBillDialog open={splitBillOpen} onOpenChange={setSplitBillOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSplitConfirm={(splits) => { toast({ title: "Cuenta dividida", description: `${splits.length} cuentas generadas` }); }} />
+      <SplitBillDialog open={splitBillOpen} onOpenChange={setSplitBillOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSplitConfirm={(splits) => { toast({ title: t("pos.restaurantView.splitDone"), description: t("pos.restaurantView.splitDoneDesc", { n: splits.length }) }); }} />
     </div>
   );
 }
