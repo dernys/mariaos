@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface KitchenOrder {
   id: string;
@@ -30,12 +31,13 @@ interface KitchenOrderItem {
 }
 
 const statusTabs = [
-  { key: "pending", label: "Pendientes", icon: Clock, color: "text-amber-400" },
-  { key: "preparing", label: "Preparando", icon: ChefHat, color: "text-blue-400" },
-  { key: "ready", label: "Listos", icon: Check, color: "text-emerald-400" },
+  { key: "pending", icon: Clock, color: "text-amber-400" },
+  { key: "preparing", icon: ChefHat, color: "text-blue-400" },
+  { key: "ready", icon: Check, color: "text-emerald-400" },
 ];
 
 export function KitchenDisplay() {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const { toast } = useToast();
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
@@ -92,8 +94,8 @@ export function KitchenDisplay() {
       await supabase.from("restaurant_tables").update({ status: "waiting_bill" }).eq("id", order.table_id);
     }
 
-    const labels: Record<string, string> = { preparing: "En preparación", ready: "¡Listo para servir!", delivered: "Entregado" };
-    toast({ title: labels[newStatus] || "Orden actualizada", description: order.table_name || "Sin mesa" });
+    const labels: Record<string, string> = { preparing: t("pos.kitchen.toasts.preparing"), ready: t("pos.kitchen.toasts.ready"), delivered: t("pos.kitchen.toasts.delivered") };
+    toast({ title: labels[newStatus] || t("pos.kitchen.toasts.updated"), description: order.table_name || t("pos.kitchen.noTable") });
     fetchOrders();
   };
 
@@ -125,7 +127,7 @@ export function KitchenDisplay() {
               }`}
             >
               <tab.icon className="h-4 w-4" />
-              {tab.label}
+              {t(`pos.kitchen.tabs.${tab.key}`)}
               {count > 0 && (
                 <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                   activeTab === tab.key ? "bg-primary-foreground/20" : "bg-foreground/10"
@@ -160,12 +162,12 @@ export function KitchenDisplay() {
                 }`}>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-heading font-bold text-sm">{order.table_name || "Sin mesa"}</h3>
+                      <h3 className="font-heading font-bold text-sm">{order.table_name || t("pos.kitchen.noTable")}</h3>
                       {order.priority === "urgent" && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
                       {late && order.priority !== "urgent" && <Bell className="h-3.5 w-3.5 text-destructive animate-pulse" />}
                     </div>
                     {order.waiter_name && (
-                      <p className="text-[10px] text-muted-foreground">Mesero: {order.waiter_name}</p>
+                      <p className="text-[10px] text-muted-foreground">{t("pos.kitchen.waiterLabel", { name: order.waiter_name })}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -204,7 +206,7 @@ export function KitchenDisplay() {
                       className="w-full text-xs gap-1.5"
                       onClick={() => updateOrderStatus(order, "preparing")}
                     >
-                      <Play className="h-3 w-3" /> Comenzar preparación
+                      <Play className="h-3 w-3" /> {t("pos.kitchen.startPrep")}
                     </Button>
                   )}
                   {order.status === "preparing" && (
@@ -213,7 +215,7 @@ export function KitchenDisplay() {
                       className="w-full text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
                       onClick={() => updateOrderStatus(order, "ready")}
                     >
-                      <Check className="h-3 w-3" /> Marcar como listo
+                      <Check className="h-3 w-3" /> {t("pos.kitchen.markReady")}
                     </Button>
                   )}
                   {order.status === "ready" && (
@@ -223,7 +225,7 @@ export function KitchenDisplay() {
                       className="w-full text-xs gap-1.5"
                       onClick={() => updateOrderStatus(order, "delivered")}
                     >
-                      <Check className="h-3 w-3" /> Entregado
+                      <Check className="h-3 w-3" /> {t("pos.kitchen.delivered")}
                     </Button>
                   )}
                 </div>
@@ -236,7 +238,7 @@ export function KitchenDisplay() {
       {filteredOrders.length === 0 && (
         <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
           <ChefHat className="h-12 w-12 mb-3 opacity-20" />
-          <p className="text-sm font-medium">No hay órdenes {activeTab === "pending" ? "pendientes" : activeTab === "preparing" ? "en preparación" : "listas"}</p>
+          <p className="text-sm font-medium">{activeTab === "pending" ? t("pos.kitchen.emptyPending") : activeTab === "preparing" ? t("pos.kitchen.emptyPreparing") : t("pos.kitchen.emptyReady")}</p>
         </div>
       )}
     </div>

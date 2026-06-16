@@ -4,6 +4,7 @@ import { Users, Clock, CircleDot, Square, RectangleHorizontal, ChefHat } from "l
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useTranslation } from "react-i18next";
 
 interface RestaurantTable {
   id: string;
@@ -22,11 +23,11 @@ interface FloorMapProps {
   selectedTableId?: string | null;
 }
 
-const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  free: { label: "Libre", color: "text-emerald-400", bg: "from-emerald-500/20 to-emerald-500/5 border-emerald-500/30" },
-  occupied: { label: "Ocupada", color: "text-amber-400", bg: "from-amber-500/20 to-amber-500/5 border-amber-500/30" },
-  served: { label: "Servida", color: "text-blue-400", bg: "from-blue-500/20 to-blue-500/5 border-blue-500/30" },
-  waiting_bill: { label: "Esperando cuenta", color: "text-purple-400", bg: "from-purple-500/20 to-purple-500/5 border-purple-500/30" },
+const statusConfig: Record<string, { key: string; color: string; bg: string }> = {
+  free: { key: "free", color: "text-emerald-400", bg: "from-emerald-500/20 to-emerald-500/5 border-emerald-500/30" },
+  occupied: { key: "occupied", color: "text-amber-400", bg: "from-amber-500/20 to-amber-500/5 border-amber-500/30" },
+  served: { key: "served", color: "text-blue-400", bg: "from-blue-500/20 to-blue-500/5 border-blue-500/30" },
+  waiting_bill: { key: "waiting_bill", color: "text-purple-400", bg: "from-purple-500/20 to-purple-500/5 border-purple-500/30" },
 };
 
 const shapeIcons: Record<string, typeof Square> = {
@@ -36,6 +37,7 @@ const shapeIcons: Record<string, typeof Square> = {
 };
 
 export function FloorMap({ onTableSelect, selectedTableId }: FloorMapProps) {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [tables, setTables] = useState<RestaurantTable[]>([]);
 
@@ -80,7 +82,7 @@ export function FloorMap({ onTableSelect, selectedTableId }: FloorMapProps) {
       <div className="flex gap-2 flex-wrap">
         {Object.entries(statusConfig).map(([key, cfg]) => (
           <Badge key={key} variant="outline" className={`text-[10px] ${cfg.color} border-current/30`}>
-            {cfg.label}: {statusCounts[key] || 0}
+            {t(`pos.floor.status.${cfg.key}`)}: {statusCounts[key] || 0}
           </Badge>
         ))}
       </div>
@@ -120,7 +122,7 @@ export function FloorMap({ onTableSelect, selectedTableId }: FloorMapProps) {
                 variant="outline"
                 className={`mt-1.5 text-[8px] px-1 h-4 ${config.color} border-current/20`}
               >
-                {config.label}
+                {t(`pos.floor.status.${config.key}`)}
               </Badge>
             </motion.button>
           );
@@ -130,7 +132,7 @@ export function FloorMap({ onTableSelect, selectedTableId }: FloorMapProps) {
       {tables.length === 0 && (
         <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
           <ChefHat className="h-10 w-10 mb-2 opacity-20" />
-          <p className="text-sm">No hay mesas configuradas</p>
+          <p className="text-sm">{t("pos.floor.noTables")}</p>
         </div>
       )}
     </div>

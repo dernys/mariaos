@@ -722,6 +722,111 @@
       "registered": "Pagamento registrado",
       "registeredDesc": "Total: {{total}} (base)",
       "invalidAmount": "Valor inválido"
+    },
+    "bar": {
+      "header": "Balcão de Serviço",
+      "productsCount": "{{n}} produtos",
+      "searchPh": "Buscar ou escanear código...",
+      "parkedTitle": "Vendas em espera",
+      "noProducts": "Sem produtos",
+      "lowStockBadge": "Baixo",
+      "account": "Conta",
+      "clientAccount": "Conta do Cliente",
+      "itemsCount": "{{n}} itens",
+      "taxLabel": "Imposto ({{rate}}%)",
+      "offlineToast": "POS offline — usando catálogo local",
+      "codeNotFound": "Código não encontrado: {{code}}"
+    },
+    "restaurantView": {
+      "header": "Comanda",
+      "dishesCount": "{{n}} pratos",
+      "noTable": "Sem mesa",
+      "waiterPh": "Garçom...",
+      "orderNotesPh": "Notas do pedido...",
+      "menu": "Menu",
+      "tables": "Mesas",
+      "searchDish": "Buscar prato do menu...",
+      "noDishes": "Sem pratos disponíveis",
+      "serviceLabel": "Serviço ({{rate}}%)",
+      "sendToCash": "Enviar ao Caixa",
+      "sendToKitchen": "Enviar à Cozinha",
+      "kitchen": "Cozinha",
+      "split": "Dividir",
+      "orderSent": "Comanda enviada",
+      "orderSentDesc": "{{n}} pratos enviados à cozinha",
+      "orderError": "Não foi possível criar o pedido",
+      "splitDone": "Conta dividida",
+      "splitDoneDesc": "{{n}} contas geradas",
+      "orderTitle": "Comanda"
+    },
+    "empresa": {
+      "searchPh": "Buscar produto ou SKU...",
+      "noProducts": "Sem produtos",
+      "cart": "Carrinho",
+      "saleCart": "Carrinho de Venda",
+      "unitsBadge": "{{n}} un",
+      "itemsCount": "{{n}} itens"
+    },
+    "floor": {
+      "status": {
+        "free": "Livre",
+        "occupied": "Ocupada",
+        "served": "Servida",
+        "waiting_bill": "Aguardando conta"
+      },
+      "statusCount": "{{label}}: {{n}}",
+      "noTables": "Sem mesas configuradas"
+    },
+    "kitchen": {
+      "tabs": {
+        "pending": "Pendentes",
+        "preparing": "Preparando",
+        "ready": "Prontos"
+      },
+      "noTable": "Sem mesa",
+      "waiterLabel": "Garçom: {{name}}",
+      "startPrep": "Começar preparo",
+      "markReady": "Marcar como pronto",
+      "delivered": "Entregue",
+      "emptyPending": "Sem pedidos pendentes",
+      "emptyPreparing": "Sem pedidos em preparo",
+      "emptyReady": "Sem pedidos prontos",
+      "toasts": {
+        "preparing": "Em preparo",
+        "ready": "Pronto para servir!",
+        "delivered": "Entregue",
+        "updated": "Pedido atualizado"
+      }
+    },
+    "tableOrders": {
+      "empty": "Sem pedidos ativos",
+      "active": "Pedidos ativos ({{n}})",
+      "waiter": "Garçom: {{name}}",
+      "status": {
+        "pending": "Pendente",
+        "preparing": "Preparando",
+        "ready": "Pronto",
+        "delivered": "Entregue"
+      }
+    },
+    "shift": {
+      "bar": {
+        "title": "Abra o balcão para começar a cobrar",
+        "sub": "Você precisa de um turno aberto para registrar consumos, dividir contas e fechar o caixa."
+      },
+      "restaurant": {
+        "title": "Inicie o turno do salão",
+        "sub": "Para anotar pedidos, enviar à cozinha e cobrar mesas, primeiro é necessário um turno ativo atribuído a um caixa."
+      },
+      "empresa": {
+        "title": "Abra um turno de venda",
+        "sub": "O POS exige um turno aberto para registrar vendas, baixar estoque e manter rastreabilidade do caixa."
+      },
+      "openNow": "Abrir turno agora",
+      "footer": "Apenas um turno aberto por usuário. Ao fechá-lo é feita a conferência automática.",
+      "active": "Turno ativo",
+      "since": "desde {{time}}",
+      "view": "Ver turno"
     }
   }
 }

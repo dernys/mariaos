@@ -8,6 +8,7 @@ import { PaymentDialog } from "./PaymentDialog";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useTranslation } from "react-i18next";
 
 interface Product {
   id: string;
@@ -40,6 +41,7 @@ const categoryIcons: Record<string, typeof Package> = {
 };
 
 export function POSEmpresa() {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -92,16 +94,17 @@ export function POSEmpresa() {
       <div className="flex-1 flex flex-col min-w-0">
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar producto o SKU..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder={t("pos.empresa.searchPh")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
 
         <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
           {categories.map((cat) => {
             const Icon = categoryIcons[cat];
+            const label = cat === "Todos" ? t("common.all") : cat;
             return (
               <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${activeCategory === cat ? "gradient-brand text-primary-foreground shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
                 {Icon && <Icon className="h-3 w-3" />}
-                {cat}
+                {label}
               </button>
             );
           })}
@@ -111,7 +114,7 @@ export function POSEmpresa() {
           {filtered.length === 0 && (
             <div className="col-span-full flex flex-col items-center justify-center h-32 text-muted-foreground">
               <Package className="h-10 w-10 mb-2 opacity-20" />
-              <p className="text-sm">No hay productos</p>
+              <p className="text-sm">{t("pos.empresa.noProducts")}</p>
             </div>
           )}
           {filtered.map((product) => {
@@ -134,7 +137,7 @@ export function POSEmpresa() {
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-base sm:text-lg font-heading font-bold text-primary">${product.price.toLocaleString()}</p>
                   <Badge variant={product.stock <= product.price * 0 + 5 ? "destructive" : "secondary"} className="text-[8px] px-1 h-4">
-                    {product.stock} uds
+                    {t("pos.empresa.unitsBadge", { n: product.stock })}
                   </Badge>
                 </div>
               </motion.button>
@@ -161,7 +164,7 @@ export function POSEmpresa() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setCartOpen(false)} className="lg:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40" />
             <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl shadow-elevated border-t max-h-[85vh] flex flex-col">
               <div className="flex items-center justify-between p-4 border-b">
-                <div><h2 className="font-heading font-semibold text-sm">Carrito</h2><p className="text-[10px] text-muted-foreground">{totalItems} artículos</p></div>
+                <div><h2 className="font-heading font-semibold text-sm">{t("pos.empresa.cart")}</h2><p className="text-[10px] text-muted-foreground">{t("pos.empresa.itemsCount", { n: totalItems })}</p></div>
                 <button onClick={() => setCartOpen(false)} className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"><X className="h-4 w-4" /></button>
               </div>
               <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} />
@@ -172,8 +175,8 @@ export function POSEmpresa() {
 
       <div className="hidden lg:flex w-80 xl:w-96 bg-card rounded-xl shadow-card border flex-col shrink-0">
         <div className="p-4 border-b">
-          <h2 className="font-heading font-semibold text-sm">Carrito de Venta</h2>
-          <p className="text-[10px] text-muted-foreground">{totalItems} artículos • ${subtotal.toLocaleString()} CUP</p>
+          <h2 className="font-heading font-semibold text-sm">{t("pos.empresa.saleCart")}</h2>
+          <p className="text-[10px] text-muted-foreground">{t("pos.empresa.itemsCount", { n: totalItems })} • ${subtotal.toLocaleString()} CUP</p>
         </div>
         <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} />
       </div>
