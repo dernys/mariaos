@@ -116,8 +116,51 @@ export function ConfigGeneral() {
   const selectedProfile = profiles.find((p) => p.code === profileCode);
   const countryLabel = (c: string) => (({ CU: "Cuba", BR: "Brasil", XX: "Genérico / Internacional" } as any)[c] || c);
 
+  const handleSaveTenantLocale = async (loc: AppLocale) => {
+    setTenantLocaleState(loc);
+    await setTenantLocale(loc);
+    toast({ title: t("settings.languageSection.saved") });
+  };
+
   return (
     <div className="space-y-4 max-w-2xl">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Languages className="h-4 w-4 text-primary" /> {t("settings.languageSection.title")}
+          </CardTitle>
+          <CardDescription>{t("settings.languageSection.description")}</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">{t("settings.languageSection.tenantLocale")}</Label>
+              <Select value={tenantLocale} onValueChange={(v) => handleSaveTenantLocale(v as AppLocale)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SUPPORTED_LOCALES.map((l) => (
+                    <SelectItem key={l.code} value={l.code}>{l.flag} {l.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground mt-1">{t("settings.languageSection.tenantLocaleHelp")}</p>
+            </div>
+            <div>
+              <Label className="text-xs">{t("settings.languageSection.userLocale")}</Label>
+              <Select value={locale} onValueChange={(v) => setUserLocale(v as AppLocale)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SUPPORTED_LOCALES.map((l) => (
+                    <SelectItem key={l.code} value={l.code}>{l.flag} {l.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground mt-1">{t("settings.languageSection.userLocaleHelp")}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
