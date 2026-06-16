@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ interface Supplier {
 }
 
 export default function Proveedores() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -110,7 +112,7 @@ export default function Proveedores() {
   });
 
   return (
-    <AppLayout title="Proveedores">
+    <AppLayout title={t("modules.suppliers.title")}>
       <div className="space-y-4">
         <StatRow>
           <MiniStatCard label="Proveedores" value={suppliers.length} icon={Truck} tone="primary" />
@@ -140,7 +142,7 @@ export default function Proveedores() {
                   { key: "rfc", label: "RFC" }, { key: "balance", label: "Saldo" },
                 ]} />
               <Button onClick={openNew} size="sm" className="gradient-brand text-primary-foreground gap-2 h-9">
-                <Plus className="h-4 w-4" />Nuevo
+                <Plus className="h-4 w-4" />{t("modules.suppliers.newSupplier")}
               </Button>
             </>
           }
@@ -179,9 +181,9 @@ export default function Proveedores() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <button onClick={() => nav(`/proveedores/${s.id}`)} className="p-1.5 rounded hover:bg-primary/10 text-primary" title="Detalle e historial"><History className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => nav(`/proveedores/${s.id}`)} className="p-1.5 rounded hover:bg-primary/10 text-primary" title={t("modules.suppliers.history")}><History className="h-3.5 w-3.5" /></button>
                         {debt > 0 && (
-                          <button onClick={() => { setPaying(s); setPayOpen(true); }} className="p-1.5 rounded hover:bg-warning/10 text-warning" title="Pagar saldo"><ArrowUpFromLine className="h-3.5 w-3.5" /></button>
+                          <button onClick={() => { setPaying(s); setPayOpen(true); }} className="p-1.5 rounded hover:bg-warning/10 text-warning" title={t("modules.suppliers.payBalance")}><ArrowUpFromLine className="h-3.5 w-3.5" /></button>
                         )}
                         <button onClick={() => openEdit(s)} className="p-1.5 rounded hover:bg-muted"><Edit2 className="h-3.5 w-3.5" /></button>
                         <button onClick={() => remove(s)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -234,7 +236,7 @@ export default function Proveedores() {
           partyName={paying.name}
           amountDue={Math.max(0, Number(paying.balance || 0))}
           referenceType={null}
-          title="Pagar a proveedor"
+          title={t("modules.suppliers.payTitle")}
           onPaid={fetchAll}
         />
       )}

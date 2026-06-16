@@ -147,5 +147,80 @@
       "userLocaleHelp": "Your personal preference takes priority over the company's.",
       "saved": "Language updated"
     }
+  },
+  "modules": {
+    "pos": {
+      "title": "Point of Sale",
+      "titleBar": "Bar / Tabs",
+      "titleRestaurant": "Restaurant / Tables"
+    },
+    "inventory": {
+      "title": "Inventory",
+      "tabs": {
+        "products": "Products",
+        "stock": "Stock by location",
+        "kardex": "Kardex",
+        "movements": "Movements"
+      },
+      "header": "Product inventory",
+      "searchProduct": "Search product…",
+      "newProduct": "New product",
+      "registerMovement": "Register movement",
+      "movementReason": "Movement reason"
+    },
+    "purchases": {
+      "title": "Purchases",
+      "tabs": {
+        "purchases": "Purchase orders",
+        "suppliers": "Suppliers"
+      },
+      "header": "Purchase orders",
+      "newPurchase": "New purchase",
+      "createPurchase": "Create Purchase",
+      "receive": "Receive",
+      "cancelOrder": "Cancel",
+      "registerPayment": "Register payment"
+    },
+    "suppliers": {
+      "title": "Suppliers",
+      "header": "Suppliers",
+      "newSupplier": "New supplier",
+      "history": "Details and history",
+      "payBalance": "Pay balance",
+      "payTitle": "Pay supplier"
+    },
+    "customers": {
+      "title": "Customers",
+      "header": "Customers",
+      "newCustomer": "New customer",
+      "history": "History"
+    },
+    "invoices": {
+      "title": "Invoices",
+      "header": "Issued invoices",
+      "settings": "Settings",
+      "goPos": "Go to POS",
+      "quickIssue": "Quick issue",
+      "issue": "Issue invoice",
+      "issueAction": "Issue",
+      "chooseSale": "Choose sale…",
+      "downloadPdf": "Download PDF",
+      "downloadXml": "Download XML",
+      "transmit": "Transmit electronically",
+      "sendEmail": "Send by email",
+      "voidInvoice": "Void"
+    },
+    "returns": {
+      "title": "Returns",
+      "tabs": {
+        "new": "Register return",
+        "history": "History"
+      },
+      "searchTicket": "Search by ticket #…",
+      "process": "Process return",
+      "reason": "Reason",
+      "reasonPlaceholder": "Defective, changed mind…",
+      "submit": "Register return"
+    }
   }
 }

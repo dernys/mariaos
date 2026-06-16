@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -39,6 +40,7 @@ interface PaymentMethodRow { id: string; name: string; type: string; }
 interface CurrencyRow { id: string; code: string; exchange_rate: number; is_base: boolean; }
 
 const statusBadge = (s: string) => {
+  const { t } = useTranslation();
   const m: Record<string, { c: string; l: string }> = {
     draft: { c: "bg-warning/10 text-warning", l: "Borrador" },
     received: { c: "bg-success/10 text-success", l: "Recibida" },
@@ -287,10 +289,10 @@ export default function Compras() {
   }, [purchases]);
 
   return (
-    <AppLayout title="Compras">
+    <AppLayout title={t("modules.purchases.title")}>
       <Tabs defaultValue="purchases" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="purchases">Órdenes de compra</TabsTrigger>
+          <TabsTrigger value="purchases">{t("modules.purchases.tabs.purchases")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="purchases" className="space-y-4">
@@ -323,7 +325,7 @@ export default function Compras() {
                 <ExportButton
                   rows={purchasesTable.filtered}
                   filename="compras"
-                  title="Órdenes de compra"
+                  title={t("modules.purchases.header")}
                   columns={[
                     { key: "purchase_number", label: "Nº" },
                     { key: "supplier_name", label: "Proveedor" },
@@ -335,7 +337,7 @@ export default function Compras() {
                   ]}
                 />
                 <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpen(true)}>
-                  <Plus className="h-3.5 w-3.5" /> Nueva Compra
+                  <Plus className="h-3.5 w-3.5" /> {t("modules.purchases.newPurchase")}
                 </Button>
               </>
             }
@@ -588,7 +590,7 @@ export default function Compras() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button className="gradient-brand text-primary-foreground" onClick={handleCreate}>Crear Compra</Button>
+            <Button className="gradient-brand text-primary-foreground" onClick={handleCreate}>{t("modules.purchases.createPurchase")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

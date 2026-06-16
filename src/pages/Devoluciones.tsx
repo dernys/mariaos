@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ interface SaleItem { id: string; product_id: string | null; product_name: string
 interface ReturnRow { id: string; return_number: string; sale_id: string; total_refunded: number; refund_method: string; reason: string | null; return_type: string; created_at: string; }
 
 export default function Devoluciones() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [sales, setSales] = useState<Sale[]>([]);
   const [returns, setReturns] = useState<ReturnRow[]>([]);
@@ -102,17 +104,17 @@ export default function Devoluciones() {
   );
 
   return (
-    <AppLayout title="Devoluciones">
+    <AppLayout title={t("modules.returns.title")}>
       <Tabs defaultValue="new" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="new">Registrar devolución</TabsTrigger>
-          <TabsTrigger value="history">Historial</TabsTrigger>
+          <TabsTrigger value="new">{t("modules.returns.tabs.new")}</TabsTrigger>
+          <TabsTrigger value="history">{t("modules.returns.tabs.history")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="new" className="space-y-4">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nº de ticket..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder={t("modules.returns.searchTicket")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
@@ -237,7 +239,7 @@ export default function Devoluciones() {
             </div>
             <div>
               <Label className="text-xs">Motivo</Label>
-              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Defectuoso, cambio de opinión..." />
+              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("modules.returns.reasonPlaceholder")} />
             </div>
           </div>
           <DialogFooter>

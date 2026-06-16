@@ -147,5 +147,80 @@
       "userLocaleHelp": "Tu preferencia personal tiene prioridad sobre la de la empresa.",
       "saved": "Idioma actualizado"
     }
+  },
+  "modules": {
+    "pos": {
+      "title": "Punto de Venta",
+      "titleBar": "Bar / Comandas",
+      "titleRestaurant": "Restaurante / Mesas"
+    },
+    "inventory": {
+      "title": "Inventario",
+      "tabs": {
+        "products": "Productos",
+        "stock": "Stock por ubicación",
+        "kardex": "Kardex",
+        "movements": "Movimientos"
+      },
+      "header": "Inventario de productos",
+      "searchProduct": "Buscar producto…",
+      "newProduct": "Nuevo producto",
+      "registerMovement": "Registrar movimiento",
+      "movementReason": "Motivo del movimiento"
+    },
+    "purchases": {
+      "title": "Compras",
+      "tabs": {
+        "purchases": "Órdenes de compra",
+        "suppliers": "Proveedores"
+      },
+      "header": "Órdenes de compra",
+      "newPurchase": "Nueva compra",
+      "createPurchase": "Crear Compra",
+      "receive": "Recibir",
+      "cancelOrder": "Cancelar",
+      "registerPayment": "Registrar pago"
+    },
+    "suppliers": {
+      "title": "Proveedores",
+      "header": "Proveedores",
+      "newSupplier": "Nuevo proveedor",
+      "history": "Detalle e historial",
+      "payBalance": "Pagar saldo",
+      "payTitle": "Pagar a proveedor"
+    },
+    "customers": {
+      "title": "Clientes",
+      "header": "Clientes",
+      "newCustomer": "Nuevo cliente",
+      "history": "Historial"
+    },
+    "invoices": {
+      "title": "Facturas",
+      "header": "Facturas emitidas",
+      "settings": "Configuración",
+      "goPos": "Ir al POS",
+      "quickIssue": "Emisión rápida",
+      "issue": "Emitir factura",
+      "issueAction": "Emitir",
+      "chooseSale": "Elegir venta…",
+      "downloadPdf": "Descargar PDF",
+      "downloadXml": "Descargar XML",
+      "transmit": "Transmitir electrónicamente",
+      "sendEmail": "Enviar por email",
+      "voidInvoice": "Anular"
+    },
+    "returns": {
+      "title": "Devoluciones",
+      "tabs": {
+        "new": "Registrar devolución",
+        "history": "Historial"
+      },
+      "searchTicket": "Buscar por nº de ticket…",
+      "process": "Procesar devolución",
+      "reason": "Motivo",
+      "reasonPlaceholder": "Defectuoso, cambio de opinión…",
+      "submit": "Registrar devolución"
+    }
   }
 }
