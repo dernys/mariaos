@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -37,6 +38,7 @@ interface RecipeLine {
 const UNITS = ["unidad", "g", "kg", "ml", "L", "oz", "tbsp", "tsp", "porción"];
 
 export default function Recetas() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { toast } = useToast();
 
@@ -160,7 +162,7 @@ export default function Recetas() {
   const availableParents = products.filter((p) => !recipesByProduct.has(p.id));
 
   return (
-    <AppLayout title="Recetas / Escandallos">
+    <AppLayout title={t("nav.items.recipes")}>
       <div className="space-y-4">
         {/* KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">

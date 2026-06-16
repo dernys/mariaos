@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ import { Receipt, User } from "lucide-react";
 import { format } from "date-fns";
 
 export default function VentaDetalle() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const nav = useNavigate();
   const [sale, setSale] = useState<any>(null);
@@ -33,7 +35,7 @@ export default function VentaDetalle() {
     })();
   }, [id]);
 
-  if (!sale) return <AppLayout title="Venta"><p className="text-sm text-muted-foreground">Cargando...</p></AppLayout>;
+  if (!sale) return <AppLayout title={t("common.sale")}><p className="text-sm text-muted-foreground">{t("common.loading")}</p></AppLayout>;
 
   return (
     <AppLayout title={`Venta ${sale.ticket_number || ""}`}>

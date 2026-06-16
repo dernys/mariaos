@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { Copy, Trash2, Plus } from "lucide-react";
 const ALL_EVENTS = ["sale.created", "shift.closed", "stock.low"];
 
 async function sha256Hex(s: string) {
+  const { t } = useTranslation();
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -84,7 +86,7 @@ export default function Developers() {
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-v1`;
 
   return (
-    <AppLayout title="API & Webhooks">
+    <AppLayout title={t("nav.items.developers")}>
       <Tabs defaultValue="keys" className="space-y-4">
         <TabsList>
           <TabsTrigger value="keys">API Keys</TabsTrigger>

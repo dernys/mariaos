@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Play, Square, DollarSign, Plus, Store, ArrowDownCircle, ArrowUpCircle, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ interface StoreItem { id: string; name: string; }
 interface Employee { id: string; name: string; position: string | null; }
 
 const Turnos = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const tenantId = useTenant();
   const nav = useNavigate();
@@ -174,7 +176,7 @@ const Turnos = () => {
 
   if (loading) {
     return (
-      <AppLayout title="Turnos de Venta">
+      <AppLayout title={t("nav.items.shifts")}>
         <div className="flex items-center justify-center h-64">
           <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
         </div>
@@ -183,7 +185,7 @@ const Turnos = () => {
   }
 
   return (
-    <AppLayout title="Turnos de Venta">
+    <AppLayout title={t("nav.items.shifts")}>
       <div className="space-y-4">
         {/* Open Shifts List */}
         {openShifts.length > 0 && (

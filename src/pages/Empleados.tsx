@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +56,7 @@ interface Shift {
 }
 
 const Empleados = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const tenantId = useTenant();
   const navigate = useNavigate();
@@ -156,7 +158,7 @@ const Empleados = () => {
   });
 
   return (
-    <AppLayout title="Empleados">
+    <AppLayout title={t("nav.items.employees")}>
       <div className="space-y-4">
         <StatRow>
           <MiniStatCard label="Total" value={employees.length} icon={Users} tone="primary" />
@@ -232,7 +234,7 @@ const Empleados = () => {
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    {loading ? "Cargando..." : "No hay empleados"}
+                    {loading ? t("common.loading") : "No hay empleados"}
                   </TableCell>
                 </TableRow>
               )}

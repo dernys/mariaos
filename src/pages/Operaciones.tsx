@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -27,6 +28,7 @@ interface Insights {
 }
 
 const Operaciones = () => {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -108,7 +110,7 @@ const Operaciones = () => {
   };
 
   return (
-    <AppLayout title="Operaciones">
+    <AppLayout title={t("nav.items.operationsItem")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <p className="text-sm text-muted-foreground">Centro de operaciones, logística inteligente, incidencias y checklists</p>

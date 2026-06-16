@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Decisions() {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [items, setItems] = useState<any[]>([]);
   const load = async () => {
@@ -26,7 +28,7 @@ export default function Decisions() {
   };
 
   return (
-    <AppLayout title="Motor de decisiones">
+    <AppLayout title={t("nav.items.decisions")}>
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Recomendaciones generadas por agentes. Aprueba, rechaza o revisa.</p>
         {items.length === 0 && <Card><CardContent className="py-12 text-center text-sm text-muted-foreground"><Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />Sin decisiones aún.</CardContent></Card>}

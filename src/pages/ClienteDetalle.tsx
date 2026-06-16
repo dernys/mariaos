@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ import { User, Phone, Mail, MapPin, FileText, Award } from "lucide-react";
 import { format } from "date-fns";
 
 export default function ClienteDetalle() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const nav = useNavigate();
   const [c, setC] = useState<any>(null);
@@ -31,7 +33,7 @@ export default function ClienteDetalle() {
     })();
   }, [id]);
 
-  if (!c) return <AppLayout title="Cliente"><p className="text-sm text-muted-foreground">Cargando...</p></AppLayout>;
+  if (!c) return <AppLayout title={t("nav.items.customers")}><p className="text-sm text-muted-foreground">{t("common.loading")}</p></AppLayout>;
 
   const debt = Number(c.balance || 0);
   const totalSpent = Number(c.total_spent || 0);

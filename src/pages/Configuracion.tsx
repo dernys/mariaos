@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Tag, Percent, Coins, CreditCard, ShoppingCart, Settings2 } from "lucide-react";
 import { ConfigGeneral } from "@/components/config/ConfigGeneral";
@@ -10,8 +11,9 @@ import { ConfigPOS } from "@/components/config/ConfigPOS";
 import { ConfigModules } from "@/components/config/ConfigModules";
 
 const Configuracion = () => {
+  const { t } = useTranslation();
   return (
-    <AppLayout title="Configuración">
+    <AppLayout title={t("nav.items.settings")}>
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Building2 className="h-3.5 w-3.5" />General</TabsTrigger>

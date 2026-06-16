@@ -27,7 +27,8 @@
     "user": "User",
     "noRole": "No role",
     "logout": "Sign out",
-    "language": "Language"
+    "language": "Language",
+    "sale": "Sale"
   },
   "nav": {
     "groups": {

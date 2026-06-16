@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function AgentDetalle() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const [agent, setAgent] = useState<any>(null);
   const [actions, setActions] = useState<any[]>([]);
@@ -57,7 +59,7 @@ export default function AgentDetalle() {
   };
 
 
-  if (!agent) return <AppLayout title="Agente"><div className="text-sm text-muted-foreground">Cargando...</div></AppLayout>;
+  if (!agent) return <AppLayout title={t("nav.items.agents")}><div className="text-sm text-muted-foreground">{t("common.loading")}</div></AppLayout>;
 
   const Icon = def?.icon ?? Bot;
   const metrics = (agent.metrics ?? {}) as any;

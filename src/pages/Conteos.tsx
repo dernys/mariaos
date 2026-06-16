@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +35,7 @@ interface Item {
 }
 
 export default function Conteos() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -131,7 +133,7 @@ export default function Conteos() {
   const filteredItems = items.filter((i) => !search || i.product?.name.toLowerCase().includes(search.toLowerCase()) || i.product?.sku?.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <AppLayout title="Conteos físicos">
+    <AppLayout title={t("nav.items.counts")}>
       <div className="space-y-4">
         <div className="flex items-end justify-between gap-3 flex-wrap">
           <p className="text-xs text-muted-foreground">Conteo cíclico, masivo y por escaneo. Las diferencias quedan registradas para auditoría y aprobación.</p>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -19,6 +20,7 @@ const COLORS = [
 ];
 
 const Analytics = () => {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [sales, setSales] = useState<any[]>([]);
   const [saleItems, setSaleItems] = useState<any[]>([]);
@@ -95,7 +97,7 @@ const Analytics = () => {
   }, [sales]);
 
   return (
-    <AppLayout title="Analytics — Informes de Ventas">
+    <AppLayout title={t("nav.items.analytics")}>
       <div className="space-y-4">
         {/* Period selector */}
         <div className="flex items-center justify-between">

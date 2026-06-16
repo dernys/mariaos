@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 export default function ProveedorDetalle() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const nav = useNavigate();
   const { toast } = useToast();
@@ -58,7 +60,7 @@ export default function ProveedorDetalle() {
   };
   useEffect(() => { fetchAll(); }, [id]);
 
-  if (!s) return <AppLayout title="Proveedor"><p className="text-sm text-muted-foreground">Cargando...</p></AppLayout>;
+  if (!s) return <AppLayout title={t("nav.items.suppliers")}><p className="text-sm text-muted-foreground">{t("common.loading")}</p></AppLayout>;
 
   const debt = Number(s.balance || 0);
   const pendingPurchases = purchases.filter((p) => Number(p.total) - Number(p.amount_paid) > 0.01);

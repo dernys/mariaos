@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function BusinessMemory() {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [decisions, setDecisions] = useState<any[]>([]);
   const [q, setQ] = useState("");
@@ -21,7 +23,7 @@ export default function BusinessMemory() {
   const filtered = decisions.filter((d) => !q || d.title?.toLowerCase().includes(q.toLowerCase()) || JSON.stringify(d.recommendation).toLowerCase().includes(q.toLowerCase()));
 
   return (
-    <AppLayout title="Memoria empresarial">
+    <AppLayout title={t("nav.items.memory")}>
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Aprendizaje organizacional acumulado a partir de decisiones, resultados y eventos.</p>
         <Input placeholder="Buscar en la memoria..." value={q} onChange={(e) => setQ(e.target.value)} className="max-w-md" />

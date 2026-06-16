@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ interface SaleRow {
 }
 
 export default function TurnoDetalle() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const nav = useNavigate();
   const { toast } = useToast();
@@ -122,7 +124,7 @@ export default function TurnoDetalle() {
     fetchAll();
   };
 
-  if (!shift) return <AppLayout title="Turno"><p className="text-sm text-muted-foreground">Cargando...</p></AppLayout>;
+  if (!shift) return <AppLayout title={t("nav.items.shifts")}><p className="text-sm text-muted-foreground">{t("common.loading")}</p></AppLayout>;
 
   const statusVariant = (s: string) =>
     s === "paid" ? "default"

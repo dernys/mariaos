@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { StatCard } from "@/components/StatCard";
 import {
   DollarSign,
@@ -47,7 +48,8 @@ interface CustomerRow { id: string; name: string; }
 const PIE_COLORS = ["hsl(160,84%,39%)", "hsl(170,70%,45%)", "hsl(217,91%,60%)", "hsl(38,92%,50%)", "hsl(280,70%,55%)"];
 
 function startOfDay(d = new Date()) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
-function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function addDays(d: Date, n: number) {
+  const { t } = useTranslation(); const x = new Date(d); x.setDate(x.getDate()+n); return x; }
 function fmtCurrency(n: number) { return `$${(n||0).toLocaleString("es-CU", { maximumFractionDigits: 2 })}`; }
 function pct(part: number, total: number) { return total > 0 ? Math.round((part/total)*100) : 0; }
 
@@ -197,7 +199,7 @@ const Dashboard = () => {
   }, [items30d]);
 
   return (
-    <AppLayout title="Dashboard">
+    <AppLayout title={t("nav.items.dashboard")}>
       <div className="space-y-4 sm:space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

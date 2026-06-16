@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { Plus, Workflow as WorkflowIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Workflows() {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [items, setItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
@@ -39,7 +41,7 @@ export default function Workflows() {
   };
 
   return (
-    <AppLayout title="Workflows autónomos">
+    <AppLayout title={t("nav.items.workflows")}>
       <div className="space-y-4">
         <div className="flex justify-between items-center flex-wrap gap-3">
           <p className="text-sm text-muted-foreground">Automatizaciones disparadas por eventos del sistema nervioso.</p>

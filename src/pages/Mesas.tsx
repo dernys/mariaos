@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { FloorMap } from "@/components/pos/FloorMap";
 import { TableManageDialog } from "@/components/pos/TableManageDialog";
@@ -32,6 +33,7 @@ interface Employee {
 }
 
 const Mesas = () => {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const { toast } = useToast();
   const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null);
@@ -90,7 +92,7 @@ const Mesas = () => {
   };
 
   return (
-    <AppLayout title="Mapa de Mesas">
+    <AppLayout title={t("nav.items.tables")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

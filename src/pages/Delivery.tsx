@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -27,6 +28,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Delivery() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { toast } = useToast();
   const [zones, setZones] = useState<Zone[]>([]);
@@ -119,7 +121,7 @@ export default function Delivery() {
   };
 
   return (
-    <AppLayout title="Delivery">
+    <AppLayout title={t("nav.items.delivery")}>
       <div className="p-6 space-y-6">
         <Tabs defaultValue="active">
           <TabsList>

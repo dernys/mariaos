@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -43,6 +44,7 @@ interface Overtime { id: string; employee_id: string; date: string; hours: numbe
 const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 export default function RRHH() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { toast } = useToast();
   const [tab, setTab] = useState("resumen");
@@ -317,7 +319,7 @@ export default function RRHH() {
   const totalSalary = employees.reduce((s, e) => s + Number(e.salary || 0), 0);
 
   return (
-    <AppLayout title="Recursos Humanos">
+    <AppLayout title={t("nav.items.hr")}>
       <div className="space-y-6 p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">

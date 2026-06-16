@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ import { format } from "date-fns";
 const tierColor: Record<string, string> = { bronze: "bg-orange-500/20 text-orange-500", silver: "bg-slate-400/20 text-slate-400", gold: "bg-amber-500/20 text-amber-500", platinum: "bg-purple-500/20 text-purple-500" };
 
 export default function Fidelizacion() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const [settings, setSettings] = useState<any>(null);
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -86,7 +88,7 @@ export default function Fidelizacion() {
   const activePromos = promos.filter((p) => p.is_active).length;
 
   return (
-    <AppLayout title="Fidelización & Promociones">
+    <AppLayout title={t("nav.items.loyalty")}>
       <Tabs defaultValue="loyalty" className="space-y-4">
         <TabsList>
           <TabsTrigger value="loyalty">Fidelización</TabsTrigger>
