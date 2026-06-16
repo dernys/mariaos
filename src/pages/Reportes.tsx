@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ type Purchase = { total: number; created_at: string; status: string };
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
 export default function Reportes() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const [from, setFrom] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
   const [to, setTo] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -166,7 +168,7 @@ export default function Reportes() {
   const inactive = customers.filter((c) => !customerSales.find((cs) => cs.id === c.id));
 
   return (
-    <AppLayout title="Reportes & BI">
+    <AppLayout title={t("nav.items.reports")}>
       <div className="space-y-4">
         <Card className="p-3 flex flex-wrap gap-3 items-end">
           <div>

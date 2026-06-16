@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function CommandCenter() {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [agents, setAgents] = useState<any[]>([]);
   const [decisions, setDecisions] = useState<any[]>([]);
@@ -56,7 +58,7 @@ export default function CommandCenter() {
   const criticalAlerts = alerts.filter((a) => a.severity === "critical" || a.severity === "high").length;
 
   return (
-    <AppLayout title="AI Command Center">
+    <AppLayout title={t("nav.items.commandCenter")}>
       <div className="space-y-6">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>

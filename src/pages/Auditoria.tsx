@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { useSuperadmin } from "@/hooks/useSuperadmin";
@@ -52,6 +53,7 @@ const ENTITY_ROUTES: Record<string, (id: string) => string> = {
 };
 
 function actionIcon(action: string) {
+  const { t } = useTranslation();
   const a = action.toLowerCase();
   if (a.includes("cancel") || a.includes("anul") || a.includes("delet") || a.includes("elim")) return <Trash2 className="h-3 w-3" />;
   if (a.includes("crea") || a.includes("alta") || a.includes("nuev") || a.includes("regist")) return <Plus className="h-3 w-3" />;
@@ -209,12 +211,12 @@ export default function Auditoria() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   if (saLoading) {
-    return <AppLayout title="Auditoría"><div className="flex justify-center py-16"><div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div></AppLayout>;
+    return <AppLayout title={t("nav.items.audit")}><div className="flex justify-center py-16"><div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div></AppLayout>;
   }
   if (!isSuperadmin) return <Navigate to="/" replace />;
 
   return (
-    <AppLayout title="Auditoría Global">
+    <AppLayout title={t("nav.items.audit")}>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">

@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +47,7 @@ interface Movement {
 }
 
 export default function Cuentas() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const nav = useNavigate();
   const [tab, setTab] = useState<PartyType>("customer");
@@ -99,7 +101,7 @@ export default function Cuentas() {
 
 
   return (
-    <AppLayout title="Cuentas por Cobrar y Pagar">
+    <AppLayout title={t("nav.items.accounts")}>
       <Tabs value={tab} onValueChange={(v) => setTab(v as PartyType)} className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <TabsList>

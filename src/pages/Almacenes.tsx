@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -25,6 +26,7 @@ interface WarehouseItem {
 }
 
 const Almacenes = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const tenantId = useTenant();
   const { toast } = useToast();
@@ -103,7 +105,7 @@ const Almacenes = () => {
   };
 
   return (
-    <AppLayout title="Almacenes">
+    <AppLayout title={t("nav.items.warehouses")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <p className="text-sm text-muted-foreground">{warehouses.length} almacenes registrados</p>

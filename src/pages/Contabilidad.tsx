@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +61,7 @@ const SECTIONS = [
 ];
 
 const Contabilidad = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const tenantId = useTenant();
   const { toast } = useToast();
@@ -351,7 +353,7 @@ const Contabilidad = () => {
   }, [section]);
 
   return (
-    <AppLayout title="Contabilidad">
+    <AppLayout title={t("nav.items.accounting")}>
       <div className="space-y-4">
         {/* Summary */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

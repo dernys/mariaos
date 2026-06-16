@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Shield, Boxes } from "lucide-react";
 import { UsersTab } from "@/components/roles/UsersTab";
@@ -6,8 +7,9 @@ import { PermissionsTab } from "@/components/roles/PermissionsTab";
 import { ModulesTab } from "@/components/roles/ModulesTab";
 
 const RolesPermisos = () => {
+  const { t } = useTranslation();
   return (
-    <AppLayout title="Roles, Permisos y Usuarios">
+    <AppLayout title={t("nav.items.roles")}>
       <Tabs defaultValue="users" className="space-y-4">
         <TabsList className="bg-muted/50">
           <TabsTrigger value="users" className="gap-2 text-xs">

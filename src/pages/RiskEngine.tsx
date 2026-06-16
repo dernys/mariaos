@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import { es } from "date-fns/locale";
 import { useAgent } from "@/hooks/useAgent";
 
 export default function RiskEngine() {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [items, setItems] = useState<any[]>([]);
   const { invoke, isRunning } = useAgent();
@@ -41,7 +43,7 @@ export default function RiskEngine() {
   };
 
   return (
-    <AppLayout title="AI Risk Engine">
+    <AppLayout title={t("nav.items.risks")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <p className="text-sm text-muted-foreground">Detección automática de fraude, pérdidas e inconsistencias.</p>

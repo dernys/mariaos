@@ -203,7 +203,7 @@ const Clientes = () => {
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     <User className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    {loading ? "Cargando..." : "No hay clientes"}
+                    {loading ? t("common.loading") : "No hay clientes"}
                   </TableCell>
                 </TableRow>
               )}

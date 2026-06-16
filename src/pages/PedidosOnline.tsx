@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -43,6 +44,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
 };
 
 const PedidosOnline = () => {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { toast } = useToast();
   const [orders, setOrders] = useState<OnlineOrder[]>([]);
@@ -96,7 +98,7 @@ const PedidosOnline = () => {
   const filtered = filterStatus === "all" ? orders : orders.filter(o => o.status === filterStatus);
 
   return (
-    <AppLayout title="Pedidos Online">
+    <AppLayout title={t("nav.items.onlineOrders")}>
       <div className="space-y-4">
         <div className="flex items-center gap-3 flex-wrap">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -177,7 +179,7 @@ const PedidosOnline = () => {
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                     <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    {loading ? "Cargando..." : "No hay pedidos online"}
+                    {loading ? t("common.loading") : "No hay pedidos online"}
                   </TableCell>
                 </TableRow>
               )}

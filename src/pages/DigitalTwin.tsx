@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ interface Intelligence {
 }
 
 export default function DigitalTwin() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -107,7 +109,7 @@ export default function DigitalTwin() {
   }, [baseline, priceChange, costChange, demandChange]);
 
   return (
-    <AppLayout title="Digital Twin">
+    <AppLayout title={t("nav.items.digitalTwin")}>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-sm text-muted-foreground">

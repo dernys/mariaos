@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
@@ -37,6 +38,7 @@ interface TenantUser {
 }
 
 const SuperAdmin = () => {
+  const { t } = useTranslation();
   const { isSuperadmin, loading: saLoading } = useSuperadmin();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +165,7 @@ const SuperAdmin = () => {
 
   if (saLoading) {
     return (
-      <AppLayout title="Super Admin">
+      <AppLayout title={t("nav.items.tenantManagement")}>
         <div className="flex items-center justify-center h-64">
           <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
         </div>
@@ -183,7 +185,7 @@ const SuperAdmin = () => {
   );
 
   return (
-    <AppLayout title="Super Admin">
+    <AppLayout title={t("nav.items.tenantManagement")}>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">

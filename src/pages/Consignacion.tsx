@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Consignacion() {
+  const { t } = useTranslation();
   const nav = useNavigate();
   const { toast } = useToast();
   const [lots, setLots] = useState<any[]>([]);
@@ -54,7 +56,7 @@ export default function Consignacion() {
   };
 
   return (
-    <AppLayout title="Consignaciones">
+    <AppLayout title={t("nav.items.consignments")}>
       <div className="space-y-4">
         <StatRow>
           <MiniStatCard label="Lotes activos" value={activeLots.length} icon={Package} tone="primary" />

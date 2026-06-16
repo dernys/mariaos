@@ -27,7 +27,8 @@
     "user": "Usuário",
     "noRole": "Sem função",
     "logout": "Sair",
-    "language": "Idioma"
+    "language": "Idioma",
+    "sale": "Venda"
   },
   "nav": {
     "groups": {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +17,7 @@ interface Att { id: string; check_in: string; check_out: string | null; hours_wo
 interface Vac { entitled: number; taken: number; pending: number; remaining: number; }
 
 export default function PortalEmpleado() {
+  const { t } = useTranslation();
   const [emp, setEmp] = useState<EmpRec | null>(null);
   const [payslips, setPayslips] = useState<Payslip[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
@@ -49,11 +51,11 @@ export default function PortalEmpleado() {
     window.open(data.signedUrl, "_blank");
   };
 
-  if (loading) return <AppLayout title="Portal del Empleado"><div className="p-8 text-center text-muted-foreground">Cargando…</div></AppLayout>;
-  if (!emp) return <AppLayout title="Portal del Empleado"><div className="p-8 text-center text-muted-foreground">No tienes un perfil de empleado asignado.</div></AppLayout>;
+  if (loading) return <AppLayout title={t("nav.items.employeePortal")}><div className="p-8 text-center text-muted-foreground">{t("common.loading")}</div></AppLayout>;
+  if (!emp) return <AppLayout title={t("nav.items.employeePortal")}><div className="p-8 text-center text-muted-foreground">No tienes un perfil de empleado asignado.</div></AppLayout>;
 
   return (
-    <AppLayout title="Portal del Empleado">
+    <AppLayout title={t("nav.items.employeePortal")}>
       <div className="space-y-4">
         <Card>
           <CardHeader className="pb-3">

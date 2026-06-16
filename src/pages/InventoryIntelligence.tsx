@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -23,6 +24,7 @@ interface Result {
 }
 
 export default function InventoryIntelligence() {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { toast } = useToast();
   const [data, setData] = useState<Result | null>(null);
@@ -45,7 +47,7 @@ export default function InventoryIntelligence() {
   useEffect(() => { if (tenantId) run(); }, [tenantId]);
 
   return (
-    <AppLayout title="Inteligencia de Inventario">
+    <AppLayout title={t("nav.items.intelligence")}>
       <div className="space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>

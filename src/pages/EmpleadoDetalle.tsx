@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 export default function EmpleadoDetalle() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const nav = useNavigate();
   const { toast } = useToast();
@@ -56,7 +58,7 @@ export default function EmpleadoDetalle() {
     fetchAll();
   };
 
-  if (!e) return <AppLayout title="Empleado"><p className="text-sm text-muted-foreground">Cargando...</p></AppLayout>;
+  if (!e) return <AppLayout title={t("nav.items.employees")}><p className="text-sm text-muted-foreground">{t("common.loading")}</p></AppLayout>;
 
   const totalShifts = shifts.length;
   const totalSales = shifts.reduce((a, s) => a + Number(s.total_sales || 0), 0);

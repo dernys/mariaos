@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -38,6 +39,7 @@ interface Employee {
 }
 
 const Tiendas = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const tenantId = useTenant();
   const { toast } = useToast();
@@ -136,7 +138,7 @@ const Tiendas = () => {
   const getManagerName = (id: string | null) => employees.find((e) => e.id === id)?.name || "Sin asignar";
 
   return (
-    <AppLayout title="Tiendas">
+    <AppLayout title={t("nav.items.stores")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{stores.length} tiendas registradas</p>

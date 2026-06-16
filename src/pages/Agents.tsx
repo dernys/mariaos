@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Agents() {
+  const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [agents, setAgents] = useState<any[]>([]);
   const [running, setRunning] = useState<string | null>(null);
@@ -83,7 +85,7 @@ export default function Agents() {
 
 
   return (
-    <AppLayout title="Agentes IA">
+    <AppLayout title={t("nav.items.agents")}>
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">

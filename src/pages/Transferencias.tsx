@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -42,6 +43,7 @@ interface Transfer {
 }
 
 const statusBadge = (s: string) => {
+  const { t } = useTranslation();
   const map: Record<string, string> = {
     requested: "bg-warning/10 text-warning",
     approved: "bg-primary/10 text-primary",
@@ -175,7 +177,7 @@ export default function Transferencias() {
   };
 
   return (
-    <AppLayout title="Transferencias">
+    <AppLayout title={t("nav.items.transfers")}>
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-lg font-heading font-semibold">Transferencias de Stock</h2>
