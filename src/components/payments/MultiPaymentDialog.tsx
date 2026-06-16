@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export type PartyType = "customer" | "employee" | "supplier";
 
@@ -38,6 +39,7 @@ interface Method { id: string; name: string; type: string; is_active: boolean }
 interface Currency { id: string; code: string; name: string; symbol: string; exchange_rate: number; is_active: boolean; is_base: boolean }
 
 export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, partyName, amountDue, referenceType, referenceId, title, onPaid }: Props) {
+  const { t } = useTranslation();
   const tenantId = useTenant();
   const { toast } = useToast();
   const [methods, setMethods] = useState<Method[]>([]);
@@ -98,7 +100,7 @@ export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, par
   const remaining = amountDue - totalBase;
 
   const handleSubmit = async () => {
-    if (totalBase <= 0) { toast({ title: "Monto inválido", variant: "destructive" }); return; }
+    if (totalBase <= 0) { toast({ title: t("pos.multiPay.invalidAmount"), variant: "destructive" }); return; }
     setSubmitting(true);
     try {
       for (const l of lines) {
@@ -117,11 +119,11 @@ export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, par
         });
         if (error) throw error;
       }
-      toast({ title: "Pago registrado", description: `Total: ${totalBase.toFixed(2)} (base)` });
+      toast({ title: t("pos.multiPay.registered"), description: t("pos.multiPay.registeredDesc", { total: totalBase.toFixed(2) }) });
       onOpenChange(false);
       onPaid?.();
     } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -131,37 +133,37 @@ export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, par
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{title || "Registrar pago"}</DialogTitle>
+          <DialogTitle>{title || t("pos.multiPay.title")}</DialogTitle>
           <DialogDescription>
-            {partyName && <span>Para: <b>{partyName}</b> · </span>}
-            Adeudo: <b>{amountDue.toFixed(2)}</b>
+            {partyName && <span>{t("pos.multiPay.for")}: <b>{partyName}</b> · </span>}
+            {t("pos.multiPay.due")}: <b>{amountDue.toFixed(2)}</b>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Desglose del pago</Label>
-            <Badge variant="outline" className="text-[10px]">{lines.length} {lines.length === 1 ? "línea" : "líneas"}</Badge>
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("pos.multiPay.breakdown")}</Label>
+            <Badge variant="outline" className="text-[10px]">{lines.length} {lines.length === 1 ? t("pos.multiPay.line") : t("pos.multiPay.lines")}</Badge>
           </div>
           {lines.map((l, idx) => (
             <div key={l.id} className="grid grid-cols-12 gap-2 items-end p-2 border rounded-lg">
               <div className="col-span-4">
-                {idx === 0 && <Label className="text-[10px]">Método</Label>}
+                {idx === 0 && <Label className="text-[10px]">{t("pos.multiPay.method")}</Label>}
                 <Select value={l.method} onValueChange={(v) => updateLine(l.id, { method: v })}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {methods.map((m) => <SelectItem key={m.id} value={m.type}>{m.name}</SelectItem>)}
                     {methods.length === 0 && <>
-                      <SelectItem value="cash">Efectivo</SelectItem>
-                      <SelectItem value="card">Tarjeta</SelectItem>
-                      <SelectItem value="qr">QR</SelectItem>
-                      <SelectItem value="transfer">Transferencia</SelectItem>
+                      <SelectItem value="cash">{t("payment.cash")}</SelectItem>
+                      <SelectItem value="card">{t("payment.card")}</SelectItem>
+                      <SelectItem value="qr">{t("payment.qr")}</SelectItem>
+                      <SelectItem value="transfer">{t("payment.transfer")}</SelectItem>
                     </>}
                   </SelectContent>
                 </Select>
               </div>
               <div className="col-span-3">
-                {idx === 0 && <Label className="text-[10px]">Moneda</Label>}
+                {idx === 0 && <Label className="text-[10px]">{t("pos.multiPay.currency")}</Label>}
                 <Select value={l.currency} onValueChange={(v) => updateLine(l.id, { currency: v })}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -171,11 +173,11 @@ export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, par
                 </Select>
               </div>
               <div className="col-span-3">
-                {idx === 0 && <Label className="text-[10px]">Monto</Label>}
+                {idx === 0 && <Label className="text-[10px]">{t("pos.multiPay.amount")}</Label>}
                 <Input type="number" className="h-8 text-xs" value={l.amount} onChange={(e) => updateLine(l.id, { amount: e.target.value })} />
               </div>
               <div className="col-span-1">
-                {idx === 0 && <Label className="text-[10px]">Tasa</Label>}
+                {idx === 0 && <Label className="text-[10px]">{t("pos.multiPay.rate")}</Label>}
                 <Input type="number" className="h-8 text-xs" value={l.rate} onChange={(e) => updateLine(l.id, { rate: e.target.value })} />
               </div>
               <div className="col-span-1 flex justify-end">
@@ -188,30 +190,32 @@ export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, par
             </div>
           ))}
           <Button variant="outline" size="sm" onClick={addLine} className="gap-1 text-xs w-full">
-            <Plus className="h-3 w-3" /> Desglosar (agregar método / moneda)
+            <Plus className="h-3 w-3" /> {t("pos.multiPay.addLine")}
           </Button>
 
 
           <div className="flex items-center justify-between p-2 rounded-lg bg-muted text-xs">
-            <span>Total convertido (base):</span>
+            <span>{t("pos.multiPay.convertedTotal")}</span>
             <Badge variant={totalBase >= amountDue ? "default" : "secondary"}>{totalBase.toFixed(2)}</Badge>
           </div>
           {Math.abs(remaining) > 0.01 && (
             <div className={`text-xs ${remaining > 0 ? "text-warning" : "text-emerald-600"}`}>
-              {remaining > 0 ? `Pago parcial. Pendiente: ${remaining.toFixed(2)}` : `Sobra: ${(-remaining).toFixed(2)} (cambio)`}
+              {remaining > 0
+                ? t("pos.multiPay.partialPending", { n: remaining.toFixed(2) })
+                : t("pos.multiPay.change", { n: (-remaining).toFixed(2) })}
             </div>
           )}
 
           <div>
-            <Label className="text-xs">Notas</Label>
+            <Label className="text-xs">{t("pos.multiPay.notes")}</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="text-xs" />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("pos.multiPay.cancel")}</Button>
           <Button onClick={handleSubmit} disabled={submitting} className="gradient-brand text-primary-foreground">
-            {submitting ? "Procesando..." : "Confirmar pago"}
+            {submitting ? t("pos.multiPay.processing") : t("pos.multiPay.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

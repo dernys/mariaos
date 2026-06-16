@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, SplitSquareVertical, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CartItem {
   id: number;
@@ -40,6 +40,7 @@ export function SplitBillDialog({
   total,
   onSplitConfirm,
 }: SplitBillDialogProps) {
+  const { t } = useTranslation();
   const [splitType, setSplitType] = useState<"equal" | "items">("equal");
   const [numPeople, setNumPeople] = useState(2);
   const [assignments, setAssignments] = useState<Record<number, number>>({});
@@ -70,8 +71,8 @@ export function SplitBillDialog({
 
     const splits: SplitResult[] = Object.values(groups).map((items) => {
       const sub = items.reduce((s, i) => s + i.price * i.qty, 0);
-      const t = sub * taxRate;
-      return { items, subtotal: sub, tax: t, total: sub + t };
+      const tx = sub * taxRate;
+      return { items, subtotal: sub, tax: tx, total: sub + tx };
     });
     onSplitConfirm(splits);
     onOpenChange(false);
@@ -89,26 +90,26 @@ export function SplitBillDialog({
         <DialogHeader>
           <DialogTitle className="font-heading flex items-center gap-2">
             <SplitSquareVertical className="h-5 w-5 text-primary" />
-            Dividir Cuenta
+            {t("pos.split.title")}
           </DialogTitle>
           <DialogDescription>
-            Total: <span className="font-bold text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+            {t("pos.split.total")}: <span className="font-bold text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={splitType} onValueChange={(v) => setSplitType(v as "equal" | "items")}>
           <TabsList className="w-full">
             <TabsTrigger value="equal" className="flex-1 gap-1.5 text-xs">
-              <Users className="h-3.5 w-3.5" /> Partes iguales
+              <Users className="h-3.5 w-3.5" /> {t("pos.split.equal")}
             </TabsTrigger>
             <TabsTrigger value="items" className="flex-1 gap-1.5 text-xs">
-              <SplitSquareVertical className="h-3.5 w-3.5" /> Por consumo
+              <SplitSquareVertical className="h-3.5 w-3.5" /> {t("pos.split.byItems")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="equal" className="space-y-4 mt-4">
             <div>
-              <Label className="text-xs">Número de personas</Label>
+              <Label className="text-xs">{t("pos.split.numPeople")}</Label>
               <div className="flex items-center gap-3 mt-1">
                 {[2, 3, 4, 5, 6].map((n) => (
                   <button
@@ -135,23 +136,23 @@ export function SplitBillDialog({
             </div>
 
             <div className="bg-muted/40 rounded-lg p-4 space-y-2">
-              <p className="text-xs text-muted-foreground">Cada persona paga:</p>
+              <p className="text-xs text-muted-foreground">{t("pos.split.perPerson")}</p>
               <p className="text-2xl font-heading font-bold text-primary">
                 ${(total / numPeople).toLocaleString(undefined, { maximumFractionDigits: 2 })}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                Subtotal: ${(subtotal / numPeople).toFixed(2)} + Impuesto: ${(tax / numPeople).toFixed(2)}
+                {t("pos.split.subPlusTax", { sub: (subtotal / numPeople).toFixed(2), tax: (tax / numPeople).toFixed(2) })}
               </p>
             </div>
 
             <Button onClick={handleEqualSplit} className="w-full gradient-brand text-primary-foreground font-heading h-11">
-              <Check className="h-4 w-4 mr-2" /> Confirmar división en {numPeople}
+              <Check className="h-4 w-4 mr-2" /> {t("pos.split.confirmEqual", { n: numPeople })}
             </Button>
           </TabsContent>
 
           <TabsContent value="items" className="space-y-4 mt-4">
             <div>
-              <Label className="text-xs mb-2 block">Número de personas</Label>
+              <Label className="text-xs mb-2 block">{t("pos.split.numPeople")}</Label>
               <div className="flex gap-2">
                 {[2, 3, 4].map((n) => (
                   <button
@@ -168,7 +169,7 @@ export function SplitBillDialog({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs">Asignar platos a cada persona</Label>
+              <Label className="text-xs">{t("pos.split.assignItems")}</Label>
               {cart.map((item) => (
                 <div key={item.id} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2">
                   <div className="flex-1 min-w-0">
@@ -194,7 +195,6 @@ export function SplitBillDialog({
               ))}
             </div>
 
-            {/* Preview */}
             <div className="space-y-2">
               {Array.from({ length: numPeople }, (_, i) => {
                 const personItems = cart.filter((item) => (assignments[item.id] ?? 0) === i);
@@ -205,7 +205,7 @@ export function SplitBillDialog({
                     <span className={`h-5 w-5 rounded-md ${personColors[i % personColors.length]} text-white text-[10px] font-bold flex items-center justify-center`}>
                       P{i + 1}
                     </span>
-                    <span className="flex-1">{personItems.length} platos</span>
+                    <span className="flex-1">{personItems.length} {t("pos.split.dishes")}</span>
                     <span className="font-heading font-bold">${personTotal.toFixed(2)}</span>
                   </div>
                 );
@@ -213,7 +213,7 @@ export function SplitBillDialog({
             </div>
 
             <Button onClick={handleItemsSplit} className="w-full gradient-brand text-primary-foreground font-heading h-11">
-              <Check className="h-4 w-4 mr-2" /> Confirmar división por consumo
+              <Check className="h-4 w-4 mr-2" /> {t("pos.split.confirmByItems")}
             </Button>
           </TabsContent>
         </Tabs>

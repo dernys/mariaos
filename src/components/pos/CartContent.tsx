@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 interface CartItem {
   id: number;
@@ -23,7 +24,9 @@ interface CartContentProps {
   extraActions?: ReactNode;
 }
 
-export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total, onCheckout, taxLabel = "IVA (16%)", checkoutLabel, extraActions }: CartContentProps) {
+export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total, onCheckout, taxLabel, checkoutLabel, extraActions }: CartContentProps) {
+  const { t } = useTranslation();
+  const fmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
   return (
     <>
       <div className="flex-1 overflow-auto p-4 space-y-2">
@@ -38,7 +41,7 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
             >
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{item.name}</p>
-                <p className="text-[10px] text-muted-foreground">${item.price.toLocaleString()} c/u</p>
+                <p className="text-[10px] text-muted-foreground">${item.price.toLocaleString()} {t("pos.cart.each")}</p>
               </div>
               <div className="flex items-center gap-1">
                 <button onClick={() => updateQty(item.id, -1)} className="h-7 w-7 rounded bg-background border flex items-center justify-center hover:bg-muted transition-colors active:scale-95">
@@ -59,8 +62,8 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
         {cart.length === 0 && (
           <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
             <ShoppingCart className="h-8 w-8 mb-2 opacity-30" />
-            <p className="text-sm">Carrito vacío</p>
-            <p className="text-[10px]">Selecciona productos para vender</p>
+            <p className="text-sm">{t("pos.cart.empty")}</p>
+            <p className="text-[10px]">{t("pos.cart.emptyHint")}</p>
           </div>
         )}
       </div>
@@ -68,16 +71,16 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
       <div className="p-4 border-t space-y-3">
         <div className="space-y-1 text-xs">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Subtotal</span>
+            <span className="text-muted-foreground">{t("pos.cart.subtotal")}</span>
             <span className="font-heading font-semibold">${subtotal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{taxLabel}</span>
-            <span className="font-heading font-semibold">${tax.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+            <span className="text-muted-foreground">{taxLabel || t("pos.cart.tax", { rate: 16 })}</span>
+            <span className="font-heading font-semibold">${fmt(tax)}</span>
           </div>
           <div className="flex justify-between text-base pt-2 border-t">
-            <span className="font-heading font-bold">Total</span>
-            <span className="font-heading font-bold text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+            <span className="font-heading font-bold">{t("pos.cart.total")}</span>
+            <span className="font-heading font-bold text-primary">${fmt(total)}</span>
           </div>
         </div>
 
@@ -88,7 +91,7 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
           className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-11"
           disabled={cart.length === 0}
         >
-          {checkoutLabel || `Cobrar $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+          {checkoutLabel || `${t("pos.cart.charge")} $${fmt(total)}`}
         </Button>
       </div>
     </>
