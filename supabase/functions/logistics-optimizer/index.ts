@@ -9,6 +9,27 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // --- Auth: require JWT ---
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userRes, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userRes?.user) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = userRes.user.id;
+
     const { tenant_id } = await req.json();
     if (!tenant_id) {
       return new Response(JSON.stringify({ error: "tenant_id requerido" }), {
@@ -17,10 +38,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // --- Tenant membership check (or superadmin) ---
+    const [{ data: membership }, { data: superadmin }] = await Promise.all([
+      supabase.from("tenant_users").select("tenant_id").eq("tenant_id", tenant_id).eq("user_id", userId).maybeSingle(),
+      supabase.from("superadmins").select("user_id").eq("user_id", userId).maybeSingle(),
+    ]);
+    if (!membership && !superadmin) {
+      return new Response(JSON.stringify({ error: "forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     const [stocksRes, prodRes, storesRes, whRes, salesRes] = await Promise.all([
       supabase.from("product_stock").select("product_id, location_type, location_id, stock").eq("tenant_id", tenant_id),
