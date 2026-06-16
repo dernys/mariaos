@@ -222,9 +222,28 @@ export default function Compras() {
       }
     }
 
+    // Emit business event for reactive workflows / agents
+    try {
+      await (supabase.from as any)("business_events").insert({
+        tenant_id: tenantId,
+        source: "purchases",
+        event_type: "purchase.created",
+        payload: {
+          purchase_id: pch.id,
+          purchase_number: code,
+          supplier_id: supplierId || null,
+          destination_type: destType,
+          destination_id: destId,
+          total, subtotal, tax: computedTax,
+          items_count: valid.length,
+        },
+      });
+    } catch (e) { console.warn("business_events emit failed", e); }
+
     toast({ title: "Compra creada", description: code });
     setOpen(false); resetForm(); fetchAll();
   };
+
 
   const receive = async (id: string, isConsignment: boolean) => {
     const fn = isConsignment ? "receive_purchase_consignment" : "receive_purchase";
