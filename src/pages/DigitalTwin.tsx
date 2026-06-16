@@ -10,6 +10,8 @@ import { Activity, TrendingDown, TrendingUp, RefreshCw, Brain, AlertTriangle } f
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useToast } from "@/hooks/use-toast";
+import { useAgent } from "@/hooks/useAgent";
+
 
 interface Baseline {
   revenue30d: number;
