@@ -386,6 +386,86 @@
       "reason": "Motivo",
       "reasonPlaceholder": "Defeituoso, mudança de ideia…",
       "submit": "Registrar devolução"
+    },
+    "treasury": {
+      "title": "Tesouraria",
+      "subtitle": "Bancos, conciliação e projeção de fluxo de caixa",
+      "stats": {
+        "totalBalance": "Saldo total",
+        "unmatched": "Não conciliados",
+        "income30": "Recebimentos 30d",
+        "payments30": "Pagamentos 30d"
+      },
+      "tabs": {
+        "accounts": "Contas",
+        "movements": "Movimentos",
+        "forecast": "Projeção"
+      },
+      "actions": {
+        "newAccount": "Nova conta",
+        "newMovement": "Novo movimento",
+        "schedule": "Agendar",
+        "cancel": "Cancelar",
+        "create": "Criar"
+      },
+      "accounts": {
+        "name": "Nome",
+        "bank": "Banco",
+        "account": "Conta",
+        "currency": "Moeda",
+        "balance": "Saldo",
+        "empty": "Sem contas bancárias",
+        "accountNumber": "N° conta",
+        "dialogTitle": "Nova conta bancária"
+      },
+      "movements": {
+        "date": "Data",
+        "description": "Descrição",
+        "ref": "Ref",
+        "amount": "Valor",
+        "status": "Status",
+        "empty": "Sem movimentos",
+        "dialogTitle": "Novo movimento bancário",
+        "dialogDesc": "Registre uma linha do extrato",
+        "selectAccount": "Selecione...",
+        "accountLabel": "Conta",
+        "typeLabel": "Tipo",
+        "reference": "Referência"
+      },
+      "directions": {
+        "in": "Entrada",
+        "out": "Saída",
+        "income": "Recebimento",
+        "payment": "Pagamento"
+      },
+      "statuses": {
+        "matched": "Conciliado",
+        "unmatched": "Não conciliado",
+        "ignored": "Ignorado",
+        "pending": "Pendente"
+      },
+      "forecast": {
+        "due": "Vence",
+        "type": "Tipo",
+        "category": "Categoria",
+        "description": "Descrição",
+        "amount": "Valor",
+        "status": "Status",
+        "empty": "Sem projeções",
+        "dialogTitle": "Agendar movimento",
+        "categoryPlaceholder": "aluguel, folha, ICMS..."
+      },
+      "match": {
+        "title": "Conciliar movimento",
+        "amount": "Valor",
+        "date": "Data",
+        "type": "Tipo",
+        "method": "Método",
+        "reconciled": "Conciliado"
+      },
+      "errors": {
+        "generic": "Erro"
+      }
     }
   },
   "empty": {

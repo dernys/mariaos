@@ -386,6 +386,86 @@
       "reason": "Motivo",
       "reasonPlaceholder": "Defectuoso, cambio de opinión…",
       "submit": "Registrar devolución"
+    },
+    "treasury": {
+      "title": "Tesorería",
+      "subtitle": "Bancos, conciliación y proyección de flujo de caja",
+      "stats": {
+        "totalBalance": "Saldo total",
+        "unmatched": "Sin conciliar",
+        "income30": "Cobros 30d",
+        "payments30": "Pagos 30d"
+      },
+      "tabs": {
+        "accounts": "Cuentas",
+        "movements": "Movimientos",
+        "forecast": "Proyección"
+      },
+      "actions": {
+        "newAccount": "Nueva cuenta",
+        "newMovement": "Nuevo movimiento",
+        "schedule": "Programar",
+        "cancel": "Cancelar",
+        "create": "Crear"
+      },
+      "accounts": {
+        "name": "Nombre",
+        "bank": "Banco",
+        "account": "Cuenta",
+        "currency": "Moneda",
+        "balance": "Saldo",
+        "empty": "Sin cuentas bancarias",
+        "accountNumber": "N° cuenta",
+        "dialogTitle": "Nueva cuenta bancaria"
+      },
+      "movements": {
+        "date": "Fecha",
+        "description": "Descripción",
+        "ref": "Ref",
+        "amount": "Monto",
+        "status": "Estado",
+        "empty": "Sin movimientos",
+        "dialogTitle": "Nuevo movimiento bancario",
+        "dialogDesc": "Registra una línea del extracto",
+        "selectAccount": "Selecciona...",
+        "accountLabel": "Cuenta",
+        "typeLabel": "Tipo",
+        "reference": "Referencia"
+      },
+      "directions": {
+        "in": "Entrada",
+        "out": "Salida",
+        "income": "Cobro",
+        "payment": "Pago"
+      },
+      "statuses": {
+        "matched": "Conciliado",
+        "unmatched": "Sin conciliar",
+        "ignored": "Ignorado",
+        "pending": "Pendiente"
+      },
+      "forecast": {
+        "due": "Vence",
+        "type": "Tipo",
+        "category": "Categoría",
+        "description": "Descripción",
+        "amount": "Monto",
+        "status": "Estado",
+        "empty": "Sin proyecciones",
+        "dialogTitle": "Programar movimiento",
+        "categoryPlaceholder": "alquiler, nómina, IVA..."
+      },
+      "match": {
+        "title": "Conciliar movimiento",
+        "amount": "Monto",
+        "date": "Fecha",
+        "type": "Tipo",
+        "method": "Método",
+        "reconciled": "Conciliado"
+      },
+      "errors": {
+        "generic": "Error"
+      }
     }
   },
   "empty": {
