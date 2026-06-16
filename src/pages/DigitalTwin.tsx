@@ -36,6 +36,8 @@ export default function DigitalTwin() {
   const [priceChange, setPriceChange] = useState(0);
   const [costChange, setCostChange] = useState(0);
   const [demandChange, setDemandChange] = useState(0);
+  const { invoke } = useAgent();
+
 
   const loadBaseline = async () => {
     if (!tenantId) return;
