@@ -27,7 +27,7 @@ type FinancialEvent = {
  * Devuelve los últimos asientos contables y eventos en vivo.
  */
 export function useRealtimeJournal(limit = 25) {
-  const { tenantId } = useTenant();
+  const tenantId = useTenant();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [events, setEvents] = useState<FinancialEvent[]>([]);
   const [loading, setLoading] = useState(true);
