@@ -466,6 +466,207 @@
       "errors": {
         "generic": "Erro"
       }
+    },
+    "hr": {
+      "title": "Recursos Humanos",
+      "subtitle": "Gestão integral do capital humano: cargos, ponto, férias, contratos e folha.",
+      "banners": { "toPay": "A pagar", "withoutPos": "{{count}} funcionário(s) sem cargo" },
+      "kpis": {
+        "employees": "Funcionários", "positions": "Cargos", "onShift": "Em turno",
+        "leavesPending": "Férias pend.", "contractsActive": "Contratos ativos", "monthlyPayroll": "Folha mensal"
+      },
+      "tabs": {
+        "summary": "Resumo", "clockIn": "Ponto", "vacations": "Férias",
+        "payroll": "Folha", "positions": "Cargos", "contracts": "Contratos",
+        "schedules": "Horários", "overtime": "Horas extras"
+      },
+      "days": ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"],
+      "summary": {
+        "byDept": "Quadro por departamento", "employeesCount": "{{count}} funcionários",
+        "noDept": "Não atribuído", "noEmployees": "Sem funcionários cadastrados.",
+        "nextActions": "Próximas ações",
+        "withoutPosMsg": "{{count}} funcionário(s) sem cargo — classifique-os em",
+        "positionsLink": "Cargos",
+        "leavesPendingMsg": "{{count}} solicitação(ões) de férias pendentes de aprovação.",
+        "payrollDueMsg": "{{count}} folha(s) a pagar — total",
+        "allUpToDate": "Tudo em dia."
+      },
+      "clockIn": {
+        "employee": "Funcionário", "selectPlaceholder": "Selecione...",
+        "clockIn": "Bater entrada", "clockOut": "Bater saída",
+        "openSince": "Turno aberto desde", "noGeo": "sem geo",
+        "header": { "employee": "Funcionário", "in": "Entrada", "out": "Saída", "hours": "Horas", "geo": "Geo" },
+        "openBadge": "Aberto", "geoYes": "Sim", "empty": "Sem registros de ponto",
+        "inRegistered": "Entrada registrada", "outRegistered": "Saída registrada"
+      },
+      "leaves": {
+        "newRequest": "Nova solicitação",
+        "header": { "employee": "Funcionário", "type": "Tipo", "from": "De", "to": "Até", "days": "Dias", "status": "Estado", "actions": "Ações" },
+        "empty": "Sem solicitações",
+        "dialogTitle": "Nova solicitação de ausência", "reason": "Motivo", "submit": "Solicitar",
+        "types": { "vacation": "Férias", "sick": "Doença", "personal": "Pessoal", "maternity": "Maternidade", "paternity": "Paternidade", "unpaid": "Sem remuneração", "other": "Outro" },
+        "statuses": { "pending": "Pendente", "approved": "Aprovado", "rejected": "Rejeitado" }
+      },
+      "payroll": {
+        "generate": "Gerar folha",
+        "header": { "employee": "Funcionário", "position": "Cargo", "period": "Período", "hours": "Horas", "base": "Base", "bonus": "Bônus", "deductions": "Deduç.", "net": "Líquido", "ap": "CP", "status": "Estado", "actions": "Ações" },
+        "apPaid": "Paga", "apCancelled": "Cancelada", "apDueAt": "Vence",
+        "statusPaid": "Pago", "statusPending": "Pendente",
+        "pay": "Pagar", "empty": "Sem folhas geradas",
+        "dialog": {
+          "title": "Gerar folha",
+          "desc": "Calcula o valor com base em horas trabalhadas, bônus e deduções. Ao salvar é criada uma conta a pagar automaticamente.",
+          "employee": "Funcionário", "selectEmployee": "Selecione funcionário",
+          "noPos": "sem cargo", "warnNoPos": "⚠ Há funcionários sem cargo: atribua-o antes de gerar a folha.",
+          "from": "De", "to": "Até",
+          "bonus": "Bônus (+)", "bonusHint": "Comissões, prêmios extras",
+          "deductions": "Deduções (-)", "deductionsHint": "Adiantamentos, multas, descontos",
+          "compute": "Calcular folha", "computing": "Calculando...",
+          "hoursWorked": "Horas trabalhadas", "baseSalaryPeriod": "Salário base (período)",
+          "plusBonus": "(+) Bônus", "gross": "Bruto",
+          "minusDed": "(-) Deduções", "netToPay": "Líquido a pagar",
+          "willCreateAP": "Será criada uma conta a pagar com vencimento {{date}}.",
+          "save": "Salvar folha", "cancel": "Cancelar"
+        },
+        "missingData": "Faltam dados", "selectEmpRange": "Selecione funcionário e intervalo",
+        "noPosTitle": "Funcionário sem cargo", "noPosDesc": "Atribua primeiro um cargo em Funcionários ou na aba Cargos.",
+        "computeFirst": "Calcule a folha primeiro",
+        "generated": "Folha gerada", "generatedDesc": "Líquido: {{amount}} · Conta a pagar criada.",
+        "payConfirm": "Pagar folha de {{name}} por {{amount}}?",
+        "paymentRegistered": "Pagamento registrado",
+        "cancelConfirm": "Anular esta folha e sua conta a pagar?"
+      },
+      "positions": {
+        "newBtn": "Novo cargo",
+        "header": { "code": "Código", "name": "Nome", "dept": "Departamento", "level": "Nível", "base": "Base", "range": "Faixa", "status": "Estado", "actions": "Ações" },
+        "empty": "Você ainda não criou cargos",
+        "dialog": {
+          "titleNew": "Novo cargo", "titleEdit": "Editar cargo",
+          "desc": "Classifique os cargos disponíveis na empresa com sua faixa salarial.",
+          "code": "Código *", "level": "Nível", "selectLevel": "Selecione",
+          "name": "Nome do cargo *", "dept": "Departamento",
+          "baseSalary": "Salário base", "minSalary": "Salário mín.", "maxSalary": "Salário máx.",
+          "description": "Descrição / responsabilidades",
+          "save": "Salvar", "cancel": "Cancelar"
+        },
+        "levels": { "none": "Sem nível", "junior": "Júnior", "semi": "Pleno", "senior": "Sênior", "lead": "Líder", "manager": "Gerente", "director": "Diretor" },
+        "codeNameRequired": "Código e nome obrigatórios",
+        "updated": "Cargo atualizado", "created": "Cargo criado",
+        "deleteConfirm": "Excluir cargo? Funcionários com este cargo ficarão sem classificação."
+      },
+      "contracts": {
+        "newBtn": "Novo contrato",
+        "header": { "employee": "Funcionário", "type": "Tipo", "start": "Início", "end": "Fim", "baseSalary": "Salário base", "status": "Estado" },
+        "empty": "Sem contratos",
+        "dialog": { "title": "Novo contrato", "employee": "Funcionário", "type": "Tipo", "start": "Início", "end": "Fim (opcional)", "baseSalary": "Salário base", "weeklyHours": "Horas semanais", "create": "Criar", "cancel": "Cancelar" },
+        "types": { "indefinite": "Indeterminado", "fixed": "Determinado", "temporary": "Temporário", "part_time": "Meio período", "internship": "Estágio", "freelance": "Autônomo" }
+      },
+      "schedules": {
+        "newBtn": "Novo horário",
+        "header": { "employee": "Funcionário", "day": "Dia", "start": "Início", "end": "Fim", "actions": "Ações" },
+        "empty": "Sem horários configurados",
+        "dialog": { "title": "Novo horário", "employee": "Funcionário", "selectEmployee": "Selecione", "dayOfWeek": "Dia da semana", "startTime": "Hora início", "endTime": "Hora fim", "save": "Salvar" },
+        "selectEmpError": "Selecione um funcionário"
+      },
+      "overtime": {
+        "registerBtn": "Registrar",
+        "header": { "employee": "Funcionário", "date": "Data", "hours": "Horas", "factor": "Fator", "status": "Estado" },
+        "empty": "Sem registros",
+        "dialog": { "title": "Registrar horas extras", "employee": "Funcionário", "selectEmployee": "Selecione...", "date": "Data", "hours": "Horas", "factor": "Fator", "reason": "Motivo", "register": "Registrar", "cancel": "Cancelar" },
+        "statuses": { "pending": "Pendente", "approved": "Aprovado", "paid": "Pago", "rejected": "Rejeitado" }
+      }
+    },
+    "accounting": {
+      "summary": { "assets": "Ativos", "liabilities": "Passivos", "income": "Receitas", "expenses": "Despesas" },
+      "sections": { "plan": "Plano de Contas", "operation": "Operação", "analysis": "Análise" },
+      "types": { "asset": "Ativo", "liability": "Passivo", "equity": "Patrimônio", "income": "Receita", "expense": "Despesa" },
+      "tabs": {
+        "accounts": "Contas", "periods": "Exercícios e Períodos",
+        "entries": "Lançamentos", "costCenters": "Centros de Custo", "budgets": "Orçamentos",
+        "reports": "Relatórios Financeiros"
+      },
+      "accounts": {
+        "countLabel": "{{total}} contas · {{postable}} contábeis",
+        "importTemplate": "Importar Modelo", "newAccount": "Nova Conta",
+        "searchPlaceholder": "Buscar por código ou nome…",
+        "filters": { "type": "Tipo", "nature": "Natureza", "postable": "Contábil", "group": "Grupo" },
+        "header": { "code": "Código", "name": "Nome", "type": "Tipo", "nature": "Natureza", "balance": "Saldo", "actions": "Ações" },
+        "imputable": "Contábil", "group": "Grupo",
+        "empty": "Sem contas. Importe um modelo para começar.",
+        "subAccount": "Subconta"
+      },
+      "periods": {
+        "countLabel": "{{years}} exercícios · {{periods}} períodos",
+        "newFy": "Novo Exercício", "current": "Atual",
+        "closeTitle": "Fechar", "reopenTitle": "Reabrir",
+        "empty": "Crie seu primeiro exercício fiscal",
+        "statuses": { "open": "Aberto", "closed": "Fechado" }
+      },
+      "entries": {
+        "countLabel": "{{count}} lançamentos",
+        "newEntry": "Novo Lançamento",
+        "needFy": "Crie primeiro um exercício em Plano de Contas → Exercícios e Períodos.",
+        "searchPlaceholder": "Buscar por número, descrição ou série…",
+        "filterStatus": "Estado",
+        "header": { "number": "Número", "date": "Data", "description": "Descrição", "status": "Estado" },
+        "reversalBadge": "Estorno", "reversedBadge": "Anulado",
+        "post": "Postar", "reverse": "Estornar",
+        "statuses": { "draft": "Rascunho", "posted": "Postado", "reversed": "Estornado" },
+        "empty": "Sem lançamentos contábeis"
+      },
+      "accountDialog": {
+        "titleNew": "Nova Conta", "titleEdit": "Editar Conta",
+        "desc": "Plano de contas hierárquico",
+        "code": "Código *", "type": "Tipo *", "name": "Nome *",
+        "parent": "Conta pai (opcional)", "noneRoot": "— Nenhuma (raiz) —",
+        "postable": "Conta contábil",
+        "postableHint": "Se desativada será um grupo e não aceitará lançamentos diretos"
+      },
+      "templateDialog": {
+        "title": "Importar plano de contas", "desc": "Carregue um modelo predefinido",
+        "options": { "cu_onat": "Cuba - ONAT (MPEs / TCP)", "es_pgc": "Espanha - PGC PMEs", "mx_sat": "México - SAT", "niif_generic": "IFRS (genérico LATAM)" },
+        "import": "Importar"
+      },
+      "fyDialog": {
+        "title": "Novo exercício fiscal", "desc": "Serão criados 12 períodos mensais",
+        "year": "Ano", "startMonth": "Mês de início", "create": "Criar"
+      },
+      "entryDialog": {
+        "title": "Novo Lançamento Contábil", "desc": "Partida dobrada: débitos = créditos",
+        "date": "Data", "series": "Série", "description": "Descrição",
+        "period": "Período", "noPeriod": "⚠ Sem período para esta data",
+        "lines": "Linhas", "addLine": "Linha",
+        "account": "Conta (contábil)", "selectAccount": "Selecionar",
+        "debit": "Débito", "credit": "Crédito", "note": "Nota",
+        "debits": "Débitos", "credits": "Créditos",
+        "balanced": "Balanceado ✓", "notBalanced": "Não balanceado",
+        "postOnSave": "Postar ao salvar",
+        "postOnSaveHint": "Se desligado, salva como rascunho",
+        "registerAndPost": "Registrar e Postar", "saveDraft": "Salvar Rascunho"
+      },
+      "entryDetail": {
+        "title": "Lançamento {{number}}", "noDescription": "Sem descrição",
+        "account": "Conta", "debit": "Débito", "credit": "Crédito"
+      },
+      "toasts": {
+        "codeNameRequired": "Código e nome obrigatórios",
+        "accountCreated": "Conta criada", "accountUpdated": "Conta atualizada",
+        "accountDeleted": "Conta excluída", "deleteError": "Não é possível excluir",
+        "balanceError": "Débitos e créditos devem ser iguais e > 0",
+        "noPeriodTitle": "Sem período", "noPeriodDesc": "Crie um exercício fiscal que cubra esta data",
+        "periodClosedTitle": "Período fechado", "periodClosedDesc": "\"{{name}}\" está {{status}}",
+        "entryCreateError": "Erro ao criar lançamento",
+        "lineError": "Erro nas linhas",
+        "postedFail": "Não foi possível postar",
+        "entryRegistered": "Lançamento registrado e postado",
+        "entrySavedDraft": "Lançamento salvo como rascunho",
+        "entryPosted": "Lançamento postado",
+        "reverseReasonPrompt": "Motivo do estorno (mín. 3 caracteres):",
+        "reversed": "Lançamento estornado",
+        "fyCreated": "Exercício {{year}} criado com 12 períodos",
+        "periodClosed": "Período fechado", "periodOpened": "Período reaberto",
+        "templateImported": "Modelo importado", "templateImportedCount": "{{count}} contas adicionadas"
+      }
     }
   },
   "empty": {

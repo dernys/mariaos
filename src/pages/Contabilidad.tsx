@@ -22,7 +22,7 @@ import { useTableState } from "@/hooks/useTableState";
 import {
   Plus, Edit2, Trash2, BookOpen, ArrowUpDown, TrendingUp, TrendingDown, DollarSign,
   Lock, Unlock, Download, Undo2, FolderTree, CalendarClock, FileType, Building2,
-  Wallet, ListTree, ClipboardList, BarChart3, Settings2,
+  Wallet, ListTree, ClipboardList, BarChart3,
 } from "lucide-react";
 import { format } from "date-fns";
 import { AccountingReports } from "@/components/accounting/AccountingReports";
@@ -43,21 +43,19 @@ interface EntryLine { id: string; account_id: string; debit: number; credit: num
 interface FiscalYear { id: string; year: number; name: string; start_date: string; end_date: string; status: string; is_current: boolean; }
 interface Period { id: string; fiscal_year_id: string; period_number: number; name: string; start_date: string; end_date: string; status: string; }
 
-const ACCOUNT_TYPES = [
-  { value: "asset", label: "Activo", color: "text-primary" },
-  { value: "liability", label: "Pasivo", color: "text-destructive" },
-  { value: "equity", label: "Capital", color: "text-muted-foreground" },
-  { value: "income", label: "Ingreso", color: "text-success" },
-  { value: "expense", label: "Gasto", color: "text-warning" },
-];
+const ACCOUNT_TYPE_VALUES = ["asset", "liability", "equity", "income", "expense"] as const;
+const TYPE_COLOR: Record<string, string> = {
+  asset: "text-primary",
+  liability: "text-destructive",
+  equity: "text-muted-foreground",
+  income: "text-success",
+  expense: "text-warning",
+};
 
-const typeLabel = (t: string) => ACCOUNT_TYPES.find((a) => a.value === t)?.label || t;
-const typeColor = (t: string) => ACCOUNT_TYPES.find((a) => a.value === t)?.color || "";
-
-const SECTIONS = [
-  { value: "plan", label: "Plan Contable", icon: ListTree, subs: ["accounts", "periods"] },
-  { value: "operacion", label: "Operación", icon: ClipboardList, subs: ["entries", "cost_centers", "budgets"] },
-  { value: "analisis", label: "Análisis", icon: BarChart3, subs: ["reports"] },
+const SECTION_VALUES = [
+  { value: "plan", icon: ListTree, subs: ["accounts", "periods"] },
+  { value: "operacion", icon: ClipboardList, subs: ["entries", "cost_centers", "budgets"] },
+  { value: "analisis", icon: BarChart3, subs: ["reports"] },
 ];
 
 const Contabilidad = () => {
@@ -68,22 +66,33 @@ const Contabilidad = () => {
   const { section: sectionParam } = useParams<{ section?: string }>();
   const navigate = useNavigate();
 
+  const typeLabel = (type: string) => t(`modules.accounting.types.${type}`, { defaultValue: type });
+  const sectionLabel = (v: string) => t(`modules.accounting.sections.${v === "plan" ? "plan" : v === "operacion" ? "operation" : "analysis"}`);
+  const periodStatusLabel = (s: string) => {
+    const k = `modules.accounting.periods.statuses.${s}`;
+    const v = t(k);
+    return v === k ? s : v;
+  };
+  const entryStatusLabel = (s: string) => {
+    const k = `modules.accounting.entries.statuses.${s}`;
+    const v = t(k);
+    return v === k ? s : v;
+  };
+
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [fiscalYears, setFiscalYears] = useState<FiscalYear[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
 
-  const validSection = SECTIONS.find((s) => s.value === sectionParam)?.value || "plan";
+  const validSection = SECTION_VALUES.find((s) => s.value === sectionParam)?.value || "plan";
   const section = validSection;
   const setSection = (v: string) => navigate(`/contabilidad/${v}`);
-  const [subTab, setSubTab] = useState(SECTIONS.find((s) => s.value === validSection)!.subs[0]);
+  const [subTab, setSubTab] = useState(SECTION_VALUES.find((s) => s.value === validSection)!.subs[0]);
 
-  // Account dialog
   const [accDialogOpen, setAccDialogOpen] = useState(false);
   const [editingAcc, setEditingAcc] = useState<Account | null>(null);
   const [accForm, setAccForm] = useState({ code: "", name: "", type: "asset", nature: "debit", is_postable: true, parent_id: "" as string });
 
-  // Entry dialog
   const [entryDialogOpen, setEntryDialogOpen] = useState(false);
   const [entryForm, setEntryForm] = useState({ description: "", date: new Date().toISOString().slice(0, 10), series: "GEN", post: true });
   const [entryLines, setEntryLines] = useState<{ account_id: string; debit: string; credit: string; description: string }[]>([
@@ -124,7 +133,6 @@ const Contabilidad = () => {
     return map;
   }, [accounts]);
 
-  // ---- Accounts table state (flat when filtered/searched) ----
   const accountsTable = useTableState<Account>({
     data: accounts,
     searchKeys: ["code", "name"],
@@ -136,7 +144,6 @@ const Contabilidad = () => {
   });
   const accountsFiltered = !!accountsTable.search.trim() || Object.values(accountsTable.filters).some((v) => v && v !== "__all__");
 
-  // ---- Entries table state ----
   const entriesTable = useTableState<JournalEntry>({
     data: entries,
     searchKeys: ["entry_number", "description", "series"],
@@ -162,7 +169,7 @@ const Contabilidad = () => {
 
   const saveAccount = async () => {
     if (!accForm.code.trim() || !accForm.name.trim()) {
-      toast({ title: "Error", description: "Código y nombre requeridos", variant: "destructive" }); return;
+      toast({ title: t("common.error"), description: t("modules.accounting.toasts.codeNameRequired"), variant: "destructive" }); return;
     }
     const parent = accForm.parent_id ? accounts.find((a) => a.id === accForm.parent_id) : null;
     const payload: any = {
@@ -175,16 +182,16 @@ const Contabilidad = () => {
     const { error } = editingAcc
       ? await supabase.from("accounting_accounts").update(payload).eq("id", editingAcc.id)
       : await supabase.from("accounting_accounts").insert(payload);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: editingAcc ? "Cuenta actualizada" : "Cuenta creada" });
+    if (error) { toast({ title: t("common.error"), description: error.message, variant: "destructive" }); return; }
+    toast({ title: editingAcc ? t("modules.accounting.toasts.accountUpdated") : t("modules.accounting.toasts.accountCreated") });
     setAccDialogOpen(false);
     fetchData();
   };
 
   const deleteAccount = async (id: string) => {
     const { error } = await supabase.from("accounting_accounts").delete().eq("id", id);
-    if (error) { toast({ title: "No se puede eliminar", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Cuenta eliminada" });
+    if (error) { toast({ title: t("modules.accounting.toasts.deleteError"), description: error.message, variant: "destructive" }); return; }
+    toast({ title: t("modules.accounting.toasts.accountDeleted") });
     fetchData();
   };
 
@@ -212,14 +219,14 @@ const Contabilidad = () => {
 
   const saveEntry = async () => {
     if (!isBalanced || totalDebits === 0) {
-      toast({ title: "Error", description: "Los débitos y créditos deben ser iguales y > 0", variant: "destructive" }); return;
+      toast({ title: t("common.error"), description: t("modules.accounting.toasts.balanceError"), variant: "destructive" }); return;
     }
     const period = periodForDate(entryForm.date);
     if (!period) {
-      toast({ title: "Sin período", description: "Crea un ejercicio fiscal que cubra esta fecha", variant: "destructive" }); return;
+      toast({ title: t("modules.accounting.toasts.noPeriodTitle"), description: t("modules.accounting.toasts.noPeriodDesc"), variant: "destructive" }); return;
     }
     if (period.status !== "open") {
-      toast({ title: "Período cerrado", description: `"${period.name}" está ${period.status}`, variant: "destructive" }); return;
+      toast({ title: t("modules.accounting.toasts.periodClosedTitle"), description: t("modules.accounting.toasts.periodClosedDesc", { name: period.name, status: periodStatusLabel(period.status) }), variant: "destructive" }); return;
     }
     const entryNumber = `${entryForm.series}-${Date.now().toString(36).toUpperCase()}`;
     const { data: entry, error } = await supabase.from("journal_entries").insert({
@@ -229,7 +236,7 @@ const Contabilidad = () => {
       fiscal_year_id: period.fiscal_year_id, tenant_id: tenantId,
       created_by: user?.id,
     } as any).select("id").single();
-    if (error || !entry) { toast({ title: "Error", description: error?.message || "Error creando asiento", variant: "destructive" }); return; }
+    if (error || !entry) { toast({ title: t("common.error"), description: error?.message || t("modules.accounting.toasts.entryCreateError"), variant: "destructive" }); return; }
     const lines = entryLines
       .filter((l) => l.account_id && ((parseFloat(l.debit) || 0) > 0 || (parseFloat(l.credit) || 0) > 0))
       .map((l) => ({
@@ -238,10 +245,10 @@ const Contabilidad = () => {
         description: l.description || null,
       }));
     const { error: linesErr } = await supabase.from("journal_entry_lines").insert(lines);
-    if (linesErr) { toast({ title: "Error en líneas", description: linesErr.message, variant: "destructive" }); return; }
+    if (linesErr) { toast({ title: t("modules.accounting.toasts.lineError"), description: linesErr.message, variant: "destructive" }); return; }
     if (entryForm.post) {
       const { error: postErr } = await supabase.rpc("post_journal_entry", { p_entry_id: entry.id });
-      if (postErr) toast({ title: "No se posteó", description: postErr.message, variant: "destructive" });
+      if (postErr) toast({ title: t("modules.accounting.toasts.postedFail"), description: postErr.message, variant: "destructive" });
       else {
         for (const l of lines) {
           const acc = accounts.find((a) => a.id === l.account_id);
@@ -251,25 +258,25 @@ const Contabilidad = () => {
             await supabase.from("accounting_accounts").update({ balance: acc.balance + delta }).eq("id", acc.id);
           }
         }
-        toast({ title: "Asiento registrado y posteado" });
+        toast({ title: t("modules.accounting.toasts.entryRegistered") });
       }
-    } else toast({ title: "Asiento guardado como borrador" });
+    } else toast({ title: t("modules.accounting.toasts.entrySavedDraft") });
     setEntryDialogOpen(false);
     fetchData();
   };
 
   const postDraft = async (id: string) => {
     const { error } = await supabase.rpc("post_journal_entry", { p_entry_id: id });
-    if (error) { toast({ title: "No se posteó", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Asiento posteado" });
+    if (error) { toast({ title: t("modules.accounting.toasts.postedFail"), description: error.message, variant: "destructive" }); return; }
+    toast({ title: t("modules.accounting.toasts.entryPosted") });
     fetchData();
   };
   const reverseEntry = async (id: string) => {
-    const reason = prompt("Motivo de la reversión (mín. 3 caracteres):");
+    const reason = prompt(t("modules.accounting.toasts.reverseReasonPrompt"));
     if (!reason || reason.trim().length < 3) return;
     const { error } = await supabase.rpc("reverse_journal_entry", { p_entry_id: id, p_reason: reason });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Asiento reversado" });
+    if (error) { toast({ title: t("common.error"), description: error.message, variant: "destructive" }); return; }
+    toast({ title: t("modules.accounting.toasts.reversed") });
     fetchData();
   };
   const openEntryDetail = async (e: JournalEntry) => {
@@ -286,23 +293,23 @@ const Contabilidad = () => {
     const { error } = await supabase.rpc("create_fiscal_year", {
       p_tenant_id: tenantId, p_year: fyForm.year, p_start_month: fyForm.start_month,
     });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: `Ejercicio ${fyForm.year} creado con 12 períodos` });
+    if (error) { toast({ title: t("common.error"), description: error.message, variant: "destructive" }); return; }
+    toast({ title: t("modules.accounting.toasts.fyCreated", { year: fyForm.year }) });
     setFyDialogOpen(false);
     fetchData();
   };
   const togglePeriod = async (p: Period) => {
     const rpc = p.status === "open" ? "close_accounting_period" : "reopen_accounting_period";
     const { error } = await supabase.rpc(rpc, { p_period_id: p.id });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: p.status === "open" ? "Período cerrado" : "Período reabierto" });
+    if (error) { toast({ title: t("common.error"), description: error.message, variant: "destructive" }); return; }
+    toast({ title: p.status === "open" ? t("modules.accounting.toasts.periodClosed") : t("modules.accounting.toasts.periodOpened") });
     fetchData();
   };
   const importTemplate = async () => {
     const { data, error } = await supabase.rpc("import_chart_template", { p_tenant_id: tenantId, p_template: templateChoice });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    if (error) { toast({ title: t("common.error"), description: error.message, variant: "destructive" }); return; }
     await supabase.rpc("relink_chart_parents", { p_tenant_id: tenantId });
-    toast({ title: `Plan importado`, description: `${data} cuentas agregadas` });
+    toast({ title: t("modules.accounting.toasts.templateImported"), description: t("modules.accounting.toasts.templateImportedCount", { count: data as any }) });
     setTemplateDialogOpen(false);
     fetchData();
   };
@@ -321,17 +328,17 @@ const Contabilidad = () => {
           {a.code}
         </TableCell>
         <TableCell className="text-xs font-medium">{a.name}</TableCell>
-        <TableCell><Badge variant="outline" className={`text-[10px] ${typeColor(a.type)}`}>{typeLabel(a.type)}</Badge></TableCell>
+        <TableCell><Badge variant="outline" className={`text-[10px] ${TYPE_COLOR[a.type] || ""}`}>{typeLabel(a.type)}</Badge></TableCell>
         <TableCell>
           <Badge variant={a.is_postable ? "default" : "secondary"} className="text-[10px]">
-            {a.is_postable ? "Imputable" : "Grupo"}
+            {a.is_postable ? t("modules.accounting.accounts.imputable") : t("modules.accounting.accounts.group")}
           </Badge>
         </TableCell>
         <TableCell className="text-xs font-heading font-bold">{a.is_postable ? `$${Number(a.balance || 0).toLocaleString()}` : "—"}</TableCell>
         <TableCell>
           <div className="flex gap-1">
             {!a.is_postable && (
-              <button onClick={() => openNewAcc(a)} className="p-1.5 rounded hover:bg-muted" title="Subcuenta"><Plus className="h-3.5 w-3.5" /></button>
+              <button onClick={() => openNewAcc(a)} className="p-1.5 rounded hover:bg-muted" title={t("modules.accounting.accounts.subAccount")}><Plus className="h-3.5 w-3.5" /></button>
             )}
             <button onClick={() => openEditAcc(a)} className="p-1.5 rounded hover:bg-muted"><Edit2 className="h-3.5 w-3.5" /></button>
             <button onClick={() => deleteAccount(a.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -345,9 +352,8 @@ const Contabilidad = () => {
 
   const rootAccounts = accountsByParent.get(null) || [];
 
-  // When section changes, ensure subTab is valid
   useEffect(() => {
-    const sec = SECTIONS.find((s) => s.value === section);
+    const sec = SECTION_VALUES.find((s) => s.value === section);
     if (sec && !sec.subs.includes(subTab)) setSubTab(sec.subs[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
@@ -355,29 +361,27 @@ const Contabilidad = () => {
   return (
     <AppLayout title={t("nav.items.accounting")}>
       <div className="space-y-4">
-        {/* Summary */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card><CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center"><DollarSign className="h-5 w-5 text-primary" /></div>
-            <div><p className="text-[10px] text-muted-foreground">Activos</p><p className="font-heading font-bold text-lg">${totalAssets.toLocaleString()}</p></div>
+            <div><p className="text-[10px] text-muted-foreground">{t("modules.accounting.summary.assets")}</p><p className="font-heading font-bold text-lg">${totalAssets.toLocaleString()}</p></div>
           </CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center"><ArrowUpDown className="h-5 w-5 text-destructive" /></div>
-            <div><p className="text-[10px] text-muted-foreground">Pasivos</p><p className="font-heading font-bold text-lg">${totalLiabilities.toLocaleString()}</p></div>
+            <div><p className="text-[10px] text-muted-foreground">{t("modules.accounting.summary.liabilities")}</p><p className="font-heading font-bold text-lg">${totalLiabilities.toLocaleString()}</p></div>
           </CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center"><TrendingUp className="h-5 w-5 text-success" /></div>
-            <div><p className="text-[10px] text-muted-foreground">Ingresos</p><p className="font-heading font-bold text-lg">${totalIncome.toLocaleString()}</p></div>
+            <div><p className="text-[10px] text-muted-foreground">{t("modules.accounting.summary.income")}</p><p className="font-heading font-bold text-lg">${totalIncome.toLocaleString()}</p></div>
           </CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center"><TrendingDown className="h-5 w-5 text-warning" /></div>
-            <div><p className="text-[10px] text-muted-foreground">Gastos</p><p className="font-heading font-bold text-lg">${totalExpenses.toLocaleString()}</p></div>
+            <div><p className="text-[10px] text-muted-foreground">{t("modules.accounting.summary.expenses")}</p><p className="font-heading font-bold text-lg">${totalExpenses.toLocaleString()}</p></div>
           </CardContent></Card>
         </div>
 
-        {/* Section selector */}
         <div className="flex gap-2 flex-wrap p-1 bg-muted/40 rounded-xl w-fit">
-          {SECTIONS.map((s) => {
+          {SECTION_VALUES.map((s) => {
             const Icon = s.icon;
             const active = section === s.value;
             return (
@@ -389,29 +393,28 @@ const Contabilidad = () => {
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                {s.label}
+                {sectionLabel(s.value)}
               </button>
             );
           })}
         </div>
 
-        {/* Plan Contable section */}
         {section === "plan" && (
           <Tabs value={subTab} onValueChange={setSubTab} className="space-y-4">
             <TabsList>
-              <TabsTrigger value="accounts"><ListTree className="h-3.5 w-3.5 mr-1" />Cuentas</TabsTrigger>
-              <TabsTrigger value="periods"><CalendarClock className="h-3.5 w-3.5 mr-1" />Ejercicios y Períodos</TabsTrigger>
+              <TabsTrigger value="accounts"><ListTree className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.accounts")}</TabsTrigger>
+              <TabsTrigger value="periods"><CalendarClock className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.periods")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="accounts" className="space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <p className="text-sm text-muted-foreground">{accounts.length} cuentas · {postableAccounts.length} imputables</p>
+                <p className="text-sm text-muted-foreground">{t("modules.accounting.accounts.countLabel", { total: accounts.length, postable: postableAccounts.length })}</p>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => setTemplateDialogOpen(true)} className="gap-1 text-xs">
-                    <Download className="h-3.5 w-3.5" /> Importar Plantilla
+                    <Download className="h-3.5 w-3.5" /> {t("modules.accounting.accounts.importTemplate")}
                   </Button>
                   <Button size="sm" onClick={() => openNewAcc()} className="gap-1 text-xs gradient-brand text-primary-foreground">
-                    <Plus className="h-3.5 w-3.5" /> Nueva Cuenta
+                    <Plus className="h-3.5 w-3.5" /> {t("modules.accounting.accounts.newAccount")}
                   </Button>
                 </div>
               </div>
@@ -419,21 +422,24 @@ const Contabilidad = () => {
               <TableToolbar
                 search={accountsTable.search}
                 onSearchChange={accountsTable.setSearch}
-                searchPlaceholder="Buscar por código o nombre…"
+                searchPlaceholder={t("modules.accounting.accounts.searchPlaceholder")}
                 filters={[
                   {
                     key: "type",
-                    label: "Tipo",
+                    label: t("modules.accounting.accounts.filters.type"),
                     value: accountsTable.filters.type || "__all__",
                     onChange: (v) => accountsTable.setFilter("type", v),
-                    options: ACCOUNT_TYPES.map((t) => ({ value: t.value, label: t.label })),
+                    options: ACCOUNT_TYPE_VALUES.map((v) => ({ value: v, label: typeLabel(v) })),
                   },
                   {
                     key: "postable",
-                    label: "Naturaleza",
+                    label: t("modules.accounting.accounts.filters.nature"),
                     value: accountsTable.filters.postable || "__all__",
                     onChange: (v) => accountsTable.setFilter("postable", v),
-                    options: [{ value: "yes", label: "Imputable" }, { value: "no", label: "Grupo" }],
+                    options: [
+                      { value: "yes", label: t("modules.accounting.accounts.filters.postable") },
+                      { value: "no", label: t("modules.accounting.accounts.filters.group") },
+                    ],
                   },
                 ]}
               />
@@ -442,29 +448,29 @@ const Contabilidad = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">Código</TableHead>
-                      <TableHead className="text-xs">Nombre</TableHead>
-                      <TableHead className="text-xs">Tipo</TableHead>
-                      <TableHead className="text-xs">Naturaleza</TableHead>
-                      <TableHead className="text-xs">Saldo</TableHead>
-                      <TableHead className="text-xs w-28">Acciones</TableHead>
+                      <TableHead className="text-xs">{t("modules.accounting.accounts.header.code")}</TableHead>
+                      <TableHead className="text-xs">{t("modules.accounting.accounts.header.name")}</TableHead>
+                      <TableHead className="text-xs">{t("modules.accounting.accounts.header.type")}</TableHead>
+                      <TableHead className="text-xs">{t("modules.accounting.accounts.header.nature")}</TableHead>
+                      <TableHead className="text-xs">{t("modules.accounting.accounts.header.balance")}</TableHead>
+                      <TableHead className="text-xs w-28">{t("modules.accounting.accounts.header.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {accounts.length === 0 ? (
                       <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-xs">
                         <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                        No hay cuentas. Importa una plantilla para empezar.
+                        {t("modules.accounting.accounts.empty")}
                       </TableCell></TableRow>
                     ) : accountsFiltered ? (
                       accountsTable.paged.map((a) => (
                         <TableRow key={a.id}>
                           <TableCell className="text-xs font-heading font-semibold">{a.code}</TableCell>
                           <TableCell className="text-xs font-medium">{a.name}</TableCell>
-                          <TableCell><Badge variant="outline" className={`text-[10px] ${typeColor(a.type)}`}>{typeLabel(a.type)}</Badge></TableCell>
+                          <TableCell><Badge variant="outline" className={`text-[10px] ${TYPE_COLOR[a.type] || ""}`}>{typeLabel(a.type)}</Badge></TableCell>
                           <TableCell>
                             <Badge variant={a.is_postable ? "default" : "secondary"} className="text-[10px]">
-                              {a.is_postable ? "Imputable" : "Grupo"}
+                              {a.is_postable ? t("modules.accounting.accounts.imputable") : t("modules.accounting.accounts.group")}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-xs font-heading font-bold">{a.is_postable ? `$${Number(a.balance || 0).toLocaleString()}` : "—"}</TableCell>
@@ -495,9 +501,9 @@ const Contabilidad = () => {
 
             <TabsContent value="periods" className="space-y-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{fiscalYears.length} ejercicios · {periods.length} períodos</p>
+                <p className="text-sm text-muted-foreground">{t("modules.accounting.periods.countLabel", { years: fiscalYears.length, periods: periods.length })}</p>
                 <Button size="sm" onClick={() => setFyDialogOpen(true)} className="gap-1 text-xs gradient-brand text-primary-foreground">
-                  <Plus className="h-3.5 w-3.5" /> Nuevo Ejercicio
+                  <Plus className="h-3.5 w-3.5" /> {t("modules.accounting.periods.newFy")}
                 </Button>
               </div>
               {fiscalYears.map((fy) => {
@@ -509,8 +515,8 @@ const Contabilidad = () => {
                         <div className="flex items-center gap-2">
                           <CalendarClock className="h-4 w-4 text-primary" />
                           <span className="font-heading font-bold">{fy.name}</span>
-                          {fy.is_current && <Badge className="text-[10px]">Actual</Badge>}
-                          <Badge variant={fy.status === "open" ? "default" : "secondary"} className="text-[10px]">{fy.status}</Badge>
+                          {fy.is_current && <Badge className="text-[10px]">{t("modules.accounting.periods.current")}</Badge>}
+                          <Badge variant={fy.status === "open" ? "default" : "secondary"} className="text-[10px]">{periodStatusLabel(fy.status)}</Badge>
                         </div>
                         <span className="text-[10px] text-muted-foreground">
                           {format(new Date(fy.start_date), "dd/MM/yyyy")} → {format(new Date(fy.end_date), "dd/MM/yyyy")}
@@ -525,7 +531,7 @@ const Contabilidad = () => {
                                 {format(new Date(p.start_date), "dd/MM")} - {format(new Date(p.end_date), "dd/MM")}
                               </p>
                             </div>
-                            <button onClick={() => togglePeriod(p)} className="p-1.5 rounded hover:bg-muted" title={p.status === "open" ? "Cerrar" : "Reabrir"}>
+                            <button onClick={() => togglePeriod(p)} className="p-1.5 rounded hover:bg-muted" title={p.status === "open" ? t("modules.accounting.periods.closeTitle") : t("modules.accounting.periods.reopenTitle")}>
                               {p.status === "open"
                                 ? <Unlock className="h-3.5 w-3.5 text-success" />
                                 : <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
@@ -540,49 +546,48 @@ const Contabilidad = () => {
               {fiscalYears.length === 0 && (
                 <Card><CardContent className="p-8 text-center text-muted-foreground text-xs">
                   <CalendarClock className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                  Crea tu primer ejercicio fiscal
+                  {t("modules.accounting.periods.empty")}
                 </CardContent></Card>
               )}
             </TabsContent>
           </Tabs>
         )}
 
-        {/* Operación section */}
         {section === "operacion" && (
           <Tabs value={subTab} onValueChange={setSubTab} className="space-y-4">
             <TabsList>
-              <TabsTrigger value="entries"><ClipboardList className="h-3.5 w-3.5 mr-1" />Asientos</TabsTrigger>
-              <TabsTrigger value="cost_centers"><Building2 className="h-3.5 w-3.5 mr-1" />Centros de Costo</TabsTrigger>
-              <TabsTrigger value="budgets"><Wallet className="h-3.5 w-3.5 mr-1" />Presupuestos</TabsTrigger>
+              <TabsTrigger value="entries"><ClipboardList className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.entries")}</TabsTrigger>
+              <TabsTrigger value="cost_centers"><Building2 className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.costCenters")}</TabsTrigger>
+              <TabsTrigger value="budgets"><Wallet className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.budgets")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="entries" className="space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <p className="text-sm text-muted-foreground">{entries.length} asientos</p>
+                <p className="text-sm text-muted-foreground">{t("modules.accounting.entries.countLabel", { count: entries.length })}</p>
                 <Button size="sm" onClick={openNewEntry} disabled={postableAccounts.length === 0 || periods.length === 0} className="gap-1 text-xs gradient-brand text-primary-foreground">
-                  <Plus className="h-3.5 w-3.5" /> Nuevo Asiento
+                  <Plus className="h-3.5 w-3.5" /> {t("modules.accounting.entries.newEntry")}
                 </Button>
               </div>
               {periods.length === 0 && (
                 <Card className="border-warning/30 bg-warning/5"><CardContent className="p-3 text-xs">
-                  Crea primero un ejercicio fiscal en <strong>Plan Contable → Ejercicios y Períodos</strong>.
+                  {t("modules.accounting.entries.needFy")}
                 </CardContent></Card>
               )}
 
               <TableToolbar
                 search={entriesTable.search}
                 onSearchChange={entriesTable.setSearch}
-                searchPlaceholder="Buscar por número, descripción o serie…"
+                searchPlaceholder={t("modules.accounting.entries.searchPlaceholder")}
                 filters={[
                   {
                     key: "status",
-                    label: "Estado",
+                    label: t("modules.accounting.entries.filterStatus"),
                     value: entriesTable.filters.status || "__all__",
                     onChange: (v) => entriesTable.setFilter("status", v),
                     options: [
-                      { value: "draft", label: "Borrador" },
-                      { value: "posted", label: "Posteado" },
-                      { value: "reversed", label: "Reversado" },
+                      { value: "draft", label: t("modules.accounting.entries.statuses.draft") },
+                      { value: "posted", label: t("modules.accounting.entries.statuses.posted") },
+                      { value: "reversed", label: t("modules.accounting.entries.statuses.reversed") },
                     ],
                   },
                 ]}
@@ -592,10 +597,10 @@ const Contabilidad = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">Número</TableHead>
-                      <TableHead className="text-xs">Fecha</TableHead>
-                      <TableHead className="text-xs">Descripción</TableHead>
-                      <TableHead className="text-xs">Estado</TableHead>
+                      <TableHead className="text-xs">{t("modules.accounting.entries.header.number")}</TableHead>
+                      <TableHead className="text-xs">{t("modules.accounting.entries.header.date")}</TableHead>
+                      <TableHead className="text-xs">{t("modules.accounting.entries.header.description")}</TableHead>
+                      <TableHead className="text-xs">{t("modules.accounting.entries.header.status")}</TableHead>
                       <TableHead className="text-xs w-24"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -606,21 +611,21 @@ const Contabilidad = () => {
                         <TableCell className="text-xs text-muted-foreground" onClick={() => openEntryDetail(e)}>{format(new Date(e.date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="text-xs" onClick={() => openEntryDetail(e)}>
                           {e.description || "—"}
-                          {e.reverses && <Badge variant="outline" className="ml-2 text-[9px]">Reversión</Badge>}
-                          {e.reversed_by && <Badge variant="destructive" className="ml-2 text-[9px]">Anulado</Badge>}
+                          {e.reverses && <Badge variant="outline" className="ml-2 text-[9px]">{t("modules.accounting.entries.reversalBadge")}</Badge>}
+                          {e.reversed_by && <Badge variant="destructive" className="ml-2 text-[9px]">{t("modules.accounting.entries.reversedBadge")}</Badge>}
                         </TableCell>
                         <TableCell onClick={() => openEntryDetail(e)}>
                           <Badge variant={e.status === "posted" ? "default" : "secondary"} className="text-[10px]">
-                            {e.status === "posted" ? "Posteado" : e.status === "draft" ? "Borrador" : e.status}
+                            {entryStatusLabel(e.status)}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             {e.status === "draft" && (
-                              <Button size="sm" variant="ghost" className="h-7 text-[10px] gap-1" onClick={() => postDraft(e.id)}>Postear</Button>
+                              <Button size="sm" variant="ghost" className="h-7 text-[10px] gap-1" onClick={() => postDraft(e.id)}>{t("modules.accounting.entries.post")}</Button>
                             )}
                             {e.status === "posted" && !e.reversed_by && !e.reverses && (
-                              <button onClick={() => reverseEntry(e.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive" title="Reversar">
+                              <button onClick={() => reverseEntry(e.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive" title={t("modules.accounting.entries.reverse")}>
                                 <Undo2 className="h-3.5 w-3.5" />
                               </button>
                             )}
@@ -629,7 +634,7 @@ const Contabilidad = () => {
                       </TableRow>
                     ))}
                     {entriesTable.total === 0 && (
-                      <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-xs">Sin asientos contables</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-xs">{t("modules.accounting.entries.empty")}</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -653,11 +658,10 @@ const Contabilidad = () => {
           </Tabs>
         )}
 
-        {/* Análisis section */}
         {section === "analisis" && (
           <Tabs value={subTab} onValueChange={setSubTab} className="space-y-4">
             <TabsList>
-              <TabsTrigger value="reports"><FileType className="h-3.5 w-3.5 mr-1" />Reportes Financieros</TabsTrigger>
+              <TabsTrigger value="reports"><FileType className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.reports")}</TabsTrigger>
             </TabsList>
             <TabsContent value="reports" className="space-y-4">
               <AccountingReports accounts={accounts as any} />
@@ -670,27 +674,27 @@ const Contabilidad = () => {
       <Dialog open={accDialogOpen} onOpenChange={setAccDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingAcc ? "Editar" : "Nueva"} Cuenta</DialogTitle>
-            <DialogDescription>Plan de cuentas jerárquico</DialogDescription>
+            <DialogTitle>{editingAcc ? t("modules.accounting.accountDialog.titleEdit") : t("modules.accounting.accountDialog.titleNew")}</DialogTitle>
+            <DialogDescription>{t("modules.accounting.accountDialog.desc")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Código *</Label><Input value={accForm.code} onChange={(e) => setAccForm({ ...accForm, code: e.target.value })} placeholder="1100" /></div>
+              <div><Label>{t("modules.accounting.accountDialog.code")}</Label><Input value={accForm.code} onChange={(e) => setAccForm({ ...accForm, code: e.target.value })} placeholder="1100" /></div>
               <div>
-                <Label>Tipo *</Label>
+                <Label>{t("modules.accounting.accountDialog.type")}</Label>
                 <Select value={accForm.type} onValueChange={(v) => setAccForm({ ...accForm, type: v, nature: (v === "asset" || v === "expense") ? "debit" : "credit" })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{ACCOUNT_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                  <SelectContent>{ACCOUNT_TYPE_VALUES.map((v) => <SelectItem key={v} value={v}>{typeLabel(v)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
-            <div><Label>Nombre *</Label><Input value={accForm.name} onChange={(e) => setAccForm({ ...accForm, name: e.target.value })} placeholder="Caja" /></div>
+            <div><Label>{t("modules.accounting.accountDialog.name")}</Label><Input value={accForm.name} onChange={(e) => setAccForm({ ...accForm, name: e.target.value })} /></div>
             <div>
-              <Label>Cuenta padre (opcional)</Label>
+              <Label>{t("modules.accounting.accountDialog.parent")}</Label>
               <Select value={accForm.parent_id || "none"} onValueChange={(v) => setAccForm({ ...accForm, parent_id: v === "none" ? "" : v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— Ninguna (raíz) —</SelectItem>
+                  <SelectItem value="none">{t("modules.accounting.accountDialog.noneRoot")}</SelectItem>
                   {accounts.filter((a) => !a.is_postable && a.id !== editingAcc?.id).map((a) => (
                     <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>
                   ))}
@@ -699,15 +703,15 @@ const Contabilidad = () => {
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>Cuenta imputable</Label>
-                <p className="text-[10px] text-muted-foreground">Si está desactivada será un grupo y no aceptará asientos directos</p>
+                <Label>{t("modules.accounting.accountDialog.postable")}</Label>
+                <p className="text-[10px] text-muted-foreground">{t("modules.accounting.accountDialog.postableHint")}</p>
               </div>
               <Switch checked={accForm.is_postable} onCheckedChange={(v) => setAccForm({ ...accForm, is_postable: v })} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAccDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={saveAccount} className="gradient-brand text-primary-foreground">Guardar</Button>
+            <Button variant="outline" onClick={() => setAccDialogOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={saveAccount} className="gradient-brand text-primary-foreground">{t("common.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -716,21 +720,20 @@ const Contabilidad = () => {
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Importar plan contable</DialogTitle>
-            <DialogDescription>Carga una plantilla predefinida</DialogDescription>
+            <DialogTitle>{t("modules.accounting.templateDialog.title")}</DialogTitle>
+            <DialogDescription>{t("modules.accounting.templateDialog.desc")}</DialogDescription>
           </DialogHeader>
           <Select value={templateChoice} onValueChange={setTemplateChoice}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="cu_onat">Cuba - ONAT (MIPYMES / TCP)</SelectItem>
-              <SelectItem value="es_pgc">España - PGC PYMES</SelectItem>
-              <SelectItem value="mx_sat">México - SAT</SelectItem>
-              <SelectItem value="niif_generic">NIIF (genérico LATAM)</SelectItem>
+              {["cu_onat","es_pgc","mx_sat","niif_generic"].map(k =>
+                <SelectItem key={k} value={k}>{t(`modules.accounting.templateDialog.options.${k}`)}</SelectItem>
+              )}
             </SelectContent>
           </Select>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={importTemplate} className="gradient-brand text-primary-foreground">Importar</Button>
+            <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={importTemplate} className="gradient-brand text-primary-foreground">{t("modules.accounting.templateDialog.import")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -739,16 +742,16 @@ const Contabilidad = () => {
       <Dialog open={fyDialogOpen} onOpenChange={setFyDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Nuevo ejercicio fiscal</DialogTitle>
-            <DialogDescription>Se crearán 12 períodos mensuales</DialogDescription>
+            <DialogTitle>{t("modules.accounting.fyDialog.title")}</DialogTitle>
+            <DialogDescription>{t("modules.accounting.fyDialog.desc")}</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Año</Label><Input type="number" value={fyForm.year} onChange={(e) => setFyForm({ ...fyForm, year: parseInt(e.target.value) })} /></div>
-            <div><Label>Mes inicio</Label><Input type="number" min={1} max={12} value={fyForm.start_month} onChange={(e) => setFyForm({ ...fyForm, start_month: parseInt(e.target.value) })} /></div>
+            <div><Label>{t("modules.accounting.fyDialog.year")}</Label><Input type="number" value={fyForm.year} onChange={(e) => setFyForm({ ...fyForm, year: parseInt(e.target.value) })} /></div>
+            <div><Label>{t("modules.accounting.fyDialog.startMonth")}</Label><Input type="number" min={1} max={12} value={fyForm.start_month} onChange={(e) => setFyForm({ ...fyForm, start_month: parseInt(e.target.value) })} /></div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFyDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={createFiscalYear} className="gradient-brand text-primary-foreground">Crear</Button>
+            <Button variant="outline" onClick={() => setFyDialogOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={createFiscalYear} className="gradient-brand text-primary-foreground">{t("modules.accounting.fyDialog.create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -757,48 +760,48 @@ const Contabilidad = () => {
       <Dialog open={entryDialogOpen} onOpenChange={setEntryDialogOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nuevo Asiento Contable</DialogTitle>
-            <DialogDescription>Partida doble: débitos = créditos</DialogDescription>
+            <DialogTitle>{t("modules.accounting.entryDialog.title")}</DialogTitle>
+            <DialogDescription>{t("modules.accounting.entryDialog.desc")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
-              <div><Label>Fecha</Label><Input type="date" value={entryForm.date} onChange={(e) => setEntryForm({ ...entryForm, date: e.target.value })} /></div>
-              <div><Label>Serie</Label><Input value={entryForm.series} onChange={(e) => setEntryForm({ ...entryForm, series: e.target.value.toUpperCase() })} placeholder="GEN" /></div>
-              <div><Label>Descripción</Label><Input value={entryForm.description} onChange={(e) => setEntryForm({ ...entryForm, description: e.target.value })} /></div>
+              <div><Label>{t("modules.accounting.entryDialog.date")}</Label><Input type="date" value={entryForm.date} onChange={(e) => setEntryForm({ ...entryForm, date: e.target.value })} /></div>
+              <div><Label>{t("modules.accounting.entryDialog.series")}</Label><Input value={entryForm.series} onChange={(e) => setEntryForm({ ...entryForm, series: e.target.value.toUpperCase() })} placeholder="GEN" /></div>
+              <div><Label>{t("modules.accounting.entryDialog.description")}</Label><Input value={entryForm.description} onChange={(e) => setEntryForm({ ...entryForm, description: e.target.value })} /></div>
             </div>
             {(() => {
               const p = periodForDate(entryForm.date);
               return p
-                ? <p className="text-[10px] text-muted-foreground">Período: <strong>{p.name}</strong> ({p.status})</p>
-                : <p className="text-[10px] text-destructive">⚠ Sin período para esta fecha</p>;
+                ? <p className="text-[10px] text-muted-foreground">{t("modules.accounting.entryDialog.period")}: <strong>{p.name}</strong> ({periodStatusLabel(p.status)})</p>
+                : <p className="text-[10px] text-destructive">{t("modules.accounting.entryDialog.noPeriod")}</p>;
             })()}
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-heading font-semibold">Líneas</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addLine} className="text-xs gap-1"><Plus className="h-3 w-3" /> Línea</Button>
+                <Label className="text-sm font-heading font-semibold">{t("modules.accounting.entryDialog.lines")}</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addLine} className="text-xs gap-1"><Plus className="h-3 w-3" /> {t("modules.accounting.entryDialog.addLine")}</Button>
               </div>
               {entryLines.map((line, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2 bg-muted/40 rounded-lg p-2 items-end">
                   <div className="col-span-5">
-                    <Label className="text-[10px]">Cuenta (imputable)</Label>
+                    <Label className="text-[10px]">{t("modules.accounting.entryDialog.account")}</Label>
                     <Select value={line.account_id} onValueChange={(v) => updateLine(idx, "account_id", v)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={t("modules.accounting.entryDialog.selectAccount")} /></SelectTrigger>
                       <SelectContent>
                         {postableAccounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="col-span-2">
-                    <Label className="text-[10px]">Débito</Label>
+                    <Label className="text-[10px]">{t("modules.accounting.entryDialog.debit")}</Label>
                     <Input type="number" className="h-8 text-xs" value={line.debit} onChange={(e) => updateLine(idx, "debit", e.target.value)} placeholder="0" />
                   </div>
                   <div className="col-span-2">
-                    <Label className="text-[10px]">Crédito</Label>
+                    <Label className="text-[10px]">{t("modules.accounting.entryDialog.credit")}</Label>
                     <Input type="number" className="h-8 text-xs" value={line.credit} onChange={(e) => updateLine(idx, "credit", e.target.value)} placeholder="0" />
                   </div>
                   <div className="col-span-2">
-                    <Label className="text-[10px]">Nota</Label>
+                    <Label className="text-[10px]">{t("modules.accounting.entryDialog.note")}</Label>
                     <Input className="h-8 text-xs" value={line.description} onChange={(e) => updateLine(idx, "description", e.target.value)} />
                   </div>
                   <div className="col-span-1">
@@ -809,20 +812,20 @@ const Contabilidad = () => {
                 </div>
               ))}
               <div className="flex justify-between items-center text-xs bg-muted/60 rounded-lg p-3">
-                <span>Débitos: <strong>${totalDebits.toLocaleString()}</strong></span>
-                <span>Créditos: <strong>${totalCredits.toLocaleString()}</strong></span>
-                <Badge variant={isBalanced ? "default" : "destructive"} className="text-[10px]">{isBalanced ? "Balanceado ✓" : "No balanceado"}</Badge>
+                <span>{t("modules.accounting.entryDialog.debits")}: <strong>${totalDebits.toLocaleString()}</strong></span>
+                <span>{t("modules.accounting.entryDialog.credits")}: <strong>${totalCredits.toLocaleString()}</strong></span>
+                <Badge variant={isBalanced ? "default" : "destructive"} className="text-[10px]">{isBalanced ? t("modules.accounting.entryDialog.balanced") : t("modules.accounting.entryDialog.notBalanced")}</Badge>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>Postear al guardar</Label>
-                  <p className="text-[10px] text-muted-foreground">Si está apagado se guarda como borrador</p>
+                  <Label>{t("modules.accounting.entryDialog.postOnSave")}</Label>
+                  <p className="text-[10px] text-muted-foreground">{t("modules.accounting.entryDialog.postOnSaveHint")}</p>
                 </div>
                 <Switch checked={entryForm.post} onCheckedChange={(v) => setEntryForm({ ...entryForm, post: v })} />
               </div>
             </div>
             <Button onClick={saveEntry} disabled={!isBalanced || totalDebits === 0} className="w-full gradient-brand text-primary-foreground font-heading font-semibold">
-              {entryForm.post ? "Registrar y Postear" : "Guardar Borrador"}
+              {entryForm.post ? t("modules.accounting.entryDialog.registerAndPost") : t("modules.accounting.entryDialog.saveDraft")}
             </Button>
           </div>
         </DialogContent>
@@ -832,17 +835,17 @@ const Contabilidad = () => {
       <Dialog open={!!detailEntry} onOpenChange={() => setDetailEntry(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Asiento {detailEntry?.entry_number}</DialogTitle>
+            <DialogTitle>{t("modules.accounting.entryDetail.title", { number: detailEntry?.entry_number })}</DialogTitle>
             <DialogDescription>
-              {detailEntry?.description || "Sin descripción"} · {detailEntry?.date && format(new Date(detailEntry.date), "dd/MM/yyyy")}
+              {detailEntry?.description || t("modules.accounting.entryDetail.noDescription")} · {detailEntry?.date && format(new Date(detailEntry.date), "dd/MM/yyyy")}
             </DialogDescription>
           </DialogHeader>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs">Cuenta</TableHead>
-                <TableHead className="text-xs text-right">Débito</TableHead>
-                <TableHead className="text-xs text-right">Crédito</TableHead>
+                <TableHead className="text-xs">{t("modules.accounting.entryDetail.account")}</TableHead>
+                <TableHead className="text-xs text-right">{t("modules.accounting.entryDetail.debit")}</TableHead>
+                <TableHead className="text-xs text-right">{t("modules.accounting.entryDetail.credit")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
