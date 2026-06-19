@@ -41,13 +41,23 @@ interface Leave { id: string; employee_id: string; leave_type: string; start_dat
 interface Contract { id: string; employee_id: string; contract_type: string; start_date: string; end_date: string | null; base_salary: number; status: string; }
 interface Overtime { id: string; employee_id: string; date: string; hours: number; pay_factor: number; status: string; }
 
-const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-
 export default function RRHH() {
   const { t } = useTranslation();
   const tenantId = useTenant();
   const { toast } = useToast();
   const [tab, setTab] = useState("resumen");
+
+  const DAYS = t("modules.hr.days", { returnObjects: true }) as string[];
+
+  // Translation helpers
+  const tx = (key: string, fallback: string, opts?: any) => {
+    const v = t(key, opts);
+    return v === key ? fallback : v;
+  };
+  const leaveTypeLabel = (k: string) => tx(`modules.hr.leaves.types.${k}`, k);
+  const leaveStatusLabel = (k: string) => tx(`modules.hr.leaves.statuses.${k}`, k);
+  const contractTypeLabel = (k: string) => tx(`modules.hr.contracts.types.${k}`, k);
+  const otStatusLabel = (k: string) => tx(`modules.hr.overtime.statuses.${k}`, k);
 
   // Datos compartidos
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -117,23 +127,21 @@ export default function RRHH() {
   const empName = (id: string) => employees.find((x) => x.id === id)?.name || "—";
   const openShift = useMemo(() => attendance.find((a) => a.employee_id === selectedEmp && !a.check_out), [attendance, selectedEmp]);
 
-  // ============= Horarios =============
   const saveSchedule = async () => {
-    if (!schedForm.employee_id) return toast({ title: "Selecciona empleado", variant: "destructive" });
+    if (!schedForm.employee_id) return toast({ title: t("modules.hr.schedules.selectEmpError"), variant: "destructive" });
     const { error } = await supabase.from("work_schedules").insert({
       tenant_id: tenantId, employee_id: schedForm.employee_id,
       day_of_week: parseInt(schedForm.day_of_week), start_time: schedForm.start_time, end_time: schedForm.end_time,
     });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     setSchedDialog(false); load();
   };
   const deleteSchedule = async (id: string) => {
     const { error } = await supabase.from("work_schedules").delete().eq("id", id);
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     load();
   };
 
-  // ============= Puestos =============
   const openPosNew = () => {
     setEditPos(null);
     setPosForm({ code: "", name: "", department: "", level: "", base_salary: "0", min_salary: "0", max_salary: "0", description: "" });
@@ -150,7 +158,7 @@ export default function RRHH() {
   };
   const savePosition = async () => {
     if (!posForm.code.trim() || !posForm.name.trim()) {
-      return toast({ title: "Código y nombre obligatorios", variant: "destructive" });
+      return toast({ title: t("modules.hr.positions.codeNameRequired"), variant: "destructive" });
     }
     const payload: any = {
       code: posForm.code.trim().toUpperCase(),
@@ -166,8 +174,8 @@ export default function RRHH() {
     const { error } = editPos
       ? await (supabase.from as any)("job_positions").update(payload).eq("id", editPos.id)
       : await (supabase.from as any)("job_positions").insert(payload);
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: editPos ? "Puesto actualizado" : "Puesto creado" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
+    toast({ title: editPos ? t("modules.hr.positions.updated") : t("modules.hr.positions.created") });
     setPosDialog(false); load();
   };
   const togglePos = async (p: JobPosition) => {
@@ -175,13 +183,12 @@ export default function RRHH() {
     load();
   };
   const deletePos = async (id: string) => {
-    if (!confirm("¿Eliminar puesto? Los empleados con este puesto quedarán sin clasificación.")) return;
+    if (!confirm(t("modules.hr.positions.deleteConfirm"))) return;
     const { error } = await (supabase.from as any)("job_positions").delete().eq("id", id);
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     load();
   };
 
-  // ============= Nóminas =============
   const openPayDialog = () => {
     setPreview(null);
     setPayForm({
@@ -195,18 +202,18 @@ export default function RRHH() {
   };
   const computePreview = async () => {
     if (!payForm.employee_id || !payForm.period_start || !payForm.period_end) {
-      return toast({ title: "Faltan datos", description: "Selecciona empleado y rango", variant: "destructive" });
+      return toast({ title: t("modules.hr.payroll.missingData"), description: t("modules.hr.payroll.selectEmpRange"), variant: "destructive" });
     }
     const emp = employees.find((x) => x.id === payForm.employee_id);
     if (!emp?.position_id) {
-      return toast({ title: "Empleado sin puesto", description: "Asigna primero un puesto laboral en Empleados o en la pestaña Puestos.", variant: "destructive" });
+      return toast({ title: t("modules.hr.payroll.noPosTitle"), description: t("modules.hr.payroll.noPosDesc"), variant: "destructive" });
     }
     setComputing(true);
     const { data, error } = await supabase.rpc("compute_payroll" as any, {
       _employee_id: payForm.employee_id, _start: payForm.period_start, _end: payForm.period_end,
     });
     setComputing(false);
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     const row = (data as any)?.[0] || { hours_worked: 0, base: 0 };
     const bonus = parseFloat(payForm.bonus || "0");
     const ded = parseFloat(payForm.deductions || "0");
@@ -216,33 +223,32 @@ export default function RRHH() {
     setPreview({ hours: Number(row.hours_worked) || 0, base, bonus, ded, gross, net });
   };
   const savePayroll = async () => {
-    if (!preview) return toast({ title: "Calcula primero la nómina", variant: "destructive" });
+    if (!preview) return toast({ title: t("modules.hr.payroll.computeFirst"), variant: "destructive" });
     const { error } = await supabase.from("payroll_runs").insert({
       tenant_id: tenantId, employee_id: payForm.employee_id,
       period_start: payForm.period_start, period_end: payForm.period_end,
       base_salary: preview.base, hours_worked: preview.hours,
       bonus: preview.bonus, deductions: preview.ded, net_pay: preview.net,
     });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Nómina generada", description: `Neto: $${preview.net.toFixed(2)} · Cuenta por pagar creada.` });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
+    toast({ title: t("modules.hr.payroll.generated"), description: t("modules.hr.payroll.generatedDesc", { amount: `$${preview.net.toFixed(2)}` }) });
     setPayDialog(false); load();
   };
   const payNow = async (p: Payroll) => {
-    if (!confirm(`Pagar nómina de ${p.employees?.name} por $${Number(p.net_pay).toFixed(2)}?`)) return;
+    if (!confirm(t("modules.hr.payroll.payConfirm", { name: p.employees?.name || "—", amount: `$${Number(p.net_pay).toFixed(2)}` }))) return;
     const { error } = await (supabase.rpc as any)("pay_payroll", { _payroll_id: p.id, _method: "transfer", _notes: null });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Pago registrado" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
+    toast({ title: t("modules.hr.payroll.paymentRegistered") });
     load();
   };
   const cancelPayroll = async (p: Payroll) => {
     if (p.status === "paid") return;
-    if (!confirm("¿Anular esta nómina y su cuenta por pagar?")) return;
+    if (!confirm(t("modules.hr.payroll.cancelConfirm"))) return;
     await (supabase.from as any)("accounts_payable").update({ status: "cancelled" }).eq("source_type", "payroll").eq("source_id", p.id);
     await supabase.from("payroll_runs").delete().eq("id", p.id);
     load();
   };
 
-  // ============= Fichaje =============
   const getGeo = (): Promise<{ lat: number | null; lng: number | null }> =>
     new Promise((resolve) => {
       if (!navigator.geolocation) return resolve({ lat: null, lng: null });
@@ -256,30 +262,29 @@ export default function RRHH() {
     if (!selectedEmp) return;
     const geo = await getGeo();
     const { error } = await (supabase as any).rpc("clock_in", { p_employee_id: selectedEmp, p_lat: geo.lat, p_lng: geo.lng, p_source: "web" });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Entrada registrada" }); load();
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
+    toast({ title: t("modules.hr.clockIn.inRegistered") }); load();
   };
   const doClockOut = async () => {
     if (!selectedEmp) return;
     const geo = await getGeo();
     const { error } = await (supabase as any).rpc("clock_out", { p_employee_id: selectedEmp, p_lat: geo.lat, p_lng: geo.lng });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Salida registrada" }); load();
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
+    toast({ title: t("modules.hr.clockIn.outRegistered") }); load();
   };
 
-  // ============= Vacaciones / Contratos / Horas Extra =============
   const createLeave = async () => {
     if (!leaveForm.employee_id) return;
     const { error } = await (supabase as any).rpc("request_leave", {
       p_employee_id: leaveForm.employee_id, p_type: leaveForm.leave_type,
       p_start: leaveForm.start_date, p_end: leaveForm.end_date, p_reason: leaveForm.reason || null,
     });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     setOpenLeave(false); load();
   };
   const approveLeave = async (id: string, approve: boolean) => {
     const { error } = await (supabase as any).rpc("approve_leave", { p_leave_id: id, p_approve: approve });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     load();
   };
   const createContract = async () => {
@@ -290,7 +295,7 @@ export default function RRHH() {
       end_date: contractForm.end_date || null, base_salary: parseFloat(contractForm.base_salary) || 0,
       weekly_hours: parseFloat(contractForm.weekly_hours) || 40,
     });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     setOpenContract(false); load();
   };
   const createOvertime = async () => {
@@ -299,11 +304,10 @@ export default function RRHH() {
       tenant_id: tenantId, employee_id: otForm.employee_id, date: otForm.date,
       hours: parseFloat(otForm.hours), pay_factor: parseFloat(otForm.pay_factor) || 1.5, reason: otForm.reason || null,
     });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     setOpenOvertime(false); load();
   };
 
-  // Helpers / KPIs
   const apFor = useMemo(() => {
     const m = new Map<string, AP>();
     payables.forEach((a) => m.set(a.source_id, a));
@@ -321,67 +325,62 @@ export default function RRHH() {
   return (
     <AppLayout title={t("nav.items.hr")}>
       <div className="space-y-6 p-4 md:p-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl md:text-3xl font-heading font-bold tracking-tight">Recursos Humanos</h1>
-            <p className="text-sm text-muted-foreground">
-              Gestión integral del capital humano: puestos, fichaje, vacaciones, contratos y nóminas.
-            </p>
+            <h1 className="text-2xl md:text-3xl font-heading font-bold tracking-tight">{t("modules.hr.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("modules.hr.subtitle")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {totalDue > 0 && (
               <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-warning" />
-                <span>Por pagar: <span className="font-bold">${totalDue.toFixed(2)}</span></span>
+                <span>{t("modules.hr.banners.toPay")}: <span className="font-bold">${totalDue.toFixed(2)}</span></span>
               </div>
             )}
             {empWithoutPos > 0 && (
               <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-warning" />
-                <span>{empWithoutPos} empleado(s) sin puesto</span>
+                <span>{t("modules.hr.banners.withoutPos", { count: empWithoutPos })}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* KPI grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Empleados</div><div className="text-xl font-bold flex items-center gap-1"><Users className="h-4 w-4 text-primary" />{employees.length}</div></CardContent></Card>
-          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Puestos</div><div className="text-xl font-bold flex items-center gap-1"><Briefcase className="h-4 w-4 text-primary" />{positions.length}</div></CardContent></Card>
-          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">En turno</div><div className="text-xl font-bold text-success flex items-center gap-1"><Clock className="h-4 w-4" />{openShiftsCount}</div></CardContent></Card>
-          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Vacaciones pend.</div><div className="text-xl font-bold text-warning flex items-center gap-1"><Plane className="h-4 w-4" />{pendingLeaves}</div></CardContent></Card>
-          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Contratos act.</div><div className="text-xl font-bold flex items-center gap-1"><FileText className="h-4 w-4 text-primary" />{activeContracts}</div></CardContent></Card>
-          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">Nómina mensual</div><div className="text-xl font-bold tabular-nums">${totalSalary.toLocaleString()}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">{t("modules.hr.kpis.employees")}</div><div className="text-xl font-bold flex items-center gap-1"><Users className="h-4 w-4 text-primary" />{employees.length}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">{t("modules.hr.kpis.positions")}</div><div className="text-xl font-bold flex items-center gap-1"><Briefcase className="h-4 w-4 text-primary" />{positions.length}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">{t("modules.hr.kpis.onShift")}</div><div className="text-xl font-bold text-success flex items-center gap-1"><Clock className="h-4 w-4" />{openShiftsCount}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">{t("modules.hr.kpis.leavesPending")}</div><div className="text-xl font-bold text-warning flex items-center gap-1"><Plane className="h-4 w-4" />{pendingLeaves}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">{t("modules.hr.kpis.contractsActive")}</div><div className="text-xl font-bold flex items-center gap-1"><FileText className="h-4 w-4 text-primary" />{activeContracts}</div></CardContent></Card>
+          <Card><CardContent className="p-3"><div className="text-[10px] text-muted-foreground uppercase tracking-widest">{t("modules.hr.kpis.monthlyPayroll")}</div><div className="text-xl font-bold tabular-nums">${totalSalary.toLocaleString()}</div></CardContent></Card>
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
           <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
             <TabsList className="inline-flex w-auto">
-              <TabsTrigger value="resumen"><TrendingUp className="h-4 w-4 mr-1.5" />Resumen</TabsTrigger>
-              <TabsTrigger value="fichaje"><Clock className="h-4 w-4 mr-1.5" />Fichaje</TabsTrigger>
-              <TabsTrigger value="vacaciones"><Plane className="h-4 w-4 mr-1.5" />Vacaciones {pendingLeaves > 0 && <Badge variant="secondary" className="ml-2">{pendingLeaves}</Badge>}</TabsTrigger>
-              <TabsTrigger value="payroll"><DollarSign className="h-4 w-4 mr-1.5" />Nóminas</TabsTrigger>
-              <TabsTrigger value="positions"><Briefcase className="h-4 w-4 mr-1.5" />Puestos</TabsTrigger>
-              <TabsTrigger value="contratos"><FileText className="h-4 w-4 mr-1.5" />Contratos</TabsTrigger>
-              <TabsTrigger value="schedules"><Calendar className="h-4 w-4 mr-1.5" />Horarios</TabsTrigger>
-              <TabsTrigger value="overtime"><TrendingUp className="h-4 w-4 mr-1.5" />Horas extras</TabsTrigger>
+              <TabsTrigger value="resumen"><TrendingUp className="h-4 w-4 mr-1.5" />{t("modules.hr.tabs.summary")}</TabsTrigger>
+              <TabsTrigger value="fichaje"><Clock className="h-4 w-4 mr-1.5" />{t("modules.hr.tabs.clockIn")}</TabsTrigger>
+              <TabsTrigger value="vacaciones"><Plane className="h-4 w-4 mr-1.5" />{t("modules.hr.tabs.vacations")} {pendingLeaves > 0 && <Badge variant="secondary" className="ml-2">{pendingLeaves}</Badge>}</TabsTrigger>
+              <TabsTrigger value="payroll"><DollarSign className="h-4 w-4 mr-1.5" />{t("modules.hr.tabs.payroll")}</TabsTrigger>
+              <TabsTrigger value="positions"><Briefcase className="h-4 w-4 mr-1.5" />{t("modules.hr.tabs.positions")}</TabsTrigger>
+              <TabsTrigger value="contratos"><FileText className="h-4 w-4 mr-1.5" />{t("modules.hr.tabs.contracts")}</TabsTrigger>
+              <TabsTrigger value="schedules"><Calendar className="h-4 w-4 mr-1.5" />{t("modules.hr.tabs.schedules")}</TabsTrigger>
+              <TabsTrigger value="overtime"><TrendingUp className="h-4 w-4 mr-1.5" />{t("modules.hr.tabs.overtime")}</TabsTrigger>
             </TabsList>
           </div>
 
-          {/* ===== RESUMEN ===== */}
           <TabsContent value="resumen" className="space-y-3">
             <div className="grid md:grid-cols-2 gap-3">
               <Card>
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-heading font-bold">Plantilla por departamento</h3>
-                    <Badge variant="outline">{employees.length} empleados</Badge>
+                    <h3 className="font-heading font-bold">{t("modules.hr.summary.byDept")}</h3>
+                    <Badge variant="outline">{t("modules.hr.summary.employeesCount", { count: employees.length })}</Badge>
                   </div>
                   <div className="space-y-1.5">
                     {Object.entries(
                       employees.reduce<Record<string, number>>((acc, e) => {
-                        const d = e.department || "Sin asignar"; acc[d] = (acc[d] || 0) + 1; return acc;
+                        const d = e.department || t("modules.hr.summary.noDept"); acc[d] = (acc[d] || 0) + 1; return acc;
                       }, {})
                     ).sort((a, b) => b[1] - a[1]).map(([d, n]) => (
                       <div key={d} className="flex justify-between text-sm">
@@ -389,19 +388,19 @@ export default function RRHH() {
                         <span className="font-medium tabular-nums">{n}</span>
                       </div>
                     ))}
-                    {employees.length === 0 && <p className="text-xs text-muted-foreground">Sin empleados registrados.</p>}
+                    {employees.length === 0 && <p className="text-xs text-muted-foreground">{t("modules.hr.summary.noEmployees")}</p>}
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 space-y-2">
-                  <h3 className="font-heading font-bold">Próximas acciones</h3>
+                  <h3 className="font-heading font-bold">{t("modules.hr.summary.nextActions")}</h3>
                   <ul className="space-y-1.5 text-sm">
-                    {empWithoutPos > 0 && <li className="flex gap-2"><AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" /><span>{empWithoutPos} empleado(s) sin puesto laboral — clasifícalos en <button onClick={() => setTab("positions")} className="underline">Puestos</button>.</span></li>}
-                    {pendingLeaves > 0 && <li className="flex gap-2"><Plane className="h-4 w-4 text-warning shrink-0 mt-0.5" /><span>{pendingLeaves} solicitud(es) de vacaciones pendientes de aprobación.</span></li>}
-                    {pendingAP.length > 0 && <li className="flex gap-2"><DollarSign className="h-4 w-4 text-warning shrink-0 mt-0.5" /><span>{pendingAP.length} nómina(s) por pagar — total <b>${totalDue.toFixed(2)}</b>.</span></li>}
+                    {empWithoutPos > 0 && <li className="flex gap-2"><AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" /><span>{t("modules.hr.summary.withoutPosMsg", { count: empWithoutPos })} <button onClick={() => setTab("positions")} className="underline">{t("modules.hr.summary.positionsLink")}</button>.</span></li>}
+                    {pendingLeaves > 0 && <li className="flex gap-2"><Plane className="h-4 w-4 text-warning shrink-0 mt-0.5" /><span>{t("modules.hr.summary.leavesPendingMsg", { count: pendingLeaves })}</span></li>}
+                    {pendingAP.length > 0 && <li className="flex gap-2"><DollarSign className="h-4 w-4 text-warning shrink-0 mt-0.5" /><span>{t("modules.hr.summary.payrollDueMsg", { count: pendingAP.length })} <b>${totalDue.toFixed(2)}</b>.</span></li>}
                     {empWithoutPos === 0 && pendingLeaves === 0 && pendingAP.length === 0 && (
-                      <li className="flex gap-2 text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />Todo al día.</li>
+                      <li className="flex gap-2 text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />{t("modules.hr.summary.allUpToDate")}</li>
                     )}
                   </ul>
                 </CardContent>
@@ -409,60 +408,58 @@ export default function RRHH() {
             </div>
           </TabsContent>
 
-          {/* ===== FICHAJE ===== */}
           <TabsContent value="fichaje" className="space-y-3">
             <Card><CardContent className="p-4 space-y-3">
               <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
                 <div className="flex-1">
-                  <Label>Empleado</Label>
+                  <Label>{t("modules.hr.clockIn.employee")}</Label>
                   <Select value={selectedEmp} onValueChange={setSelectedEmp}>
-                    <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("modules.hr.clockIn.selectPlaceholder")} /></SelectTrigger>
                     <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}{e.position ? ` · ${e.position}` : ""}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 {openShift ? (
-                  <Button onClick={doClockOut} variant="destructive" className="gap-1"><LogOut className="h-4 w-4" /> Marcar salida</Button>
+                  <Button onClick={doClockOut} variant="destructive" className="gap-1"><LogOut className="h-4 w-4" /> {t("modules.hr.clockIn.clockOut")}</Button>
                 ) : (
-                  <Button onClick={doClockIn} className="gap-1 gradient-brand text-primary-foreground"><LogIn className="h-4 w-4" /> Marcar entrada</Button>
+                  <Button onClick={doClockIn} className="gap-1 gradient-brand text-primary-foreground"><LogIn className="h-4 w-4" /> {t("modules.hr.clockIn.clockIn")}</Button>
                 )}
               </div>
-              {openShift && <div className="text-xs text-muted-foreground">Turno abierto desde {format(new Date(openShift.check_in), "dd/MM HH:mm")} · {openShift.check_in_lat ? <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{openShift.check_in_lat.toFixed(4)},{openShift.check_in_lng?.toFixed(4)}</span> : "sin geo"}</div>}
+              {openShift && <div className="text-xs text-muted-foreground">{t("modules.hr.clockIn.openSince")} {format(new Date(openShift.check_in), "dd/MM HH:mm")} · {openShift.check_in_lat ? <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{openShift.check_in_lat.toFixed(4)},{openShift.check_in_lng?.toFixed(4)}</span> : t("modules.hr.clockIn.noGeo")}</div>}
             </CardContent></Card>
 
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Entrada</TableHead><TableHead>Salida</TableHead><TableHead>Horas</TableHead><TableHead>Geo</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t("modules.hr.clockIn.header.employee")}</TableHead><TableHead>{t("modules.hr.clockIn.header.in")}</TableHead><TableHead>{t("modules.hr.clockIn.header.out")}</TableHead><TableHead>{t("modules.hr.clockIn.header.hours")}</TableHead><TableHead>{t("modules.hr.clockIn.header.geo")}</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {attendance.slice(0, 50).map((a) => (
                     <TableRow key={a.id}>
                       <TableCell>{empName(a.employee_id)}</TableCell>
                       <TableCell className="text-xs">{format(new Date(a.check_in), "dd/MM HH:mm")}</TableCell>
-                      <TableCell className="text-xs">{a.check_out ? format(new Date(a.check_out), "dd/MM HH:mm") : <Badge variant="secondary">Abierto</Badge>}</TableCell>
+                      <TableCell className="text-xs">{a.check_out ? format(new Date(a.check_out), "dd/MM HH:mm") : <Badge variant="secondary">{t("modules.hr.clockIn.openBadge")}</Badge>}</TableCell>
                       <TableCell>{a.hours_worked ? Number(a.hours_worked).toFixed(2) : "—"}</TableCell>
-                      <TableCell>{a.check_in_lat ? <Badge variant="outline" className="gap-1"><MapPin className="h-3 w-3" /> Sí</Badge> : "—"}</TableCell>
+                      <TableCell>{a.check_in_lat ? <Badge variant="outline" className="gap-1"><MapPin className="h-3 w-3" /> {t("modules.hr.clockIn.geoYes")}</Badge> : "—"}</TableCell>
                     </TableRow>
                   ))}
-                  {attendance.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">Sin registros de fichaje</TableCell></TableRow>}
+                  {attendance.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">{t("modules.hr.clockIn.empty")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent></Card>
           </TabsContent>
 
-          {/* ===== VACACIONES ===== */}
           <TabsContent value="vacaciones" className="space-y-3">
-            <div className="flex justify-end"><Button size="sm" onClick={() => setOpenLeave(true)} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-4 w-4" /> Nueva solicitud</Button></div>
+            <div className="flex justify-end"><Button size="sm" onClick={() => setOpenLeave(true)} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-4 w-4" /> {t("modules.hr.leaves.newRequest")}</Button></div>
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Tipo</TableHead><TableHead>Desde</TableHead><TableHead>Hasta</TableHead><TableHead>Días</TableHead><TableHead>Estado</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t("modules.hr.leaves.header.employee")}</TableHead><TableHead>{t("modules.hr.leaves.header.type")}</TableHead><TableHead>{t("modules.hr.leaves.header.from")}</TableHead><TableHead>{t("modules.hr.leaves.header.to")}</TableHead><TableHead>{t("modules.hr.leaves.header.days")}</TableHead><TableHead>{t("modules.hr.leaves.header.status")}</TableHead><TableHead className="text-right">{t("modules.hr.leaves.header.actions")}</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {leaves.map((l) => (
                     <TableRow key={l.id}>
                       <TableCell>{empName(l.employee_id)}</TableCell>
-                      <TableCell><Badge variant="outline">{l.leave_type}</Badge></TableCell>
+                      <TableCell><Badge variant="outline">{leaveTypeLabel(l.leave_type)}</Badge></TableCell>
                       <TableCell>{format(new Date(l.start_date), "dd/MM/yyyy")}</TableCell>
                       <TableCell>{format(new Date(l.end_date), "dd/MM/yyyy")}</TableCell>
                       <TableCell>{l.days}</TableCell>
-                      <TableCell><Badge variant={l.status === "approved" ? "default" : l.status === "rejected" ? "destructive" : "secondary"}>{l.status}</Badge></TableCell>
+                      <TableCell><Badge variant={l.status === "approved" ? "default" : l.status === "rejected" ? "destructive" : "secondary"}>{leaveStatusLabel(l.status)}</Badge></TableCell>
                       <TableCell className="text-right">
                         {l.status === "pending" && <div className="flex gap-1 justify-end">
                           <Button size="sm" variant="ghost" onClick={() => approveLeave(l.id, true)}><CheckCircle2 className="h-3.5 w-3.5 text-success" /></Button>
@@ -471,32 +468,31 @@ export default function RRHH() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {leaves.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">Sin solicitudes</TableCell></TableRow>}
+                  {leaves.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">{t("modules.hr.leaves.empty")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent></Card>
           </TabsContent>
 
-          {/* ===== NÓMINAS ===== */}
           <TabsContent value="payroll" className="space-y-3">
             <div className="flex justify-end">
-              <Button onClick={openPayDialog} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />Generar nómina</Button>
+              <Button onClick={openPayDialog} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />{t("modules.hr.payroll.generate")}</Button>
             </div>
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Empleado</TableHead>
-                    <TableHead>Puesto</TableHead>
-                    <TableHead>Período</TableHead>
-                    <TableHead className="text-right">Horas</TableHead>
-                    <TableHead className="text-right">Base</TableHead>
-                    <TableHead className="text-right">Bonos</TableHead>
-                    <TableHead className="text-right">Deducc.</TableHead>
-                    <TableHead className="text-right">Neto</TableHead>
-                    <TableHead>CxP</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>{t("modules.hr.payroll.header.employee")}</TableHead>
+                    <TableHead>{t("modules.hr.payroll.header.position")}</TableHead>
+                    <TableHead>{t("modules.hr.payroll.header.period")}</TableHead>
+                    <TableHead className="text-right">{t("modules.hr.payroll.header.hours")}</TableHead>
+                    <TableHead className="text-right">{t("modules.hr.payroll.header.base")}</TableHead>
+                    <TableHead className="text-right">{t("modules.hr.payroll.header.bonus")}</TableHead>
+                    <TableHead className="text-right">{t("modules.hr.payroll.header.deductions")}</TableHead>
+                    <TableHead className="text-right">{t("modules.hr.payroll.header.net")}</TableHead>
+                    <TableHead>{t("modules.hr.payroll.header.ap")}</TableHead>
+                    <TableHead>{t("modules.hr.payroll.header.status")}</TableHead>
+                    <TableHead className="text-right">{t("modules.hr.payroll.header.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -516,37 +512,36 @@ export default function RRHH() {
                           {ap ? (
                             <Badge variant={ap.status === "paid" ? "default" : ap.status === "cancelled" ? "secondary" : "outline"} className="text-[10px] gap-1">
                               <FileText className="h-3 w-3" />
-                              {ap.status === "paid" ? "Pagada" : ap.status === "cancelled" ? "Anulada" : `Vence ${ap.due_date || "—"}`}
+                              {ap.status === "paid" ? t("modules.hr.payroll.apPaid") : ap.status === "cancelled" ? t("modules.hr.payroll.apCancelled") : `${t("modules.hr.payroll.apDueAt")} ${ap.due_date || "—"}`}
                             </Badge>
                           ) : <span className="text-xs text-muted-foreground">—</span>}
                         </TableCell>
-                        <TableCell><Badge variant={p.status === "paid" ? "default" : "secondary"}>{p.status === "paid" ? "Pagado" : "Pendiente"}</Badge></TableCell>
+                        <TableCell><Badge variant={p.status === "paid" ? "default" : "secondary"}>{p.status === "paid" ? t("modules.hr.payroll.statusPaid") : t("modules.hr.payroll.statusPending")}</Badge></TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-1 justify-end">
-                            {p.status !== "paid" && <Button size="sm" variant="outline" onClick={() => payNow(p)} className="gap-1"><CheckCircle2 className="h-3 w-3" />Pagar</Button>}
+                            {p.status !== "paid" && <Button size="sm" variant="outline" onClick={() => payNow(p)} className="gap-1"><CheckCircle2 className="h-3 w-3" />{t("modules.hr.payroll.pay")}</Button>}
                             {p.status !== "paid" && <Button size="sm" variant="ghost" onClick={() => cancelPayroll(p)} className="text-destructive"><Trash2 className="h-3 w-3" /></Button>}
                           </div>
                         </TableCell>
                       </TableRow>
                     );
                   })}
-                  {payrolls.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">Sin nóminas generadas</TableCell></TableRow>}
+                  {payrolls.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">{t("modules.hr.payroll.empty")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent></Card>
           </TabsContent>
 
-          {/* ===== PUESTOS ===== */}
           <TabsContent value="positions" className="space-y-3">
             <div className="flex justify-end">
-              <Button onClick={openPosNew} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />Nuevo puesto</Button>
+              <Button onClick={openPosNew} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />{t("modules.hr.positions.newBtn")}</Button>
             </div>
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead>Código</TableHead><TableHead>Nombre</TableHead><TableHead>Departamento</TableHead>
-                  <TableHead>Nivel</TableHead><TableHead className="text-right">Base</TableHead>
-                  <TableHead className="text-right">Rango</TableHead><TableHead>Estado</TableHead><TableHead className="text-right">Acciones</TableHead>
+                  <TableHead>{t("modules.hr.positions.header.code")}</TableHead><TableHead>{t("modules.hr.positions.header.name")}</TableHead><TableHead>{t("modules.hr.positions.header.dept")}</TableHead>
+                  <TableHead>{t("modules.hr.positions.header.level")}</TableHead><TableHead className="text-right">{t("modules.hr.positions.header.base")}</TableHead>
+                  <TableHead className="text-right">{t("modules.hr.positions.header.range")}</TableHead><TableHead>{t("modules.hr.positions.header.status")}</TableHead><TableHead className="text-right">{t("modules.hr.positions.header.actions")}</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {positions.map((p) => (
@@ -554,12 +549,12 @@ export default function RRHH() {
                       <TableCell className="font-mono text-xs">{p.code}</TableCell>
                       <TableCell className="font-medium">{p.name}</TableCell>
                       <TableCell>{p.department || "—"}</TableCell>
-                      <TableCell>{p.level ? <Badge variant="outline">{p.level}</Badge> : "—"}</TableCell>
+                      <TableCell>{p.level ? <Badge variant="outline">{tx(`modules.hr.positions.levels.${p.level}`, p.level)}</Badge> : "—"}</TableCell>
                       <TableCell className="text-right tabular-nums">${Number(p.base_salary).toFixed(2)}</TableCell>
                       <TableCell className="text-right tabular-nums text-xs text-muted-foreground">
                         {p.min_salary || p.max_salary ? `$${Number(p.min_salary).toFixed(0)} – $${Number(p.max_salary).toFixed(0)}` : "—"}
                       </TableCell>
-                      <TableCell><Badge variant={p.is_active ? "default" : "secondary"} className="cursor-pointer" onClick={() => togglePos(p)}>{p.is_active ? "Activo" : "Inactivo"}</Badge></TableCell>
+                      <TableCell><Badge variant={p.is_active ? "default" : "secondary"} className="cursor-pointer" onClick={() => togglePos(p)}>{p.is_active ? t("common.active") : t("common.inactive")}</Badge></TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-1 justify-end">
                           <Button size="sm" variant="ghost" onClick={() => openPosEdit(p)}><Edit2 className="h-3 w-3" /></Button>
@@ -568,43 +563,41 @@ export default function RRHH() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {positions.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">Aún no has creado puestos laborales</TableCell></TableRow>}
+                  {positions.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">{t("modules.hr.positions.empty")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent></Card>
           </TabsContent>
 
-          {/* ===== CONTRATOS ===== */}
           <TabsContent value="contratos" className="space-y-3">
-            <div className="flex justify-end"><Button size="sm" onClick={() => setOpenContract(true)} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-4 w-4" /> Nuevo contrato</Button></div>
+            <div className="flex justify-end"><Button size="sm" onClick={() => setOpenContract(true)} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-4 w-4" /> {t("modules.hr.contracts.newBtn")}</Button></div>
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Tipo</TableHead><TableHead>Inicio</TableHead><TableHead>Fin</TableHead><TableHead className="text-right">Salario base</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t("modules.hr.contracts.header.employee")}</TableHead><TableHead>{t("modules.hr.contracts.header.type")}</TableHead><TableHead>{t("modules.hr.contracts.header.start")}</TableHead><TableHead>{t("modules.hr.contracts.header.end")}</TableHead><TableHead className="text-right">{t("modules.hr.contracts.header.baseSalary")}</TableHead><TableHead>{t("modules.hr.contracts.header.status")}</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {contracts.map((c) => (
                     <TableRow key={c.id}>
                       <TableCell>{empName(c.employee_id)}</TableCell>
-                      <TableCell><Badge variant="outline">{c.contract_type}</Badge></TableCell>
+                      <TableCell><Badge variant="outline">{contractTypeLabel(c.contract_type)}</Badge></TableCell>
                       <TableCell>{format(new Date(c.start_date), "dd/MM/yyyy")}</TableCell>
                       <TableCell>{c.end_date ? format(new Date(c.end_date), "dd/MM/yyyy") : "—"}</TableCell>
                       <TableCell className="text-right font-mono">{Number(c.base_salary).toFixed(2)}</TableCell>
-                      <TableCell><Badge variant={c.status === "active" ? "default" : "secondary"}>{c.status}</Badge></TableCell>
+                      <TableCell><Badge variant={c.status === "active" ? "default" : "secondary"}>{c.status === "active" ? t("common.active") : c.status}</Badge></TableCell>
                     </TableRow>
                   ))}
-                  {contracts.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">Sin contratos</TableCell></TableRow>}
+                  {contracts.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">{t("modules.hr.contracts.empty")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent></Card>
           </TabsContent>
 
-          {/* ===== HORARIOS ===== */}
           <TabsContent value="schedules" className="space-y-3">
             <div className="flex justify-end">
-              <Button onClick={() => setSchedDialog(true)} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />Nuevo horario</Button>
+              <Button onClick={() => setSchedDialog(true)} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />{t("modules.hr.schedules.newBtn")}</Button>
             </div>
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Día</TableHead><TableHead>Inicio</TableHead><TableHead>Fin</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t("modules.hr.schedules.header.employee")}</TableHead><TableHead>{t("modules.hr.schedules.header.day")}</TableHead><TableHead>{t("modules.hr.schedules.header.start")}</TableHead><TableHead>{t("modules.hr.schedules.header.end")}</TableHead><TableHead className="text-right">{t("modules.hr.schedules.header.actions")}</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {schedules.map((s) => (
                     <TableRow key={s.id}>
@@ -617,18 +610,17 @@ export default function RRHH() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {schedules.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">Sin horarios configurados</TableCell></TableRow>}
+                  {schedules.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">{t("modules.hr.schedules.empty")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent></Card>
           </TabsContent>
 
-          {/* ===== HORAS EXTRAS ===== */}
           <TabsContent value="overtime" className="space-y-3">
-            <div className="flex justify-end"><Button size="sm" onClick={() => setOpenOvertime(true)} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-4 w-4" /> Registrar</Button></div>
+            <div className="flex justify-end"><Button size="sm" onClick={() => setOpenOvertime(true)} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-4 w-4" /> {t("modules.hr.overtime.registerBtn")}</Button></div>
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead>Fecha</TableHead><TableHead>Horas</TableHead><TableHead>Factor</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t("modules.hr.overtime.header.employee")}</TableHead><TableHead>{t("modules.hr.overtime.header.date")}</TableHead><TableHead>{t("modules.hr.overtime.header.hours")}</TableHead><TableHead>{t("modules.hr.overtime.header.factor")}</TableHead><TableHead>{t("modules.hr.overtime.header.status")}</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {overtime.map((o) => (
                     <TableRow key={o.id}>
@@ -636,235 +628,231 @@ export default function RRHH() {
                       <TableCell>{format(new Date(o.date), "dd/MM/yyyy")}</TableCell>
                       <TableCell>{Number(o.hours).toFixed(2)}</TableCell>
                       <TableCell>x{Number(o.pay_factor).toFixed(2)}</TableCell>
-                      <TableCell><Badge variant={o.status === "approved" || o.status === "paid" ? "default" : "secondary"}>{o.status}</Badge></TableCell>
+                      <TableCell><Badge variant={o.status === "approved" || o.status === "paid" ? "default" : "secondary"}>{otStatusLabel(o.status)}</Badge></TableCell>
                     </TableRow>
                   ))}
-                  {overtime.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">Sin registros</TableCell></TableRow>}
+                  {overtime.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">{t("modules.hr.overtime.empty")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent></Card>
           </TabsContent>
         </Tabs>
 
-        {/* ===== Dialogs ===== */}
+        {/* Schedule dialog */}
         <Dialog open={schedDialog} onOpenChange={setSchedDialog}>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nuevo horario</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t("modules.hr.schedules.dialog.title")}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Empleado</Label>
+              <div><Label>{t("modules.hr.schedules.dialog.employee")}</Label>
                 <Select value={schedForm.employee_id} onValueChange={(v) => setSchedForm({ ...schedForm, employee_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("modules.hr.schedules.dialog.selectEmployee")} /></SelectTrigger>
                   <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Día de la semana</Label>
+              <div><Label>{t("modules.hr.schedules.dialog.dayOfWeek")}</Label>
                 <Select value={schedForm.day_of_week} onValueChange={(v) => setSchedForm({ ...schedForm, day_of_week: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{DAYS.map((d, i) => <SelectItem key={i} value={String(i)}>{d}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div><Label>Hora inicio</Label><Input type="time" value={schedForm.start_time} onChange={(e) => setSchedForm({ ...schedForm, start_time: e.target.value })} /></div>
-                <div><Label>Hora fin</Label><Input type="time" value={schedForm.end_time} onChange={(e) => setSchedForm({ ...schedForm, end_time: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.schedules.dialog.startTime")}</Label><Input type="time" value={schedForm.start_time} onChange={(e) => setSchedForm({ ...schedForm, start_time: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.schedules.dialog.endTime")}</Label><Input type="time" value={schedForm.end_time} onChange={(e) => setSchedForm({ ...schedForm, end_time: e.target.value })} /></div>
               </div>
             </div>
-            <DialogFooter><Button onClick={saveSchedule} className="gradient-brand text-primary-foreground">Guardar</Button></DialogFooter>
+            <DialogFooter><Button onClick={saveSchedule} className="gradient-brand text-primary-foreground">{t("modules.hr.schedules.dialog.save")}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
 
+        {/* Position dialog */}
         <Dialog open={posDialog} onOpenChange={setPosDialog}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>{editPos ? "Editar puesto" : "Nuevo puesto laboral"}</DialogTitle>
-              <DialogDescription>Clasifica los puestos disponibles en la empresa con su rango salarial.</DialogDescription>
+              <DialogTitle>{editPos ? t("modules.hr.positions.dialog.titleEdit") : t("modules.hr.positions.dialog.titleNew")}</DialogTitle>
+              <DialogDescription>{t("modules.hr.positions.dialog.desc")}</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
-                <div><Label>Código *</Label><Input value={posForm.code} onChange={(e) => setPosForm({ ...posForm, code: e.target.value })} placeholder="ADM-01" /></div>
-                <div><Label>Nivel</Label>
+                <div><Label>{t("modules.hr.positions.dialog.code")}</Label><Input value={posForm.code} onChange={(e) => setPosForm({ ...posForm, code: e.target.value })} placeholder="ADM-01" /></div>
+                <div><Label>{t("modules.hr.positions.dialog.level")}</Label>
                   <Select value={posForm.level || "__none__"} onValueChange={(v) => setPosForm({ ...posForm, level: v === "__none__" ? "" : v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("modules.hr.positions.dialog.selectLevel")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">Sin nivel</SelectItem>
-                      <SelectItem value="junior">Junior</SelectItem>
-                      <SelectItem value="semi-senior">Semi-Senior</SelectItem>
-                      <SelectItem value="senior">Senior</SelectItem>
-                      <SelectItem value="lead">Líder / Jefe</SelectItem>
-                      <SelectItem value="manager">Gerente</SelectItem>
-                      <SelectItem value="director">Director</SelectItem>
+                      <SelectItem value="__none__">{t("modules.hr.positions.levels.none")}</SelectItem>
+                      <SelectItem value="junior">{t("modules.hr.positions.levels.junior")}</SelectItem>
+                      <SelectItem value="semi-senior">{t("modules.hr.positions.levels.semi")}</SelectItem>
+                      <SelectItem value="senior">{t("modules.hr.positions.levels.senior")}</SelectItem>
+                      <SelectItem value="lead">{t("modules.hr.positions.levels.lead")}</SelectItem>
+                      <SelectItem value="manager">{t("modules.hr.positions.levels.manager")}</SelectItem>
+                      <SelectItem value="director">{t("modules.hr.positions.levels.director")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div><Label>Nombre del puesto *</Label><Input value={posForm.name} onChange={(e) => setPosForm({ ...posForm, name: e.target.value })} placeholder="Vendedor de tienda" /></div>
-              <div><Label>Departamento</Label><Input value={posForm.department} onChange={(e) => setPosForm({ ...posForm, department: e.target.value })} placeholder="Ventas" /></div>
+              <div><Label>{t("modules.hr.positions.dialog.name")}</Label><Input value={posForm.name} onChange={(e) => setPosForm({ ...posForm, name: e.target.value })} /></div>
+              <div><Label>{t("modules.hr.positions.dialog.dept")}</Label><Input value={posForm.department} onChange={(e) => setPosForm({ ...posForm, department: e.target.value })} /></div>
               <div className="grid grid-cols-3 gap-2">
-                <div><Label>Salario base</Label><Input type="number" value={posForm.base_salary} onChange={(e) => setPosForm({ ...posForm, base_salary: e.target.value })} /></div>
-                <div><Label>Salario mín.</Label><Input type="number" value={posForm.min_salary} onChange={(e) => setPosForm({ ...posForm, min_salary: e.target.value })} /></div>
-                <div><Label>Salario máx.</Label><Input type="number" value={posForm.max_salary} onChange={(e) => setPosForm({ ...posForm, max_salary: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.positions.dialog.baseSalary")}</Label><Input type="number" value={posForm.base_salary} onChange={(e) => setPosForm({ ...posForm, base_salary: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.positions.dialog.minSalary")}</Label><Input type="number" value={posForm.min_salary} onChange={(e) => setPosForm({ ...posForm, min_salary: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.positions.dialog.maxSalary")}</Label><Input type="number" value={posForm.max_salary} onChange={(e) => setPosForm({ ...posForm, max_salary: e.target.value })} /></div>
               </div>
-              <div><Label>Descripción / responsabilidades</Label><Textarea rows={3} value={posForm.description} onChange={(e) => setPosForm({ ...posForm, description: e.target.value })} /></div>
+              <div><Label>{t("modules.hr.positions.dialog.description")}</Label><Textarea rows={3} value={posForm.description} onChange={(e) => setPosForm({ ...posForm, description: e.target.value })} /></div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setPosDialog(false)}>Cancelar</Button>
-              <Button onClick={savePosition} className="gradient-brand text-primary-foreground">Guardar</Button>
+              <Button variant="outline" onClick={() => setPosDialog(false)}>{t("modules.hr.positions.dialog.cancel")}</Button>
+              <Button onClick={savePosition} className="gradient-brand text-primary-foreground">{t("modules.hr.positions.dialog.save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
+        {/* Payroll dialog */}
         <Dialog open={payDialog} onOpenChange={setPayDialog}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Generar nómina</DialogTitle>
-              <DialogDescription>
-                Calcula el monto en base a horas trabajadas, bonos y deducciones. Al guardar se creará una cuenta por pagar automáticamente.
-              </DialogDescription>
+              <DialogTitle>{t("modules.hr.payroll.dialog.title")}</DialogTitle>
+              <DialogDescription>{t("modules.hr.payroll.dialog.desc")}</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
-              <div><Label>Empleado</Label>
+              <div><Label>{t("modules.hr.payroll.dialog.employee")}</Label>
                 <Select value={payForm.employee_id} onValueChange={(v) => { setPreview(null); setPayForm({ ...payForm, employee_id: v }); }}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona empleado" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("modules.hr.payroll.dialog.selectEmployee")} /></SelectTrigger>
                   <SelectContent>{employees.map((e) => (
                     <SelectItem key={e.id} value={e.id} disabled={!e.position_id}>
-                      {e.name}{e.position ? ` · ${e.position}` : " · sin puesto"}
+                      {e.name}{e.position ? ` · ${e.position}` : ` · ${t("modules.hr.payroll.dialog.noPos")}`}
                     </SelectItem>
                   ))}</SelectContent>
                 </Select>
                 {employees.length > 0 && empWithoutPos > 0 && (
-                  <p className="text-[11px] text-warning mt-1">⚠ Hay empleados sin puesto: asígnaselo antes de generar su nómina.</p>
+                  <p className="text-[11px] text-warning mt-1">{t("modules.hr.payroll.dialog.warnNoPos")}</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div><Label>Desde</Label><Input type="date" value={payForm.period_start} onChange={(e) => { setPreview(null); setPayForm({ ...payForm, period_start: e.target.value }); }} /></div>
-                <div><Label>Hasta</Label><Input type="date" value={payForm.period_end} onChange={(e) => { setPreview(null); setPayForm({ ...payForm, period_end: e.target.value }); }} /></div>
+                <div><Label>{t("modules.hr.payroll.dialog.from")}</Label><Input type="date" value={payForm.period_start} onChange={(e) => { setPreview(null); setPayForm({ ...payForm, period_start: e.target.value }); }} /></div>
+                <div><Label>{t("modules.hr.payroll.dialog.to")}</Label><Input type="date" value={payForm.period_end} onChange={(e) => { setPreview(null); setPayForm({ ...payForm, period_end: e.target.value }); }} /></div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label>Bonos (+)</Label>
+                  <Label>{t("modules.hr.payroll.dialog.bonus")}</Label>
                   <Input type="number" value={payForm.bonus} onChange={(e) => { setPreview(null); setPayForm({ ...payForm, bonus: e.target.value }); }} />
-                  <p className="text-[10px] text-muted-foreground mt-1">Comisiones, premios extra</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t("modules.hr.payroll.dialog.bonusHint")}</p>
                 </div>
                 <div>
-                  <Label>Deducciones (-)</Label>
+                  <Label>{t("modules.hr.payroll.dialog.deductions")}</Label>
                   <Input type="number" value={payForm.deductions} onChange={(e) => { setPreview(null); setPayForm({ ...payForm, deductions: e.target.value }); }} />
-                  <p className="text-[10px] text-muted-foreground mt-1">Adelantos, multas, descuentos</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t("modules.hr.payroll.dialog.deductionsHint")}</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={computePreview} disabled={computing} className="w-full">
-                {computing ? "Calculando..." : "Calcular nómina"}
+                {computing ? t("modules.hr.payroll.dialog.computing") : t("modules.hr.payroll.dialog.compute")}
               </Button>
               {preview && (
                 <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Horas trabajadas</span><span className="tabular-nums">{preview.hours.toFixed(2)} h</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Salario base (período)</span><span className="tabular-nums">${preview.base.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-success"><span>(+) Bonos</span><span className="tabular-nums">${preview.bonus.toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span className="font-medium">Bruto</span><span className="tabular-nums font-medium">${preview.gross.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-destructive"><span>(-) Deducciones</span><span className="tabular-nums">${preview.ded.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("modules.hr.payroll.dialog.hoursWorked")}</span><span className="tabular-nums">{preview.hours.toFixed(2)} h</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("modules.hr.payroll.dialog.baseSalaryPeriod")}</span><span className="tabular-nums">${preview.base.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-success"><span>{t("modules.hr.payroll.dialog.plusBonus")}</span><span className="tabular-nums">${preview.bonus.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="font-medium">{t("modules.hr.payroll.dialog.gross")}</span><span className="tabular-nums font-medium">${preview.gross.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-destructive"><span>{t("modules.hr.payroll.dialog.minusDed")}</span><span className="tabular-nums">${preview.ded.toFixed(2)}</span></div>
                   <div className="flex justify-between border-t pt-1.5 mt-1.5">
-                    <span className="font-bold">Neto a pagar</span>
+                    <span className="font-bold">{t("modules.hr.payroll.dialog.netToPay")}</span>
                     <span className="tabular-nums font-bold text-lg">${preview.net.toFixed(2)}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground pt-1">
-                    Se creará una cuenta por pagar con vencimiento {format(addDays(new Date(payForm.period_end), 5), "dd/MM/yyyy")}.
+                    {t("modules.hr.payroll.dialog.willCreateAP", { date: format(addDays(new Date(payForm.period_end), 5), "dd/MM/yyyy") })}
                   </p>
                 </div>
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setPayDialog(false)}>Cancelar</Button>
-              <Button onClick={savePayroll} disabled={!preview} className="gradient-brand text-primary-foreground">Guardar nómina</Button>
+              <Button variant="outline" onClick={() => setPayDialog(false)}>{t("modules.hr.payroll.dialog.cancel")}</Button>
+              <Button onClick={savePayroll} disabled={!preview} className="gradient-brand text-primary-foreground">{t("modules.hr.payroll.dialog.save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
+        {/* Leave dialog */}
         <Dialog open={openLeave} onOpenChange={setOpenLeave}>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nueva solicitud de ausencia</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t("modules.hr.leaves.dialogTitle")}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Empleado</Label>
+              <div><Label>{t("modules.hr.leaves.header.employee")}</Label>
                 <Select value={leaveForm.employee_id} onValueChange={(v) => setLeaveForm({ ...leaveForm, employee_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("modules.hr.clockIn.selectPlaceholder")} /></SelectTrigger>
                   <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Tipo</Label>
+              <div><Label>{t("modules.hr.leaves.header.type")}</Label>
                 <Select value={leaveForm.leave_type} onValueChange={(v) => setLeaveForm({ ...leaveForm, leave_type: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="vacation">Vacaciones</SelectItem>
-                    <SelectItem value="sick">Enfermedad</SelectItem>
-                    <SelectItem value="personal">Personal</SelectItem>
-                    <SelectItem value="maternity">Maternidad</SelectItem>
-                    <SelectItem value="paternity">Paternidad</SelectItem>
-                    <SelectItem value="unpaid">Sin sueldo</SelectItem>
-                    <SelectItem value="other">Otro</SelectItem>
+                    {["vacation","sick","personal","maternity","paternity","unpaid","other"].map(k =>
+                      <SelectItem key={k} value={k}>{t(`modules.hr.leaves.types.${k}`)}</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div><Label>Desde</Label><Input type="date" value={leaveForm.start_date} onChange={(e) => setLeaveForm({ ...leaveForm, start_date: e.target.value })} /></div>
-                <div><Label>Hasta</Label><Input type="date" value={leaveForm.end_date} onChange={(e) => setLeaveForm({ ...leaveForm, end_date: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.leaves.header.from")}</Label><Input type="date" value={leaveForm.start_date} onChange={(e) => setLeaveForm({ ...leaveForm, start_date: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.leaves.header.to")}</Label><Input type="date" value={leaveForm.end_date} onChange={(e) => setLeaveForm({ ...leaveForm, end_date: e.target.value })} /></div>
               </div>
-              <div><Label>Motivo</Label><Textarea value={leaveForm.reason} onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })} /></div>
+              <div><Label>{t("modules.hr.leaves.reason")}</Label><Textarea value={leaveForm.reason} onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })} /></div>
             </div>
-            <DialogFooter><Button variant="outline" onClick={() => setOpenLeave(false)}>Cancelar</Button><Button onClick={createLeave} className="gradient-brand text-primary-foreground">Solicitar</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" onClick={() => setOpenLeave(false)}>{t("common.cancel")}</Button><Button onClick={createLeave} className="gradient-brand text-primary-foreground">{t("modules.hr.leaves.submit")}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
 
+        {/* Contract dialog */}
         <Dialog open={openContract} onOpenChange={setOpenContract}>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nuevo contrato</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t("modules.hr.contracts.dialog.title")}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Empleado</Label>
+              <div><Label>{t("modules.hr.contracts.dialog.employee")}</Label>
                 <Select value={contractForm.employee_id} onValueChange={(v) => setContractForm({ ...contractForm, employee_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("modules.hr.clockIn.selectPlaceholder")} /></SelectTrigger>
                   <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Tipo</Label>
+              <div><Label>{t("modules.hr.contracts.dialog.type")}</Label>
                 <Select value={contractForm.contract_type} onValueChange={(v) => setContractForm({ ...contractForm, contract_type: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="indefinite">Indefinido</SelectItem>
-                    <SelectItem value="fixed">Fijo (con fin)</SelectItem>
-                    <SelectItem value="temporary">Temporal</SelectItem>
-                    <SelectItem value="part_time">Tiempo parcial</SelectItem>
-                    <SelectItem value="internship">Prácticas</SelectItem>
-                    <SelectItem value="freelance">Autónomo</SelectItem>
+                    {["indefinite","fixed","temporary","part_time","internship","freelance"].map(k =>
+                      <SelectItem key={k} value={k}>{t(`modules.hr.contracts.types.${k}`)}</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div><Label>Inicio</Label><Input type="date" value={contractForm.start_date} onChange={(e) => setContractForm({ ...contractForm, start_date: e.target.value })} /></div>
-                <div><Label>Fin (opcional)</Label><Input type="date" value={contractForm.end_date} onChange={(e) => setContractForm({ ...contractForm, end_date: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.contracts.dialog.start")}</Label><Input type="date" value={contractForm.start_date} onChange={(e) => setContractForm({ ...contractForm, start_date: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.contracts.dialog.end")}</Label><Input type="date" value={contractForm.end_date} onChange={(e) => setContractForm({ ...contractForm, end_date: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div><Label>Salario base</Label><Input type="number" step="0.01" value={contractForm.base_salary} onChange={(e) => setContractForm({ ...contractForm, base_salary: e.target.value })} /></div>
-                <div><Label>Horas semanales</Label><Input type="number" value={contractForm.weekly_hours} onChange={(e) => setContractForm({ ...contractForm, weekly_hours: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.contracts.dialog.baseSalary")}</Label><Input type="number" step="0.01" value={contractForm.base_salary} onChange={(e) => setContractForm({ ...contractForm, base_salary: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.contracts.dialog.weeklyHours")}</Label><Input type="number" value={contractForm.weekly_hours} onChange={(e) => setContractForm({ ...contractForm, weekly_hours: e.target.value })} /></div>
               </div>
             </div>
-            <DialogFooter><Button variant="outline" onClick={() => setOpenContract(false)}>Cancelar</Button><Button onClick={createContract} className="gradient-brand text-primary-foreground">Crear</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" onClick={() => setOpenContract(false)}>{t("modules.hr.contracts.dialog.cancel")}</Button><Button onClick={createContract} className="gradient-brand text-primary-foreground">{t("modules.hr.contracts.dialog.create")}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
 
+        {/* Overtime dialog */}
         <Dialog open={openOvertime} onOpenChange={setOpenOvertime}>
           <DialogContent>
-            <DialogHeader><DialogTitle>Registrar horas extras</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t("modules.hr.overtime.dialog.title")}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Empleado</Label>
+              <div><Label>{t("modules.hr.overtime.dialog.employee")}</Label>
                 <Select value={otForm.employee_id} onValueChange={(v) => setOtForm({ ...otForm, employee_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("modules.hr.overtime.dialog.selectEmployee")} /></SelectTrigger>
                   <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div><Label>Fecha</Label><Input type="date" value={otForm.date} onChange={(e) => setOtForm({ ...otForm, date: e.target.value })} /></div>
-                <div><Label>Horas</Label><Input type="number" step="0.25" value={otForm.hours} onChange={(e) => setOtForm({ ...otForm, hours: e.target.value })} /></div>
-                <div><Label>Factor</Label><Input type="number" step="0.1" value={otForm.pay_factor} onChange={(e) => setOtForm({ ...otForm, pay_factor: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.overtime.dialog.date")}</Label><Input type="date" value={otForm.date} onChange={(e) => setOtForm({ ...otForm, date: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.overtime.dialog.hours")}</Label><Input type="number" step="0.25" value={otForm.hours} onChange={(e) => setOtForm({ ...otForm, hours: e.target.value })} /></div>
+                <div><Label>{t("modules.hr.overtime.dialog.factor")}</Label><Input type="number" step="0.1" value={otForm.pay_factor} onChange={(e) => setOtForm({ ...otForm, pay_factor: e.target.value })} /></div>
               </div>
-              <div><Label>Motivo</Label><Textarea value={otForm.reason} onChange={(e) => setOtForm({ ...otForm, reason: e.target.value })} /></div>
+              <div><Label>{t("modules.hr.overtime.dialog.reason")}</Label><Textarea value={otForm.reason} onChange={(e) => setOtForm({ ...otForm, reason: e.target.value })} /></div>
             </div>
-            <DialogFooter><Button variant="outline" onClick={() => setOpenOvertime(false)}>Cancelar</Button><Button onClick={createOvertime} className="gradient-brand text-primary-foreground">Registrar</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" onClick={() => setOpenOvertime(false)}>{t("modules.hr.overtime.dialog.cancel")}</Button><Button onClick={createOvertime} className="gradient-brand text-primary-foreground">{t("modules.hr.overtime.dialog.register")}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
