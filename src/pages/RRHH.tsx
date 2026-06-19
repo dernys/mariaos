@@ -50,8 +50,11 @@ export default function RRHH() {
   const DAYS = t("modules.hr.days", { returnObjects: true }) as string[];
 
   // Translation helpers
-  const tx = (key: string, fallback: string, opts?: any) => {
-    const v = t(key, opts);
+  const tx = (key: string, fallback: string, opts?: any): string => {
+    const v = t(key, opts) as unknown as string;
+    return v === key ? fallback : v;
+  };
+  const asStr = (v: any): string => (typeof v === "string" ? v : String(v ?? ""));
     return v === key ? fallback : v;
   };
   const leaveTypeLabel = (k: string) => tx(`modules.hr.leaves.types.${k}`, k);
