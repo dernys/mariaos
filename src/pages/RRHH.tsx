@@ -55,8 +55,6 @@ export default function RRHH() {
     return v === key ? fallback : v;
   };
   const asStr = (v: any): string => (typeof v === "string" ? v : String(v ?? ""));
-    return v === key ? fallback : v;
-  };
   const leaveTypeLabel = (k: string) => tx(`modules.hr.leaves.types.${k}`, k);
   const leaveStatusLabel = (k: string) => tx(`modules.hr.leaves.statuses.${k}`, k);
   const contractTypeLabel = (k: string) => tx(`modules.hr.contracts.types.${k}`, k);
