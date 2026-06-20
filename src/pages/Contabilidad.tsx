@@ -30,6 +30,8 @@ import { CostCentersTab } from "@/components/accounting/CostCentersTab";
 import { BudgetsTab } from "@/components/accounting/BudgetsTab";
 import CuTaxDeclarationsTab from "@/components/accounting/CuTaxDeclarationsTab";
 import CuCostSheetsTab from "@/components/accounting/CuCostSheetsTab";
+import { FinancialKpiPanel } from "@/components/accounting/FinancialKpiPanel";
+import { SmokeTestPanel } from "@/components/accounting/SmokeTestPanel";
 
 interface Account {
   id: string; code: string; name: string; type: string; nature: string;
@@ -673,6 +675,8 @@ const Contabilidad = () => {
               <TabsTrigger value="reports"><FileType className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.reports")}</TabsTrigger>
             </TabsList>
             <TabsContent value="reports" className="space-y-4">
+              <FinancialKpiPanel />
+              <SmokeTestPanel />
               <AccountingReports accounts={accounts as any} />
             </TabsContent>
           </Tabs>
