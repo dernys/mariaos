@@ -365,11 +365,34 @@ export function AccountingReports({ accounts, tenantName }: Props) {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardContent className="p-4 flex flex-col sm:flex-row gap-3 sm:items-end">
+          <div className="flex-1">
+            <Label className="text-xs">Cierre de período</Label>
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un período" /></SelectTrigger>
+              <SelectContent>
+                {periods.map(p => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} · {p.status === "closed" ? "Cerrado" : p.status === "locked" ? "Bloqueado" : "Abierto"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={closeMonth} disabled={loading !== null || !selectedPeriod} className="gap-2">
+            {loading === "close" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+            Cerrar mes
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {reportCard("income", "Estado de Resultados", "Ingresos y gastos del período", TrendingUp, generateIncomeStatement)}
         {reportCard("balance", "Balance General", "Activos, pasivos y capital", Scale, generateBalanceSheet)}
         {reportCard("trial", "Balance Comprobación", "Sumas y saldos por cuenta", BookOpen, generateTrialBalance)}
         {reportCard("journal", "Libro Diario", "Asientos detallados del período", BookOpen, generateJournal)}
+        {reportCard("ledger", "Libro Mayor", "Saldos por cuenta y período", BookText, generateGeneralLedger)}
       </div>
     </div>
   );
