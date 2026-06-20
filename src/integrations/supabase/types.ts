@@ -8525,6 +8525,10 @@ export type Database = {
         Args: { p_currency: string; p_date?: string; p_tenant: string }
         Returns: number
       }
+      get_financial_kpis: {
+        Args: { p_period_id?: string; p_tenant: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -8841,6 +8845,14 @@ export type Database = {
           p_settlement_ids: string[]
         }
         Returns: string
+      }
+      smoke_test_financial_core: {
+        Args: { p_tenant: string }
+        Returns: {
+          check_name: string
+          detail: string
+          status: string
+        }[]
       }
       submit_cu_tax_declaration: {
         Args: { p_declaration_id: string }
