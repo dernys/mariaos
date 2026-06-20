@@ -8387,6 +8387,15 @@ export type Database = {
         Args: { p_counted_cash?: number; p_shift_id: string }
         Returns: Json
       }
+      compute_cu_tax_declaration: {
+        Args: {
+          p_declaration_type?: string
+          p_period_id: string
+          p_tax_rate?: number
+          p_tenant: string
+        }
+        Returns: string
+      }
       compute_payroll: {
         Args: { _employee_id: string; _end: string; _start: string }
         Returns: {
@@ -8744,6 +8753,10 @@ export type Database = {
         Args: { p_transfer_id: string }
         Returns: undefined
       }
+      recompute_cu_cost_sheet: {
+        Args: { p_cost_sheet_id: string }
+        Returns: Json
+      }
       redeem_loyalty_points: {
         Args: { p_customer_id: string; p_points: number; p_sale_id?: string }
         Returns: number
@@ -8828,6 +8841,10 @@ export type Database = {
           p_settlement_ids: string[]
         }
         Returns: string
+      }
+      submit_cu_tax_declaration: {
+        Args: { p_declaration_id: string }
+        Returns: Json
       }
       sync_offline_sale: { Args: { p_payload: Json }; Returns: string }
       validate_coupon: {

@@ -22,12 +22,14 @@ import { useTableState } from "@/hooks/useTableState";
 import {
   Plus, Edit2, Trash2, BookOpen, ArrowUpDown, TrendingUp, TrendingDown, DollarSign,
   Lock, Unlock, Download, Undo2, FolderTree, CalendarClock, FileType, Building2,
-  Wallet, ListTree, ClipboardList, BarChart3,
+  Wallet, ListTree, ClipboardList, BarChart3, Landmark, FileSpreadsheet,
 } from "lucide-react";
 import { format } from "date-fns";
 import { AccountingReports } from "@/components/accounting/AccountingReports";
 import { CostCentersTab } from "@/components/accounting/CostCentersTab";
 import { BudgetsTab } from "@/components/accounting/BudgetsTab";
+import CuTaxDeclarationsTab from "@/components/accounting/CuTaxDeclarationsTab";
+import CuCostSheetsTab from "@/components/accounting/CuCostSheetsTab";
 
 interface Account {
   id: string; code: string; name: string; type: string; nature: string;
@@ -56,6 +58,7 @@ const SECTION_VALUES = [
   { value: "plan", icon: ListTree, subs: ["accounts", "periods"] },
   { value: "operacion", icon: ClipboardList, subs: ["entries", "cost_centers", "budgets"] },
   { value: "analisis", icon: BarChart3, subs: ["reports"] },
+  { value: "fiscal", icon: Landmark, subs: ["onat", "costos"] },
 ];
 
 const Contabilidad = () => {
@@ -67,7 +70,13 @@ const Contabilidad = () => {
   const navigate = useNavigate();
 
   const typeLabel = (type: string) => t(`modules.accounting.types.${type}`, { defaultValue: type });
-  const sectionLabel = (v: string) => t(`modules.accounting.sections.${v === "plan" ? "plan" : v === "operacion" ? "operation" : "analysis"}`);
+  const sectionLabel = (v: string) => {
+    if (v === "plan") return t("modules.accounting.sections.plan");
+    if (v === "operacion") return t("modules.accounting.sections.operation");
+    if (v === "analisis") return t("modules.accounting.sections.analysis");
+    if (v === "fiscal") return "Fiscal Cuba";
+    return v;
+  };
   const periodStatusLabel = (s: string) => {
     const k = `modules.accounting.periods.statuses.${s}`;
     const v = t(k);
@@ -665,6 +674,21 @@ const Contabilidad = () => {
             </TabsList>
             <TabsContent value="reports" className="space-y-4">
               <AccountingReports accounts={accounts as any} />
+            </TabsContent>
+          </Tabs>
+        )}
+
+        {section === "fiscal" && (
+          <Tabs value={subTab} onValueChange={setSubTab} className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="onat"><Landmark className="h-3.5 w-3.5 mr-1" />Declaraciones ONAT</TabsTrigger>
+              <TabsTrigger value="costos"><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Plantillas de Costos</TabsTrigger>
+            </TabsList>
+            <TabsContent value="onat" className="space-y-4">
+              <CuTaxDeclarationsTab />
+            </TabsContent>
+            <TabsContent value="costos" className="space-y-4">
+              <CuCostSheetsTab />
             </TabsContent>
           </Tabs>
         )}
