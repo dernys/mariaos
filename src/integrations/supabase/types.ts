@@ -8331,6 +8331,7 @@ export type Database = {
         Returns: number
       }
       award_loyalty_points: { Args: { p_sale_id: string }; Returns: number }
+      bootstrap_tenant_accounting: { Args: { p_tenant: string }; Returns: Json }
       br_generate_nfe: { Args: { p_sale_id: string }; Returns: string }
       br_generate_sped_ecd: {
         Args: { p_fiscal_year: number; p_tenant_id: string }
