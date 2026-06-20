@@ -6,10 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { FileType, BookOpen, Scale, TrendingUp, Loader2 } from "lucide-react";
+import { FileType, BookOpen, Scale, TrendingUp, Loader2, Lock, BookText } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Account {
   id: string;
@@ -49,8 +51,90 @@ export function AccountingReports({ accounts, tenantName }: Props) {
   const [from, setFrom] = useState(() => { const d=new Date(); d.setDate(1); return d.toISOString().slice(0,10); });
   const [to, setTo] = useState(() => new Date().toISOString().slice(0,10));
   const [loading, setLoading] = useState<string | null>(null);
+  const [periods, setPeriods] = useState<Array<{ id: string; name: string; status: string; start_date: string; end_date: string }>>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
 
   const accountMap = useMemo(() => new Map(accounts.map(a => [a.id, a])), [accounts]);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    supabase.from("accounting_periods")
+      .select("id,name,status,start_date,end_date")
+      .eq("tenant_id", tenantId)
+      .order("start_date", { ascending: false })
+      .then(({ data }) => {
+        setPeriods(data ?? []);
+        const openOne = (data ?? []).find(p => p.status === "open");
+        if (openOne && !selectedPeriod) setSelectedPeriod(openOne.id);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId]);
+
+  async function closeMonth() {
+    if (!selectedPeriod) { toast({ title: "Selecciona un período", variant: "destructive" }); return; }
+    if (!confirm("¿Cerrar este período contable? No podrás registrar nuevos asientos en él.")) return;
+    setLoading("close");
+    try {
+      const { data, error } = await supabase.rpc("close_accounting_period", { p_period: selectedPeriod });
+      if (error) throw error;
+      toast({ title: "Período cerrado", description: `Filas en libro mayor: ${(data as any)?.gl_rows ?? 0}` });
+      const { data: pdata } = await supabase.from("accounting_periods")
+        .select("id,name,status,start_date,end_date").eq("tenant_id", tenantId!).order("start_date",{ascending:false});
+      setPeriods(pdata ?? []);
+    } catch (e: any) {
+      toast({ title: "Error al cerrar", description: e.message, variant: "destructive" });
+    } finally { setLoading(null); }
+  }
+
+  async function generateGeneralLedger() {
+    if (!tenantId) return;
+    setLoading("ledger");
+    try {
+      const { data: gl, error } = await supabase.from("general_ledger")
+        .select("account_id,opening_balance,debit_total,credit_total,closing_balance,period_id,accounting_periods!inner(name,start_date)")
+        .eq("tenant_id", tenantId)
+        .gte("accounting_periods.start_date", from)
+        .lte("accounting_periods.start_date", to)
+        .order("account_id");
+      if (error) throw error;
+      const rows: any[] = [];
+      let totOB=0, totD=0, totC=0, totCB=0;
+      (gl ?? []).sort((a:any,b:any) => {
+        const ac = accountMap.get(a.account_id)?.code || "";
+        const bc = accountMap.get(b.account_id)?.code || "";
+        return ac.localeCompare(bc);
+      }).forEach((r:any) => {
+        const a = accountMap.get(r.account_id);
+        if (!a) return;
+        totOB += Number(r.opening_balance); totD += Number(r.debit_total);
+        totC += Number(r.credit_total); totCB += Number(r.closing_balance);
+        rows.push([
+          (r.accounting_periods as any)?.name || "—",
+          a.code, a.name,
+          money(Number(r.opening_balance)),
+          money(Number(r.debit_total)),
+          money(Number(r.credit_total)),
+          money(Number(r.closing_balance)),
+        ]);
+      });
+      rows.push([{ content: "TOTALES", colSpan: 3, styles: { fontStyle: "bold" } },
+                 money(totOB), money(totD), money(totC), money(totCB)]);
+      const doc = new jsPDF({ orientation: "landscape" });
+      pdfHeader(doc, "Libro Mayor", `${from} a ${to}`, tenantName);
+      autoTable(doc, {
+        startY: 34,
+        head: [["Período","Código","Cuenta","Saldo Inicial","Débito","Crédito","Saldo Final"]],
+        body: rows,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [16,185,129] },
+        columnStyles: { 3:{halign:"right"}, 4:{halign:"right"}, 5:{halign:"right"}, 6:{halign:"right"} },
+      });
+      doc.save(`libro_mayor_${from}_${to}.pdf`);
+      toast({ title: "PDF generado" });
+    } catch (e:any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally { setLoading(null); }
+  }
 
   async function fetchEntryLines() {
     const { data: ents, error: e1 } = await supabase.from("journal_entries")
@@ -281,11 +365,34 @@ export function AccountingReports({ accounts, tenantName }: Props) {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardContent className="p-4 flex flex-col sm:flex-row gap-3 sm:items-end">
+          <div className="flex-1">
+            <Label className="text-xs">Cierre de período</Label>
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un período" /></SelectTrigger>
+              <SelectContent>
+                {periods.map(p => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} · {p.status === "closed" ? "Cerrado" : p.status === "locked" ? "Bloqueado" : "Abierto"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={closeMonth} disabled={loading !== null || !selectedPeriod} className="gap-2">
+            {loading === "close" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+            Cerrar mes
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {reportCard("income", "Estado de Resultados", "Ingresos y gastos del período", TrendingUp, generateIncomeStatement)}
         {reportCard("balance", "Balance General", "Activos, pasivos y capital", Scale, generateBalanceSheet)}
         {reportCard("trial", "Balance Comprobación", "Sumas y saldos por cuenta", BookOpen, generateTrialBalance)}
         {reportCard("journal", "Libro Diario", "Asientos detallados del período", BookOpen, generateJournal)}
+        {reportCard("ledger", "Libro Mayor", "Saldos por cuenta y período", BookText, generateGeneralLedger)}
       </div>
     </div>
   );

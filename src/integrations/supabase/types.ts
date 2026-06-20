@@ -8370,10 +8370,7 @@ export type Database = {
         }
         Returns: string
       }
-      close_accounting_period: {
-        Args: { p_period_id: string }
-        Returns: boolean
-      }
+      close_accounting_period: { Args: { p_period: string }; Returns: Json }
       close_bank_reconciliation: {
         Args: { p_reconciliation_id: string }
         Returns: boolean
@@ -8731,7 +8728,13 @@ export type Database = {
         }
         Returns: undefined
       }
-      rebuild_general_ledger: { Args: { p_period_id: string }; Returns: number }
+      rebuild_general_ledger:
+        | { Args: { p_period_id: string }; Returns: number }
+        | { Args: { p_period: string; p_tenant: string }; Returns: number }
+      rebuild_general_ledger_all: {
+        Args: { p_tenant: string }
+        Returns: number
+      }
       receive_purchase: { Args: { p_purchase_id: string }; Returns: undefined }
       receive_purchase_consignment: {
         Args: { p_purchase_id: string }
@@ -8797,8 +8800,16 @@ export type Database = {
         Args: { p_code: string; p_tenant_id: string }
         Returns: string
       }
+      resolve_fiscal_year_id: {
+        Args: { p_date: string; p_tenant: string }
+        Returns: string
+      }
       resolve_period: {
         Args: { p_date: string; p_tenant_id: string }
+        Returns: string
+      }
+      resolve_period_id: {
+        Args: { p_date: string; p_tenant: string }
         Returns: string
       }
       reverse_journal_entry: {
