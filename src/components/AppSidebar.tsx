@@ -104,7 +104,7 @@ const menuGroups: MenuGroup[] = [
   {
     labelKey: "general",
     items: [
-      { titleKey: "dashboard", url: "/", icon: LayoutDashboard },
+      { titleKey: "dashboard", url: "/app", icon: LayoutDashboard },
       { titleKey: "analytics", url: "/analytics", icon: BarChart3 },
       { titleKey: "reports", url: "/reportes", icon: PieChart },
     ],

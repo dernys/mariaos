@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   ShoppingCart, Package, Users, BarChart3, Truck, ChefHat, Receipt, Globe,
   Shield, Zap, Smartphone, Cloud, ArrowRight, Check, Sparkles, Store, Utensils, Building2, PlayCircle, Loader2,
+  Bot, Brain, Wallet, Languages,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
@@ -35,19 +36,25 @@ const demoBusinessTypes = [
 
 const modules = [
   { icon: ShoppingCart, title: "POS Adaptable", desc: "Tres modos especializados: Bar con cuentas, Restaurante con mapa de mesas y KDS, y Retail con búsqueda por SKU/código de barras.", bullets: ["Cobro en segundos", "Pagos divididos y multimoneda", "QR, tarjeta, efectivo y crédito"] },
-  { icon: Package, title: "Inventario Inteligente", desc: "Control total de stock con recetas (BOM), múltiples almacenes, transferencias y alertas automáticas de bajo stock.", bullets: ["Movimientos auditables", "Recetas y descuento automático", "Alertas en tiempo real"] },
+  { icon: Package, title: "Inventario Inteligente", desc: "Control total de stock con recetas (BOM), múltiples almacenes, transferencias, conteos cíclicos y alertas automáticas.", bullets: ["Movimientos auditables", "Recetas y descuento automático", "Inteligencia de stock con IA"] },
   { icon: ChefHat, title: "Operaciones Restaurante", desc: "Mapa de mesas en tiempo real, KDS de cocina sincronizado, división de cuentas y gestión completa del salón.", bullets: ["Realtime entre dispositivos", "Cocina conectada", "Mesas, bar y delivery"] },
-  { icon: Globe, title: "Marketplace Online", desc: "Tienda online pública con geolocalización: tus clientes encuentran tus productos según ubicación del dispositivo.", bullets: ["PWA instalable", "Registro y conversión a cliente", "Catálogo por tienda"] },
+  { icon: Globe, title: "Marketplace Online", desc: "Tienda online pública con geolocalización: tus clientes encuentran tus productos según la ubicación del dispositivo.", bullets: ["PWA instalable", "Registro y conversión a cliente", "Catálogo por tienda"] },
   { icon: Receipt, title: "Facturación Electrónica", desc: "Emisión local y electrónica con UBL 2.1, CUFE y transmisión por webhook a tu PAC. PDF profesional incluido.", bullets: ["UBL 2.1 + XML firmado", "Compatible LATAM", "Envío por correo automático"] },
-  { icon: Users, title: "Clientes y Empleados", desc: "Gestión de saldos, fidelización, salarios, asistencia, horarios y nóminas con timeline de actividad por persona.", bullets: ["Programa de fidelización", "RRHH integrado", "Historial completo"] },
+  { icon: Users, title: "Clientes, RRHH y Nómina", desc: "Saldos, fidelización, asistencia, horarios y nómina automatizada, con timeline de actividad y portal del empleado.", bullets: ["Programa de fidelización", "Nómina y adelantos", "Portal del empleado"] },
   { icon: Truck, title: "Delivery y Repartos", desc: "Zonas, repartidores y asignación de pedidos en tiempo real para coordinar tu logística de última milla.", bullets: ["Zonas configurables", "Asignación realtime", "Seguimiento por pedido"] },
-  { icon: BarChart3, title: "Analytics y Contabilidad", desc: "Dashboards en vivo, reportes exportables y partida doble validada para una contabilidad básica integrada.", bullets: ["KPIs por tienda y turno", "Asientos auditables", "Exportación CSV/PDF"] },
+  { icon: Wallet, title: "Tesorería y Contabilidad", desc: "Cuentas bancarias, conciliación, flujo de caja y partida doble validada con reportes financieros exportables.", bullets: ["Conciliación bancaria", "Asientos auditables", "Balances y P&L"] },
+  { icon: BarChart3, title: "Analytics y Reportes", desc: "Dashboards en vivo, reportes operativos y financieros con exportación CSV/PDF y filtros por tienda y turno.", bullets: ["KPIs por tienda y turno", "Reportes exportables", "Comparativas históricas"] },
+  { icon: Bot, title: "Agentes de IA Autónomos", desc: "Agentes especializados que vigilan inventario, ventas y riesgo. Toman decisiones recomendadas en tu Command Center.", bullets: ["Command Center 24/7", "Decisiones recomendadas", "Memoria de negocio"] },
+  { icon: Brain, title: "Workflows y Digital Twin", desc: "Automatiza procesos con flujos sin código y simula escenarios con el gemelo digital de tu operación.", bullets: ["Workflows visuales", "Simulación de escenarios", "Motor de riesgo"] },
+  { icon: Shield, title: "Multi-empresa y Roles", desc: "Multi-tenant con RLS, roles dinámicos por módulo, auditoría completa y panel de superadmin para todo el grupo.", bullets: ["RBAC por módulo", "Auditoría detallada", "Panel superadmin"] },
 ];
 
 const platformFeatures = [
   { icon: Shield, title: "Multi-tenant Seguro", desc: "Aislamiento total por empresa con Row-Level Security." },
-  { icon: Zap, title: "Realtime Nativo", desc: "Mesas, cocina y pedidos sincronizados al instante." },
-  { icon: Smartphone, title: "Mobile-first PWA", desc: "Instalable en móvil con soporte offline." },
+  { icon: Zap, title: "Realtime Nativo", desc: "Mesas, cocina, pedidos y caja sincronizados al instante." },
+  { icon: Smartphone, title: "Mobile-first PWA", desc: "Instalable en móvil con soporte offline y pagos." },
+  { icon: Languages, title: "Multi-idioma", desc: "Interfaz en español, inglés y portugués (Brasil)." },
+  { icon: Bot, title: "IA Integrada", desc: "Agentes autónomos y asistentes con Lovable AI Gateway." },
   { icon: Cloud, title: "Cloud Escalable", desc: "Infraestructura gestionada lista para crecer." },
 ];
 
@@ -155,8 +162,8 @@ const Landing = () => {
             </span>
           </h1>
           <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto animate-fade-in">
-            POS adaptable, inventario, facturación electrónica, marketplace, delivery y RRHH en una sola plataforma
-            multi-empresa, en tiempo real y lista para escalar.
+            POS adaptable, inventario, facturación electrónica, tesorería, marketplace, delivery, RRHH y agentes de IA
+            en una sola plataforma multi-empresa, multi-idioma y en tiempo real.
           </p>
           <div className="mt-9 flex items-center justify-center gap-3 flex-wrap animate-fade-in">
             <a href="#demo">
@@ -203,7 +210,7 @@ const Landing = () => {
       {/* Platform features */}
       <section id="plataforma" className="py-20 border-y border-border bg-card/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
             {platformFeatures.map((f) => (
               <div key={f.title} className="text-center sm:text-left">
                 <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-primary/10 text-primary mb-3">
@@ -437,10 +444,10 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { v: "20+", l: "Módulos integrados" },
+              { v: "30+", l: "Módulos integrados" },
               { v: "3", l: "Modos de POS" },
-              { v: "Realtime", l: "Sincronización" },
-              { v: "Multi-tenant", l: "Listo para escalar" },
+              { v: "3", l: "Idiomas (ES/EN/PT-BR)" },
+              { v: "IA", l: "Agentes autónomos" },
             ].map((s) => (
               <div key={s.l} className="rounded-2xl border border-border bg-card p-6">
                 <p className="font-heading font-bold text-3xl bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
