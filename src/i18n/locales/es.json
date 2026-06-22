@@ -889,7 +889,8 @@
       "priceDesc": "Mayor precio",
       "nearest": "Más cercanos",
       "newest": "Más nuevos",
-      "discount": "Mayor descuento"
+      "discount": "Mayor descuento",
+      "rating": "Mejor valorados"
     },
     "filters": {
       "title": "Filtros",

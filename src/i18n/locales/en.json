@@ -876,7 +876,8 @@
       "priceDesc": "Highest price",
       "nearest": "Nearest",
       "newest": "Newest",
-      "discount": "Biggest discount"
+      "discount": "Biggest discount",
+      "rating": "Top rated"
     },
     "filters": {
       "title": "Filters",
