@@ -208,7 +208,7 @@ export const MarketplaceCartSheet = ({
             </div>
             <div className="border-t p-5 bg-card">
               <Button onClick={() => setStep("delivery")} className="w-full rounded-full h-11" disabled={!form.name.trim() || !form.phone.trim()}>
-                {t("common.continue")} <ChevronRight className="h-4 w-4 ml-1" />
+                {t("common.next")} <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </>
@@ -252,7 +252,7 @@ export const MarketplaceCartSheet = ({
             </div>
             <div className="border-t p-5 bg-card">
               <Button onClick={() => setStep("review")} className="w-full rounded-full h-11" disabled={form.delivery_type === "delivery" && !form.address.trim()}>
-                {t("common.continue")} <ChevronRight className="h-4 w-4 ml-1" />
+                {t("common.next")} <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </>
