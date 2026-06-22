@@ -52,7 +52,7 @@ const MarketplaceProduct = () => {
       try {
         const { data: p } = await supabase
           .from("products")
-          .select("id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable, sku, warehouse_id, created_at")
+          .select("id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable, sku, warehouse_id, store_id, brand, prep_minutes, created_at")
           .eq("id", id)
           .eq("is_online", true)
           .eq("is_active", true)
@@ -65,7 +65,7 @@ const MarketplaceProduct = () => {
           supabase.from("stores_public" as any).select("*").eq("tenant_id", p.tenant_id),
           supabase
             .from("products")
-            .select("id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable, sku, warehouse_id, created_at")
+            .select("id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable, sku, warehouse_id, store_id, brand, prep_minutes, created_at")
             .eq("tenant_id", p.tenant_id)
             .eq("is_online", true)
             .eq("is_active", true)
@@ -230,13 +230,19 @@ const MarketplaceProduct = () => {
               </Link>
             )}
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{product.name}</h1>
+            {product.brand && (
+              <p className="text-sm text-muted-foreground -mt-1">{product.brand}</p>
+            )}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               {product.category && (
                 <Badge variant="outline" className="gap-1"><Tag className="h-3 w-3" /> {product.category}</Badge>
               )}
               {product.is_deliverable !== false && (
                 <Badge variant="outline" className="gap-1"><Truck className="h-3 w-3" /> {t("marketplace.badge.delivery")}</Badge>
+              )}
+              {product.prep_minutes != null && product.prep_minutes > 0 && (
+                <Badge variant="outline" className="gap-1">⏱ {product.prep_minutes} min</Badge>
               )}
               {stockState === "low" && (
                 <Badge className="bg-amber-500 hover:bg-amber-500 text-white">{t("marketplace.stock.last", { n: product.online_stock })}</Badge>
@@ -245,6 +251,14 @@ const MarketplaceProduct = () => {
                 <Badge variant="destructive">{t("marketplace.stock.out")}</Badge>
               )}
             </div>
+
+            {(product.reviews_count ?? 0) > 0 && (
+              <div className="flex items-center gap-2">
+                <RatingStars value={product.rating_avg ?? 0} size={16} />
+                <span className="text-sm font-semibold">{(product.rating_avg ?? 0).toFixed(1)}</span>
+                <span className="text-xs text-muted-foreground">({product.reviews_count})</span>
+              </div>
+            )}
 
             <div className="flex items-end gap-3 pt-1">
               <span className="text-3xl font-bold text-primary">{formatPrice(finalPrice)}</span>
