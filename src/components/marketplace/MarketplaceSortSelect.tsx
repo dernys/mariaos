@@ -24,6 +24,7 @@ export const MarketplaceSortSelect = ({ value, onChange, hasGeo }: Props) => {
         {hasGeo && <SelectItem value="nearest">{t("marketplace.sort.nearest")}</SelectItem>}
         <SelectItem value="newest">{t("marketplace.sort.newest")}</SelectItem>
         <SelectItem value="discount">{t("marketplace.sort.discount")}</SelectItem>
+        <SelectItem value="rating">{t("marketplace.sort.rating")}</SelectItem>
       </SelectContent>
     </Select>
   );
