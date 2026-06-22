@@ -876,7 +876,8 @@
       "priceDesc": "Highest price",
       "nearest": "Nearest",
       "newest": "Newest",
-      "discount": "Biggest discount"
+      "discount": "Biggest discount",
+      "rating": "Top rated"
     },
     "filters": {
       "title": "Filters",
@@ -888,9 +889,26 @@
       "distance": "Distance",
       "businesses": "Businesses",
       "stores": "Stores",
+      "brands": "Brand",
+      "minRating": "Minimum rating",
+      "anyRating": "Any",
+      "prepTime": "Prep time",
+      "anyTime": "Any",
       "offers": "Offers",
       "onlyOffers": "Only with discount",
       "none": "No options"
+    },
+    "reviews": {
+      "title": "Ratings & reviews",
+      "count": "reviews",
+      "writeYours": "Write your review",
+      "editYours": "Edit your review",
+      "titlePh": "Title (optional)",
+      "commentPh": "Tell us about your experience…",
+      "publish": "Publish review",
+      "saved": "Review saved",
+      "empty": "No reviews yet. Be the first!",
+      "loginRequired": "Sign in to leave a review"
     },
     "availability": { "any": "Any", "in_stock": "In stock", "low_stock": "Low stock" },
     "deliveryType": { "any": "Any", "delivery": "Home delivery", "pickup": "Store pickup" },

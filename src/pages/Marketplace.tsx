@@ -117,6 +117,7 @@ const Marketplace = () => {
       if (q && !p.name.toLowerCase().includes(q) && !(p.description || "").toLowerCase().includes(q) && !(p.category || "").toLowerCase().includes(q)) return false;
       if (filters.categories.length && !filters.categories.includes(p.category ?? "")) return false;
       if (filters.tenantIds.length && !filters.tenantIds.includes(p.tenant_id)) return false;
+      if (filters.brands.length && !(p.brand && filters.brands.includes(p.brand))) return false;
       if (filters.storeIds.length) {
         const okStores = storesByTenant[p.tenant_id] ?? [];
         if (!okStores.some((s) => filters.storeIds.includes(s.id))) return false;
@@ -136,6 +137,12 @@ const Marketplace = () => {
         const d = tenantDistances[p.tenant_id];
         if (d == null || d > filters.maxDistanceKm) return false;
       }
+      if (filters.minRating != null) {
+        if ((p.rating_avg ?? 0) < filters.minRating) return false;
+      }
+      if (filters.maxPrepMinutes != null) {
+        if (p.prep_minutes == null || p.prep_minutes > filters.maxPrepMinutes) return false;
+      }
       if (filters.onlyOffers && discount <= 0) return false;
       return true;
     });
@@ -149,6 +156,7 @@ const Marketplace = () => {
         case "price_asc": return pa - pb;
         case "price_desc": return pb - pa;
         case "discount": return db - da;
+        case "rating": return (b.rating_avg ?? 0) - (a.rating_avg ?? 0);
         case "newest": return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
         case "nearest": {
           const ad = tenantDistances[a.tenant_id] ?? 9999;
@@ -209,11 +217,14 @@ const Marketplace = () => {
     filters.subcategoryIds.length > 0 ||
     filters.tenantIds.length > 0 ||
     filters.storeIds.length > 0 ||
+    filters.brands.length > 0 ||
     filters.priceMin != null ||
     filters.priceMax != null ||
     filters.availability !== "any" ||
     filters.delivery !== "any" ||
     filters.maxDistanceKm != null ||
+    filters.minRating != null ||
+    filters.maxPrepMinutes != null ||
     filters.onlyOffers;
 
   if (orderSuccess) {

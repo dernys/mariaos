@@ -876,7 +876,8 @@
       "priceDesc": "Maior preço",
       "nearest": "Mais próximos",
       "newest": "Mais novos",
-      "discount": "Maior desconto"
+      "discount": "Maior desconto",
+      "rating": "Melhores avaliados"
     },
     "filters": {
       "title": "Filtros",
@@ -888,9 +889,26 @@
       "distance": "Distância",
       "businesses": "Negócios",
       "stores": "Lojas",
+      "brands": "Marca",
+      "minRating": "Avaliação mínima",
+      "anyRating": "Qualquer",
+      "prepTime": "Tempo de preparo",
+      "anyTime": "Qualquer",
       "offers": "Ofertas",
       "onlyOffers": "Só com desconto",
       "none": "Sem opções"
+    },
+    "reviews": {
+      "title": "Avaliações e resenhas",
+      "count": "avaliações",
+      "writeYours": "Escreva sua avaliação",
+      "editYours": "Edite sua avaliação",
+      "titlePh": "Título (opcional)",
+      "commentPh": "Conte sua experiência…",
+      "publish": "Publicar avaliação",
+      "saved": "Avaliação salva",
+      "empty": "Ainda não há avaliações. Seja o primeiro!",
+      "loginRequired": "Entre para deixar sua avaliação"
     },
     "availability": { "any": "Qualquer", "in_stock": "Em estoque", "low_stock": "Poucas unidades" },
     "deliveryType": { "any": "Qualquer", "delivery": "Em casa", "pickup": "Na loja" },

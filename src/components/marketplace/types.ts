@@ -10,6 +10,11 @@ export interface MarketProduct {
   is_deliverable: boolean | null;
   sku: string | null;
   warehouse_id: string | null;
+  store_id?: string | null;
+  brand?: string | null;
+  prep_minutes?: number | null;
+  rating_avg?: number | null;
+  reviews_count?: number | null;
   created_at?: string;
 }
 
@@ -55,6 +60,21 @@ export interface Promotion {
   is_active: boolean;
 }
 
+export interface ProductReview {
+  id: string;
+  tenant_id: string;
+  product_id: string;
+  customer_id: string | null;
+  user_id: string | null;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  is_verified_purchase: boolean;
+  is_visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CartItem extends MarketProduct {
   qty: number;
   tenantName: string;
@@ -68,19 +88,23 @@ export type SortKey =
   | "price_desc"
   | "nearest"
   | "newest"
-  | "discount";
+  | "discount"
+  | "rating";
 
 export interface MarketplaceFilterState {
   search: string;
-  categories: string[];        // category names (text column on products)
-  subcategoryIds: string[];    // ids from product_categories
+  categories: string[];
+  subcategoryIds: string[];
   tenantIds: string[];
   storeIds: string[];
+  brands: string[];
   priceMin: number | null;
   priceMax: number | null;
   availability: AvailabilityFilter;
   delivery: DeliveryFilter;
   maxDistanceKm: number | null;
+  minRating: number | null;
+  maxPrepMinutes: number | null;
   onlyOffers: boolean;
   sort: SortKey;
 }
@@ -91,11 +115,14 @@ export const defaultFilterState: MarketplaceFilterState = {
   subcategoryIds: [],
   tenantIds: [],
   storeIds: [],
+  brands: [],
   priceMin: null,
   priceMax: null,
   availability: "any",
   delivery: "any",
   maxDistanceKm: null,
+  minRating: null,
+  maxPrepMinutes: null,
   onlyOffers: false,
   sort: "relevance",
 };

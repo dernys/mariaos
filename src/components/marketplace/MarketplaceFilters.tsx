@@ -276,6 +276,78 @@ export const MarketplaceFilters = ({
         )}
 
         {/* Offers */}
+        <AccordionItem value="brands">
+          <AccordionTrigger className="text-sm font-medium">
+            {t("marketplace.filters.brands")}
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+              {(() => {
+                const m = new Map<string, number>();
+                products.forEach((p) => p.brand && m.set(p.brand, (m.get(p.brand) ?? 0) + 1));
+                const arr = Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
+                if (arr.length === 0) {
+                  return <p className="text-xs text-muted-foreground">{t("marketplace.filters.none")}</p>;
+                }
+                return arr.map(([brand, count]) => (
+                  <label key={brand} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox
+                      checked={filters.brands.includes(brand)}
+                      onCheckedChange={() => onChange({ brands: toggle(filters.brands, brand) })}
+                    />
+                    <span className="flex-1 truncate">{brand}</span>
+                    <span className="text-[10px] text-muted-foreground">({count})</span>
+                  </label>
+                ));
+              })()}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="rating">
+          <AccordionTrigger className="text-sm font-medium">
+            {t("marketplace.filters.minRating")}
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-1.5">
+              {[null, 3, 4, 4.5].map((v) => (
+                <label key={String(v)} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="minRating"
+                    checked={filters.minRating === v}
+                    onChange={() => onChange({ minRating: v })}
+                    className="accent-primary"
+                  />
+                  {v == null ? t("marketplace.filters.anyRating") : `★ ${v}+`}
+                </label>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="prepTime">
+          <AccordionTrigger className="text-sm font-medium">
+            {t("marketplace.filters.prepTime")}
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-1.5">
+              {[null, 15, 30, 60].map((v) => (
+                <label key={String(v)} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="prepTime"
+                    checked={filters.maxPrepMinutes === v}
+                    onChange={() => onChange({ maxPrepMinutes: v })}
+                    className="accent-primary"
+                  />
+                  {v == null ? t("marketplace.filters.anyTime") : `≤ ${v} min`}
+                </label>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
         <AccordionItem value="offers">
           <AccordionTrigger className="text-sm font-medium">
             {t("marketplace.filters.offers")}
