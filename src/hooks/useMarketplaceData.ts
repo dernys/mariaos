@@ -31,11 +31,11 @@ export function useMarketplaceData(): MarketplaceData {
     let cancelled = false;
     (async () => {
       try {
-        const [pRes, tRes, sRes, cRes, prRes] = await Promise.all([
+        const [pRes, tRes, sRes, cRes, prRes, rRes] = await Promise.all([
           supabase
             .from("products")
             .select(
-              "id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable, sku, warehouse_id, created_at"
+              "id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable, sku, warehouse_id, store_id, brand, prep_minutes, created_at"
             )
             .eq("is_online", true)
             .eq("is_active", true)
@@ -54,10 +54,20 @@ export function useMarketplaceData(): MarketplaceData {
               "id, tenant_id, name, promo_type, discount_value, scope, scope_id, scope_value, valid_from, valid_until, is_active"
             )
             .eq("is_active", true),
+          supabase.from("product_ratings_public" as any).select("product_id, rating_avg, reviews_count"),
         ]);
         if (cancelled) return;
         if (pRes.error) throw pRes.error;
-        setProducts((pRes.data ?? []) as unknown as MarketProduct[]);
+        const ratingMap = new Map<string, { avg: number; count: number }>();
+        ((rRes.data ?? []) as any[]).forEach((r) =>
+          ratingMap.set(r.product_id, { avg: Number(r.rating_avg) || 0, count: Number(r.reviews_count) || 0 })
+        );
+        const productsWithRatings = ((pRes.data ?? []) as any[]).map((p) => ({
+          ...p,
+          rating_avg: ratingMap.get(p.id)?.avg ?? null,
+          reviews_count: ratingMap.get(p.id)?.count ?? 0,
+        })) as unknown as MarketProduct[];
+        setProducts(productsWithRatings);
         setTenants((tRes.data ?? []) as unknown as Tenant[]);
         setStores((sRes.data ?? []) as unknown as StorePublic[]);
         setCategories((cRes.data ?? []) as unknown as ProductCategory[]);
