@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { Plus, Minus, MapPin, Truck, Tag } from "lucide-react";
+import { Plus, Minus, MapPin, Truck, Tag, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { bizIcon, formatPrice } from "./types";
+import { RatingStars } from "./RatingStars";
 import type { MarketProduct, Tenant } from "./types";
 
 interface Props {
