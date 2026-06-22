@@ -901,9 +901,26 @@
       "distance": "Distancia",
       "businesses": "Negocios",
       "stores": "Sucursales",
+      "brands": "Marca",
+      "minRating": "Valoración mínima",
+      "anyRating": "Cualquiera",
+      "prepTime": "Tiempo de preparación",
+      "anyTime": "Cualquiera",
       "offers": "Ofertas",
       "onlyOffers": "Solo con descuento",
       "none": "Sin opciones"
+    },
+    "reviews": {
+      "title": "Valoraciones y reseñas",
+      "count": "reseñas",
+      "writeYours": "Escribe tu reseña",
+      "editYours": "Edita tu reseña",
+      "titlePh": "Título (opcional)",
+      "commentPh": "Cuéntanos tu experiencia…",
+      "publish": "Publicar reseña",
+      "saved": "Reseña guardada",
+      "empty": "Aún no hay reseñas. ¡Sé el primero!",
+      "loginRequired": "Inicia sesión para dejar tu reseña"
     },
     "availability": {
       "any": "Cualquiera",
