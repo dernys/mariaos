@@ -385,6 +385,13 @@ const MarketplaceProduct = () => {
             </div>
           </section>
         )}
+
+        <ProductReviewsSection
+          productId={product.id}
+          tenantId={product.tenant_id}
+          ratingAvg={product.rating_avg}
+          reviewsCount={product.reviews_count}
+        />
       </main>
 
       {/* Sticky CTA mobile */}
