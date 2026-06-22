@@ -1,99 +1,56 @@
-import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 import {
-  Search, ShoppingCart, Store, MapPin, Filter, Plus, Minus, Trash2,
-  X, ChevronRight, Package, Truck, Building2, Check, ArrowLeft,
+  ShoppingCart, Store as StoreIcon, MapPin, SlidersHorizontal, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+import { useMarketplaceData, buildPromoIndex } from "@/hooks/useMarketplaceData";
+import { MarketplaceSearchBar } from "@/components/marketplace/MarketplaceSearchBar";
+import { MarketplaceFilters } from "@/components/marketplace/MarketplaceFilters";
+import { MarketplaceSortSelect } from "@/components/marketplace/MarketplaceSortSelect";
+import { ActiveFilterChips } from "@/components/marketplace/ActiveFilterChips";
+import { MarketplaceProductCard } from "@/components/marketplace/MarketplaceProductCard";
+import { ProductCardSkeletonGrid } from "@/components/marketplace/ProductCardSkeleton";
+import { EmptyState } from "@/components/marketplace/EmptyState";
+import { MarketplaceCartSheet } from "@/components/marketplace/MarketplaceCartSheet";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
-import { Link, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+  defaultFilterState,
+  distanceKm,
+  formatPrice,
+} from "@/components/marketplace/types";
+import type {
+  CartItem,
+  MarketProduct,
+  MarketplaceFilterState,
+  Tenant,
+  StorePublic,
+} from "@/components/marketplace/types";
 
-interface MarketProduct {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  category: string | null;
-  image_url: string | null;
-  online_stock: number;
-  tenant_id: string;
-  is_deliverable: boolean | null;
-}
-
-interface Tenant {
-  id: string;
-  name: string;
-  business_type: string;
-  address: string | null;
-}
-
-interface StorePublic {
-  id: string;
-  tenant_id: string;
-  name: string;
-  address: string | null;
-  latitude: number;
-  longitude: number;
-  delivery_radius_km: number;
-  accepts_delivery: boolean;
-  accepts_pickup: boolean;
-}
-
-interface CartItem extends MarketProduct {
-  qty: number;
-  tenantName: string;
-}
+const NEW_DAYS = 14;
 
 const Marketplace = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [products, setProducts] = useState<MarketProduct[]>([]);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [stores, setStores] = useState<StorePublic[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedTenant, setSelectedTenant] = useState("all");
-  const [deliveryOnly, setDeliveryOnly] = useState(false);
+  const data = useMarketplaceData();
+  const [filters, setFilters] = useState<MarketplaceFilterState>(defaultFilterState);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
-  const [maxDistance, setMaxDistance] = useState<number | null>(null); // km filter
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [checkoutMode, setCheckoutMode] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [checkoutForm, setCheckoutForm] = useState({
-    name: "", phone: "", email: "", delivery_type: "pickup", address: "", notes: "",
-  });
 
   useEffect(() => {
-    const load = async () => {
-      const [pRes, tRes, sRes] = await Promise.all([
-        supabase.from("products").select("id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable").eq("is_online", true).eq("is_active", true).gt("online_stock", 0),
-        supabase.from("tenants_public" as any).select("id, name, business_type"),
-        supabase.from("stores_public" as any).select("*"),
-      ]);
-      if (pRes.data) setProducts(pRes.data as MarketProduct[]);
-      if (tRes.data) setTenants(tRes.data as any);
-      if (sRes.data) setStores(sRes.data as unknown as StorePublic[]);
-      setLoading(false);
-    };
-    load();
-    // Try silent geolocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (p) => setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
@@ -104,7 +61,10 @@ const Marketplace = () => {
   }, []);
 
   const requestLocation = () => {
-    if (!navigator.geolocation) { toast({ title: t("marketplace.toasts.geoUnavailable"), variant: "destructive" }); return; }
+    if (!navigator.geolocation) {
+      toast({ title: t("marketplace.toasts.geoUnavailable"), variant: "destructive" });
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (p) => { setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }); toast({ title: t("marketplace.toasts.locationDetected") }); },
       (err) => toast({ title: t("common.error"), description: err.message, variant: "destructive" }),
@@ -112,160 +72,170 @@ const Marketplace = () => {
     );
   };
 
-  const distanceKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
-    const R = 6371;
-    const dLat = (b.lat - a.lat) * Math.PI / 180;
-    const dLng = (b.lng - a.lng) * Math.PI / 180;
-    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-    return R * 2 * Math.asin(Math.sqrt(x));
-  };
+  const tenantsMap = useMemo(() => {
+    const m: Record<string, Tenant> = {};
+    data.tenants.forEach((tn) => (m[tn.id] = tn));
+    return m;
+  }, [data.tenants]);
 
-  // Compute nearest store distance per tenant
+  const storesByTenant = useMemo(() => {
+    const m: Record<string, StorePublic[]> = {};
+    data.stores.forEach((s) => {
+      (m[s.tenant_id] ||= []).push(s);
+    });
+    return m;
+  }, [data.stores]);
+
   const tenantDistances = useMemo(() => {
-    const out: Record<string, { dist: number; store: StorePublic } | null> = {};
+    const out: Record<string, number | undefined> = {};
     if (!userPos) return out;
-    for (const s of stores) {
+    for (const s of data.stores) {
       const d = distanceKm(userPos, { lat: s.latitude, lng: s.longitude });
       const cur = out[s.tenant_id];
-      if (!cur || d < cur.dist) out[s.tenant_id] = { dist: d, store: s };
+      if (cur == null || d < cur) out[s.tenant_id] = d;
     }
     return out;
-  }, [stores, userPos]);
+  }, [data.stores, userPos]);
 
-  const tenantMap = useMemo(() => {
-    const m: Record<string, Tenant> = {};
-    tenants.forEach(t => m[t.id] = t);
-    return m;
-  }, [tenants]);
+  const promoIndex = useMemo(
+    () => buildPromoIndex(data.promotions, data.products, data.categories),
+    [data.promotions, data.products, data.categories]
+  );
 
-  const categories = useMemo(() => {
-    const cats = new Set(products.map(p => p.category).filter(Boolean));
-    return Array.from(cats) as string[];
-  }, [products]);
+  // Featured categories (top 8 by count)
+  const featuredCategories = useMemo(() => {
+    const c = new Map<string, number>();
+    data.products.forEach((p) => p.category && c.set(p.category, (c.get(p.category) ?? 0) + 1));
+    return Array.from(c.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([n]) => n);
+  }, [data.products]);
+
+  const setF = (patch: Partial<MarketplaceFilterState>) => setFilters((f) => ({ ...f, ...patch }));
 
   const filtered = useMemo(() => {
-    return products.filter(p => {
-      const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.description || "").toLowerCase().includes(search.toLowerCase());
-      const matchCat = selectedCategory === "all" || p.category === selectedCategory;
-      const matchTenant = selectedTenant === "all" || p.tenant_id === selectedTenant;
-      const matchDeliv = !deliveryOnly || (p.is_deliverable !== false);
-      let matchDist = true;
-      if (maxDistance && userPos) {
-        const td = tenantDistances[p.tenant_id];
-        matchDist = !!td && td.dist <= maxDistance;
+    const q = filters.search.trim().toLowerCase();
+    const list = data.products.filter((p) => {
+      if (q && !p.name.toLowerCase().includes(q) && !(p.description || "").toLowerCase().includes(q) && !(p.category || "").toLowerCase().includes(q)) return false;
+      if (filters.categories.length && !filters.categories.includes(p.category ?? "")) return false;
+      if (filters.tenantIds.length && !filters.tenantIds.includes(p.tenant_id)) return false;
+      if (filters.storeIds.length) {
+        const okStores = storesByTenant[p.tenant_id] ?? [];
+        if (!okStores.some((s) => filters.storeIds.includes(s.id))) return false;
       }
-      return matchSearch && matchCat && matchTenant && matchDeliv && matchDist;
-    }).sort((a, b) => {
-      if (!userPos) return 0;
-      const da = tenantDistances[a.tenant_id]?.dist ?? 9999;
-      const db = tenantDistances[b.tenant_id]?.dist ?? 9999;
-      return da - db;
+      const discount = promoIndex.get(p.id) ?? 0;
+      const finalPrice = discount > 0 ? p.price * (1 - discount / 100) : p.price;
+      if (filters.priceMin != null && finalPrice < filters.priceMin) return false;
+      if (filters.priceMax != null && finalPrice > filters.priceMax) return false;
+      if (filters.availability === "in_stock" && p.online_stock <= 0) return false;
+      if (filters.availability === "low_stock" && p.online_stock > 5) return false;
+      if (filters.delivery === "delivery" && p.is_deliverable === false) return false;
+      if (filters.delivery === "pickup") {
+        const okStores = storesByTenant[p.tenant_id] ?? [];
+        if (!okStores.some((s) => s.accepts_pickup)) return false;
+      }
+      if (filters.maxDistanceKm != null && userPos) {
+        const d = tenantDistances[p.tenant_id];
+        if (d == null || d > filters.maxDistanceKm) return false;
+      }
+      if (filters.onlyOffers && discount <= 0) return false;
+      return true;
     });
-  }, [products, search, selectedCategory, selectedTenant, deliveryOnly, maxDistance, userPos, tenantDistances]);
+
+    return list.sort((a, b) => {
+      const da = promoIndex.get(a.id) ?? 0;
+      const db = promoIndex.get(b.id) ?? 0;
+      const pa = da > 0 ? a.price * (1 - da / 100) : a.price;
+      const pb = db > 0 ? b.price * (1 - db / 100) : b.price;
+      switch (filters.sort) {
+        case "price_asc": return pa - pb;
+        case "price_desc": return pb - pa;
+        case "discount": return db - da;
+        case "newest": return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+        case "nearest": {
+          const ad = tenantDistances[a.tenant_id] ?? 9999;
+          const bd = tenantDistances[b.tenant_id] ?? 9999;
+          return ad - bd;
+        }
+        default: {
+          // relevance: distance if available, then newest
+          if (userPos) {
+            const ad = tenantDistances[a.tenant_id] ?? 9999;
+            const bd = tenantDistances[b.tenant_id] ?? 9999;
+            if (ad !== bd) return ad - bd;
+          }
+          return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+        }
+      }
+    });
+  }, [data.products, filters, userPos, tenantDistances, promoIndex, storesByTenant]);
 
   const addToCart = (p: MarketProduct) => {
-    if (!user) {
-      toast({ title: t("marketplace.toasts.loginRequired"), description: t("marketplace.toasts.needAccount"), variant: "destructive" });
-      navigate("/auth");
-      return;
-    }
-    setCart(prev => {
-      const existing = prev.find(i => i.id === p.id);
+    setCart((prev) => {
+      const existing = prev.find((i) => i.id === p.id);
       if (existing) {
         if (existing.qty >= p.online_stock) {
           toast({ title: t("marketplace.toasts.stockMax"), variant: "destructive" });
           return prev;
         }
-        return prev.map(i => i.id === p.id ? { ...i, qty: i.qty + 1 } : i);
+        return prev.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i));
       }
-      return [...prev, { ...p, qty: 1, tenantName: tenantMap[p.tenant_id]?.name || "" }];
+      return [...prev, { ...p, qty: 1, tenantName: tenantsMap[p.tenant_id]?.name || "" }];
     });
     toast({ title: t("marketplace.toasts.addedToCart"), description: p.name });
   };
 
   const updateQty = (id: string, delta: number) => {
-    setCart(prev => prev.map(i => {
-      if (i.id !== id) return i;
-      const newQty = i.qty + delta;
-      if (newQty <= 0) return i;
-      if (newQty > i.online_stock) return i;
-      return { ...i, qty: newQty };
-    }));
+    setCart((prev) =>
+      prev
+        .map((i) => {
+          if (i.id !== id) return i;
+          const next = i.qty + delta;
+          if (next > i.online_stock) return i;
+          return { ...i, qty: next };
+        })
+        .filter((i) => i.qty > 0)
+    );
   };
 
-  const removeFromCart = (id: string) => setCart(prev => prev.filter(i => i.id !== id));
+  const removeFromCart = (id: string) => setCart((p) => p.filter((i) => i.id !== id));
 
-  const cartTotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-  const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+  const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
-  // Group cart by tenant
-  const cartByTenant = useMemo(() => {
-    const groups: Record<string, CartItem[]> = {};
-    cart.forEach(i => {
-      if (!groups[i.tenant_id]) groups[i.tenant_id] = [];
-      groups[i.tenant_id].push(i);
-    });
-    return groups;
-  }, [cart]);
+  const clearFilters = () => setFilters(defaultFilterState);
 
-  const handleCheckout = async () => {
-    if (!user) return;
-    if (!checkoutForm.name.trim() || !checkoutForm.phone.trim()) {
-      toast({ title: t("common.error"), description: t("marketplace.toasts.nameOrPhone"), variant: "destructive" });
-      return;
-    }
-    if (checkoutForm.delivery_type === "delivery" && !checkoutForm.address.trim()) {
-      toast({ title: t("common.error"), description: t("marketplace.toasts.addressRequired"), variant: "destructive" });
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      // Crear un pedido por tenant usando la RPC atómica con validación de stock real
-      for (const [tenantId, items] of Object.entries(cartByTenant)) {
-        const { error: rpcErr } = await supabase.rpc("place_online_order" as any, {
-          p_tenant_id: tenantId,
-          p_items: items.map(i => ({ product_id: i.id, qty: i.qty })),
-          p_customer_name: checkoutForm.name.trim(),
-          p_customer_phone: checkoutForm.phone.trim(),
-          p_customer_email: checkoutForm.email.trim() || null,
-          p_delivery_type: checkoutForm.delivery_type,
-          p_delivery_address: checkoutForm.delivery_type === "delivery" ? checkoutForm.address.trim() : null,
-          p_notes: checkoutForm.notes.trim() || null,
-        });
-        if (rpcErr) throw rpcErr;
-      }
-
-      setOrderSuccess(true);
-      setCart([]);
-      setCheckoutMode(false);
-      setCartOpen(false);
-    } catch (err: any) {
-      toast({ title: t("marketplace.toasts.orderError"), description: err.message, variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-
-  const bizIcon = (type: string) => {
-    if (type === "restaurante") return "🍽️";
-    if (type === "bar") return "🍸";
-    return "🏢";
-  };
+  const hasActiveFilters =
+    !!filters.search ||
+    filters.categories.length > 0 ||
+    filters.subcategoryIds.length > 0 ||
+    filters.tenantIds.length > 0 ||
+    filters.storeIds.length > 0 ||
+    filters.priceMin != null ||
+    filters.priceMax != null ||
+    filters.availability !== "any" ||
+    filters.delivery !== "any" ||
+    filters.maxDistanceKm != null ||
+    filters.onlyOffers;
 
   if (orderSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center space-y-4">
-          <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-            <Check className="h-8 w-8 text-emerald-600" />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-card rounded-3xl shadow-xl border border-border p-8 max-w-md w-full text-center space-y-4"
+        >
+          <div className="h-16 w-16 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
+            <Check className="h-8 w-8 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">{t("marketplace.orderPlacedTitle")}</h2>
-          <p className="text-gray-500">{t("marketplace.orderPlacedMsg", { action: checkoutForm.delivery_type === "delivery" ? t("marketplace.actionDelivery") : t("marketplace.actionPickup") })}</p>
-          <div className="flex gap-3 justify-center pt-4">
-            <Button variant="outline" onClick={() => setOrderSuccess(false)}>{t("marketplace.keepShopping")}</Button>
-            <Button onClick={() => navigate("/")} className="bg-emerald-600 hover:bg-emerald-700 text-white">{t("marketplace.goHome")}</Button>
+          <h2 className="text-2xl font-bold">{t("marketplace.orderPlacedTitle")}</h2>
+          <p className="text-muted-foreground">{t("marketplace.orderPlacedDetail")}</p>
+          <div className="flex gap-3 justify-center pt-2">
+            <Button variant="outline" onClick={() => setOrderSuccess(false)} className="rounded-full">
+              {t("marketplace.keepShopping")}
+            </Button>
+            <Button onClick={() => navigate("/")} className="rounded-full">
+              {t("marketplace.goHome")}
+            </Button>
           </div>
         </motion.div>
       </div>
@@ -273,317 +243,237 @@ const Marketplace = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-emerald-100">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
-              <Store className="h-4 w-4 text-white" />
+    <div className="min-h-screen bg-background">
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-lg border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center">
+              <StoreIcon className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg text-gray-900 hidden sm:block">{t("marketplace.brand")}</span>
+            <span className="font-bold text-base text-foreground hidden sm:block">{t("marketplace.brand")}</span>
           </Link>
 
-          <div className="relative flex-1 max-w-xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder={t("marketplace.searchPlaceholder")}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-9 bg-gray-50 border-gray-200 rounded-full"
-            />
-          </div>
+          <MarketplaceSearchBar
+            value={filters.search}
+            onChange={(v) => setF({ search: v })}
+            products={data.products}
+            tenants={data.tenants}
+            onSelectProduct={(p) => navigate(`/marketplace/p/${p.id}`)}
+            onSelectTenant={(tn) => setF({ tenantIds: [tn.id] })}
+            onSelectCategory={(c) => setF({ categories: [c] })}
+          />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {!user && (
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="rounded-full text-xs hidden sm:inline-flex">
                   {t("marketplace.login")}
                 </Button>
-                <Button size="sm" onClick={() => navigate("/auth?view=register")} className="rounded-full text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button size="sm" onClick={() => navigate("/auth?view=register")} className="rounded-full text-xs hidden sm:inline-flex">
                   {t("marketplace.createAccount")}
                 </Button>
               </>
             )}
-            <Sheet open={cartOpen} onOpenChange={setCartOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="relative rounded-full">
-                  <ShoppingCart className="h-4 w-4" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-md flex flex-col">
-                <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2">
-                    <ShoppingCart className="h-5 w-5" /> {t("marketplace.cart")} ({cartCount})
-                  </SheetTitle>
-                </SheetHeader>
-
-                {!checkoutMode ? (
-                  <>
-                    <div className="flex-1 overflow-y-auto space-y-3 py-4">
-                      {cart.length === 0 && (
-                        <div className="text-center py-12 text-gray-400">
-                          <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                          <p>{t("marketplace.cartEmpty")}</p>
-                        </div>
-                      )}
-                      {Object.entries(cartByTenant).map(([tid, items]) => (
-                        <div key={tid} className="space-y-2">
-                          <p className="text-xs font-semibold text-gray-500 uppercase">{bizIcon(tenantMap[tid]?.business_type || "")} {tenantMap[tid]?.name}</p>
-                          {items.map(item => (
-                            <div key={item.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                              <div className="h-12 w-12 rounded-lg bg-emerald-100 flex items-center justify-center text-xl shrink-0">
-                                {item.image_url ? <img src={item.image_url} alt={item.name} className="h-full w-full object-cover rounded-lg" /> : "📦"}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{item.name}</p>
-                                <p className="text-xs text-emerald-600 font-semibold">${(item.price * item.qty).toFixed(2)}</p>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <button onClick={() => updateQty(item.id, -1)} className="h-7 w-7 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"><Minus className="h-3 w-3" /></button>
-                                <span className="text-sm font-bold w-6 text-center">{item.qty}</span>
-                                <button onClick={() => updateQty(item.id, 1)} className="h-7 w-7 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"><Plus className="h-3 w-3" /></button>
-                              </div>
-                              <button onClick={() => removeFromCart(item.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                    {cart.length > 0 && (
-                      <div className="border-t pt-4 space-y-3">
-                        <div className="flex justify-between text-lg font-bold">
-                          <span>{t("marketplace.total")}</span>
-                          <span className="text-emerald-600">${cartTotal.toFixed(2)}</span>
-                        </div>
-                        <Button onClick={() => setCheckoutMode(true)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-full">
-                          {t("marketplace.continueOrder")} <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex-1 overflow-y-auto py-4 space-y-4">
-                    <button onClick={() => setCheckoutMode(false)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900">
-                      <ArrowLeft className="h-4 w-4" /> {t("marketplace.backToCart")}
-                    </button>
-                    <div className="space-y-3">
-                      <div><Label>{t("marketplace.name")} *</Label><Input value={checkoutForm.name} onChange={e => setCheckoutForm(f => ({ ...f, name: e.target.value }))} placeholder={t("marketplace.fullNamePh")} /></div>
-                      <div><Label>{t("marketplace.phone")} *</Label><Input value={checkoutForm.phone} onChange={e => setCheckoutForm(f => ({ ...f, phone: e.target.value }))} placeholder={t("marketplace.phonePh")} /></div>
-                      <div><Label>{t("marketplace.email")}</Label><Input type="email" value={checkoutForm.email} onChange={e => setCheckoutForm(f => ({ ...f, email: e.target.value }))} placeholder={t("marketplace.emailPh")} /></div>
-                      <div>
-                        <Label>{t("marketplace.deliveryType")}</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-1">
-                          <button
-                            onClick={() => setCheckoutForm(f => ({ ...f, delivery_type: "pickup" }))}
-                            className={`p-3 rounded-xl border-2 text-center text-sm transition-all ${checkoutForm.delivery_type === "pickup" ? "border-emerald-500 bg-emerald-50" : "border-gray-200"}`}
-                          >
-                            <Building2 className="h-5 w-5 mx-auto mb-1" />
-                            {t("marketplace.pickup")}
-                          </button>
-                          <button
-                            onClick={() => setCheckoutForm(f => ({ ...f, delivery_type: "delivery" }))}
-                            className={`p-3 rounded-xl border-2 text-center text-sm transition-all ${checkoutForm.delivery_type === "delivery" ? "border-emerald-500 bg-emerald-50" : "border-gray-200"}`}
-                          >
-                            <Truck className="h-5 w-5 mx-auto mb-1" />
-                            {t("marketplace.delivery")}
-                          </button>
-                        </div>
-                      </div>
-                      {checkoutForm.delivery_type === "delivery" && (
-                        <div><Label>{t("marketplace.deliveryAddress")} *</Label><Textarea value={checkoutForm.address} onChange={e => setCheckoutForm(f => ({ ...f, address: e.target.value }))} placeholder={t("marketplace.deliveryAddressPh")} /></div>
-                      )}
-                      <div><Label>{t("marketplace.notes")}</Label><Textarea value={checkoutForm.notes} onChange={e => setCheckoutForm(f => ({ ...f, notes: e.target.value }))} placeholder={t("marketplace.notesPh")} /></div>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>{t("marketplace.total")}</span>
-                      <span className="text-emerald-600">${cartTotal.toFixed(2)}</span>
-                    </div>
-                    <Button onClick={handleCheckout} disabled={submitting} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-full">
-                      {submitting ? t("marketplace.processing") : t("marketplace.confirmOrder")}
-                    </Button>
-                  </div>
-                )}
-              </SheetContent>
-            </Sheet>
+            <Button
+              variant="outline" size="icon"
+              className="relative rounded-full"
+              onClick={() => setCartOpen(true)}
+              aria-label="cart"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
+              )}
+            </Button>
           </div>
         </div>
+
+        {/* Featured categories chips */}
+        {featuredCategories.length > 0 && (
+          <div className="max-w-7xl mx-auto px-4 pb-3 overflow-x-auto">
+            <div className="flex gap-2 snap-x">
+              <button
+                onClick={() => setF({ categories: [] })}
+                className={`snap-start shrink-0 h-8 px-3 rounded-full text-xs font-medium border transition-all ${filters.categories.length === 0 ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border hover:bg-muted"}`}
+              >
+                {t("common.all")}
+              </button>
+              {featuredCategories.map((c) => {
+                const active = filters.categories.includes(c);
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setF({ categories: active ? filters.categories.filter((x) => x !== c) : [...filters.categories, c] })}
+                    className={`snap-start shrink-0 h-8 px-3 rounded-full text-xs font-medium border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border hover:bg-muted"}`}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 py-12 sm:py-16">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-2xl mx-auto">
-            <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-4">
-              {t("marketplace.heroTitle")} <span className="text-emerald-600">{t("marketplace.heroAccent")}</span>
+      {/* HERO (compact) */}
+      <section className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              {t("marketplace.heroTitle")} <span className="text-primary">{t("marketplace.heroAccent")}</span>
             </h1>
-            <p className="text-gray-500 text-lg">{t("marketplace.heroSubtitle")}</p>
-          </motion.div>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xl">{t("marketplace.heroSubtitle")}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {userPos ? (
+              <Badge variant="outline" className="gap-1 bg-primary/5 border-primary/30 text-primary">
+                <MapPin className="h-3 w-3" /> {t("marketplace.locationOn")}
+              </Badge>
+            ) : (
+              <Button size="sm" variant="outline" onClick={requestLocation} className="h-8 text-xs gap-1 rounded-full">
+                <MapPin className="h-3.5 w-3.5" /> {t("marketplace.useLocation")}
+              </Button>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* Geo banner */}
-      <div className="max-w-7xl mx-auto px-4 pb-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          {userPos ? (
-            <Badge variant="outline" className="gap-1 bg-emerald-50 border-emerald-200 text-emerald-700">
-              <MapPin className="h-3 w-3" /> {t("marketplace.locationDetected")}
-            </Badge>
-          ) : (
-            <Button size="sm" variant="outline" onClick={requestLocation} className="h-8 text-xs gap-1 rounded-full">
-              <MapPin className="h-3.5 w-3.5" /> {t("marketplace.useLocation")}
-            </Button>
-          )}
-          {userPos && (
-            <Select value={maxDistance ? String(maxDistance) : "all"} onValueChange={(v) => setMaxDistance(v === "all" ? null : parseFloat(v))}>
-              <SelectTrigger className="w-[160px] h-8 text-xs rounded-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("marketplace.distanceAny")}</SelectItem>
-                <SelectItem value="2">≤ 2 km</SelectItem>
-                <SelectItem value="5">≤ 5 km</SelectItem>
-                <SelectItem value="10">≤ 10 km</SelectItem>
-                <SelectItem value="25">≤ 25 km</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-          <button
-            onClick={() => setDeliveryOnly((v) => !v)}
-            className={`h-8 px-3 rounded-full text-xs font-medium border transition-all ${deliveryOnly ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-600 border-gray-200 hover:bg-emerald-50"}`}
-          >
-            <Truck className="h-3 w-3 inline mr-1" /> {t("marketplace.deliveryOnly")}
-          </button>
+      {/* TOOLBAR */}
+      <div className="sticky top-[64px] sm:top-[68px] z-30 bg-background/85 backdrop-blur border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center gap-2 flex-wrap">
+          <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="rounded-full lg:hidden">
+                <SlidersHorizontal className="h-4 w-4 mr-1" /> {t("marketplace.filters.title")}
+                {hasActiveFilters && <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-primary" />}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl flex flex-col p-0">
+              <SheetHeader className="px-5 pt-5 pb-2">
+                <SheetTitle>{t("marketplace.filters.title")}</SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-5 pb-5">
+                <MarketplaceFilters
+                  filters={filters}
+                  onChange={setF}
+                  onClear={clearFilters}
+                  products={data.products}
+                  tenants={data.tenants}
+                  stores={data.stores}
+                  categories={data.categories}
+                  hasGeo={!!userPos}
+                  resultsCount={filtered.length}
+                />
+              </div>
+              <div className="border-t p-4 bg-card">
+                <Button onClick={() => setFiltersOpen(false)} className="w-full rounded-full h-11">
+                  {t("marketplace.showResults", { n: filtered.length })}
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <MarketplaceSortSelect value={filters.sort} onChange={(v) => setF({ sort: v })} hasGeo={!!userPos} />
+
+          <div className="flex-1 min-w-0 overflow-x-auto">
+            <ActiveFilterChips
+              filters={filters}
+              tenants={data.tenants}
+              stores={data.stores}
+              categories={data.categories}
+              onChange={setF}
+              onClear={clearFilters}
+            />
+          </div>
+
+          <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:inline">
+            {filtered.length} {t("marketplace.results")}
+          </span>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="max-w-7xl mx-auto px-4 pb-4">
-        <div className="flex flex-wrap gap-2 items-center">
-          <Badge
-            variant={selectedCategory === "all" ? "default" : "outline"}
-            className={`cursor-pointer transition-all ${selectedCategory === "all" ? "bg-emerald-600 text-white" : "hover:bg-emerald-50"}`}
-            onClick={() => setSelectedCategory("all")}
-          >
-            {t("common.all")}
-          </Badge>
-          {categories.map(cat => (
-            <Badge
-              key={cat}
-              variant={selectedCategory === cat ? "default" : "outline"}
-              className={`cursor-pointer transition-all ${selectedCategory === cat ? "bg-emerald-600 text-white" : "hover:bg-emerald-50"}`}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </Badge>
-          ))}
-          <Separator orientation="vertical" className="h-6 mx-2 hidden sm:block" />
-          <Select value={selectedTenant} onValueChange={setSelectedTenant}>
-            <SelectTrigger className="w-[180px] h-8 text-xs rounded-full">
-              <SelectValue placeholder={t("marketplace.allBusinesses")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("marketplace.allBusinesses")}</SelectItem>
-              {tenants.map(t => (
-                <SelectItem key={t.id} value={t.id}>{bizIcon(t.business_type)} {t.name}{userPos && tenantDistances[t.id] ? ` · ${tenantDistances[t.id]!.dist.toFixed(1)} km` : ""}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* MAIN: sidebar + grid */}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
+          {/* Sidebar desktop */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-[140px] bg-card border border-border rounded-2xl p-5">
+              <MarketplaceFilters
+                filters={filters}
+                onChange={setF}
+                onClear={clearFilters}
+                products={data.products}
+                tenants={data.tenants}
+                stores={data.stores}
+                categories={data.categories}
+                hasGeo={!!userPos}
+                resultsCount={filtered.length}
+              />
+            </div>
+          </aside>
+
+          {/* Grid */}
+          <section>
+            {data.loading ? (
+              <ProductCardSkeletonGrid />
+            ) : filtered.length === 0 ? (
+              <EmptyState hasActiveFilters={hasActiveFilters} onClear={clearFilters} />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                {filtered.map((p, i) => {
+                  const inCart = cart.find((c) => c.id === p.id);
+                  const isNew =
+                    p.created_at &&
+                    (Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24) < NEW_DAYS;
+                  return (
+                    <MarketplaceProductCard
+                      key={p.id}
+                      product={p}
+                      tenant={tenantsMap[p.tenant_id]}
+                      distanceKm={userPos ? tenantDistances[p.tenant_id] : undefined}
+                      discountPct={promoIndex.get(p.id) ?? 0}
+                      qtyInCart={inCart?.qty ?? 0}
+                      isNew={!!isNew}
+                      index={i}
+                      onAdd={() => addToCart(p)}
+                      onRemove={() => updateQty(p.id, -1)}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </div>
-      </div>
-
-
-      {/* Products Grid */}
-      <main className="max-w-7xl mx-auto px-4 pb-16">
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="h-8 w-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            <Package className="h-16 w-16 mx-auto mb-4 opacity-30" />
-            <h3 className="text-xl font-medium text-gray-600">{t("marketplace.noProducts")}</h3>
-            <p className="text-sm mt-1">{t("marketplace.tryFilters")}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            <AnimatePresence>
-              {filtered.map((p, i) => {
-                const tenant = tenantMap[p.tenant_id];
-                const inCart = cart.find(c => c.id === p.id);
-                return (
-                  <motion.div
-                    key={p.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow group"
-                  >
-                    <div className="aspect-square bg-gradient-to-br from-emerald-50 to-teal-50 relative overflow-hidden">
-                      {p.image_url ? (
-                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-5xl opacity-60">
-                          {tenant?.business_type === "restaurante" ? "🍽️" : tenant?.business_type === "bar" ? "🍹" : "📦"}
-                        </div>
-                      )}
-                      {inCart && (
-                        <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">{inCart.qty}</div>
-                      )}
-                    </div>
-                    <div className="p-3 space-y-1.5">
-                      {tenant && (
-                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide truncate flex items-center gap-1">
-                          <span className="truncate">{bizIcon(tenant.business_type)} {tenant.name}</span>
-                          {userPos && tenantDistances[p.tenant_id] && (
-                            <span className="text-emerald-600 font-semibold whitespace-nowrap">· {tenantDistances[p.tenant_id]!.dist.toFixed(1)} km</span>
-                          )}
-                        </p>
-                      )}
-                      <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-tight">{p.name}</h3>
-                      {p.description && <p className="text-[11px] text-gray-400 line-clamp-1">{p.description}</p>}
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-lg font-bold text-emerald-600">${p.price.toFixed(2)}</span>
-                        <Button
-                          size="sm"
-                          onClick={() => addToCart(p)}
-                          className="h-8 w-8 p-0 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between gap-1">
-                        <p className="text-[10px] text-gray-400">{p.online_stock} {t("marketplace.available")}</p>
-                        {p.is_deliverable === false && (
-                          <span className="text-[9px] text-amber-600 font-medium">{t("marketplace.pickupOnly")}</span>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        )}
       </main>
 
-      {/* Floating cart button mobile */}
+      {/* Floating cart bar mobile */}
       {cartCount > 0 && !cartOpen && (
         <motion.div
-          initial={{ y: 100 }} animate={{ y: 0 }}
-          className="fixed bottom-4 left-4 right-4 sm:hidden z-50"
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          className="fixed bottom-3 left-3 right-3 sm:hidden z-40"
         >
           <Button
             onClick={() => setCartOpen(true)}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg h-12 text-base"
+            className="w-full rounded-full shadow-xl h-12 text-sm"
           >
             <ShoppingCart className="h-5 w-5 mr-2" />
-            {t("marketplace.viewCart")} ({cartCount}) — ${cartTotal.toFixed(2)}
+            {t("marketplace.viewCart")} ({cartCount}) · {formatPrice(cartTotal)}
           </Button>
         </motion.div>
       )}
+
+      <MarketplaceCartSheet
+        open={cartOpen}
+        onOpenChange={setCartOpen}
+        cart={cart}
+        tenantsMap={tenantsMap}
+        onUpdateQty={updateQty}
+        onRemove={removeFromCart}
+        onClear={() => setCart([])}
+        onOrderSuccess={() => setOrderSuccess(true)}
+      />
     </div>
   );
 };

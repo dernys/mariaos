@@ -35,6 +35,7 @@ const Devoluciones = lazy(() => import("./pages/Devoluciones"));
 const Cuentas = lazy(() => import("./pages/Cuentas"));
 const Facturas = lazy(() => import("./pages/Facturas"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
+const MarketplaceProduct = lazy(() => import("./pages/MarketplaceProduct"));
 const Reportes = lazy(() => import("./pages/Reportes"));
 const Fidelizacion = lazy(() => import("./pages/Fidelizacion"));
 const RRHH = lazy(() => import("./pages/RRHH"));
@@ -101,6 +102,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/marketplace" element={<Suspense fallback={<PageLoader />}><Marketplace /></Suspense>} />
+              <Route path="/marketplace/p/:id" element={<Suspense fallback={<PageLoader />}><MarketplaceProduct /></Suspense>} />
               <Route path="/app" element={<P><Index /></P>} />
               <Route path="/dashboard" element={<P><Index /></P>} />
               <Route path="/pos" element={<P><POS /></P>} />

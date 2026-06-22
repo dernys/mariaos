@@ -1,93 +1,205 @@
-# Internacionalización completa de MarIA OS
 
-Sistema multilenguaje profesional, escalable y separado claramente de **locale**, **moneda funcional** y **perfil fiscal/contable**.
+# Rediseño profesional del Marketplace de MarIA OS
 
-## Arquitectura
+## 1. Diagnóstico del marketplace actual
+
+**Funciona bien**
+- Multi-tenant real (`tenants_public`, `stores_public`), checkout con RPC `place_online_order` (valida stock, multi-tenant).
+- Geolocalización + cálculo Haversine por tenant.
+- Carrito agrupado por negocio, deep link a `/auth` cuando no hay sesión.
+
+**Debilidades**
+1. **Diseño desalineado** con el sistema MarIA OS (verde plano emerald + gris, sin tokens semánticos, sin Space Grotesk/DM Sans).
+2. **Buscador débil**: sin autosugerencias, sin búsquedas recientes, sin scope (producto/negocio/categoría).
+3. **Filtros pobres**: solo categoría, negocio, delivery, distancia. Faltan: subcategoría, rango de precio, disponibilidad, sucursal, tipo de entrega, ofertas, rating, marca, tiempo de preparación.
+4. **Sin ordenamiento explícito** (solo orden implícito por distancia).
+5. **Cards básicas**: no muestran sucursal específica, tiempo estimado, badges (oferta/delivery), rating.
+6. **Sin ficha de producto** — no hay galería, descripción extendida, relacionados, info del negocio, variantes.
+7. **Mobile**: filtros viven en la barra superior y se vuelven inmanejables; falta drawer real.
+8. **Sin chips de filtros activos**, sin "limpiar filtros", sin skeletons.
+
+## 2. Arquitectura visual nueva
+
+Adopta el sistema MarIA OS (memoria del proyecto):
+- **Tema oscuro elegante** con superficie clara opcional para el marketplace público (modo "comercial premium"): bg `slate-950 / navy-deep`, superficies elevadas, acentos `emerald` semánticos vía tokens existentes en `index.css`.
+- Tipografía: Space Grotesk (titulares), DM Sans (cuerpo).
+- Tokens: usar `bg-background`, `text-foreground`, `bg-card`, `border-border`, `text-primary` (nunca `bg-emerald-600` hardcoded).
+- Sombras suaves: nuevo token `--shadow-product`, `--shadow-elevated`.
+- Radii consistentes (`rounded-2xl` para cards, `rounded-full` para chips).
+
+## 3. Estructura de la nueva página
 
 ```text
-Usuario  ─┐
-Tenant   ─┼─►  resolver(prioridad)  ─►  i18next  ─►  UI + emails + reportes
-Browser  ─┤                              │
-es (fallback)                            └─► Intl (fechas/números/moneda)
+┌─────────────────────────────────────────────────────────────┐
+│ HEADER sticky: logo · buscador con autosugest · ubicación · │
+│                 idioma · login · carrito                     │
+├─────────────────────────────────────────────────────────────┤
+│ HERO compacto + chips de categorías destacadas (scroll-x)   │
+├─────────────────────────────────────────────────────────────┤
+│ TOOLBAR sticky: [Filtros] · Ordenar por · Chips activos · X │
+├─────────────────┬───────────────────────────────────────────┤
+│ SIDEBAR FILTROS │ GRID PRODUCTOS (responsive 2/3/4/5)       │
+│ (desktop)       │ Skeleton loaders                          │
+│ Drawer (mobile) │ Estado vacío ilustrado                    │
+└─────────────────┴───────────────────────────────────────────┘
+   FAB carrito mobile · CTA flotante sticky
 ```
 
-- **Librería**: `i18next` + `react-i18next` + `i18next-browser-languagedetector` (estándar, soporta plurales, interpolación, lazy load por namespace).
-- **Locales soportados**: `es` (default), `es-CU`, `pt-BR`, `en`, `en-US`.
-- **Namespaces** (carga perezosa por módulo): `common`, `auth`, `nav`, `pos`, `inventory`, `purchases`, `suppliers`, `customers`, `hr`, `payroll`, `accounting`, `treasury`, `marketplace`, `delivery`, `reports`, `ai`, `audit`, `settings`, `emails`, `enums`.
-- **Resolución** (en orden): `profiles.locale` → `tenants.default_locale` → `navigator.language` → `es`.
-- **Persistencia**:
-  - Columna nueva `profiles.locale text` (preferencia del usuario).
-  - Columna nueva `tenants.default_locale text` (preferencia de la empresa).
-  - `localStorage` como caché para arranque sin parpadeo.
+## 4. Filtros (sidebar desktop / drawer mobile)
 
-## Locale ≠ Idioma ≠ Fiscal
+Componente nuevo `MarketplaceFilters` con secciones colapsables:
+- **Categoría / Subcategoría** (de `product_categories`, jerarquía padre→hijo).
+- **Rango de precio** (slider doble min/max sobre el set visible).
+- **Disponibilidad**: en stock, bajo stock, agotado.
+- **Sucursal** (multi-select de `stores_public`).
+- **Negocio** (multi-select de `tenants_public`).
+- **Tipo de entrega**: delivery / pickup / ambos.
+- **Distancia** (slider 1–25 km, requiere geolocalización).
+- **Ofertas**: solo con descuento (tabla `promotions` activas).
+- **Marca**: cuando exista (campo derivado del nombre/categoría; si no hay, se oculta).
+- **Rating**: ≥3, ≥4, ≥5 (calculado vía agregado de reviews si existe; si no, oculto).
+- **Tiempo estimado**: ≤15 / ≤30 / ≤60 min (usar `pos_settings.kitchen_prep_avg_min` por tenant cuando exista; fallback "—").
 
-Tres ejes independientes en `tenants`:
+Comportamiento:
+- Multi-selección, actualización en vivo (debounced 200 ms).
+- Chips de filtros activos en la toolbar, con `×` individual y "Limpiar todo".
+- Contadores por opción (`Bar (12)`).
 
-| Eje               | Columna                         | Ejemplo            | Uso                                    |
-| ----------------- | ------------------------------- | ------------------ | -------------------------------------- |
-| Idioma UI         | `default_locale`                | `pt-BR`            | `i18next.language`                     |
-| Formato regional  | `default_locale` (mismo)        | `pt-BR`            | `Intl.NumberFormat`, `Intl.DateTimeFormat` |
-| Moneda funcional  | `base_currency` (ya existe)     | `BRL`              | reportes contables, totales            |
-| Perfil contable   | `accounting_profile_code` (ya)  | `BR-LucroPresumido`| plan de cuentas + impuestos            |
-| País              | `country_code` (ya)             | `BR`               | impuestos por región (ICMS/ISS/ONAT)   |
+## 5. Ordenamiento
 
-Un tenant cubano puede operar en **pt-BR** mostrando precios en **CUP** y declarando en **DJ-09 ONAT** sin contradicciones.
+Select compacto con: relevancia, más vendidos (orden por `total_sold` precomputado en vista pública o cálculo client-side), mejor valorados, menor precio, mayor precio, más cercanos, más nuevos, entrega más rápida, mayor descuento.
 
-## Datos traducibles (lookups con clave estable)
+## 6. Buscador con autosugerencias
 
-Los catálogos no se almacenan traducidos; se guardan por **código** y se traducen vía `enums` namespace:
+Componente nuevo `MarketplaceSearchBar`:
+- Input grande sticky, `cmdk`-style popover.
+- Sugerencias divididas en grupos: **Productos**, **Negocios**, **Categorías**.
+- Coincidencia fuzzy client-side sobre el set ya cargado (rápido, sin RPC extra).
+- Historial local (últimas 5 búsquedas) en `localStorage`.
+- Atajos: `/` para enfocar, `Esc` para cerrar.
 
-- Estados de pedido / delivery / venta / pago
-- Tipos de documento
-- Roles, permisos
-- Categorías por defecto
-- Etiquetas de dashboard
-- Mensajes del motor IA / agentes
+## 7. Product Card rediseñada
 
-Para datos del tenant (categorías custom, productos, etc.) se respeta el texto que el usuario escribió — no se traducen automáticamente.
+`MarketplaceProductCard` con:
+- Imagen (lazy, aspect-square, placeholder por tipo de negocio).
+- Badges top-left: **Oferta -%**, **Delivery**, **Nuevo**.
+- Badge top-right: stock indicator (`En stock`/`Últimas X`/`Agotado` en color semántico).
+- Nombre, descripción 1 línea.
+- Precio + moneda local del tenant (CUP/USD).
+- Footer: nombre del negocio + ícono · distancia · ⭐ rating (si hay) · 🕒 tiempo estimado.
+- Botón `+` (añadir) o stepper si ya está en carrito.
+- Click en card → ficha de producto.
 
-## Fases de ejecución (incrementales)
+## 8. Ficha de producto (`/marketplace/p/:id`)
 
-### Fase 1 — Cimientos (este turno)
-1. Instalar `i18next`, `react-i18next`, `i18next-browser-languagedetector`.
-2. Crear `src/i18n/index.ts` (config), `src/i18n/locales/{es,pt-BR,en}/{common,nav,auth,enums,settings}.json` con strings base.
-3. Migración: `profiles.locale`, `tenants.default_locale`.
-4. Hook `useLocale()` que resuelve prioridad y cambia idioma en runtime.
-5. Helpers `formatMoney(value, currency, locale)`, `formatDate(date, locale)`, `formatNumber(n, locale)`.
-6. Selector de idioma global en el sidebar/topbar (persiste en `profiles.locale`).
-7. Sección "Idioma de la empresa" en `ConfigGeneral.tsx` (persiste `default_locale`).
-8. Traducir: AppSidebar, NavLink, Auth, ConfigGeneral, NotFound, header común.
+Página nueva con:
+- Galería (imagen principal + miniaturas, swipe en mobile).
+- Header: nombre, badges, precio con tachado de antes si hay oferta.
+- Selector de cantidad + CTA **Añadir al carrito** sticky en mobile.
+- Pestañas: **Descripción** · **Negocio** (sucursal, dirección, horario, distancia, mapa estático) · **Entrega** (delivery/pickup, zonas, costo).
+- **Productos relacionados** (misma categoría/tenant, 6 items).
+- **Complementarios** (otros productos del mismo tenant, distinta categoría).
+- Breadcrumbs y botón "Volver".
 
-### Fase 2 — Módulos operativos
-POS, Inventario, Compras, Proveedores, Clientes, Ventas/Facturas.
-Cada módulo extrae strings a su namespace, sustituye literales por `t('key')`, fechas/montos usan helpers.
+## 9. Checkout mejorado
 
-### Fase 3 — Módulos financieros y RH
-Contabilidad, Tesorería, Nómina, RRHH, Reportes.
+- Mantener flujo actual (`place_online_order` RPC, login requerido para confirmar).
+- Stepper visual: Carrito → Datos → Entrega → Confirmación.
+- Pre-rellenar datos con `profiles` del usuario logueado.
+- Mostrar **resumen por negocio** (cada tenant es un sub-pedido).
+- **Pantalla de éxito** rediseñada con número de pedido, próximos pasos, link a "Mis pedidos".
 
-### Fase 4 — Marketplace, Delivery, IA, Auditoría
+## 10. Estados visuales
 
-### Fase 5 — Plantillas de email y PDF
-Auth emails (scaffold con plantilla por locale), facturas PDF (`invoicePdf.ts`), tickets de impresión.
+- **Skeletons**: 10 cards mientras carga.
+- **Estado vacío de búsqueda**: ilustración + sugerencias para limpiar filtros.
+- **Estado sin negocios en zona**: CTA para ampliar distancia.
+- **Transiciones**: framer-motion fade+slide al cambiar filtros.
 
-### Fase 6 — QA y limpieza
-- Linter para detectar strings sin `t()`: `npx i18next-parser` integrado a CI.
-- Inventario final de cobertura por módulo (% strings traducidos).
+## 11. Mobile UX
 
-## Salida esperada al terminar Fase 1
+- Header colapsable al hacer scroll (busca + carrito quedan visibles).
+- Botón **Filtros** abre `Sheet` desde abajo (no lateral) en mobile, con CTA "Mostrar X resultados".
+- Chips de categorías destacadas en scroll horizontal con snap.
+- FAB de carrito + barra inferior con total y CTA siempre visible cuando hay items.
 
-- App arranca en idioma resuelto (usuario > tenant > navegador > es).
-- Cambio de idioma desde la UI funciona en caliente.
-- Sidebar/Auth/Config en 3 idiomas.
-- Base lista para que las fases 2–6 sean repetitivas y rápidas (sustitución mecánica).
+## 12. Integración real (sin datos ficticios)
 
-## Notas
+Confirmaciones:
+- Productos: `products` con `is_online=true`, `is_active=true`, `online_stock>0` (ya hecho).
+- Stock real validado en checkout vía RPC (ya hecho).
+- Sucursales reales: usar `stores_public` para sucursal por producto (warehouse_id→store opcional, fallback: primera sucursal del tenant).
+- Moneda real: `tenants.default_currency` (añadir al `tenants_public` si falta).
+- Tipo de negocio real: ya usado.
+- Promociones reales: `promotions` activas joineadas al producto.
 
-- Plan de cuentas, nombres de impuestos legales (ICMS, ISS, ONAT-DJ08): **no traducir** — son nombres propios fiscales.
-- Mensajes de error técnicos del backend (Postgres): se traducen en el catch del cliente vía `enums`.
-- Plurales con `{count}` y `i18next` pluralization rules nativas.
+## 13. Validaciones técnicas
 
----
+- ✅ Multi-tenant: filtros respetan `tenant_id`, checkout sigue creando un pedido por tenant.
+- ✅ i18n: nuevas claves agregadas en `es.json` / `en.json` / `pt-BR.json` bajo `marketplace.*`.
+- ✅ Moneda: usa `useLocale`/`formatCurrency` por tenant.
+- ✅ Delivery: respeta `accepts_delivery` y `delivery_radius_km` de `stores_public`.
+- ✅ Contabilidad / inventario: intacto, sigue pasando por `place_online_order`.
+- ✅ Permisos: público para navegar; RLS de `online_orders` exige `auth.uid()`.
+- ✅ Rendimiento: filtros client-side sobre set ya cargado, memoización con `useMemo`, virtualización solo si >200 items (no por ahora).
 
-**Confirma para arrancar la Fase 1** (instalación + cimientos + sidebar/auth/config en 3 idiomas). Las fases 2-6 las haremos por módulo en mensajes siguientes para mantener cada cambio revisable.
+## 14. Plan de implementación
+
+**Fase A — Fundaciones**
+1. Crear hook `useMarketplaceData` (productos + tenants + stores + categorías + promos).
+2. Definir tokens visuales del marketplace en `index.css` (variantes claras/oscuras del modo público).
+3. Componentes nuevos en `src/components/marketplace/`:
+   - `MarketplaceHeader.tsx`
+   - `MarketplaceSearchBar.tsx` (con autosugest cmdk)
+   - `MarketplaceFilters.tsx` (sidebar + drawer)
+   - `MarketplaceSortSelect.tsx`
+   - `ActiveFilterChips.tsx`
+   - `MarketplaceProductCard.tsx`
+   - `ProductCardSkeleton.tsx`
+   - `EmptyState.tsx`
+
+**Fase B — Página principal**
+4. Reescribir `src/pages/Marketplace.tsx` componiendo lo anterior.
+
+**Fase C — Detalle**
+5. Crear `src/pages/MarketplaceProduct.tsx` y ruta `/marketplace/p/:id` en `App.tsx`.
+
+**Fase D — Checkout & éxito**
+6. Extraer carrito y checkout a `MarketplaceCartSheet.tsx` con stepper.
+7. Pantalla de éxito rediseñada.
+
+**Fase E — i18n y QA**
+8. Añadir claves a los tres idiomas.
+9. Smoke test con Playwright: navegación pública → filtro → detalle → añadir → login → checkout.
+
+## Detalles técnicos
+
+- Reusar `cmdk` ya disponible vía shadcn `Command`.
+- `Slider` shadcn para rango de precio y distancia.
+- `Sheet` shadcn lado `bottom` en mobile, `left` en desktop.
+- Categorías jerárquicas: `product_categories` tiene `parent_id` (verificar con read_query antes de implementar).
+- Promociones activas: filtro `is_active=true AND now() BETWEEN starts_at AND ends_at`.
+- Tiempo de preparación: usar `pos_settings.avg_prep_minutes` si existe, sino ocultar el filtro y el campo.
+- Rating: si `product_reviews` o similar no existe, se oculta el filtro y el badge — no se inventan estrellas.
+- Marca: si no hay columna `brand`, derivar de la primera palabra del nombre solo si el tenant es `empresa`; si no, ocultar.
+
+## Lista de cambios
+
+**Aplicados (al finalizar)**
+- Marketplace rediseñado mobile-first.
+- 14 filtros + ordenamiento + autosugerencias + chips activos.
+- Cards modernas con badges, stock, distancia, tiempo, sucursal.
+- Ficha de producto con galería, relacionados, info del negocio.
+- Checkout en stepper con resumen por negocio.
+- Skeletons, estados vacíos, transiciones.
+- i18n ES/EN/PT.
+
+**Pendientes / requieren cambios de schema (informar al usuario)**
+- Reviews/ratings (necesita tabla `product_reviews`).
+- Marca (necesita columna `brand` en `products`).
+- Tiempo de preparación por producto (hoy es por tenant).
+- Sucursal exacta por producto (hoy `warehouse_id` → mapeo a sucursal opcional).
+
+## Confirmación necesaria
+
+¿Apruebas este plan tal cual, o quieres priorizar/recortar alguna fase (p.ej. dejar la ficha de producto para una segunda iteración)?
