@@ -15,6 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { MarketplaceProductCard } from "@/components/marketplace/MarketplaceProductCard";
 import { MarketplaceCartSheet } from "@/components/marketplace/MarketplaceCartSheet";
+import { ProductReviewsSection } from "@/components/marketplace/ProductReviewsSection";
+import { RatingStars } from "@/components/marketplace/RatingStars";
 import {
   bizIcon, formatPrice, distanceKm,
 } from "@/components/marketplace/types";
