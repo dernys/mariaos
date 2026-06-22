@@ -117,10 +117,26 @@ export const MarketplaceProductCard = ({
         >
           {product.name}
         </h3>
-        {product.category && (
-          <p className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
-            <Tag className="h-2.5 w-2.5" /> {product.category}
-          </p>
+        {product.brand && (
+          <p className="text-[10px] text-muted-foreground font-medium truncate">{product.brand}</p>
+        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {product.category && (
+            <p className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+              <Tag className="h-2.5 w-2.5" /> {product.category}
+            </p>
+          )}
+          {product.prep_minutes != null && product.prep_minutes > 0 && (
+            <p className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+              <Clock className="h-2.5 w-2.5" /> {product.prep_minutes}′
+            </p>
+          )}
+        </div>
+        {(product.reviews_count ?? 0) > 0 && (
+          <div className="flex items-center gap-1">
+            <RatingStars value={product.rating_avg ?? 0} size={11} />
+            <span className="text-[10px] text-muted-foreground">({product.reviews_count})</span>
+          </div>
         )}
 
         <div className="flex items-end justify-between pt-1 mt-auto">
