@@ -5297,6 +5297,87 @@ export type Database = {
           },
         ]
       }
+      product_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          is_verified_purchase: boolean
+          is_visible: boolean
+          product_id: string
+          rating: number
+          tenant_id: string
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          is_verified_purchase?: boolean
+          is_visible?: boolean
+          product_id: string
+          rating: number
+          tenant_id: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          is_verified_purchase?: boolean
+          is_visible?: boolean
+          product_id?: string
+          rating?: number
+          tenant_id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_replenishment_suggestions"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_serials: {
         Row: {
           created_at: string
@@ -5532,6 +5613,7 @@ export type Database = {
       products: {
         Row: {
           barcodes: Json
+          brand: string | null
           category: string | null
           cost: number
           created_at: string
@@ -5551,10 +5633,12 @@ export type Database = {
           min_stock: number
           name: string
           online_stock: number
+          prep_minutes: number | null
           price: number
           product_type: string
           sku: string
           stock: number
+          store_id: string | null
           tenant_id: string | null
           track_lots: boolean
           track_serials: boolean
@@ -5563,6 +5647,7 @@ export type Database = {
         }
         Insert: {
           barcodes?: Json
+          brand?: string | null
           category?: string | null
           cost?: number
           created_at?: string
@@ -5582,10 +5667,12 @@ export type Database = {
           min_stock?: number
           name: string
           online_stock?: number
+          prep_minutes?: number | null
           price?: number
           product_type?: string
           sku: string
           stock?: number
+          store_id?: string | null
           tenant_id?: string | null
           track_lots?: boolean
           track_serials?: boolean
@@ -5594,6 +5681,7 @@ export type Database = {
         }
         Update: {
           barcodes?: Json
+          brand?: string | null
           category?: string | null
           cost?: number
           created_at?: string
@@ -5613,10 +5701,12 @@ export type Database = {
           min_stock?: number
           name?: string
           online_stock?: number
+          prep_minutes?: number | null
           price?: number
           product_type?: string
           sku?: string
           stock?: number
+          store_id?: string | null
           tenant_id?: string | null
           track_lots?: boolean
           track_serials?: boolean
@@ -5629,6 +5719,20 @@ export type Database = {
             columns: ["default_tax_rate_id"]
             isOneToOne: false
             referencedRelation: "tax_rates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores_public"
             referencedColumns: ["id"]
           },
           {
@@ -7987,6 +8091,29 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants_public"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_ratings_public: {
+        Row: {
+          product_id: string | null
+          rating_avg: number | null
+          reviews_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_replenishment_suggestions"
+            referencedColumns: ["product_id"]
           },
         ]
       }
