@@ -8433,6 +8433,20 @@ export type Database = {
       }
     }
     Functions: {
+      accounting_audit_summary: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          payments_unposted: number
+          payrolls_unposted: number
+          purchases_unposted: number
+          returns_unposted: number
+          sales_unposted: number
+          total_credit: number
+          total_debit: number
+          total_entries: number
+          unbalanced_entries: number
+        }[]
+      }
       allocate_consignment_for_sale: {
         Args: { p_sale_id: string }
         Returns: undefined
