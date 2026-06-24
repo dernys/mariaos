@@ -32,6 +32,7 @@ import CuTaxDeclarationsTab from "@/components/accounting/CuTaxDeclarationsTab";
 import CuCostSheetsTab from "@/components/accounting/CuCostSheetsTab";
 import { FinancialKpiPanel } from "@/components/accounting/FinancialKpiPanel";
 import { SmokeTestPanel } from "@/components/accounting/SmokeTestPanel";
+import { AccountingAuditPanel } from "@/components/accounting/AccountingAuditPanel";
 
 interface Account {
   id: string; code: string; name: string; type: string; nature: string;
