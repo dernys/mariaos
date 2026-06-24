@@ -677,6 +677,7 @@ const Contabilidad = () => {
             </TabsList>
             <TabsContent value="reports" className="space-y-4">
               <FinancialKpiPanel />
+              <AccountingAuditPanel />
               <SmokeTestPanel />
               <AccountingReports accounts={accounts as any} />
             </TabsContent>
