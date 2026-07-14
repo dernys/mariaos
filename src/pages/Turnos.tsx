@@ -387,13 +387,18 @@ const Turnos = () => {
         </Dialog>
 
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <p className="text-sm text-muted-foreground">Historial de turnos</p>
-          {stores.some((s) => !openShifts.find((os) => os.store_id === s.id)) && (
-            <Button size="sm" onClick={() => setShowOpen(!showOpen)} className="gap-1 text-xs gradient-brand text-primary-foreground">
-              <Plus className="h-3.5 w-3.5" /> Abrir Turno
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowSetPin(true)} className="gap-1 text-xs">
+              <KeyRound className="h-3.5 w-3.5" /> PIN empleado
             </Button>
-          )}
+            {stores.some((s) => !openShifts.find((os) => os.store_id === s.id)) && (
+              <Button size="sm" onClick={() => setShowOpen(!showOpen)} className="gap-1 text-xs gradient-brand text-primary-foreground">
+                <Plus className="h-3.5 w-3.5" /> Abrir Turno
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Open Shift Form */}
@@ -402,6 +407,9 @@ const Turnos = () => {
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
               <div className="bg-card rounded-xl p-5 shadow-card border space-y-3">
                 <h3 className="font-heading font-semibold text-sm">Abrir Nuevo Turno</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Abierto por <b>{user?.email}</b>. Si el trabajador que operará el turno es otro, deberá autorizar con su PIN.
+                </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <Label className="text-xs">Tienda *</Label>
@@ -414,22 +422,38 @@ const Turnos = () => {
                   </div>
 
                   <div>
-                    <Label className="text-xs">Cajero *</Label>
+                    <Label className="text-xs">Trabajador del turno *</Label>
                     <Select value={openEmployeeId} onValueChange={setOpenEmployeeId}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar cajero" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar trabajador" /></SelectTrigger>
                       <SelectContent>
-                        {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.position && `(${e.position})`}</SelectItem>)}
+                        {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.position && `(${e.position})`}{e.user_id === user?.id ? " · tú" : ""}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Efectivo Inicial</Label>
+                    <Label className="text-xs">Efectivo Inicial *</Label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input type="number" placeholder="0.00" value={openCash} onChange={(e) => setOpenCash(e.target.value)} className="pl-9" />
                     </div>
                   </div>
                 </div>
+
+                {needsOpenPin && (
+                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2">
+                    <p className="text-[11px] flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> El trabajador <b>{selectedOpenEmp?.name}</b> debe autorizar con su PIN.</p>
+                    <Input type="password" inputMode="numeric" placeholder="PIN del trabajador" value={openPin} onChange={(e) => setOpenPin(e.target.value)} />
+                    {!selectedOpenEmp?.has_pin && (
+                      <p className="text-[10px] text-destructive">Este trabajador aún no tiene PIN. Configúralo con el botón "PIN empleado".</p>
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <Label className="text-xs">Notas</Label>
+                  <Textarea rows={2} value={openNotes} onChange={(e) => setOpenNotes(e.target.value)} placeholder="Observaciones del turno..." />
+                </div>
+
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" size="sm" onClick={() => setShowOpen(false)}>Cancelar</Button>
                   <Button size="sm" onClick={openShift} className="gradient-brand text-primary-foreground font-heading font-semibold">Abrir Turno</Button>
