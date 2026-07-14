@@ -85,7 +85,7 @@ const Turnos = () => {
       setOpenShifts(data.filter((s) => s.status === "open"));
     }
     if (storeRes.data) setStores(storeRes.data);
-    if (empRes.data) setEmployees(empRes.data);
+    if (empRes.data) setEmployees((empRes.data as any[]).map((e) => ({ id: e.id, name: e.name, position: e.position, user_id: e.user_id, has_pin: !!e.access_pin_hash })));
     setLoading(false);
   };
 
