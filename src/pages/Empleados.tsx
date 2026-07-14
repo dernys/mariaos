@@ -17,7 +17,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit2, Trash2, Users, History, UserCheck, Wallet, Briefcase } from "lucide-react";
+import { Plus, Edit2, Trash2, Users, History, UserCheck, Wallet, Briefcase, KeyRound, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +39,7 @@ interface Employee {
   is_active: boolean;
   hire_date: string | null;
   notes: string | null;
+  access_pin_hash: string | null;
 }
 
 interface JobPosition {
@@ -66,6 +67,11 @@ const Empleados = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [form, setForm] = useState({ name: "", position: "", position_id: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: "", notes: "" });
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pinTarget, setPinTarget] = useState<Employee | null>(null);
+  const [pinValue, setPinValue] = useState("");
+  const [pinConfirm, setPinConfirm] = useState("");
+  const [pinSaving, setPinSaving] = useState(false);
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
@@ -145,6 +151,25 @@ const Empleados = () => {
     fetchEmployees();
   };
 
+  const openPin = (e: Employee) => {
+    setPinTarget(e); setPinValue(""); setPinConfirm(""); setPinDialogOpen(true);
+  };
+
+  const savePin = async () => {
+    if (!pinTarget) return;
+    if (!/^\d{4,8}$/.test(pinValue)) { toast({ title: "PIN inválido", description: "Usa 4 a 8 dígitos numéricos", variant: "destructive" }); return; }
+    if (pinValue !== pinConfirm) { toast({ title: "PIN no coincide", variant: "destructive" }); return; }
+    setPinSaving(true);
+    const { error } = await supabase.rpc("set_employee_pin" as any, { _employee_id: pinTarget.id, _pin: pinValue });
+    setPinSaving(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    await logActivity({ entity_type: "employee", entity_id: pinTarget.id, action: "PIN actualizado", description: `Se configuró el PIN de acceso a POS/Caja de ${pinTarget.name}`, tenant_id: tenantId, performed_by: user?.id });
+    toast({ title: "PIN actualizado", description: `${pinTarget.name} ya puede autorizar turnos y ventas` });
+    setPinDialogOpen(false);
+    fetchEmployees();
+  };
+
+
   const active = employees.filter((e) => e.is_active).length;
   const totalSalary = employees.filter((e) => e.is_active).reduce((a, e) => a + (Number(e.salary) || 0), 0);
   const totalAdvances = employees.reduce((a, e) => a + Math.max(0, Number((e as any).balance) || 0), 0);
@@ -209,7 +234,8 @@ const Empleados = () => {
                 <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead className="hidden lg:table-cell">Salario</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="w-28">Acciones</TableHead>
+                <TableHead className="hidden md:table-cell">PIN POS</TableHead>
+                <TableHead className="w-32">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -221,8 +247,14 @@ const Empleados = () => {
                   <TableCell className="hidden md:table-cell">{e.email || "—"}</TableCell>
                   <TableCell className="hidden lg:table-cell">${e.salary.toLocaleString()}</TableCell>
                   <TableCell><Badge variant={e.is_active ? "default" : "secondary"}>{e.is_active ? "Activo" : "Inactivo"}</Badge></TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {e.access_pin_hash
+                      ? <Badge variant="outline" className="gap-1 text-success border-success/40"><ShieldCheck className="h-3 w-3" /> Configurado</Badge>
+                      : <Badge variant="outline" className="gap-1 text-muted-foreground">Sin PIN</Badge>}
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
+                      <button onClick={() => openPin(e)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Configurar PIN de POS/Caja"><KeyRound className="h-3.5 w-3.5" /></button>
                       <button onClick={() => openDetail(e)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Historial"><History className="h-3.5 w-3.5" /></button>
                       <button onClick={() => openEdit(e)} className="p-1.5 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
                       <button onClick={() => handleDelete(e.id, e.name)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -232,7 +264,7 @@ const Empleados = () => {
               ))}
               {table.total === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     {loading ? t("common.loading") : "No hay empleados"}
                   </TableCell>
@@ -286,6 +318,40 @@ const Empleados = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleSave} className="gradient-brand text-primary-foreground">Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* PIN Dialog */}
+      <Dialog open={pinDialogOpen} onOpenChange={setPinDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> PIN de acceso POS / Caja</DialogTitle>
+            <DialogDescription>
+              {pinTarget?.name} usará este PIN para autorizar apertura de turnos, cambios de operador y ventas sensibles.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div>
+              <Label className="text-xs">Nuevo PIN (4 a 8 dígitos)</Label>
+              <Input type="password" inputMode="numeric" maxLength={8} value={pinValue}
+                onChange={(e) => setPinValue(e.target.value.replace(/\D/g, ""))} placeholder="••••" />
+            </div>
+            <div>
+              <Label className="text-xs">Confirmar PIN</Label>
+              <Input type="password" inputMode="numeric" maxLength={8} value={pinConfirm}
+                onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ""))} placeholder="••••" />
+            </div>
+            <p className="text-[11px] text-muted-foreground flex items-start gap-1">
+              <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              El PIN se guarda cifrado. Solo el empleado debe conocerlo.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPinDialogOpen(false)} disabled={pinSaving}>Cancelar</Button>
+            <Button onClick={savePin} disabled={pinSaving} className="gradient-brand text-primary-foreground">
+              {pinSaving ? "Guardando…" : "Guardar PIN"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

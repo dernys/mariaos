@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
-import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowLeft, PlayCircle, Store, UtensilsCrossed, Building2, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -46,6 +47,38 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [demoTenants, setDemoTenants] = useState<Array<{ tenant_id: string; name: string; business_type: string; roles: { role: string; email: string }[] }>>([]);
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("ensure-demo-user", { body: { action: "list" } });
+        if (data?.tenants) setDemoTenants(data.tenants);
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
+  const bizIcon = (t: string) => t === "bar" ? Store : t === "restaurant" ? UtensilsCrossed : Building2;
+  const bizLabel = (t: string) => t === "bar" ? "Bar / Cafetería" : t === "restaurant" ? "Restaurante" : "Empresa / Retail";
+  const roleLabel = (r: string) => r === "admin" ? "Administrador" : r === "gerente" ? "Gerente" : "Cajero";
+
+  const loginAsDemo = async (tenantId: string, role: string, tenantName: string) => {
+    setDemoLoading(`${tenantId}:${role}`);
+    try {
+      const { data, error } = await supabase.functions.invoke("ensure-demo-user", {
+        body: { action: "ensure", tenant_id: tenantId, role },
+      });
+      if (error || !data?.email) throw new Error(error?.message || data?.error || "No se pudo preparar el usuario demo");
+      const { error: loginErr } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
+      if (loginErr) throw loginErr;
+      toast.success(`Sesión demo: ${roleLabel(role)} · ${tenantName}`);
+    } catch (e: any) {
+      toast.error(e.message || "Error al iniciar demo");
+    } finally {
+      setDemoLoading(null);
+    }
+  };
 
   useEffect(() => {
     if (authLoading || !session) return;
@@ -274,6 +307,47 @@ const Auth = () => {
             </form>
           )}
         </div>
+
+        {/* Demo access panel */}
+        {view === "login" && demoTenants.length > 0 && (
+          <div className="mt-4 rounded-2xl border bg-card/70 backdrop-blur p-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <p className="text-xs font-heading font-semibold">Prueba con cuentas demo</p>
+              <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-auto">Sin registro</Badge>
+            </div>
+            <p className="text-[10px] text-muted-foreground -mt-1">Un clic para entrar como uno de los 3 roles configurados en cada tipo de negocio.</p>
+            <div className="space-y-2">
+              {demoTenants.map((t) => {
+                const Icon = bizIcon(t.business_type);
+                return (
+                  <div key={t.tenant_id} className="rounded-lg border bg-background/50 p-2">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Icon className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs font-medium truncate">{t.name}</span>
+                      <span className="text-[10px] text-muted-foreground ml-auto">{bizLabel(t.business_type)}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {t.roles.map((r) => {
+                        const busy = demoLoading === `${t.tenant_id}:${r.role}`;
+                        return (
+                          <Button key={r.role} size="sm" variant="outline"
+                            disabled={!!demoLoading}
+                            onClick={() => loginAsDemo(t.tenant_id, r.role, t.name)}
+                            className="h-8 text-[11px] gap-1 px-2">
+                            {busy ? <span className="h-3 w-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                  : <PlayCircle className="h-3 w-3" />}
+                            {roleLabel(r.role)}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 flex flex-col gap-2">
           <div className="rounded-xl border bg-card/50 p-1">
