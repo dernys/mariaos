@@ -67,6 +67,11 @@ const Empleados = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [form, setForm] = useState({ name: "", position: "", position_id: "", salary: "0", credit_limit: "0", phone: "", email: "", hire_date: "", notes: "" });
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pinTarget, setPinTarget] = useState<Employee | null>(null);
+  const [pinValue, setPinValue] = useState("");
+  const [pinConfirm, setPinConfirm] = useState("");
+  const [pinSaving, setPinSaving] = useState(false);
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
