@@ -113,26 +113,22 @@ const SuperAdmin = () => {
 
   const selectTenant = async (tenant: Tenant) => {
     setSelectedTenant(tenant);
-    // Fetch tenant users with profiles
-    const { data } = await supabase
+    // Fetch tenant users (no FK to profiles → join manually below)
+    const { data: tusers } = await supabase
       .from("tenant_users")
-      .select("*, profile:profiles!tenant_users_user_id_fkey(full_name, user_id)")
+      .select("*")
       .eq("tenant_id", tenant.id);
-    
-    // If join fails, fetch separately
-    if (!data) {
-      const { data: tusers } = await supabase
-        .from("tenant_users")
-        .select("*")
-        .eq("tenant_id", tenant.id);
-      setTenantUsers((tusers ?? []) as TenantUser[]);
-    } else {
-      setTenantUsers(data as unknown as TenantUser[]);
-    }
 
-    // Fetch all profiles for adding users
+    // Fetch all profiles once and map by user_id for display
     const { data: profiles } = await supabase.from("profiles").select("user_id, full_name");
     setAllProfiles(profiles ?? []);
+
+    const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+    const enriched = (tusers ?? []).map((tu) => ({
+      ...tu,
+      profile: profileMap.get(tu.user_id) ?? null,
+    }));
+    setTenantUsers(enriched as unknown as TenantUser[]);
   };
 
   const addUserToTenant = async (userId: string) => {
@@ -198,13 +194,33 @@ const SuperAdmin = () => {
               </p>
             </div>
           </div>
-          <Button
-            size="sm"
-            onClick={() => setShowCreate(!showCreate)}
-            className="gap-1 text-xs gradient-brand text-primary-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" /> Nueva Empresa
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                const id = toast.loading("Sembrando usuarios demo...");
+                const { data, error } = await supabase.functions.invoke("seed-demo-users", { body: {} });
+                toast.dismiss(id);
+                if (error || data?.error) {
+                  toast.error(data?.error || error?.message || "Error");
+                } else {
+                  toast.success(`${data?.users?.length ?? 0} usuarios demo listos (pass: Demo2026!)`);
+                  if (selectedTenant) selectTenant(selectedTenant);
+                }
+              }}
+              className="gap-1 text-xs"
+            >
+              <UserPlus className="h-3.5 w-3.5" /> Sembrar usuarios demo
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setShowCreate(!showCreate)}
+              className="gap-1 text-xs gradient-brand text-primary-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" /> Nueva Empresa
+            </Button>
+          </div>
         </div>
 
         {/* Create Form */}

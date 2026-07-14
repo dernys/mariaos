@@ -27,10 +27,16 @@ serve(async (req) => {
       });
     }
 
-    // Check if caller is superadmin or admin
+    // Check if caller is superadmin, admin, or tenant owner (any tenant)
     const { data: isSA } = await supabaseAdmin.rpc("is_superadmin", { _user_id: caller.id });
     const { data: isAdmin } = await supabaseAdmin.rpc("has_role", { _user_id: caller.id, _role: "admin" });
-    if (!isSA && !isAdmin) {
+    const { count: ownerCount } = await supabaseAdmin
+      .from("tenant_users")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", caller.id)
+      .eq("is_owner", true);
+    const isTenantOwner = (ownerCount ?? 0) > 0;
+    if (!isSA && !isAdmin && !isTenantOwner) {
       return new Response(JSON.stringify({ error: "Sin permisos" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

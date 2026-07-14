@@ -8686,7 +8686,13 @@ export type Database = {
         Returns: number
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
-      is_tenant_member: { Args: { _tenant: string }; Returns: boolean }
+      is_tenant_member:
+        | { Args: { _tenant: string }; Returns: boolean }
+        | { Args: { _tenant_id: string; _user_id: string }; Returns: boolean }
+      is_tenant_owner: {
+        Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
       issue_invoice: {
         Args: { p_sale_id: string; p_series_code?: string }
         Returns: string
