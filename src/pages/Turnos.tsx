@@ -36,7 +36,7 @@ interface SalesShift {
 }
 
 interface StoreItem { id: string; name: string; }
-interface Employee { id: string; name: string; position: string | null; }
+interface Employee { id: string; name: string; position: string | null; user_id: string | null; has_pin?: boolean; }
 
 const Turnos = () => {
   const { t } = useTranslation();
