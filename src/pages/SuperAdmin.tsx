@@ -113,26 +113,22 @@ const SuperAdmin = () => {
 
   const selectTenant = async (tenant: Tenant) => {
     setSelectedTenant(tenant);
-    // Fetch tenant users with profiles
-    const { data } = await supabase
+    // Fetch tenant users (no FK to profiles → join manually below)
+    const { data: tusers } = await supabase
       .from("tenant_users")
-      .select("*, profile:profiles!tenant_users_user_id_fkey(full_name, user_id)")
+      .select("*")
       .eq("tenant_id", tenant.id);
-    
-    // If join fails, fetch separately
-    if (!data) {
-      const { data: tusers } = await supabase
-        .from("tenant_users")
-        .select("*")
-        .eq("tenant_id", tenant.id);
-      setTenantUsers((tusers ?? []) as TenantUser[]);
-    } else {
-      setTenantUsers(data as unknown as TenantUser[]);
-    }
 
-    // Fetch all profiles for adding users
+    // Fetch all profiles once and map by user_id for display
     const { data: profiles } = await supabase.from("profiles").select("user_id, full_name");
     setAllProfiles(profiles ?? []);
+
+    const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+    const enriched = (tusers ?? []).map((tu) => ({
+      ...tu,
+      profile: profileMap.get(tu.user_id) ?? null,
+    }));
+    setTenantUsers(enriched as unknown as TenantUser[]);
   };
 
   const addUserToTenant = async (userId: string) => {
