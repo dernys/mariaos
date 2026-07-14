@@ -151,6 +151,25 @@ const Empleados = () => {
     fetchEmployees();
   };
 
+  const openPin = (e: Employee) => {
+    setPinTarget(e); setPinValue(""); setPinConfirm(""); setPinDialogOpen(true);
+  };
+
+  const savePin = async () => {
+    if (!pinTarget) return;
+    if (!/^\d{4,8}$/.test(pinValue)) { toast({ title: "PIN inválido", description: "Usa 4 a 8 dígitos numéricos", variant: "destructive" }); return; }
+    if (pinValue !== pinConfirm) { toast({ title: "PIN no coincide", variant: "destructive" }); return; }
+    setPinSaving(true);
+    const { error } = await supabase.rpc("set_employee_pin" as any, { _employee_id: pinTarget.id, _pin: pinValue });
+    setPinSaving(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    await logActivity({ entity_type: "employee", entity_id: pinTarget.id, action: "PIN actualizado", description: `Se configuró el PIN de acceso a POS/Caja de ${pinTarget.name}`, tenant_id: tenantId, performed_by: user?.id });
+    toast({ title: "PIN actualizado", description: `${pinTarget.name} ya puede autorizar turnos y ventas` });
+    setPinDialogOpen(false);
+    fetchEmployees();
+  };
+
+
   const active = employees.filter((e) => e.is_active).length;
   const totalSalary = employees.filter((e) => e.is_active).reduce((a, e) => a + (Number(e.salary) || 0), 0);
   const totalAdvances = employees.reduce((a, e) => a + Math.max(0, Number((e as any).balance) || 0), 0);
