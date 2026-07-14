@@ -39,6 +39,7 @@ interface Employee {
   is_active: boolean;
   hire_date: string | null;
   notes: string | null;
+  access_pin_hash: string | null;
 }
 
 interface JobPosition {
