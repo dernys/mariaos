@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Play, Square, DollarSign, Plus, Store, ArrowDownCircle, ArrowUpCircle, Calculator } from "lucide-react";
+import { Clock, Play, Square, DollarSign, Plus, Store, ArrowDownCircle, ArrowUpCircle, Calculator, Eye, Pencil, KeyRound, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
