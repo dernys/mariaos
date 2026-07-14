@@ -54,17 +54,11 @@ serve(async (req) => {
     const tenantId: string | undefined = body?.tenant_id;
 
     // Target tenants: one specified, or all active.
-    const { data: tenants, error: tErr } = await admin
-      .from("tenants")
-      .select("id, name, business_type, is_active")
-      .eq("is_active", true)
-      .maybeIf(tenantId ? { column: "id", value: tenantId } : null as any) // placeholder, replaced below
-      ;
-
-    // The Supabase JS client has no `maybeIf`; do the filter here instead.
-    let list = tenants ?? [];
+    let q = admin.from("tenants").select("id, name, business_type, is_active").eq("is_active", true);
+    if (tenantId) q = q.eq("id", tenantId);
+    const { data: tenants, error: tErr } = await q;
     if (tErr) throw tErr;
-    if (tenantId) list = list.filter((t: any) => t.id === tenantId);
+    const list = tenants ?? [];
 
     const created: any[] = [];
 
