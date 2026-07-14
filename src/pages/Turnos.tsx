@@ -386,6 +386,75 @@ const Turnos = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Edit Shift Dialog */}
+        <Dialog open={showEdit} onOpenChange={setShowEdit}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Pencil className="h-5 w-5" /> Editar Turno</DialogTitle>
+              <DialogDescription>{selectedShift && getStoreName(selectedShift)}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Trabajador</Label>
+                <Select value={editEmployeeId} onValueChange={setEditEmployeeId}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}{e.user_id === user?.id ? " · tú" : ""}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Efectivo inicial</Label>
+                <Input type="number" value={editCash} onChange={(e) => setEditCash(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Notas</Label>
+                <Textarea rows={2} value={editNotes} onChange={(e) => setEditNotes(e.target.value)} />
+              </div>
+              {needsEditPin && (
+                <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2">
+                  <p className="text-[11px] flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> El nuevo trabajador <b>{selectedEditEmp?.name}</b> debe autorizar con su PIN.</p>
+                  <Input type="password" inputMode="numeric" placeholder="PIN" value={editPin} onChange={(e) => setEditPin(e.target.value)} />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEdit(false)}>Cancelar</Button>
+              <Button onClick={submitEditShift} className="gradient-brand text-primary-foreground">Guardar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Set Employee PIN Dialog */}
+        <Dialog open={showSetPin} onOpenChange={setShowSetPin}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> Configurar PIN</DialogTitle>
+              <DialogDescription>Cada trabajador necesita un PIN para autorizar la apertura de turnos en su nombre.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Empleado</Label>
+                <Select value={pinEmployeeId} onValueChange={setPinEmployeeId}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
+                  <SelectContent>
+                    {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.has_pin ? "· ✓" : "· sin PIN"}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Nuevo PIN (mín. 4)</Label>
+                <Input type="password" inputMode="numeric" value={newPin} onChange={(e) => setNewPin(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowSetPin(false)}>Cancelar</Button>
+              <Button onClick={submitSetPin} className="gradient-brand text-primary-foreground">Guardar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+
         {/* Header */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <p className="text-sm text-muted-foreground">Historial de turnos</p>
