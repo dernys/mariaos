@@ -47,6 +47,38 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [demoTenants, setDemoTenants] = useState<Array<{ tenant_id: string; name: string; business_type: string; roles: { role: string; email: string }[] }>>([]);
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("ensure-demo-user", { body: { action: "list" } });
+        if (data?.tenants) setDemoTenants(data.tenants);
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
+  const bizIcon = (t: string) => t === "bar" ? Store : t === "restaurant" ? UtensilsCrossed : Building2;
+  const bizLabel = (t: string) => t === "bar" ? "Bar / Cafetería" : t === "restaurant" ? "Restaurante" : "Empresa / Retail";
+  const roleLabel = (r: string) => r === "admin" ? "Administrador" : r === "gerente" ? "Gerente" : "Cajero";
+
+  const loginAsDemo = async (tenantId: string, role: string, tenantName: string) => {
+    setDemoLoading(`${tenantId}:${role}`);
+    try {
+      const { data, error } = await supabase.functions.invoke("ensure-demo-user", {
+        body: { action: "ensure", tenant_id: tenantId, role },
+      });
+      if (error || !data?.email) throw new Error(error?.message || data?.error || "No se pudo preparar el usuario demo");
+      const { error: loginErr } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
+      if (loginErr) throw loginErr;
+      toast.success(`Sesión demo: ${roleLabel(role)} · ${tenantName}`);
+    } catch (e: any) {
+      toast.error(e.message || "Error al iniciar demo");
+    } finally {
+      setDemoLoading(null);
+    }
+  };
 
   useEffect(() => {
     if (authLoading || !session) return;
