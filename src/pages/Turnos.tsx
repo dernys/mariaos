@@ -56,8 +56,22 @@ const Turnos = () => {
   const [openStoreId, setOpenStoreId] = useState("");
   const [openEmployeeId, setOpenEmployeeId] = useState("");
   const [openCash, setOpenCash] = useState("");
+  const [openPin, setOpenPin] = useState("");
+  const [openNotes, setOpenNotes] = useState("");
   const [closeCash, setCloseCash] = useState("");
   const [closeNotes, setCloseNotes] = useState("");
+
+  // Edit shift dialog
+  const [showEdit, setShowEdit] = useState(false);
+  const [editEmployeeId, setEditEmployeeId] = useState("");
+  const [editCash, setEditCash] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editPin, setEditPin] = useState("");
+
+  // Set PIN dialog
+  const [showSetPin, setShowSetPin] = useState(false);
+  const [pinEmployeeId, setPinEmployeeId] = useState("");
+  const [newPin, setNewPin] = useState("");
 
   // Cash movement
   const [cashType, setCashType] = useState<"cash_in" | "cash_out">("cash_out");
