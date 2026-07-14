@@ -279,7 +279,13 @@ const Turnos = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-3 justify-end">
+                  <div className="flex gap-2 mt-3 justify-end flex-wrap">
+                    <Button variant="ghost" size="sm" onClick={() => nav(`/turnos/${sh.id}`)} className="gap-1 text-xs h-8">
+                      <Eye className="h-3.5 w-3.5" /> Ver
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(sh)} className="gap-1 text-xs h-8">
+                      <Pencil className="h-3.5 w-3.5" /> Editar
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => openCashDialog(sh)} className="gap-1 text-xs h-8">
                       <DollarSign className="h-3.5 w-3.5" /> Movimiento
                     </Button>
