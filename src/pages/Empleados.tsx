@@ -322,6 +322,40 @@ const Empleados = () => {
         </DialogContent>
       </Dialog>
 
+      {/* PIN Dialog */}
+      <Dialog open={pinDialogOpen} onOpenChange={setPinDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> PIN de acceso POS / Caja</DialogTitle>
+            <DialogDescription>
+              {pinTarget?.name} usará este PIN para autorizar apertura de turnos, cambios de operador y ventas sensibles.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div>
+              <Label className="text-xs">Nuevo PIN (4 a 8 dígitos)</Label>
+              <Input type="password" inputMode="numeric" maxLength={8} value={pinValue}
+                onChange={(e) => setPinValue(e.target.value.replace(/\D/g, ""))} placeholder="••••" />
+            </div>
+            <div>
+              <Label className="text-xs">Confirmar PIN</Label>
+              <Input type="password" inputMode="numeric" maxLength={8} value={pinConfirm}
+                onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ""))} placeholder="••••" />
+            </div>
+            <p className="text-[11px] text-muted-foreground flex items-start gap-1">
+              <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              El PIN se guarda cifrado. Solo el empleado debe conocerlo.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPinDialogOpen(false)} disabled={pinSaving}>Cancelar</Button>
+            <Button onClick={savePin} disabled={pinSaving} className="gradient-brand text-primary-foreground">
+              {pinSaving ? "Guardando…" : "Guardar PIN"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </AppLayout>
   );
 };
