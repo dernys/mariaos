@@ -264,7 +264,7 @@ const Empleados = () => {
               ))}
               {table.total === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     {loading ? t("common.loading") : "No hay empleados"}
                   </TableCell>
