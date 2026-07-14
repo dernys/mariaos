@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.webhook-dispatcher]
 verify_jwt = false
+
+[functions.ensure-demo-user]
+verify_jwt = false
