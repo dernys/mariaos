@@ -111,32 +111,76 @@ const Turnos = () => {
 
   const getEmployeeName = (id: string | null) => employees.find((e) => e.id === id)?.name || "—";
 
+  const selectedOpenEmp = employees.find((e) => e.id === openEmployeeId);
+  const openerIsWorker = !!selectedOpenEmp && selectedOpenEmp.user_id === user?.id;
+  const needsOpenPin = !!selectedOpenEmp && !openerIsWorker;
+
   const openShift = async () => {
     if (!openCash) return toast.error("Ingresa el monto inicial");
     if (!openStoreId) return toast.error("Selecciona una tienda");
     if (!openEmployeeId) return toast.error("Selecciona un cajero");
+    if (needsOpenPin) {
+      if (!selectedOpenEmp?.has_pin) return toast.error(`${selectedOpenEmp?.name} no tiene PIN configurado. Configúralo primero.`);
+      if (!openPin || openPin.length < 4) return toast.error("Ingresa el PIN del trabajador (mín. 4)");
+    }
 
-    const store = stores.find((s) => s.id === openStoreId);
-    const { data, error } = await supabase.from("sales_shifts").insert({
-      user_id: user!.id,
-      store_name: store?.name || "Tienda",
-      store_id: openStoreId,
-      employee_id: openEmployeeId,
-      opening_cash: parseFloat(openCash),
-      tenant_id: tenantId,
-    }).select("id").single();
+    const { data, error } = await supabase.rpc("open_shift" as any, {
+      _store_id: openStoreId,
+      _employee_id: openEmployeeId,
+      _opening_cash: parseFloat(openCash),
+      _pin: needsOpenPin ? openPin : null,
+      _notes: openNotes || null,
+    });
 
     if (error) return toast.error(error.message);
-    if (data) {
-      await logActivity({ entity_type: "shift", entity_id: data.id, action: "Turno abierto", description: `Cajero: ${getEmployeeName(openEmployeeId)}, Tienda: ${store?.name}`, tenant_id: tenantId, performed_by: user?.id });
-    }
     toast.success("Turno abierto correctamente");
     setShowOpen(false);
-    setOpenCash("");
-    setOpenStoreId("");
-    setOpenEmployeeId("");
+    setOpenCash(""); setOpenStoreId(""); setOpenEmployeeId(""); setOpenPin(""); setOpenNotes("");
     fetchAll();
   };
+
+  const openEditDialog = (shift: SalesShift) => {
+    setSelectedShift(shift);
+    setEditEmployeeId(shift.employee_id || "");
+    setEditCash(String(shift.opening_cash ?? ""));
+    setEditNotes(shift.notes || "");
+    setEditPin("");
+    setShowEdit(true);
+  };
+
+  const selectedEditEmp = employees.find((e) => e.id === editEmployeeId);
+  const editChangedWorker = !!selectedShift && editEmployeeId !== selectedShift.employee_id;
+  const needsEditPin = editChangedWorker && !!selectedEditEmp && selectedEditEmp.user_id !== user?.id;
+
+  const submitEditShift = async () => {
+    if (!selectedShift) return;
+    if (needsEditPin) {
+      if (!selectedEditEmp?.has_pin) return toast.error(`${selectedEditEmp?.name} no tiene PIN configurado.`);
+      if (!editPin || editPin.length < 4) return toast.error("Ingresa el PIN del nuevo trabajador");
+    }
+    const { error } = await supabase.rpc("update_shift" as any, {
+      _shift_id: selectedShift.id,
+      _opening_cash: editCash ? parseFloat(editCash) : null,
+      _employee_id: editEmployeeId || null,
+      _notes: editNotes || null,
+      _pin: needsEditPin ? editPin : null,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Turno actualizado");
+    setShowEdit(false);
+    fetchAll();
+  };
+
+  const submitSetPin = async () => {
+    if (!pinEmployeeId) return toast.error("Selecciona un empleado");
+    if (!newPin || newPin.length < 4) return toast.error("PIN mínimo 4 caracteres");
+    const { error } = await supabase.rpc("set_employee_pin" as any, { _employee_id: pinEmployeeId, _pin: newPin });
+    if (error) return toast.error(error.message);
+    toast.success("PIN actualizado");
+    setShowSetPin(false); setPinEmployeeId(""); setNewPin("");
+    fetchAll();
+  };
+
 
   const loadSummary = async () => {
     if (!selectedShift) return;
