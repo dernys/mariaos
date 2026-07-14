@@ -234,7 +234,8 @@ const Empleados = () => {
                 <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead className="hidden lg:table-cell">Salario</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="w-28">Acciones</TableHead>
+                <TableHead className="hidden md:table-cell">PIN POS</TableHead>
+                <TableHead className="w-32">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
