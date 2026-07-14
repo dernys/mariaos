@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Play, Square, DollarSign, Plus, Store, ArrowDownCircle, ArrowUpCircle, Calculator } from "lucide-react";
+import { Clock, Play, Square, DollarSign, Plus, Store, ArrowDownCircle, ArrowUpCircle, Calculator, Eye, Pencil, KeyRound, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +36,7 @@ interface SalesShift {
 }
 
 interface StoreItem { id: string; name: string; }
-interface Employee { id: string; name: string; position: string | null; }
+interface Employee { id: string; name: string; position: string | null; user_id: string | null; has_pin?: boolean; }
 
 const Turnos = () => {
   const { t } = useTranslation();
@@ -56,8 +56,22 @@ const Turnos = () => {
   const [openStoreId, setOpenStoreId] = useState("");
   const [openEmployeeId, setOpenEmployeeId] = useState("");
   const [openCash, setOpenCash] = useState("");
+  const [openPin, setOpenPin] = useState("");
+  const [openNotes, setOpenNotes] = useState("");
   const [closeCash, setCloseCash] = useState("");
   const [closeNotes, setCloseNotes] = useState("");
+
+  // Edit shift dialog
+  const [showEdit, setShowEdit] = useState(false);
+  const [editEmployeeId, setEditEmployeeId] = useState("");
+  const [editCash, setEditCash] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editPin, setEditPin] = useState("");
+
+  // Set PIN dialog
+  const [showSetPin, setShowSetPin] = useState(false);
+  const [pinEmployeeId, setPinEmployeeId] = useState("");
+  const [newPin, setNewPin] = useState("");
 
   // Cash movement
   const [cashType, setCashType] = useState<"cash_in" | "cash_out">("cash_out");
@@ -77,7 +91,7 @@ const Turnos = () => {
     const [shiftRes, storeRes, empRes] = await Promise.all([
       supabase.from("sales_shifts").select("*").eq("tenant_id", tenantId).order("opened_at", { ascending: false }).limit(50),
       supabase.from("stores").select("id, name").eq("is_active", true).order("name"),
-      supabase.from("employees").select("id, name, position").eq("is_active", true).order("name"),
+      supabase.from("employees").select("id, name, position, user_id, access_pin_hash").eq("is_active", true).order("name"),
     ]);
     if (shiftRes.data) {
       const data = shiftRes.data as SalesShift[];
@@ -85,7 +99,7 @@ const Turnos = () => {
       setOpenShifts(data.filter((s) => s.status === "open"));
     }
     if (storeRes.data) setStores(storeRes.data);
-    if (empRes.data) setEmployees(empRes.data);
+    if (empRes.data) setEmployees((empRes.data as any[]).map((e) => ({ id: e.id, name: e.name, position: e.position, user_id: e.user_id, has_pin: !!e.access_pin_hash })));
     setLoading(false);
   };
 
@@ -97,32 +111,76 @@ const Turnos = () => {
 
   const getEmployeeName = (id: string | null) => employees.find((e) => e.id === id)?.name || "—";
 
+  const selectedOpenEmp = employees.find((e) => e.id === openEmployeeId);
+  const openerIsWorker = !!selectedOpenEmp && selectedOpenEmp.user_id === user?.id;
+  const needsOpenPin = !!selectedOpenEmp && !openerIsWorker;
+
   const openShift = async () => {
     if (!openCash) return toast.error("Ingresa el monto inicial");
     if (!openStoreId) return toast.error("Selecciona una tienda");
     if (!openEmployeeId) return toast.error("Selecciona un cajero");
+    if (needsOpenPin) {
+      if (!selectedOpenEmp?.has_pin) return toast.error(`${selectedOpenEmp?.name} no tiene PIN configurado. Configúralo primero.`);
+      if (!openPin || openPin.length < 4) return toast.error("Ingresa el PIN del trabajador (mín. 4)");
+    }
 
-    const store = stores.find((s) => s.id === openStoreId);
-    const { data, error } = await supabase.from("sales_shifts").insert({
-      user_id: user!.id,
-      store_name: store?.name || "Tienda",
-      store_id: openStoreId,
-      employee_id: openEmployeeId,
-      opening_cash: parseFloat(openCash),
-      tenant_id: tenantId,
-    }).select("id").single();
+    const { data, error } = await supabase.rpc("open_shift" as any, {
+      _store_id: openStoreId,
+      _employee_id: openEmployeeId,
+      _opening_cash: parseFloat(openCash),
+      _pin: needsOpenPin ? openPin : null,
+      _notes: openNotes || null,
+    });
 
     if (error) return toast.error(error.message);
-    if (data) {
-      await logActivity({ entity_type: "shift", entity_id: data.id, action: "Turno abierto", description: `Cajero: ${getEmployeeName(openEmployeeId)}, Tienda: ${store?.name}`, tenant_id: tenantId, performed_by: user?.id });
-    }
     toast.success("Turno abierto correctamente");
     setShowOpen(false);
-    setOpenCash("");
-    setOpenStoreId("");
-    setOpenEmployeeId("");
+    setOpenCash(""); setOpenStoreId(""); setOpenEmployeeId(""); setOpenPin(""); setOpenNotes("");
     fetchAll();
   };
+
+  const openEditDialog = (shift: SalesShift) => {
+    setSelectedShift(shift);
+    setEditEmployeeId(shift.employee_id || "");
+    setEditCash(String(shift.opening_cash ?? ""));
+    setEditNotes(shift.notes || "");
+    setEditPin("");
+    setShowEdit(true);
+  };
+
+  const selectedEditEmp = employees.find((e) => e.id === editEmployeeId);
+  const editChangedWorker = !!selectedShift && editEmployeeId !== selectedShift.employee_id;
+  const needsEditPin = editChangedWorker && !!selectedEditEmp && selectedEditEmp.user_id !== user?.id;
+
+  const submitEditShift = async () => {
+    if (!selectedShift) return;
+    if (needsEditPin) {
+      if (!selectedEditEmp?.has_pin) return toast.error(`${selectedEditEmp?.name} no tiene PIN configurado.`);
+      if (!editPin || editPin.length < 4) return toast.error("Ingresa el PIN del nuevo trabajador");
+    }
+    const { error } = await supabase.rpc("update_shift" as any, {
+      _shift_id: selectedShift.id,
+      _opening_cash: editCash ? parseFloat(editCash) : null,
+      _employee_id: editEmployeeId || null,
+      _notes: editNotes || null,
+      _pin: needsEditPin ? editPin : null,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Turno actualizado");
+    setShowEdit(false);
+    fetchAll();
+  };
+
+  const submitSetPin = async () => {
+    if (!pinEmployeeId) return toast.error("Selecciona un empleado");
+    if (!newPin || newPin.length < 4) return toast.error("PIN mínimo 4 caracteres");
+    const { error } = await supabase.rpc("set_employee_pin" as any, { _employee_id: pinEmployeeId, _pin: newPin });
+    if (error) return toast.error(error.message);
+    toast.success("PIN actualizado");
+    setShowSetPin(false); setPinEmployeeId(""); setNewPin("");
+    fetchAll();
+  };
+
 
   const loadSummary = async () => {
     if (!selectedShift) return;
@@ -221,7 +279,13 @@ const Turnos = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-3 justify-end">
+                  <div className="flex gap-2 mt-3 justify-end flex-wrap">
+                    <Button variant="ghost" size="sm" onClick={() => nav(`/turnos/${sh.id}`)} className="gap-1 text-xs h-8">
+                      <Eye className="h-3.5 w-3.5" /> Ver
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(sh)} className="gap-1 text-xs h-8">
+                      <Pencil className="h-3.5 w-3.5" /> Editar
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => openCashDialog(sh)} className="gap-1 text-xs h-8">
                       <DollarSign className="h-3.5 w-3.5" /> Movimiento
                     </Button>
@@ -322,14 +386,88 @@ const Turnos = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Edit Shift Dialog */}
+        <Dialog open={showEdit} onOpenChange={setShowEdit}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Pencil className="h-5 w-5" /> Editar Turno</DialogTitle>
+              <DialogDescription>{selectedShift && getStoreName(selectedShift)}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Trabajador</Label>
+                <Select value={editEmployeeId} onValueChange={setEditEmployeeId}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}{e.user_id === user?.id ? " · tú" : ""}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Efectivo inicial</Label>
+                <Input type="number" value={editCash} onChange={(e) => setEditCash(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Notas</Label>
+                <Textarea rows={2} value={editNotes} onChange={(e) => setEditNotes(e.target.value)} />
+              </div>
+              {needsEditPin && (
+                <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2">
+                  <p className="text-[11px] flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> El nuevo trabajador <b>{selectedEditEmp?.name}</b> debe autorizar con su PIN.</p>
+                  <Input type="password" inputMode="numeric" placeholder="PIN" value={editPin} onChange={(e) => setEditPin(e.target.value)} />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEdit(false)}>Cancelar</Button>
+              <Button onClick={submitEditShift} className="gradient-brand text-primary-foreground">Guardar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Set Employee PIN Dialog */}
+        <Dialog open={showSetPin} onOpenChange={setShowSetPin}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> Configurar PIN</DialogTitle>
+              <DialogDescription>Cada trabajador necesita un PIN para autorizar la apertura de turnos en su nombre.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Empleado</Label>
+                <Select value={pinEmployeeId} onValueChange={setPinEmployeeId}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
+                  <SelectContent>
+                    {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.has_pin ? "· ✓" : "· sin PIN"}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Nuevo PIN (mín. 4)</Label>
+                <Input type="password" inputMode="numeric" value={newPin} onChange={(e) => setNewPin(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowSetPin(false)}>Cancelar</Button>
+              <Button onClick={submitSetPin} className="gradient-brand text-primary-foreground">Guardar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <p className="text-sm text-muted-foreground">Historial de turnos</p>
-          {stores.some((s) => !openShifts.find((os) => os.store_id === s.id)) && (
-            <Button size="sm" onClick={() => setShowOpen(!showOpen)} className="gap-1 text-xs gradient-brand text-primary-foreground">
-              <Plus className="h-3.5 w-3.5" /> Abrir Turno
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowSetPin(true)} className="gap-1 text-xs">
+              <KeyRound className="h-3.5 w-3.5" /> PIN empleado
             </Button>
-          )}
+            {stores.some((s) => !openShifts.find((os) => os.store_id === s.id)) && (
+              <Button size="sm" onClick={() => setShowOpen(!showOpen)} className="gap-1 text-xs gradient-brand text-primary-foreground">
+                <Plus className="h-3.5 w-3.5" /> Abrir Turno
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Open Shift Form */}
@@ -338,6 +476,9 @@ const Turnos = () => {
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
               <div className="bg-card rounded-xl p-5 shadow-card border space-y-3">
                 <h3 className="font-heading font-semibold text-sm">Abrir Nuevo Turno</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Abierto por <b>{user?.email}</b>. Si el trabajador que operará el turno es otro, deberá autorizar con su PIN.
+                </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <Label className="text-xs">Tienda *</Label>
@@ -350,22 +491,38 @@ const Turnos = () => {
                   </div>
 
                   <div>
-                    <Label className="text-xs">Cajero *</Label>
+                    <Label className="text-xs">Trabajador del turno *</Label>
                     <Select value={openEmployeeId} onValueChange={setOpenEmployeeId}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar cajero" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar trabajador" /></SelectTrigger>
                       <SelectContent>
-                        {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.position && `(${e.position})`}</SelectItem>)}
+                        {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.position && `(${e.position})`}{e.user_id === user?.id ? " · tú" : ""}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Efectivo Inicial</Label>
+                    <Label className="text-xs">Efectivo Inicial *</Label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input type="number" placeholder="0.00" value={openCash} onChange={(e) => setOpenCash(e.target.value)} className="pl-9" />
                     </div>
                   </div>
                 </div>
+
+                {needsOpenPin && (
+                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2">
+                    <p className="text-[11px] flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> El trabajador <b>{selectedOpenEmp?.name}</b> debe autorizar con su PIN.</p>
+                    <Input type="password" inputMode="numeric" placeholder="PIN del trabajador" value={openPin} onChange={(e) => setOpenPin(e.target.value)} />
+                    {!selectedOpenEmp?.has_pin && (
+                      <p className="text-[10px] text-destructive">Este trabajador aún no tiene PIN. Configúralo con el botón "PIN empleado".</p>
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <Label className="text-xs">Notas</Label>
+                  <Textarea rows={2} value={openNotes} onChange={(e) => setOpenNotes(e.target.value)} placeholder="Observaciones del turno..." />
+                </div>
+
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" size="sm" onClick={() => setShowOpen(false)}>Cancelar</Button>
                   <Button size="sm" onClick={openShift} className="gradient-brand text-primary-foreground font-heading font-semibold">Abrir Turno</Button>

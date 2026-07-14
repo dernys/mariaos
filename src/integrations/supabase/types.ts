@@ -2883,6 +2883,7 @@ export type Database = {
       }
       employees: {
         Row: {
+          access_pin_hash: string | null
           address: string | null
           balance: number
           bank_name: string | null
@@ -2918,6 +2919,7 @@ export type Database = {
           vacation_days_per_year: number
         }
         Insert: {
+          access_pin_hash?: string | null
           address?: string | null
           balance?: number
           bank_name?: string | null
@@ -2953,6 +2955,7 @@ export type Database = {
           vacation_days_per_year?: number
         }
         Update: {
+          access_pin_hash?: string | null
           address?: string | null
           balance?: number
           bank_name?: string | null
@@ -8819,6 +8822,16 @@ export type Database = {
           taken: number
         }[]
       }
+      open_shift: {
+        Args: {
+          _employee_id: string
+          _notes?: string
+          _opening_cash: number
+          _pin?: string
+          _store_id: string
+        }
+        Returns: string
+      }
       pay_payroll: {
         Args: { _method?: string; _notes?: string; _payroll_id: string }
         Returns: string
@@ -8979,6 +8992,10 @@ export type Database = {
         Args: { _tenant: string; _year?: number }
         Returns: undefined
       }
+      set_employee_pin: {
+        Args: { _employee_id: string; _pin: string }
+        Returns: undefined
+      }
       settle_consignment_lots: {
         Args: {
           p_method?: string
@@ -9000,6 +9017,16 @@ export type Database = {
         Returns: Json
       }
       sync_offline_sale: { Args: { p_payload: Json }; Returns: string }
+      update_shift: {
+        Args: {
+          _employee_id?: string
+          _notes?: string
+          _opening_cash?: number
+          _pin?: string
+          _shift_id: string
+        }
+        Returns: undefined
+      }
       validate_coupon: {
         Args: {
           p_amount: number
@@ -9008,6 +9035,10 @@ export type Database = {
           p_tenant_id: string
         }
         Returns: Json
+      }
+      verify_employee_pin: {
+        Args: { _employee_id: string; _pin: string }
+        Returns: boolean
       }
     }
     Enums: {
