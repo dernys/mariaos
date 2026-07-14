@@ -77,7 +77,7 @@ const Turnos = () => {
     const [shiftRes, storeRes, empRes] = await Promise.all([
       supabase.from("sales_shifts").select("*").eq("tenant_id", tenantId).order("opened_at", { ascending: false }).limit(50),
       supabase.from("stores").select("id, name").eq("is_active", true).order("name"),
-      supabase.from("employees").select("id, name, position").eq("is_active", true).order("name"),
+      supabase.from("employees").select("id, name, position, user_id, access_pin_hash").eq("is_active", true).order("name"),
     ]);
     if (shiftRes.data) {
       const data = shiftRes.data as SalesShift[];
