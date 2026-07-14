@@ -247,8 +247,14 @@ const Empleados = () => {
                   <TableCell className="hidden md:table-cell">{e.email || "—"}</TableCell>
                   <TableCell className="hidden lg:table-cell">${e.salary.toLocaleString()}</TableCell>
                   <TableCell><Badge variant={e.is_active ? "default" : "secondary"}>{e.is_active ? "Activo" : "Inactivo"}</Badge></TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {e.access_pin_hash
+                      ? <Badge variant="outline" className="gap-1 text-success border-success/40"><ShieldCheck className="h-3 w-3" /> Configurado</Badge>
+                      : <Badge variant="outline" className="gap-1 text-muted-foreground">Sin PIN</Badge>}
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
+                      <button onClick={() => openPin(e)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Configurar PIN de POS/Caja"><KeyRound className="h-3.5 w-3.5" /></button>
                       <button onClick={() => openDetail(e)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Historial"><History className="h-3.5 w-3.5" /></button>
                       <button onClick={() => openEdit(e)} className="p-1.5 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
                       <button onClick={() => handleDelete(e.id, e.name)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
