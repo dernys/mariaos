@@ -194,13 +194,33 @@ const SuperAdmin = () => {
               </p>
             </div>
           </div>
-          <Button
-            size="sm"
-            onClick={() => setShowCreate(!showCreate)}
-            className="gap-1 text-xs gradient-brand text-primary-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" /> Nueva Empresa
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                const id = toast.loading("Sembrando usuarios demo...");
+                const { data, error } = await supabase.functions.invoke("seed-demo-users", { body: {} });
+                toast.dismiss(id);
+                if (error || data?.error) {
+                  toast.error(data?.error || error?.message || "Error");
+                } else {
+                  toast.success(`${data?.users?.length ?? 0} usuarios demo listos (pass: Demo2026!)`);
+                  if (selectedTenant) selectTenant(selectedTenant);
+                }
+              }}
+              className="gap-1 text-xs"
+            >
+              <UserPlus className="h-3.5 w-3.5" /> Sembrar usuarios demo
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setShowCreate(!showCreate)}
+              className="gap-1 text-xs gradient-brand text-primary-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" /> Nueva Empresa
+            </Button>
+          </div>
         </div>
 
         {/* Create Form */}
