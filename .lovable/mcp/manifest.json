@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://xamrlxcfqniafraahtbc.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "maria-os-mcp",
+      "version": "0.1.0",
+      "title": "MarIA OS Agent Integrations"
+    },
+    "tools": [
+      {
+        "name": "list_tenants",
+        "title": "List tenants",
+        "description": "List the MarIA OS companies/tenants available to the signed-in user.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": null,
+        "outputSchema": null
+      },
+      {
+        "name": "list_ai_agents",
+        "title": "List AI agents",
+        "description": "List the configured MarIA OS AI agents for one tenant.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "tenant_id": {
+              "type": "string",
+              "description": "Tenant/company ID to inspect."
+            }
+          },
+          "required": [
+            "tenant_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_command_center",
+        "title": "Get command center",
+        "description": "Return a compact operational snapshot with agents, pending decisions, and open risk alerts for one tenant.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "tenant_id": {
+              "type": "string",
+              "description": "Tenant/company ID to summarize."
+            }
+          },
+          "required": [
+            "tenant_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_decision_status",
+        "title": "Update decision status",
+        "description": "Approve, reject, or reset a pending MarIA OS business decision for a tenant the signed-in user can access.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "tenant_id": {
+              "type": "string",
+              "description": "Tenant/company ID that owns the decision."
+            },
+            "decision_id": {
+              "type": "string",
+              "description": "Business decision ID to update."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "approved",
+                "rejected",
+                "pending"
+              ],
+              "description": "New decision status."
+            }
+          },
+          "required": [
+            "tenant_id",
+            "decision_id",
+            "status"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "resolve_risk_alert",
+        "title": "Resolve risk alert",
+        "description": "Mark an open MarIA OS risk alert as resolved for a tenant the signed-in user can access.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "tenant_id": {
+              "type": "string",
+              "description": "Tenant/company ID that owns the risk alert."
+            },
+            "risk_alert_id": {
+              "type": "string",
+              "description": "Risk alert ID to resolve."
+            }
+          },
+          "required": [
+            "tenant_id",
+            "risk_alert_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

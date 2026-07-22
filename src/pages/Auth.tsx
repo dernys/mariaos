@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
@@ -40,6 +40,7 @@ const passwordStrength = (pwd: string): { score: number; color: string } => {
 const Auth = () => {
   const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
   const [view, setView] = useState<AuthView>("login");
   const [email, setEmail] = useState("");
@@ -49,6 +50,12 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [demoTenants, setDemoTenants] = useState<Array<{ tenant_id: string; name: string; business_type: string; roles: { role: string; email: string }[] }>>([]);
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
+
+  const getSafeNext = () => {
+    const next = searchParams.get("next");
+    if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
+    return next;
+  };
 
   useEffect(() => {
     (async () => {
@@ -85,6 +92,8 @@ const Auth = () => {
     const checkAndRedirect = async () => {
       try {
         const cached = sessionStorage.getItem(`sa:${session.user.id}`);
+        const next = getSafeNext();
+        if (next) return navigate(next, { replace: true });
         if (cached === "1") return navigate("/superadmin", { replace: true });
         if (cached === "0") return navigate("/app", { replace: true });
         const { data } = await supabase.functions.invoke("check-superadmin");
@@ -96,7 +105,7 @@ const Auth = () => {
       }
     };
     checkAndRedirect();
-  }, [session, authLoading, navigate]);
+  }, [session, authLoading, navigate, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,7 +147,7 @@ const Auth = () => {
     const { error } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
-      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
+      options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}${getSafeNext() ?? ""}` },
     });
     if (error) toast.error(translateAuthError(error.message, t));
     else toast.success(t("auth.accountCreated"));
