@@ -27,6 +27,7 @@ const Cocina = lazy(() => import("./pages/Cocina"));
 const Mesas = lazy(() => import("./pages/Mesas"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const PedidosOnline = lazy(() => import("./pages/PedidosOnline"));
 const Transferencias = lazy(() => import("./pages/Transferencias"));
@@ -98,6 +99,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/.lovable/oauth/consent" element={<Suspense fallback={<PageLoader />}><OAuthConsent /></Suspense>} />
               <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
               <Route path="/" element={<Landing />} />
               <Route path="/landing" element={<Landing />} />
