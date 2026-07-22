@@ -75,7 +75,7 @@ var list_tenants_default = defineTool({
 
 // src/lib/mcp/tools/list-ai-agents.ts
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.24.0";
-import { z } from "npm:zod@^4.4.3";
+import { z } from "npm:zod@^3.25.76";
 var list_ai_agents_default = defineTool2({
   name: "list_ai_agents",
   title: "List AI agents",
@@ -95,7 +95,7 @@ var list_ai_agents_default = defineTool2({
 
 // src/lib/mcp/tools/get-command-center.ts
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.24.0";
-import { z as z2 } from "npm:zod@^4.4.3";
+import { z as z2 } from "npm:zod@^3.25.76";
 var get_command_center_default = defineTool3({
   name: "get_command_center",
   title: "Get command center",
@@ -135,7 +135,7 @@ var get_command_center_default = defineTool3({
 
 // src/lib/mcp/tools/update-decision-status.ts
 import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.24.0";
-import { z as z3 } from "npm:zod@^4.4.3";
+import { z as z3 } from "npm:zod@^3.25.76";
 var update_decision_status_default = defineTool4({
   name: "update_decision_status",
   title: "Update decision status",
@@ -158,7 +158,7 @@ var update_decision_status_default = defineTool4({
 
 // src/lib/mcp/tools/resolve-risk-alert.ts
 import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.24.0";
-import { z as z4 } from "npm:zod@^4.4.3";
+import { z as z4 } from "npm:zod@^3.25.76";
 var resolve_risk_alert_default = defineTool5({
   name: "resolve_risk_alert",
   title: "Resolve risk alert",
