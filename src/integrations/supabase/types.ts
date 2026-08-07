@@ -9277,7 +9277,10 @@ export type Database = {
         Returns: Json
       }
       sync_offline_sale: { Args: { p_payload: Json }; Returns: string }
-      twin_baseline: { Args: { p_tenant_id: string }; Returns: Json }
+      twin_baseline: {
+        Args: { p_days?: number; p_tenant_id: string }
+        Returns: Json
+      }
       update_shift: {
         Args: {
           _employee_id?: string
