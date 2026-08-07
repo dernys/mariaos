@@ -18,6 +18,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { useTableState } from "@/hooks/useTableState";
+import { callFinancialRpc } from "@/lib/finance/idempotentRpc";
+import { beginOperation } from "@/lib/context/operationContext";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";

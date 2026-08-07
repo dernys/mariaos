@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { callFinancialRpc } from "@/lib/finance/idempotentRpc";
+import { beginOperation } from "@/lib/context/operationContext";
 
 export type PartyType = "customer" | "employee" | "supplier";
 
