@@ -3873,6 +3873,93 @@ export type Database = {
           },
         ]
       }
+      kg_edges: {
+        Row: {
+          attributes: Json
+          created_at: string
+          dst_id: string
+          id: string
+          relation: string
+          src_id: string
+          tenant_id: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          attributes?: Json
+          created_at?: string
+          dst_id: string
+          id?: string
+          relation: string
+          src_id: string
+          tenant_id: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          attributes?: Json
+          created_at?: string
+          dst_id?: string
+          id?: string
+          relation?: string
+          src_id?: string
+          tenant_id?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kg_edges_dst_id_fkey"
+            columns: ["dst_id"]
+            isOneToOne: false
+            referencedRelation: "kg_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kg_edges_src_id_fkey"
+            columns: ["src_id"]
+            isOneToOne: false
+            referencedRelation: "kg_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kg_nodes: {
+        Row: {
+          attributes: Json
+          created_at: string
+          id: string
+          importance: number
+          label: string
+          node_key: string
+          node_type: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          attributes?: Json
+          created_at?: string
+          id?: string
+          importance?: number
+          label: string
+          node_key: string
+          node_type: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          attributes?: Json
+          created_at?: string
+          id?: string
+          importance?: number
+          label?: string
+          node_key?: string
+          node_type?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kitchen_order_items: {
         Row: {
           created_at: string
@@ -9048,6 +9135,7 @@ export type Database = {
         Args: { p_tenant: string }
         Returns: number
       }
+      rebuild_knowledge_graph: { Args: { p_tenant_id: string }; Returns: Json }
       receive_purchase:
         | { Args: { p_purchase_id: string }; Returns: undefined }
         | {
@@ -9189,6 +9277,7 @@ export type Database = {
         Returns: Json
       }
       sync_offline_sale: { Args: { p_payload: Json }; Returns: string }
+      twin_baseline: { Args: { p_tenant_id: string }; Returns: Json }
       update_shift: {
         Args: {
           _employee_id?: string
