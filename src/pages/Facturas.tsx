@@ -257,11 +257,18 @@ const Facturas = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : paged.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Sin facturas</TableCell></TableRow>
-              ) : paged.map((inv) => {
+              <TableDataState
+                colSpan={8}
+                loading={loading}
+                error={table.error}
+                empty={!loading && paged.length === 0}
+                emptyTitle="Sin facturas"
+                emptyHint="Emite tu primera factura desde una venta cobrada."
+                icon={FileText}
+                onRetry={() => table.refetch()}
+              />
+              {paged.map((inv) => {
+
                 const tStatus = inv.transmission_status || "local";
                 return (
                 <TableRow key={inv.id}>
