@@ -41,7 +41,6 @@ export default function Proveedores() {
   const { user } = useAuth();
   const { toast } = useToast();
   const nav = useNavigate();
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [productCounts, setProductCounts] = useState<Record<string, number>>({});
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
@@ -49,17 +48,32 @@ export default function Proveedores() {
   const [payOpen, setPayOpen] = useState(false);
   const [paying, setPaying] = useState<Supplier | null>(null);
 
-  const fetchAll = async () => {
-    const [sR, spR] = await Promise.all([
-      (supabase.from as any)("suppliers").select("*").order("name"),
-      (supabase.from as any)("supplier_products").select("supplier_id"),
-    ]);
-    setSuppliers(sR.data || []);
-    const c: Record<string, number> = {};
-    (spR.data || []).forEach((r: any) => { c[r.supplier_id] = (c[r.supplier_id] || 0) + 1; });
-    setProductCounts(c);
-  };
-  useEffect(() => { fetchAll(); }, []);
+  const table = useServerTable<Supplier>({
+    table: "suppliers",
+    select: "id,name,contact_name,phone,email,rfc,address,balance,is_active",
+    searchColumns: ["name", "contact_name", "phone", "email", "rfc"],
+    orderBy: { column: "name", ascending: true },
+    scope: tenantId,
+    filterFns: {
+      debt: (q, v) => (v === "with" ? q.gt("balance", 0) : q.lte("balance", 0)),
+      status: (q, v) => q.eq("is_active", v === "active"),
+    },
+  });
+
+  const statsQuery = useTableStats<{ balance: number }>("suppliers", "balance", { scope: tenantId });
+  const statRows = statsQuery.data ?? [];
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase.from as any)("supplier_products").select("supplier_id");
+      const c: Record<string, number> = {};
+      (data || []).forEach((r: any) => { c[r.supplier_id] = (c[r.supplier_id] || 0) + 1; });
+      setProductCounts(c);
+    })();
+  }, [tenantId]);
+
+  const fetchAll = () => { table.invalidate(); statsQuery.refetch(); };
+
 
   const openNew = () => {
     setEditing(null);
