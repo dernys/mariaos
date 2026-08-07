@@ -146,3 +146,17 @@ Regla transversal: cada migración incluye en comentario su SQL inverso.
 - **Fase 3 (30–60 d)** — `src/modules/inventory/{domain,application,infrastructure,ui}`; la UI de Inventario deja de llamar a Supabase; regla de lint que prohíbe `supabase.from()` dentro de `src/modules/**/ui`.
 - **Fase 4 (60–90 d)** — `domain_events` append-only, eventos `sales.completed`, `purchase.received`, `inventory.moved`, `payment.registered` en shadow mode con panel de divergencias.
 - **Fase 5 (90 d+)** — `Money {amount, currency}` como estándar, Knowledge Graph empresarial y motor de simulación del gemelo digital sobre el event store.
+
+## Estado Sprint 0–30 (actualizado)
+
+| Iniciativa | Estado | Evidencia |
+|---|---|---|
+| QW5 Seguridad edge functions | Hecho | `docs/security-audit.md`, fix SEC-001 en `ensure-demo-user` |
+| QW6a Quality gate CI | Hecho | `.github/workflows/quality.yml`, script `verify` |
+| QW3 Observabilidad | Hecho | `src/lib/observability/index.ts` + handlers globales |
+| QW2 Correlation ID | Hecho | `src/lib/context/operationContext.ts` (3 tests) |
+| QW1 Idempotencia financiera | Hecho | tabla `operation_idempotency`, overloads de `create_quick_sale` / `register_account_payment` / `receive_purchase`, frontera única `src/lib/finance/idempotentRpc.ts` cableada en Venta rápida, Pagos multi-moneda y Recepción de compra |
+| QW4 Índices calientes | Hecho | 10 índices justificados (ventas, mayor, kardex, cola de webhooks) |
+| QW6b Invariantes financieras | Hecho | `src/lib/finance/invariants.ts` + 13 tests (Debe=Haber, venta liquidada, ecuación de stock, multi-moneda) |
+
+Siguiente sprint (30–60): repositorios por módulo + TanStack Query para eliminar los ~316 `supabase.from` directos en páginas.
