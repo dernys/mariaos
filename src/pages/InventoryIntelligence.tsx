@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DemandForecastPanel } from "@/components/intelligence/DemandForecastPanel";
+
 import { Brain, TrendingUp, AlertTriangle, ArrowRightLeft, Sparkles, Loader2, RefreshCw, Package } from "lucide-react";
 import { motion } from "framer-motion";
 
