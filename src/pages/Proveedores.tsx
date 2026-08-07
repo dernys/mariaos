@@ -200,11 +200,17 @@ export default function Proveedores() {
                   </TableRow>
                 );
               })}
-              {table.total === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  <Truck className="h-8 w-8 mx-auto mb-2 opacity-30" />Sin proveedores
-                </TableCell></TableRow>
-              )}
+              <TableDataState
+                colSpan={7}
+                loading={table.loading}
+                error={table.error}
+                empty={!table.loading && table.rows.length === 0}
+                emptyTitle="Sin proveedores"
+                emptyHint="Registra proveedores para gestionar compras y cuentas por pagar."
+                icon={Truck}
+                onRetry={() => table.refetch()}
+              />
+
             </TableBody>
           </Table>
           <TablePagination page={table.page} pageSize={table.pageSize} total={table.total}
