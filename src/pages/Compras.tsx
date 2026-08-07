@@ -258,10 +258,23 @@ export default function Compras() {
 
 
   const receive = async (id: string, isConsignment: boolean) => {
-    const fn = isConsignment ? "receive_purchase_consignment" : "receive_purchase";
-    const { error } = await supabase.rpc(fn as any, { p_purchase_id: id });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: isConsignment ? "Consignación recibida" : "Compra recibida y stock actualizado" });
+    if (isConsignment) {
+      const { error } = await supabase.rpc("receive_purchase_consignment" as any, { p_purchase_id: id });
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Consignación recibida" });
+      fetchAll();
+      return;
+    }
+    // QW1: clave derivada de la compra → recibir dos veces no duplica el stock.
+    const ctx = beginOperation({
+      module: "purchasing",
+      operation: "receive_purchase",
+      tenant_id: tenantId,
+      correlationId: `purchase-receive:${id}`,
+    });
+    const { error } = await callFinancialRpc("receive_purchase", { p_purchase_id: id }, ctx);
+    if (error) { toast({ title: "Error", description: error, variant: "destructive" }); return; }
+    toast({ title: "Compra recibida y stock actualizado" });
     fetchAll();
   };
 
