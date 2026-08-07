@@ -8502,6 +8502,7 @@ export type Database = {
           code: string | null
           name: string | null
           period_id: string | null
+          presented_balance: number | null
           tenant_id: string | null
           type: string | null
         }
