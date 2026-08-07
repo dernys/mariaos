@@ -37,6 +37,13 @@ function slugify(s: string) {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (rateLimited(ip)) {
+    return new Response(JSON.stringify({ error: "rate_limited" }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   try {
     const url = Deno.env.get("SUPABASE_URL")!;
     const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
