@@ -142,44 +142,30 @@ const Inventario = () => {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.sku.trim()) {
-      toast({ title: t("common.error"), description: t("modules.inventory.errors.nameSkuRequired"), variant: "destructive" });
-      return;
-    }
-    const payload = {
-      name: form.name.trim(), sku: form.sku.trim(), description: form.description || null,
-      category: form.category || null, price: parseFloat(form.price) || 0, cost: parseFloat(form.cost) || 0,
-      stock: parseInt(form.stock) || 0, min_stock: parseInt(form.min_stock) || 0,
-      warehouse_id: form.warehouse_id || null, tenant_id: tenantId,
-      is_online: form.is_online, online_stock: form.is_online ? (parseInt(form.online_stock) || 0) : 0,
-      image_url: form.image_url.trim() || null,
+    const draft = {
+      name: form.name,
+      sku: form.sku,
+      description: form.description,
+      category: form.category,
+      price: parseFloat(form.price) || 0,
+      cost: parseFloat(form.cost) || 0,
+      stock: parseInt(form.stock) || 0,
+      min_stock: parseInt(form.min_stock) || 0,
+      warehouse_id: form.warehouse_id,
+      is_online: form.is_online,
+      online_stock: parseInt(form.online_stock) || 0,
+      image_url: form.image_url,
       is_deliverable: form.is_deliverable,
     };
-
-    if (editing) {
-      const { error } = await supabase.from("products").update(payload).eq("id", editing.id);
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-      await logActivity({ entity_type: "product", entity_id: editing.id, action: t("modules.inventory.activity.updated"), description: t("modules.inventory.activity.updatedDesc", { name: payload.name }), tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: t("modules.inventory.toasts.productUpdated") });
-    } else {
-      const { data, error } = await supabase.from("products").insert(payload).select("id").single();
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-      if (data) {
-        await logActivity({ entity_type: "product", entity_id: data.id, action: t("modules.inventory.activity.created"), description: t("modules.inventory.activity.createdDesc", { name: payload.name, sku: payload.sku }), tenant_id: tenantId, performed_by: user?.id });
-        // Log initial stock as movement
-        if (payload.stock > 0) {
-          await supabase.from("inventory_movements").insert({
-            product_id: data.id, warehouse_id: payload.warehouse_id, movement_type: "entry",
-            quantity: payload.stock, previous_stock: 0, new_stock: payload.stock,
-            reason: t("modules.inventory.activity.initialStock"), tenant_id: tenantId, performed_by: user?.id,
-          });
-        }
-      }
-      toast({ title: t("modules.inventory.toasts.productCreated") });
+    try {
+      await saveProductMutation.mutateAsync({ id: editing?.id ?? null, draft });
+      toast({ title: editing ? t("modules.inventory.toasts.productUpdated") : t("modules.inventory.toasts.productCreated") });
+      setDialogOpen(false);
+    } catch (e: any) {
+      toast({ title: t("common.error"), description: domainMessage(e, t), variant: "destructive" });
     }
-    setDialogOpen(false);
-    fetchData();
   };
+
 
   const handleDelete = async (p: Product) => {
     try {
