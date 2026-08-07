@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Check, X, Save, Shield } from "lucide-react";
 import { motion } from "framer-motion";
@@ -50,6 +51,7 @@ export function PermissionsTab() {
   const [selectedRole, setSelectedRole] = useState<AppRole>("admin");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     fetchData();
@@ -114,6 +116,7 @@ export function PermissionsTab() {
         await supabase.from("role_permissions").upsert(data, { onConflict: "role,module_id" });
       }
     }
+    queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
     toast.success("Permisos guardados correctamente");
     await fetchData();
     setSaving(false);
