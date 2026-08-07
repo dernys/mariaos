@@ -143,7 +143,7 @@ export default function Proveedores() {
           ]}
           rightSlot={
             <>
-              <ExportButton rows={table.filtered} filename="proveedores" title="Proveedores"
+              <ExportButton rows={table.rows} filename="proveedores" title="Proveedores"
                 columns={[
                   { key: "name", label: "Nombre" }, { key: "contact_name", label: "Contacto" },
                   { key: "phone", label: "Teléfono" }, { key: "email", label: "Email" },
@@ -170,7 +170,7 @@ export default function Proveedores() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {table.paged.map((s) => {
+              {table.rows.map((s) => {
                 const debt = Number(s.balance || 0);
                 return (
                   <TableRow key={s.id}>
