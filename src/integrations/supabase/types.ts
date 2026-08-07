@@ -2517,6 +2517,57 @@ export type Database = {
           },
         ]
       }
+      domain_events: {
+        Row: {
+          aggregate_id: string | null
+          aggregate_type: string
+          correlation_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          operation_id: string | null
+          payload: Json
+          shadow: boolean
+          source: string
+          tenant_id: string | null
+          version: number
+        }
+        Insert: {
+          aggregate_id?: string | null
+          aggregate_type: string
+          correlation_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          operation_id?: string | null
+          payload?: Json
+          shadow?: boolean
+          source?: string
+          tenant_id?: string | null
+          version?: number
+        }
+        Update: {
+          aggregate_id?: string | null
+          aggregate_type?: string
+          correlation_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          operation_id?: string | null
+          payload?: Json
+          shadow?: boolean
+          source?: string
+          tenant_id?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       driver_locations: {
         Row: {
           accuracy: number | null
@@ -7985,6 +8036,18 @@ export type Database = {
           },
         ]
       }
+      domain_event_divergences: {
+        Row: {
+          aggregate_id: string | null
+          aggregate_type: string | null
+          detail: string | null
+          detected_for: string | null
+          divergence_type: string | null
+          event_type: string | null
+          tenant_id: string | null
+        }
+        Relationships: []
+      }
       driver_last_location: {
         Row: {
           accuracy: number | null
@@ -8669,6 +8732,22 @@ export type Database = {
       distance_km: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
+      }
+      domain_events_shadow_summary: {
+        Args: { p_tenant_id: string }
+        Returns: Json
+      }
+      emit_domain_event: {
+        Args: {
+          p_aggregate_id: string
+          p_aggregate_type: string
+          p_event_type: string
+          p_metadata?: Json
+          p_payload?: Json
+          p_source?: string
+          p_tenant_id: string
+        }
+        Returns: string
       }
       employee_vacation_balance: {
         Args: { p_employee_id: string; p_year?: number }

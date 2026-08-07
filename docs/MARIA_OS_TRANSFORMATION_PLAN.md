@@ -175,3 +175,17 @@ Regla transversal: cada migración incluye en comentario su SQL inverso.
 
 Siguiente: replicar el patrón en Compras y POS, y arrancar Fase 4 (`domain_events` en shadow mode).
 
+
+## Estado Fase 4 — Event store en shadow mode
+
+| Entrega | Estado | Evidencia |
+|---|---|---|
+| Tabla `domain_events` append-only (RLS por tenant, sin UPDATE/DELETE) | Hecho | migración Fase 4 + trigger `domain_events_append_only` |
+| Emisor único `emit_domain_event` con correlación/operación | Hecho | función SQL `security definer` + `p_metadata` con `correlation_id` |
+| Eventos en shadow: `sales.completed`, `purchase.received`, `inventory.moved`, `payment.registered` | Hecho | triggers `AFTER` que no escriben estado (RETURN NULL) |
+| Panel de divergencias (evento sin asiento / estado sin evento) | Hecho | vista `domain_event_divergences` + `/eventos` |
+| Resumen del shadow run (cobertura, salud, días limpios) | Hecho | `domain_events_shadow_summary` + tab Cobertura |
+| Módulo DDD `src/modules/events/{domain,application,infrastructure,ui}` | Hecho | dominio puro + 14 tests, TanStack Query en la UI |
+| Regla de gobierno: 14 días sin divergencias antes de retirar un trigger legado | Hecho | `CLEAN_RUN_DAYS_REQUIRED` visible en el panel |
+
+Siguiente: Fase 5 — `Money {amount, currency}` como estándar, Knowledge Graph y motor de simulación sobre el event store.

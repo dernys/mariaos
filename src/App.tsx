@@ -49,6 +49,7 @@ const VentaDetalle = lazy(() => import("./pages/VentaDetalle"));
 const Consignacion = lazy(() => import("./pages/Consignacion"));
 const TurnoDetalle = lazy(() => import("./pages/TurnoDetalle"));
 const Auditoria = lazy(() => import("./pages/Auditoria"));
+const EventStore = lazy(() => import("./pages/EventStore"));
 const CommandCenter = lazy(() => import("./pages/CommandCenter"));
 const Agents = lazy(() => import("./pages/Agents"));
 const AgentDetalle = lazy(() => import("./pages/AgentDetalle"));
@@ -144,6 +145,7 @@ const App = () => (
               <Route path="/delivery" element={<P><Delivery /></P>} />
               <Route path="/superadmin" element={<P><SuperAdmin /></P>} />
               <Route path="/auditoria" element={<P><Auditoria /></P>} />
+              <Route path="/eventos" element={<P><EventStore /></P>} />
               <Route path="/command-center" element={<P><CommandCenter /></P>} />
               <Route path="/agents" element={<P><Agents /></P>} />
               <Route path="/agents/:id" element={<P><AgentDetalle /></P>} />
