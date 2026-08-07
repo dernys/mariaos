@@ -206,6 +206,8 @@ export function AppSidebar() {
   const location = useLocation();
   const { profile, roles, signOut } = useAuth();
   const { isSuperadmin } = useSuperadmin();
+  const { canView } = usePermissions();
+
   const { tenant, allTenants, businessType } = useTenantContext();
   const { t } = useTranslation();
   const biz = (businessType || "empresa") as BizType;
