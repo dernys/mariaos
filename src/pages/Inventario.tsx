@@ -7,10 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useTenant } from "@/hooks/useTenant";
-import { logActivity } from "@/hooks/useActivityLog";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -28,60 +25,34 @@ import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
-
-interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  description: string | null;
-  category: string | null;
-  price: number;
-  cost: number;
-  stock: number;
-  min_stock: number;
-  warehouse_id: string | null;
-  is_active: boolean;
-  is_online?: boolean;
-  online_stock?: number;
-  image_url?: string | null;
-}
-
-interface Warehouse {
-  id: string;
-  name: string;
-}
-
-interface Store {
-  id: string;
-  name: string;
-}
-
-interface LocationStock {
-  id: string;
-  product_id: string;
-  location_type: string;
-  location_id: string;
-  stock: number;
-}
-
-interface Movement {
-  id: string;
-  movement_type: string;
-  quantity: number;
-  previous_stock: number;
-  new_stock: number;
-  reason: string | null;
-  created_at: string;
-  product_id: string;
-  location_type?: string | null;
-  location_id?: string | null;
-}
+// Fase 3 (Strangler) — esta página ya no habla con la base de datos:
+// consume el módulo de Inventario (dominio + casos de uso + repositorio).
+import {
+  useInventory, useSaveProduct, useDeleteProduct, useRegisterMovement,
+  stockStatus, type Product, type Warehouse, type Store, type LocationStock, type Movement,
+} from "@/modules/inventory";
 
 const statusConfig = (stock: number, min: number) => {
-  if (stock <= 0) return { label: "outOfStock", className: "bg-destructive/10 text-destructive" };
-  if (stock <= min) return { label: "lowStock", className: "bg-warning/10 text-warning" };
-  return { label: "inStock", className: "bg-success/10 text-success" };
+  const status = stockStatus(stock, min);
+  const className =
+    status === "outOfStock" ? "bg-destructive/10 text-destructive"
+    : status === "lowStock" ? "bg-warning/10 text-warning"
+    : "bg-success/10 text-success";
+  return { label: status, className };
 };
+
+/** Traduce los códigos de error del dominio a mensajes de usuario. */
+const domainMessage = (e: any, t: (k: string) => string) => {
+  const code = e?.code ?? e?.message;
+  const map: Record<string, string> = {
+    nameSkuRequired: "modules.inventory.errors.nameSkuRequired",
+    negativeAmounts: "modules.inventory.errors.qtyGtZero",
+    qtyGtZero: "modules.inventory.errors.qtyGtZero",
+    notEnoughStock: "modules.inventory.errors.notEnoughStock",
+  };
+  return map[code] ? t(map[code]) : String(e?.message ?? e);
+};
+
 
 const Inventario = () => {
   const { t } = useTranslation();
