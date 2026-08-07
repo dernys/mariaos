@@ -114,24 +114,16 @@ export default function Proveedores() {
     toast({ title: "Eliminado" }); fetchAll();
   };
 
-  const totalDebt = suppliers.reduce((a, s) => a + Math.max(0, Number(s.balance) || 0), 0);
-  const withDebt = suppliers.filter((s) => Number(s.balance) > 0).length;
+  const totalDebt = statRows.reduce((a, s) => a + Math.max(0, Number(s.balance) || 0), 0);
+  const withDebt = statRows.filter((s) => Number(s.balance) > 0).length;
   const totalProducts = Object.values(productCounts).reduce((a, b) => a + b, 0);
-
-  const table = useTableState({
-    data: suppliers,
-    searchKeys: ["name", "contact_name", "phone", "email", "rfc"],
-    filterFns: {
-      debt: (s, v) => v === "with" ? Number(s.balance) > 0 : v === "without" ? Number(s.balance) <= 0 : true,
-      status: (s, v) => v === "active" ? s.is_active : v === "inactive" ? !s.is_active : true,
-    },
-  });
 
   return (
     <AppLayout title={t("modules.suppliers.title")}>
       <div className="space-y-4">
         <StatRow>
-          <MiniStatCard label="Proveedores" value={suppliers.length} icon={Truck} tone="primary" />
+          <MiniStatCard label="Proveedores" value={statRows.length} icon={Truck} tone="primary" />
+
           <MiniStatCard label="Con saldo" value={withDebt} icon={Wallet} tone={withDebt > 0 ? "warning" : "default"} />
           <MiniStatCard label="Por pagar" value={`$${totalDebt.toLocaleString()}`} icon={DollarSign} tone={totalDebt > 0 ? "destructive" : "success"} />
           <MiniStatCard label="Productos" value={totalProducts} icon={Package} />
