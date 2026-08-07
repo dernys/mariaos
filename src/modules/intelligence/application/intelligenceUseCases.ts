@@ -1,7 +1,7 @@
 // Fase 5 — Casos de uso del módulo de inteligencia (grafo + gemelo digital).
 
-import { logger } from "@/lib/observability";
-import { withOperation } from "@/lib/context/operationContext";
+import { observability } from "@/lib/observability";
+import { beginOperation, traceFields } from "@/lib/context/operationContext";
 import { EMPTY_GRAPH, graphInsights, graphStats, topNodes, type KnowledgeGraph } from "../domain/knowledgeGraph";
 import {
   cashRunwayDays,
