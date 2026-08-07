@@ -15,6 +15,9 @@ export interface TwinBaseline {
   monthlyPayroll: Money;
   cash: Money;
   topProducts: Array<{ productId: string | null; name: string; revenue: Money; units: number }>;
+  /** true cuando no hay ventas recientes y se usó la última ventana con actividad. */
+  staleWindow: boolean;
+  windowTo: string | null;
   computedAt: string | null;
 }
 
@@ -72,6 +75,8 @@ export function emptyBaseline(currency = "CUP"): TwinBaseline {
     monthlyPayroll: Money.zero(currency),
     cash: Money.zero(currency),
     topProducts: [],
+    staleWindow: false,
+    windowTo: null,
     computedAt: null,
   };
 }

@@ -78,6 +78,8 @@ export const supabaseIntelligenceRepository: IntelligenceRepository = {
         revenue: m(p.revenue),
         units: Number(p.units ?? 0),
       })),
+      staleWindow: Boolean(data.stale_window),
+      windowTo: data.window_to ?? null,
       computedAt: data.computed_at ?? null,
     };
   },
