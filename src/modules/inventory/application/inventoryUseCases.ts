@@ -133,3 +133,8 @@ export async function registerMovement(deps: InventoryDeps, input: RegisterMovem
 
   return plan;
 }
+
+export async function uploadProductImage(deps: InventoryDeps, file: File): Promise<string> {
+  if (!deps.tenantId) throw new InventoryUseCaseError("noTenant");
+  return deps.repo.uploadProductImage(file, deps.tenantId);
+}

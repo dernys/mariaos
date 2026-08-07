@@ -85,4 +85,13 @@ export const supabaseInventoryRepository: InventoryRepository = {
     const { error } = await supabase.from("products").update({ stock }).eq("id", id);
     if (error) throw new Error(error.message);
   },
+
+  async uploadProductImage(file: File, tenantId: string) {
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${tenantId}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
+    if (error) throw new Error(error.message);
+    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+    return data.publicUrl;
+  },
 };

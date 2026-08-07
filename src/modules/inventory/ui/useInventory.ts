@@ -11,6 +11,7 @@ import {
   deleteProduct,
   loadInventory,
   registerMovement,
+  uploadProductImage,
   updateProduct,
   type InventoryDeps,
   type RegisterMovementInput,
@@ -74,4 +75,9 @@ export function useRegisterMovement() {
     mutationFn: (input: RegisterMovementInput) => registerMovement(deps, input),
     onSuccess: invalidate,
   });
+}
+
+export function useUploadProductImage() {
+  const deps = useInventoryDeps();
+  return useMutation({ mutationFn: (file: File) => uploadProductImage(deps, file) });
 }

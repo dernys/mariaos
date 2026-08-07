@@ -28,4 +28,5 @@ export interface InventoryRepository {
   deleteProduct(id: string): Promise<void>;
   recordMovement(record: MovementRecord, tenantId: string | null, userId?: string | null): Promise<void>;
   setProductStock(id: string, stock: number): Promise<void>;
+  uploadProductImage(file: File, tenantId: string): Promise<string>;
 }

@@ -28,7 +28,7 @@ import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 // Fase 3 (Strangler) — esta página ya no habla con la base de datos:
 // consume el módulo de Inventario (dominio + casos de uso + repositorio).
 import {
-  useInventory, useSaveProduct, useDeleteProduct, useRegisterMovement,
+  useInventory, useSaveProduct, useDeleteProduct, useRegisterMovement, useUploadProductImage, useInventoryDeps,
   stockStatus, type Product, type Warehouse, type Store, type LocationStock, type Movement,
 } from "@/modules/inventory";
 
@@ -57,12 +57,13 @@ const domainMessage = (e: any, t: (k: string) => string) => {
 const Inventario = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const tenantId = useTenant();
+  const { tenantId } = useInventoryDeps();
   const { toast } = useToast();
   const { products, warehouses, stores, locationStocks, movements, loading, refetch } = useInventory();
   const saveProductMutation = useSaveProduct();
   const deleteProductMutation = useDeleteProduct();
   const registerMovementMutation = useRegisterMovement();
+  const uploadImageMutation = useUploadProductImage();
   const fetchData = () => { void refetch(); };
   const [search, setSearch] = useState("");
   const [kardexProductId, setKardexProductId] = useState<string>("");
@@ -532,13 +533,13 @@ const Inventario = () => {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file || !tenantId) return;
-                        const ext = file.name.split(".").pop() || "jpg";
-                        const path = `${tenantId}/${Date.now()}.${ext}`;
-                        const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
-                        if (error) { toast({ title: t("modules.inventory.errors.uploadImage"), description: error.message, variant: "destructive" }); return; }
-                        const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-                        setForm((f) => ({ ...f, image_url: data.publicUrl }));
-                        toast({ title: t("modules.inventory.toasts.imageUploaded") });
+                        try {
+                          const publicUrl = await uploadImageMutation.mutateAsync(file);
+                          setForm((f) => ({ ...f, image_url: publicUrl }));
+                          toast({ title: t("modules.inventory.toasts.imageUploaded") });
+                        } catch (err: any) {
+                          toast({ title: t("modules.inventory.errors.uploadImage"), description: domainMessage(err, t), variant: "destructive" });
+                        }
                       }}
                     />
                     {form.image_url && (
