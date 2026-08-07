@@ -64,11 +64,14 @@ export async function loadTwinSnapshot(deps: IntelligenceDeps): Promise<TwinSnap
 
 export async function rebuildGraph(deps: IntelligenceDeps) {
   if (!deps.tenantId) throw new Error("Sin empresa activa");
-  return withOperation({ module: "intelligence", operation: "rebuild_knowledge_graph" }, async () => {
-    const result = await deps.repo.rebuildGraph(deps.tenantId as string);
-    logger.info("intelligence", "knowledge graph rebuilt", result);
-    return result;
+  const ctx = beginOperation({
+    module: "intelligence",
+    operation: "rebuild_knowledge_graph",
+    tenant_id: deps.tenantId,
   });
+  const result = await deps.repo.rebuildGraph(deps.tenantId);
+  observability.info("knowledge graph rebuilt", { ...traceFields(ctx), ...result });
+  return result;
 }
 
 export function runScenario(baseline: TwinBaseline, scenario: Scenario) {
