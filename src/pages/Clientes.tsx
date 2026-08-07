@@ -55,20 +55,36 @@ const Clientes = () => {
   const { user } = useAuth();
   const tenantId = useTenant();
   const navigate = useNavigate();
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", rfc: "", credit_limit: "0", notes: "" });
   const { toast } = useToast();
 
-  const fetchCustomers = async () => {
-    const { data, error } = await supabase.from("customers").select("*").order("name");
-    if (!error && data) setCustomers(data as Customer[]);
-    setLoading(false);
-  };
+  const table = useServerTable<Customer>({
+    table: "customers",
+    select: "id,name,phone,email,address,rfc,credit_limit,balance,notes",
+    searchColumns: ["name", "email", "phone", "rfc"],
+    orderBy: { column: "name", ascending: true },
+    scope: tenantId,
+    filterFns: {
+      status: (q, v) => (v === "debt" ? q.gt("balance", 0) : q.lte("balance", 0)),
+    },
+  });
 
-  useEffect(() => { fetchCustomers(); }, []);
+  const statsQuery = useTableStats<{ balance: number; credit_limit: number }>(
+    "customers",
+    "balance,credit_limit",
+    { scope: tenantId },
+  );
+  const statRows = statsQuery.data ?? [];
+  const totalDebt = statRows.reduce((a, c) => a + Math.max(0, Number(c.balance) || 0), 0);
+  const totalCredit = statRows.reduce((a, c) => a + (Number(c.credit_limit) || 0), 0);
+  const withDebt = statRows.filter((c) => (Number(c.balance) || 0) > 0).length;
+
+  const refresh = () => {
+    table.invalidate();
+    statsQuery.refetch();
+  };
 
   const openNew = () => {
     setEditing(null);
@@ -103,7 +119,7 @@ const Clientes = () => {
       toast({ title: "Cliente creado" });
     }
     setDialogOpen(false);
-    fetchCustomers();
+    refresh();
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -111,22 +127,11 @@ const Clientes = () => {
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     await logActivity({ entity_type: "customer", entity_id: id, action: "Cliente eliminado", description: `Se eliminó ${name}`, tenant_id: tenantId, performed_by: user?.id });
     toast({ title: "Cliente eliminado" });
-    fetchCustomers();
+    refresh();
   };
 
-  const totalDebt = customers.reduce((a, c) => a + Math.max(0, Number(c.balance) || 0), 0);
-  const totalCredit = customers.reduce((a, c) => a + (Number(c.credit_limit) || 0), 0);
-  const withDebt = customers.filter((c) => (c.balance || 0) > 0).length;
-
-  const table = useTableState({
-    data: customers,
-    searchKeys: ["name", "email", "phone", "rfc"],
-    filterFns: {
-      status: (c, v) => v === "debt" ? (c.balance || 0) > 0 : v === "ok" ? (c.balance || 0) <= 0 : true,
-    },
-  });
-
   return (
+
     <AppLayout title={t("modules.customers.title")}>
       <div className="space-y-4">
         <StatRow>
