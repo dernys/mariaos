@@ -35,9 +35,12 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
   const [method, setMethod] = useState("cash");
   const [issueAfter, setIssueAfter] = useState(true);
   const [busy, setBusy] = useState(false);
+  // QW1/QW2: una intención por apertura del diálogo (sobrevive a reintentos).
+  const [intent, setIntent] = useState<OperationContext | null>(null);
 
   useEffect(() => {
     if (!open || !tenantId) return;
+    setIntent(beginSaleIntent(tenantId));
     (async () => {
       const [p, c, e] = await Promise.all([
         supabase.from("products").select("id, name, sku, price").eq("tenant_id", tenantId).eq("is_active", true).order("name").limit(500),
