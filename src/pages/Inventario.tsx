@@ -88,12 +88,11 @@ const Inventario = () => {
   const { user } = useAuth();
   const tenantId = useTenant();
   const { toast } = useToast();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
-  const [locationStocks, setLocationStocks] = useState<LocationStock[]>([]);
-  const [movements, setMovements] = useState<Movement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { products, warehouses, stores, locationStocks, movements, loading, refetch } = useInventory();
+  const saveProductMutation = useSaveProduct();
+  const deleteProductMutation = useDeleteProduct();
+  const registerMovementMutation = useRegisterMovement();
+  const fetchData = () => { void refetch(); };
   const [search, setSearch] = useState("");
   const [kardexProductId, setKardexProductId] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -106,23 +105,6 @@ const Inventario = () => {
   });
   const [movForm, setMovForm] = useState({ type: "entry", quantity: "0", reason: "" });
 
-  const fetchData = async () => {
-    const [prodRes, whRes, stRes, psRes, movRes] = await Promise.all([
-      supabase.from("products").select("*").order("name"),
-      supabase.from("warehouses").select("id, name").order("name"),
-      supabase.from("stores").select("id, name").order("name"),
-      supabase.from("product_stock").select("*"),
-      supabase.from("inventory_movements").select("*").order("created_at", { ascending: false }).limit(200),
-    ]);
-    if (prodRes.data) setProducts(prodRes.data as Product[]);
-    if (whRes.data) setWarehouses(whRes.data);
-    if (stRes.data) setStores(stRes.data);
-    if (psRes.data) setLocationStocks(psRes.data as LocationStock[]);
-    if (movRes.data) setMovements(movRes.data as Movement[]);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchData(); }, []);
 
   const openNew = () => {
     setEditing(null);
