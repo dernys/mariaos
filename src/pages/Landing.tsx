@@ -60,11 +60,55 @@ const platformFeatures = [
 
 // (Sección "Capturas reales" eliminada: el carrusel del tour ya muestra las pantallas reales sin duplicarlas)
 
+interface DemoBusiness {
+  name: string;
+  type: string;
+  products: number;
+  sales: number;
+  revenue: number;
+  employees: number;
+}
+interface DemoStats {
+  tenants: number;
+  products: number;
+  sales: number;
+  revenue: number;
+  journal_entries: number;
+  employees: number;
+  events: number;
+  agents: number;
+  businesses: DemoBusiness[];
+}
+interface DemoTenant {
+  tenant_id: string;
+  name: string;
+  business_type: string;
+  roles: { role: string; email: string }[];
+}
+
+const DEMO_ROLES = [
+  { role: "admin", label: "Administrador", desc: "Acceso total" },
+  { role: "gerente", label: "Gerente", desc: "Operación y reportes" },
+  { role: "cajero", label: "Cajero", desc: "Solo POS y turnos" },
+];
+
+const TYPE_ALIASES: Record<string, string[]> = {
+  bar: ["bar"],
+  restaurant: ["restaurant", "restaurante"],
+  retail: ["empresa", "retail", "tienda"],
+};
+
+const fmtMoney = (n: number) =>
+  new Intl.NumberFormat("es-CU", { maximumFractionDigits: 0 }).format(n || 0);
+
 const Landing = () => {
   const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [selected, setSelected] = useState(0);
+  const [stats, setStats] = useState<DemoStats | null>(null);
+  const [demoTenants, setDemoTenants] = useState<DemoTenant[]>([]);
+  const [demoRole, setDemoRole] = useState("admin");
   const autoplay = useRef(Autoplay({ delay: 4500, stopOnInteraction: false, stopOnMouseEnter: true }));
 
   useEffect(() => {
@@ -76,25 +120,40 @@ const Landing = () => {
     return () => { api.off("select", onSelect); };
   }, [api]);
 
-  const DEMO_EMAILS: Record<string, string> = {
-    bar: "demo-bar@kirabit.app",
-    restaurant: "demo-restaurante@kirabit.app",
-    retail: "demo-empresa@kirabit.app",
-    empresa: "demo-empresa@kirabit.app",
-  };
+  // Métricas reales de las empresas demo (función pública agregada)
+  useEffect(() => {
+    let alive = true;
+    supabase.rpc("public_demo_stats").then(({ data }) => {
+      if (alive && data) setStats(data as unknown as DemoStats);
+    });
+    supabase.functions.invoke("ensure-demo-user", { body: { action: "list" } }).then(({ data }) => {
+      if (alive && data?.tenants) setDemoTenants(data.tenants as DemoTenant[]);
+    });
+    return () => { alive = false; };
+  }, []);
+
+  const findTenant = (type: string) =>
+    demoTenants.find((t) => (TYPE_ALIASES[type] ?? [type]).includes((t.business_type ?? "").toLowerCase()));
+
+  const findBusiness = (type: string) =>
+    stats?.businesses?.find((b) => (TYPE_ALIASES[type] ?? [type]).includes((b.type ?? "").toLowerCase()));
 
   const startDemo = async (type: string) => {
     setDemoLoading(type);
     try {
-      const { error: seedErr } = await supabase.functions.invoke("seed-demo");
-      if (seedErr) throw seedErr;
-      const email = DEMO_EMAILS[type] ?? DEMO_EMAILS.empresa;
+      const tenant = findTenant(type);
+      if (!tenant) throw new Error("Demo no disponible en este momento");
+      const { data, error } = await supabase.functions.invoke("ensure-demo-user", {
+        body: { action: "ensure", tenant_id: tenant.tenant_id, role: demoRole },
+      });
+      if (error) throw error;
+      if (!data?.email) throw new Error(data?.error ?? "No se pudo preparar la demo");
       const { error: loginErr } = await supabase.auth.signInWithPassword({
-        email,
-        password: "demo1234",
+        email: data.email,
+        password: data.password,
       });
       if (loginErr) throw loginErr;
-      toast.success("Demo lista. Bienvenido a MarIA.");
+      toast.success(`Demo de ${tenant.name} lista (rol ${demoRole}).`);
       navigate("/app");
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo iniciar la demo");
@@ -102,6 +161,7 @@ const Landing = () => {
       setDemoLoading(null);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
