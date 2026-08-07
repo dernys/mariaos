@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- filas sin tipar: objetos nuevos, el cliente tipado se regenera de forma asíncrona */
 // Fase 5 — Infraestructura: única frontera con Lovable Cloud para inteligencia.
 
 import { supabase } from "@/integrations/supabase/client";
