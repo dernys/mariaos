@@ -34,6 +34,19 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // SEC-002: el bootstrap es de un solo uso. Si ya existe un superadmin,
+    // el endpoint queda cerrado (no se puede crear ni reescribir credenciales).
+    const { count: existingSuperadmins } = await supabase
+      .from("superadmins")
+      .select("user_id", { count: "exact", head: true });
+
+    if ((existingSuperadmins ?? 0) > 0) {
+      return new Response(
+        JSON.stringify({ error: "bootstrap_already_completed" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Create user with admin API (auto-confirms email)
     const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
       email,

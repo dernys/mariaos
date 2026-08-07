@@ -189,3 +189,29 @@ Siguiente: replicar el patrón en Compras y POS, y arrancar Fase 4 (`domain_even
 | Regla de gobierno: 14 días sin divergencias antes de retirar un trigger legado | Hecho | `CLEAN_RUN_DAYS_REQUIRED` visible en el panel |
 
 Siguiente: Fase 5 — `Money {amount, currency}` como estándar, Knowledge Graph y motor de simulación sobre el event store.
+
+## Estado Fase 5 — Money, Knowledge Graph y gemelo digital
+
+| Entrega | Estado | Evidencia |
+|---|---|---|
+| Value object `Money` (inmutable, sin mezcla de monedas, reparto sin pérdida de centavos, conversión solo con tasa explícita) | Hecho | `src/modules/shared/domain/money.ts` + 11 tests |
+| Knowledge Graph empresarial (`kg_nodes`, `kg_edges`, RLS por tenant, solo lectura desde el cliente) | Hecho | migración Fase 5 + `rebuild_knowledge_graph(tenant)` |
+| Grafo derivado de datos reales: producto↔categoría, cliente→producto, tienda→producto, proveedor→producto, empleado→tienda | Hecho | 6 empresas construidas (58–66 nodos, hasta 108 aristas) |
+| Señales estructurales del grafo (proveedor único, concentración de cliente, productos sin proveedor) | Hecho | `domain/knowledgeGraph.ts` (`graphInsights`) |
+| Línea base del gemelo con ventana adaptativa (usa el último período con actividad si no hay ventas recientes) | Hecho | `twin_baseline(tenant, days)` |
+| Motor de simulación sobre `Money` (precio, coste, demanda, gastos fijos, horizonte, equilibrio, runway de caja) | Hecho | `domain/twin.ts` + 14 tests |
+| Módulo DDD `src/modules/intelligence/{domain,application,infrastructure,ui}` con TanStack Query | Hecho | `ui/useDigitalTwin.ts` |
+| Página `/digital-twin` sin `supabase.from()` (antes consultaba tablas con estados de venta inexistentes) | Hecho | `src/pages/DigitalTwin.tsx` reescrita |
+
+### Pendientes de fases anteriores cerrados en esta fase
+
+| Deuda | Origen | Cierre |
+|---|---|---|
+| SEC-002 · `register-superadmin` abierto tras el bootstrap | QW5 | El endpoint devuelve `403 bootstrap_already_completed` si ya existe un superadmin |
+| SEC-003 · falta de rate limiting en `ensure-demo-user` | QW5 | Límite de 20 peticiones/minuto por IP (`429 rate_limited`) |
+| Bug del gemelo: filtraba ventas por estados `paid`/`partial`, inexistentes en `sales` | Fase 0 | La línea base se calcula en SQL con `status = 'completed'` |
+| Lint `no-explicit-any` en los adaptadores de infraestructura | Fase 4 | Excepción justificada a nivel de archivo; `eslint` limpio en `src/modules` |
+
+Tests: **66** (7 archivos). `vitest`, `tsgo --noEmit` y `eslint` en verde.
+
+Sigue abierto por decisión de alcance: propagar `Money` a las páginas de POS/Compras (hoy siguen usando `number` + FX en cliente) y replicar el patrón modular en Compras y POS.

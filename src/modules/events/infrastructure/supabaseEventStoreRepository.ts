@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- filas sin tipar: objetos nuevos, el cliente tipado se regenera de forma asíncrona */
 // Fase 4 — Infraestructura: única frontera con Lovable Cloud para el event store.
 
 import { supabase } from "@/integrations/supabase/client";
