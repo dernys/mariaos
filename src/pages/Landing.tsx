@@ -422,34 +422,74 @@ const Landing = () => {
               Elige tu tipo de negocio
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Entra a una demo preconfigurada según tu rubro. Sin tarjeta, sin instalaciones.
+              Empresas demo con operación real cargada: catálogo, ventas, turnos, cocina, nómina y contabilidad.
+              Entra con el rol que quieras probar y comprueba los permisos.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {demoBusinessTypes.map((b) => (
+          {/* Selector de rol para probar permisos */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+            {DEMO_ROLES.map((r) => (
               <button
-                key={b.id}
-                onClick={() => startDemo(b.id)}
-                disabled={demoLoading !== null}
-                className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)] disabled:opacity-60 disabled:cursor-wait"
+                key={r.role}
+                onClick={() => setDemoRole(r.role)}
+                className={[
+                  "px-4 py-2 rounded-full border text-xs font-medium transition-colors",
+                  demoRole === r.role
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                ].join(" ")}
               >
-                <div aria-hidden className={`absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${b.accent} opacity-20 blur-3xl group-hover:opacity-40 transition-opacity`} />
-                <div className={`relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br ${b.accent} text-white shadow-lg mb-5`}>
-                  <b.icon className="h-6 w-6" />
-                </div>
-                <h3 className="relative font-heading font-semibold text-lg">{b.title}</h3>
-                <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
-                <div className="relative mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                  {demoLoading === b.id ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Preparando demo…</>
-                  ) : (
-                    <>Entrar a la demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
-                  )}
-                </div>
+                {r.label} <span className="opacity-60">· {r.desc}</span>
               </button>
             ))}
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {demoBusinessTypes.map((b) => {
+              const biz = findBusiness(b.id);
+              return (
+                <button
+                  key={b.id}
+                  onClick={() => startDemo(b.id)}
+                  disabled={demoLoading !== null}
+                  className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)] disabled:opacity-60 disabled:cursor-wait"
+                >
+                  <div aria-hidden className={`absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${b.accent} opacity-20 blur-3xl group-hover:opacity-40 transition-opacity`} />
+                  <div className={`relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br ${b.accent} text-white shadow-lg mb-5`}>
+                    <b.icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="relative font-heading font-semibold text-lg">{b.title}</h3>
+                  {biz && (
+                    <p className="relative text-xs text-primary font-medium mt-1">{biz.name}</p>
+                  )}
+                  <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
+                  {biz && (
+                    <dl className="relative mt-5 grid grid-cols-3 gap-2 border-t border-border/60 pt-4">
+                      {[
+                        { l: "Productos", v: String(biz.products) },
+                        { l: "Ventas", v: String(biz.sales) },
+                        { l: "Facturado", v: `$${fmtMoney(biz.revenue)}` },
+                      ].map((m) => (
+                        <div key={m.l}>
+                          <dd className="font-heading font-bold text-sm">{m.v}</dd>
+                          <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">{m.l}</dt>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                  <div className="relative mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                    {demoLoading === b.id ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Preparando demo…</>
+                    ) : (
+                      <>Entrar como {demoRole} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
 
           <div className="mt-10 text-center">
             <Link to="/marketplace">
