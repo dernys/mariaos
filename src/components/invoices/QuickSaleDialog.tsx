@@ -10,6 +10,8 @@ import { Plus, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { beginSaleIntent, callFinancialRpc } from "@/lib/finance/idempotentRpc";
+import type { OperationContext } from "@/lib/context/operationContext";
 
 interface Item { product_id?: string; product_name: string; sku?: string; qty: number; price: number; }
 
