@@ -158,5 +158,20 @@ Regla transversal: cada migración incluye en comentario su SQL inverso.
 | QW1 Idempotencia financiera | Hecho | tabla `operation_idempotency`, overloads de `create_quick_sale` / `register_account_payment` / `receive_purchase`, frontera única `src/lib/finance/idempotentRpc.ts` cableada en Venta rápida, Pagos multi-moneda y Recepción de compra |
 | QW4 Índices calientes | Hecho | 10 índices justificados (ventas, mayor, kardex, cola de webhooks) |
 | QW6b Invariantes financieras | Hecho | `src/lib/finance/invariants.ts` + 13 tests (Debe=Haber, venta liquidada, ecuación de stock, multi-moneda) |
+| Cierre fino: correlación en auditoría | Hecho | `useActivityLog` hereda `correlation_id`/`operation_id` del contexto de operación |
+| Cierre fino: informe de sprint (paso 8) | Hecho | `docs/SPRINT_0_30_CLOSING_REPORT.md` |
 
-Siguiente sprint (30–60): repositorios por módulo + TanStack Query para eliminar los ~316 `supabase.from` directos en páginas.
+## Estado Fase 3 — Strangler, módulo piloto Inventario
+
+| Entrega | Estado | Evidencia |
+|---|---|---|
+| Estructura modular `domain / application / infrastructure / ui` | Hecho | `src/modules/inventory/**` |
+| Dominio puro (estado de stock, `planMovement`, validación de producto) | Hecho | `src/modules/inventory/domain/product.ts` + 10 tests |
+| Puerto de repositorio + implementación Lovable Cloud (única frontera de datos) | Hecho | `application/inventoryRepository.ts`, `infrastructure/supabaseInventoryRepository.ts` |
+| Casos de uso con trazabilidad (crear/editar/borrar producto, movimiento, imagen) | Hecho | `application/inventoryUseCases.ts` |
+| TanStack Query en la UI (cache + invalidación, sin `useEffect` de carga) | Hecho | `ui/useInventory.ts` |
+| Página de Inventario sin `supabase.from()` ni `supabase.storage` | Hecho | `src/pages/Inventario.tsx` |
+| Regla de lint que prohíbe acceso a datos en `src/modules/**/ui` y `domain` | Hecho | `eslint.config.js` |
+
+Siguiente: replicar el patrón en Compras y POS, y arrancar Fase 4 (`domain_events` en shadow mode).
+
