@@ -326,14 +326,19 @@ export function AppSidebar() {
           );
         })}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
-            {t("nav.groups.system")}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{systemItems.map(renderItem)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {systemItems.filter((it) => canView(moduleForUrl(it.url))).length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
+              {t("nav.groups.system")}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {systemItems.filter((it) => canView(moduleForUrl(it.url))).map(renderItem)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
 
         {isSuperadmin && (
           <SidebarGroup>
