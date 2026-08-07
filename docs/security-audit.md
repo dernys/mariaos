@@ -31,7 +31,7 @@ Además existían tenants reales junto a los de demostración en la misma tabla:
 
 ## Deuda registrada (fuera del alcance del Sprint 0–30)
 
-1. `register-superadmin` debería deshabilitarse por configuración una vez completado el bootstrap.
+1. ~~`register-superadmin` debería deshabilitarse tras el bootstrap~~ · **Cerrado (SEC-002, Fase 5)**: si ya existe un superadmin, la función responde `403 bootstrap_already_completed`.
 2. Las contraseñas de demo son fijas y conocidas: aceptable solo porque quedan confinadas a tenants de demostración tras SEC-001.
-3. Falta rate limiting en `api-v1` y en `ensure-demo-user`.
+3. Falta rate limiting en `api-v1`. En `ensure-demo-user` **cerrado (SEC-003, Fase 5)**: 20 peticiones/minuto por IP, `429 rate_limited`.
 4. Recomendado activar la comprobación de contraseñas filtradas (HIBP) en la configuración de autenticación.
