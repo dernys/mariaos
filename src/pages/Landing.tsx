@@ -539,18 +539,31 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Stats reales de las demos */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Datos en vivo</p>
+            <h2 className="font-heading font-bold text-3xl sm:text-4xl tracking-tight">
+              Las demos operan con información real
+            </h2>
+            <p className="mt-3 text-muted-foreground text-sm">
+              Estas cifras se leen directamente de las tres empresas demo del sistema, no son maquetas.
+            </p>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { v: "30+", l: "Módulos integrados" },
-              { v: "3", l: "Modos de POS" },
+              { v: stats ? `$${fmtMoney(stats.revenue)}` : "—", l: "Facturado en las demos" },
+              { v: stats ? String(stats.sales) : "—", l: "Ventas registradas" },
+              { v: stats ? String(stats.products) : "—", l: "Productos en catálogo" },
+              { v: stats ? String(stats.journal_entries) : "—", l: "Asientos contables" },
+              { v: stats ? String(stats.employees) : "—", l: "Empleados con nómina" },
+              { v: stats ? String(stats.events) : "—", l: "Eventos de dominio" },
+              { v: stats ? String(stats.agents) : "—", l: "Agentes de IA activos" },
               { v: "3", l: "Idiomas (ES/EN/PT-BR)" },
-              { v: "IA", l: "Agentes autónomos" },
             ].map((s) => (
               <div key={s.l} className="rounded-2xl border border-border bg-card p-6">
-                <p className="font-heading font-bold text-3xl bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
+                <p className="font-heading font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
                   {s.v}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">{s.l}</p>
@@ -558,6 +571,7 @@ const Landing = () => {
             ))}
           </div>
         </div>
+
       </section>
 
       {/* CTA */}
