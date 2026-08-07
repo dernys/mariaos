@@ -86,7 +86,23 @@ interface MenuGroup {
   items: MenuItem[];
 }
 
-const adminOnlyGroupKeys = new Set(["mariaos"]);
+/** Maps a route to the app_modules slug that governs its visibility. */
+const URL_MODULE_OVERRIDES: Record<string, string> = {
+  app: "dashboard",
+  "command-center": "mariaos",
+  decisions: "mariaos",
+  risk: "mariaos",
+  memory: "mariaos",
+  "digital-twin": "mariaos",
+  workflows: "mariaos",
+  developers: "configuracion",
+};
+
+const moduleForUrl = (url: string) => {
+  const seg = url.split("/")[1] ?? "";
+  return URL_MODULE_OVERRIDES[seg] ?? seg;
+};
+
 
 const menuGroups: MenuGroup[] = [
   {
