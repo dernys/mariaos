@@ -38,17 +38,22 @@ const ROLE_LABELS: Record<AppRole, string> = {
   admin: "Administrador",
   gerente: "Gerente",
   supervisor: "Supervisor",
+  contador: "Contador",
   cajero: "Cajero",
   inventarista: "Inventarista",
+  empleado: "Empleado",
 };
 
 const ROLE_COLORS: Record<AppRole, string> = {
   admin: "bg-primary/10 text-primary border-primary/20",
   gerente: "bg-info/10 text-info border-info/20",
   supervisor: "bg-warning/10 text-warning border-warning/20",
+  contador: "bg-accent/10 text-accent-foreground border-accent/20",
   cajero: "bg-success/10 text-success border-success/20",
   inventarista: "bg-muted text-muted-foreground border-muted",
+  empleado: "bg-secondary text-secondary-foreground border-secondary",
 };
+
 
 export function UsersTab() {
   const [users, setUsers] = useState<UserItem[]>([]);
