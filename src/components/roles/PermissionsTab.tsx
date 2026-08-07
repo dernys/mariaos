@@ -29,9 +29,12 @@ const ROLES: { value: AppRole; label: string; color: string }[] = [
   { value: "admin", label: "Administrador", color: "bg-primary text-primary-foreground" },
   { value: "gerente", label: "Gerente", color: "bg-info text-info-foreground" },
   { value: "supervisor", label: "Supervisor", color: "bg-warning text-warning-foreground" },
+  { value: "contador", label: "Contador", color: "bg-accent text-accent-foreground" },
   { value: "cajero", label: "Cajero", color: "bg-success text-success-foreground" },
   { value: "inventarista", label: "Inventarista", color: "bg-muted text-muted-foreground" },
+  { value: "empleado", label: "Empleado", color: "bg-secondary text-secondary-foreground" },
 ];
+
 
 const PERMISSION_KEYS = ["can_view", "can_create", "can_edit", "can_delete"] as const;
 const PERMISSION_LABELS: Record<string, string> = {
