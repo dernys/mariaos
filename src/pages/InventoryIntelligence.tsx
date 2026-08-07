@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DemandForecastPanel } from "@/components/intelligence/DemandForecastPanel";
+
 import { Brain, TrendingUp, AlertTriangle, ArrowRightLeft, Sparkles, Loader2, RefreshCw, Package } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -78,15 +80,21 @@ export default function InventoryIntelligence() {
           <KPI icon={<ArrowRightLeft className="h-4 w-4 text-primary" />} label="Sugerencias rebalanceo" value={data?.counts.rebalance ?? 0} />
         </div>
 
-        <Tabs defaultValue="risk">
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+        <Tabs defaultValue="forecast">
+          <TabsList className="grid grid-cols-5 w-full max-w-3xl">
+            <TabsTrigger value="forecast" className="text-xs">Pronóstico</TabsTrigger>
             <TabsTrigger value="risk" className="text-xs">Riesgo quiebre</TabsTrigger>
             <TabsTrigger value="abc" className="text-xs">Análisis ABC</TabsTrigger>
             <TabsTrigger value="slow" className="text-xs">Baja rotación</TabsTrigger>
             <TabsTrigger value="rebalance" className="text-xs">Rebalanceo</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="forecast">
+            <DemandForecastPanel />
+          </TabsContent>
+
           <TabsContent value="risk">
+
             <DataList rows={(data?.stockout_risk || []).map((p) => ({
               title: p.name,
               subtitle: `Stock: ${p.stock} · Demanda diaria: ${p.daily_demand.toFixed(2)}`,

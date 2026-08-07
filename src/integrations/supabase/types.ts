@@ -3166,6 +3166,78 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscal_rules: {
+        Row: {
+          applies_to: string
+          base: string
+          code: string
+          config: Json
+          country_code: string
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          rate: number
+          rule_type: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string
+          base?: string
+          code: string
+          config?: Json
+          country_code: string
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          rate?: number
+          rule_type: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string
+          base?: string
+          code?: string
+          config?: Json
+          country_code?: string
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          rate?: number
+          rule_type?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fiscal_years: {
         Row: {
           closed_at: string | null
@@ -8767,6 +8839,21 @@ export type Database = {
           taxable_base: number
         }[]
       }
+      compute_tax_breakdown: {
+        Args: {
+          p_applies_to?: string
+          p_base: number
+          p_codes?: string[]
+          p_tenant: string
+        }
+        Returns: {
+          amount: number
+          code: string
+          name: string
+          rate: number
+          rule_type: string
+        }[]
+      }
       create_fiscal_year: {
         Args: { p_start_month?: number; p_tenant_id: string; p_year: number }
         Returns: string
@@ -8891,6 +8978,31 @@ export type Database = {
       find_account_by_codes: {
         Args: { p_codes: string[]; p_tenant: string }
         Returns: string
+      }
+      forecast_cashflow: {
+        Args: { p_tenant: string; p_weeks?: number }
+        Returns: {
+          inflow: number
+          is_shortfall: boolean
+          net: number
+          outflow: number
+          running_balance: number
+          week_start: string
+        }[]
+      }
+      forecast_demand: {
+        Args: { p_horizon?: number; p_tenant: string; p_window?: number }
+        Returns: {
+          avg_daily: number
+          days_of_stock: number
+          min_stock: number
+          product_id: string
+          product_name: string
+          projected_demand: number
+          sku: string
+          stock: number
+          suggested_reorder: number
+        }[]
       }
       generate_sepa_xml: {
         Args: { _bank_account_id: string; _payroll_run_ids: string[] }
@@ -9245,6 +9357,20 @@ export type Database = {
       resolve_account_id: {
         Args: { p_code: string; p_tenant_id: string }
         Returns: string
+      }
+      resolve_fiscal_rules: {
+        Args: { p_applies_to?: string; p_tenant: string }
+        Returns: {
+          applies_to: string
+          base: string
+          code: string
+          config: Json
+          is_default: boolean
+          name: string
+          rate: number
+          rule_type: string
+          source: string
+        }[]
       }
       resolve_fiscal_year_id: {
         Args: { p_date: string; p_tenant: string }
