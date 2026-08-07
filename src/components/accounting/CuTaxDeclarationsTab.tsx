@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calculator, Send, RefreshCw } from "lucide-react";
+import { useFiscalRules, RULE_TYPE_LABELS, useBaseCurrency } from "@/hooks/useFiscalRules";
 
 type Period = { id: string; name: string; start_date: string; end_date: string; status: string };
 type Declaration = {
@@ -26,34 +27,52 @@ type Declaration = {
   submitted_at: string | null;
 };
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat("es-CU", { style: "currency", currency: "CUP", maximumFractionDigits: 2 }).format(n || 0);
+const COUNTRY_LABELS: Record<string, string> = {
+  CU: "Cuba", ES: "España", MX: "México", CO: "Colombia",
+  PE: "Perú", BR: "Brasil", AR: "Argentina", US: "Estados Unidos",
+};
 
-export default function CuTaxDeclarationsTab() {
+/** Declaraciones fiscales genéricas: el catálogo aplicable depende del país del tenant. */
+export default function TaxDeclarationsTab() {
   const tenantId = useTenant();
   const { toast } = useToast();
+  const { code: currency } = useBaseCurrency();
+  const { data: rules = [] } = useFiscalRules();
+  const [country, setCountry] = useState<string>("");
   const [periods, setPeriods] = useState<Period[]>([]);
   const [periodId, setPeriodId] = useState<string>("");
-  const [declarationType, setDeclarationType] = useState<string>("utilidades");
-  const [taxRate, setTaxRate] = useState<number>(35);
+  const [ruleCode, setRuleCode] = useState<string>("");
+  const [taxRate, setTaxRate] = useState<number>(0);
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const fmt = useMemo(
+    () => (n: number) =>
+      new Intl.NumberFormat("es-ES", {
+        style: currency ? "currency" : "decimal",
+        currency: currency || undefined,
+        maximumFractionDigits: 2,
+      }).format(n || 0),
+    [currency],
+  );
+
+  /** Solo tributos declarables (no retenciones a terceros). */
+  const declarable = useMemo(
+    () => rules.filter((r) => ["income_tax", "sales_tax", "turnover", "social_security", "vat"].includes(r.rule_type)),
+    [rules],
+  );
+
   const load = async () => {
     if (!tenantId) return;
-    const { data: p } = await supabase
-      .from("accounting_periods")
-      .select("id,name,start_date,end_date,status")
-      .eq("tenant_id", tenantId)
-      .order("start_date", { ascending: false });
+    const [{ data: t }, { data: p }, { data: d }] = await Promise.all([
+      supabase.from("tenants").select("country_code").eq("id", tenantId).maybeSingle(),
+      supabase.from("accounting_periods").select("id,name,start_date,end_date,status")
+        .eq("tenant_id", tenantId).order("start_date", { ascending: false }),
+      supabase.from("cu_tax_declarations").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false }),
+    ]);
+    setCountry(t?.country_code ?? "");
     setPeriods((p as Period[]) || []);
     if (p && p.length && !periodId) setPeriodId(p[0].id);
-
-    const { data: d } = await supabase
-      .from("cu_tax_declarations")
-      .select("*")
-      .eq("tenant_id", tenantId)
-      .order("created_at", { ascending: false });
     setDeclarations((d as Declaration[]) || []);
   };
 
@@ -62,13 +81,23 @@ export default function CuTaxDeclarationsTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId]);
 
+  // Preselecciona el primer tributo del país y su tasa oficial
+  useEffect(() => {
+    if (!declarable.length) return;
+    const current = declarable.find((r) => r.code === ruleCode) ?? declarable[0];
+    if (current.code !== ruleCode) setRuleCode(current.code);
+    setTaxRate(Math.abs(Number(current.rate)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [declarable, ruleCode]);
+
   const compute = async () => {
-    if (!tenantId || !periodId) return;
+    if (!tenantId || !periodId || !ruleCode) return;
+    const rule = declarable.find((r) => r.code === ruleCode);
     setLoading(true);
-    const { error } = await supabase.rpc("compute_cu_tax_declaration", {
+    const { error } = await supabase.rpc("compute_tax_declaration", {
       p_tenant: tenantId,
       p_period_id: periodId,
-      p_declaration_type: declarationType,
+      p_declaration_type: rule?.rule_type ?? "income_tax",
       p_tax_rate: taxRate,
     });
     setLoading(false);
@@ -88,15 +117,18 @@ export default function CuTaxDeclarationsTab() {
     }
   };
 
+  const countryLabel = COUNTRY_LABELS[country] ?? country ?? "—";
+
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Calculator className="h-4 w-4" /> Calcular declaración ONAT
+          <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+            <Calculator className="h-4 w-4" /> Calcular declaración fiscal
+            <Badge variant="secondary" className="text-[10px]">Régimen: {countryLabel}</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-2">
           <div className="grid sm:grid-cols-4 gap-3 items-end">
             <div>
               <Label className="text-xs">Período</Label>
@@ -104,22 +136,21 @@ export default function CuTaxDeclarationsTab() {
                 <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                 <SelectContent>
                   {periods.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name} ({p.status})
-                    </SelectItem>
+                    <SelectItem key={p.id} value={p.id}>{p.name} ({p.status})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Tipo</Label>
-              <Select value={declarationType} onValueChange={setDeclarationType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Label className="text-xs">Tributo</Label>
+              <Select value={ruleCode} onValueChange={setRuleCode}>
+                <SelectTrigger><SelectValue placeholder="Sin reglas fiscales" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="utilidades">Impuesto sobre Utilidades</SelectItem>
-                  <SelectItem value="ventas">Impuesto sobre Ventas</SelectItem>
-                  <SelectItem value="ssocial">Seguridad Social</SelectItem>
-                  <SelectItem value="ftrabajo">Fuerza de Trabajo</SelectItem>
+                  {declarable.map((r) => (
+                    <SelectItem key={r.code} value={r.code}>
+                      {r.name} · {RULE_TYPE_LABELS[r.rule_type] ?? r.rule_type}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -127,10 +158,13 @@ export default function CuTaxDeclarationsTab() {
               <Label className="text-xs">Tasa (%)</Label>
               <Input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} />
             </div>
-            <Button onClick={compute} disabled={loading || !periodId} className="gradient-brand text-primary-foreground">
+            <Button onClick={compute} disabled={loading || !periodId || !ruleCode} className="gradient-brand text-primary-foreground">
               <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Calcular
             </Button>
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Las tasas provienen del catálogo fiscal de {countryLabel} y de los ajustes propios de la empresa; puedes sobreescribirlas aquí.
+          </p>
         </CardContent>
       </Card>
 
@@ -158,7 +192,7 @@ export default function CuTaxDeclarationsTab() {
               {declarations.map((d) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-mono text-xs">{d.period_label}</TableCell>
-                  <TableCell>{d.declaration_type}</TableCell>
+                  <TableCell>{RULE_TYPE_LABELS[d.declaration_type] ?? d.declaration_type}</TableCell>
                   <TableCell className="text-right">{fmt(d.total_income)}</TableCell>
                   <TableCell className="text-right">{fmt(d.deductible_expenses)}</TableCell>
                   <TableCell className="text-right font-semibold">{fmt(d.taxable_base)}</TableCell>

@@ -8854,6 +8854,15 @@ export type Database = {
           rule_type: string
         }[]
       }
+      compute_tax_declaration: {
+        Args: {
+          p_declaration_type?: string
+          p_period_id: string
+          p_tax_rate?: number
+          p_tenant: string
+        }
+        Returns: string
+      }
       create_fiscal_year: {
         Args: { p_start_month?: number; p_tenant_id: string; p_year: number }
         Returns: string
@@ -9339,6 +9348,63 @@ export type Database = {
       reopen_accounting_period: {
         Args: { p_period_id: string }
         Returns: undefined
+      }
+      report_balance_sheet: {
+        Args: { p_tenant: string; p_to: string }
+        Returns: {
+          amount: number
+          code: string
+          name: string
+          section: string
+        }[]
+      }
+      report_general_ledger: {
+        Args: { p_from: string; p_tenant: string; p_to: string }
+        Returns: {
+          code: string
+          credit: number
+          debit: number
+          description: string
+          entry_date: string
+          entry_number: string
+          name: string
+          running_balance: number
+        }[]
+      }
+      report_income_statement: {
+        Args: { p_from: string; p_tenant: string; p_to: string }
+        Returns: {
+          amount: number
+          code: string
+          name: string
+          section: string
+        }[]
+      }
+      report_journal: {
+        Args: { p_from: string; p_tenant: string; p_to: string }
+        Returns: {
+          code: string
+          credit: number
+          debit: number
+          entry_date: string
+          entry_description: string
+          entry_id: string
+          entry_number: string
+          line_description: string
+          name: string
+        }[]
+      }
+      report_trial_balance: {
+        Args: { p_from: string; p_tenant: string; p_to: string }
+        Returns: {
+          balance: number
+          code: string
+          credit: number
+          debit: number
+          name: string
+          nature: string
+          type: string
+        }[]
       }
       request_leave: {
         Args: {

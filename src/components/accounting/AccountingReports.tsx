@@ -1,17 +1,19 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileType, BookOpen, Scale, TrendingUp, Loader2, Lock, BookText } from "lucide-react";
+import { FileType, BookOpen, Scale, TrendingUp, Loader2, Lock, BookText, Eye } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
-import { useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useBaseCurrency } from "@/hooks/useFiscalRules";
 
 interface Account {
   id: string;
@@ -29,32 +31,47 @@ interface Props {
 
 const TYPE_LABEL: Record<string, string> = {
   asset: "Activo", liability: "Pasivo", equity: "Capital",
-  income: "Ingreso", expense: "Gasto",
+  income: "Ingreso", expense: "Gasto", cost: "Costo",
 };
 
+type ReportKey = "income" | "balance" | "trial" | "journal" | "ledger";
+
+interface Preview {
+  key: ReportKey;
+  title: string;
+  subtitle: string;
+  head: string[];
+  /** rows already formatted for display; numeric columns as strings */
+  rows: (string | { text: string; bold?: boolean; span?: number })[][];
+  rightAligned: number[];
+  landscape?: boolean;
+  balanced?: boolean;
+}
+
 function pdfHeader(doc: jsPDF, title: string, subtitle: string, tenantName?: string) {
-  doc.setFontSize(16); doc.setFont("helvetica","bold");
+  doc.setFontSize(16); doc.setFont("helvetica", "bold");
   doc.text(title, 14, 16);
-  doc.setFontSize(10); doc.setFont("helvetica","normal");
+  doc.setFontSize(10); doc.setFont("helvetica", "normal");
   doc.text(tenantName || "Empresa", 14, 22);
   doc.setTextColor(120); doc.text(subtitle, 14, 27);
   doc.setTextColor(0);
 }
 
-function money(n: number) {
-  return `$${(n||0).toLocaleString("es-CU",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-}
-
 export function AccountingReports({ accounts, tenantName }: Props) {
   const tenantId = useTenant();
   const { toast } = useToast();
-  const [from, setFrom] = useState(() => { const d=new Date(); d.setDate(1); return d.toISOString().slice(0,10); });
-  const [to, setTo] = useState(() => new Date().toISOString().slice(0,10));
+  const { symbol } = useBaseCurrency();
+  const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(1); return d.toISOString().slice(0, 10); });
+  const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState<string | null>(null);
   const [periods, setPeriods] = useState<Array<{ id: string; name: string; status: string; start_date: string; end_date: string }>>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  const [preview, setPreview] = useState<Preview | null>(null);
 
-  const accountMap = useMemo(() => new Map(accounts.map(a => [a.id, a])), [accounts]);
+  const money = useMemo(
+    () => (n: number) => `${symbol || "$"}${(n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    [symbol],
+  );
 
   useEffect(() => {
     if (!tenantId) return;
@@ -67,7 +84,7 @@ export function AccountingReports({ accounts, tenantName }: Props) {
         const openOne = (data ?? []).find(p => p.status === "open");
         if (openOne && !selectedPeriod) setSelectedPeriod(openOne.id);
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId]);
 
   async function closeMonth() {
@@ -79,258 +96,142 @@ export function AccountingReports({ accounts, tenantName }: Props) {
       if (error) throw error;
       toast({ title: "Período cerrado", description: `Filas en libro mayor: ${(data as any)?.gl_rows ?? 0}` });
       const { data: pdata } = await supabase.from("accounting_periods")
-        .select("id,name,status,start_date,end_date").eq("tenant_id", tenantId!).order("start_date",{ascending:false});
+        .select("id,name,status,start_date,end_date").eq("tenant_id", tenantId!).order("start_date", { ascending: false });
       setPeriods(pdata ?? []);
     } catch (e: any) {
       toast({ title: "Error al cerrar", description: e.message, variant: "destructive" });
     } finally { setLoading(null); }
   }
 
-  async function generateGeneralLedger() {
-    if (!tenantId) return;
-    setLoading("ledger");
-    try {
-      const { data: gl, error } = await supabase.from("general_ledger")
-        .select("account_id,opening_balance,debit_total,credit_total,closing_balance,period_id,accounting_periods!inner(name,start_date)")
-        .eq("tenant_id", tenantId)
-        .gte("accounting_periods.start_date", from)
-        .lte("accounting_periods.start_date", to)
-        .order("account_id");
+  const bold = (text: string, span?: number) => ({ text, bold: true, span });
+
+  async function build(key: ReportKey): Promise<Preview> {
+    const range = `${from} a ${to}`;
+    if (key === "income") {
+      const { data, error } = await supabase.rpc("report_income_statement", { p_tenant: tenantId!, p_from: from, p_to: to });
       if (error) throw error;
-      const rows: any[] = [];
-      let totOB=0, totD=0, totC=0, totCB=0;
-      (gl ?? []).sort((a:any,b:any) => {
-        const ac = accountMap.get(a.account_id)?.code || "";
-        const bc = accountMap.get(b.account_id)?.code || "";
-        return ac.localeCompare(bc);
-      }).forEach((r:any) => {
-        const a = accountMap.get(r.account_id);
-        if (!a) return;
-        totOB += Number(r.opening_balance); totD += Number(r.debit_total);
-        totC += Number(r.credit_total); totCB += Number(r.closing_balance);
-        rows.push([
-          (r.accounting_periods as any)?.name || "—",
-          a.code, a.name,
-          money(Number(r.opening_balance)),
-          money(Number(r.debit_total)),
-          money(Number(r.credit_total)),
-          money(Number(r.closing_balance)),
-        ]);
+      const rows: Preview["rows"] = [];
+      let inc = 0, exp = 0;
+      (data ?? []).filter((r: any) => r.section === "income").forEach((r: any) => {
+        inc += Number(r.amount); rows.push([r.code, r.name, money(Number(r.amount))]);
       });
-      rows.push([{ content: "TOTALES", colSpan: 3, styles: { fontStyle: "bold" } },
-                 money(totOB), money(totD), money(totC), money(totCB)]);
-      const doc = new jsPDF({ orientation: "landscape" });
-      pdfHeader(doc, "Libro Mayor", `${from} a ${to}`, tenantName);
-      autoTable(doc, {
-        startY: 34,
-        head: [["Período","Código","Cuenta","Saldo Inicial","Débito","Crédito","Saldo Final"]],
-        body: rows,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [16,185,129] },
-        columnStyles: { 3:{halign:"right"}, 4:{halign:"right"}, 5:{halign:"right"}, 6:{halign:"right"} },
+      rows.push([bold("", 1), bold("TOTAL INGRESOS"), bold(money(inc))]);
+      (data ?? []).filter((r: any) => r.section === "expense").forEach((r: any) => {
+        exp += Number(r.amount); rows.push([r.code, r.name, money(Number(r.amount))]);
       });
-      doc.save(`libro_mayor_${from}_${to}.pdf`);
-      toast({ title: "PDF generado" });
-    } catch (e:any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally { setLoading(null); }
-  }
+      rows.push([bold(""), bold("TOTAL GASTOS Y COSTOS"), bold(money(exp))]);
+      rows.push([bold(""), bold("RESULTADO NETO"), bold(money(inc - exp))]);
+      return { key, title: "Estado de Resultados", subtitle: `Período: ${range}`, head: ["Cuenta", "Descripción", "Importe"], rows, rightAligned: [2] };
+    }
 
-  async function fetchEntryLines() {
-    const { data: ents, error: e1 } = await supabase.from("journal_entries")
-      .select("id,date,entry_number,description")
-      .eq("tenant_id", tenantId!).eq("status","posted")
-      .gte("date", from).lte("date", to).order("date");
-    if (e1) throw e1;
-    const ids = (ents ?? []).map(e => e.id);
-    if (ids.length === 0) return { entries: [], lines: [] as any[] };
-    const { data: lines, error: e2 } = await supabase.from("journal_entry_lines")
-      .select("entry_id,account_id,debit,credit,description").in("entry_id", ids);
-    if (e2) throw e2;
-    return { entries: ents ?? [], lines: lines ?? [] };
-  }
+    if (key === "balance") {
+      const { data, error } = await supabase.rpc("report_balance_sheet", { p_tenant: tenantId!, p_to: to });
+      if (error) throw error;
+      const rows: Preview["rows"] = [];
+      const totals: Record<string, number> = { asset: 0, liability: 0, equity: 0 };
+      (["asset", "liability", "equity"] as const).forEach(t => {
+        const section = (data ?? []).filter((r: any) => r.section === t);
+        rows.push([bold(TYPE_LABEL[t].toUpperCase(), 3)]);
+        section.forEach((r: any) => { totals[t] += Number(r.amount); rows.push([r.code, r.name, money(Number(r.amount))]); });
+        rows.push([bold(""), bold(`TOTAL ${TYPE_LABEL[t].toUpperCase()}`), bold(money(totals[t]))]);
+      });
+      rows.push([bold(""), bold("TOTAL PASIVO + CAPITAL"), bold(money(totals.liability + totals.equity))]);
+      const balanced = Math.abs(totals.asset - (totals.liability + totals.equity)) < 0.01;
+      return { key, title: "Balance General", subtitle: `Al ${to}`, head: ["Cuenta", "Descripción", "Saldo"], rows, rightAligned: [2], balanced };
+    }
 
-  function balancesByAccount(lines: any[]) {
-    const m = new Map<string, { debit: number; credit: number }>();
-    lines.forEach(l => {
-      const cur = m.get(l.account_id) || { debit: 0, credit: 0 };
-      cur.debit += Number(l.debit||0); cur.credit += Number(l.credit||0);
-      m.set(l.account_id, cur);
+    if (key === "trial") {
+      const { data, error } = await supabase.rpc("report_trial_balance", { p_tenant: tenantId!, p_from: from, p_to: to });
+      if (error) throw error;
+      let d = 0, c = 0;
+      const rows: Preview["rows"] = (data ?? []).map((r: any) => {
+        d += Number(r.debit); c += Number(r.credit);
+        return [r.code, r.name, TYPE_LABEL[r.type] ?? r.type, money(Number(r.debit)), money(Number(r.credit)), money(Number(r.balance))];
+      });
+      rows.push([bold("TOTALES", 3), bold(""), bold(money(d)), bold(money(c)), bold("")]);
+      return {
+        key, title: "Balance de Comprobación", subtitle: range,
+        head: ["Código", "Cuenta", "Tipo", "Débito", "Crédito", "Saldo"],
+        rows, rightAligned: [3, 4, 5], balanced: Math.abs(d - c) < 0.01,
+      };
+    }
+
+    if (key === "journal") {
+      const { data, error } = await supabase.rpc("report_journal", { p_tenant: tenantId!, p_from: from, p_to: to });
+      if (error) throw error;
+      const rows: Preview["rows"] = [];
+      let d = 0, c = 0, current = "";
+      (data ?? []).forEach((r: any) => {
+        if (r.entry_id !== current) {
+          current = r.entry_id;
+          rows.push([bold(`${format(new Date(r.entry_date), "dd/MM/yyyy")} · ${r.entry_number} · ${r.entry_description ?? ""}`, 4)]);
+        }
+        d += Number(r.debit); c += Number(r.credit);
+        rows.push([r.code, r.name, Number(r.debit) > 0 ? money(Number(r.debit)) : "", Number(r.credit) > 0 ? money(Number(r.credit)) : ""]);
+      });
+      rows.push([bold("TOTALES", 2), bold(""), bold(money(d)), bold(money(c))]);
+      return {
+        key, title: "Libro Diario", subtitle: range, head: ["Código", "Cuenta", "Débito", "Crédito"],
+        rows, rightAligned: [2, 3], landscape: true, balanced: Math.abs(d - c) < 0.01,
+      };
+    }
+
+    const { data, error } = await supabase.rpc("report_general_ledger", { p_tenant: tenantId!, p_from: from, p_to: to });
+    if (error) throw error;
+    const rows: Preview["rows"] = [];
+    let current = "";
+    (data ?? []).forEach((r: any) => {
+      if (r.code !== current) { current = r.code; rows.push([bold(`${r.code} · ${r.name}`, 6)]); }
+      rows.push([
+        format(new Date(r.entry_date), "dd/MM/yyyy"), r.entry_number, r.description ?? "",
+        Number(r.debit) > 0 ? money(Number(r.debit)) : "",
+        Number(r.credit) > 0 ? money(Number(r.credit)) : "",
+        money(Number(r.running_balance)),
+      ]);
     });
-    return m;
+    return {
+      key, title: "Libro Mayor", subtitle: range,
+      head: ["Fecha", "Asiento", "Concepto", "Débito", "Crédito", "Saldo"],
+      rows, rightAligned: [3, 4, 5], landscape: true,
+    };
   }
 
-  function signedBalance(acc: Account, debit: number, credit: number) {
-    return acc.nature === "debit" ? debit - credit : credit - debit;
-  }
-
-  async function generateIncomeStatement() {
+  async function show(key: ReportKey) {
     if (!tenantId) return;
-    setLoading("income");
+    setLoading(key);
     try {
-      const { lines } = await fetchEntryLines();
-      const bal = balancesByAccount(lines);
-      const rows: any[] = [];
-      let totalIncome = 0, totalExpense = 0;
-      accounts.filter(a => a.type === "income").forEach(a => {
-        const b = bal.get(a.id); if (!b) return;
-        const v = signedBalance(a, b.debit, b.credit);
-        if (v !== 0) { rows.push([a.code, a.name, money(v)]); totalIncome += v; }
-      });
-      rows.push(["", "TOTAL INGRESOS", money(totalIncome)]);
-      rows.push(["", "", ""]);
-      accounts.filter(a => a.type === "expense").forEach(a => {
-        const b = bal.get(a.id); if (!b) return;
-        const v = signedBalance(a, b.debit, b.credit);
-        if (v !== 0) { rows.push([a.code, a.name, money(v)]); totalExpense += v; }
-      });
-      rows.push(["", "TOTAL GASTOS", money(totalExpense)]);
-      rows.push(["", "RESULTADO NETO", money(totalIncome - totalExpense)]);
-
-      const doc = new jsPDF();
-      pdfHeader(doc, "Estado de Resultados", `Período: ${from} a ${to}`, tenantName);
-      autoTable(doc, {
-        startY: 34,
-        head: [["Cuenta", "Descripción", "Importe"]],
-        body: rows,
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [16, 185, 129] },
-        columnStyles: { 2: { halign: "right" } },
-      });
-      doc.save(`estado_resultados_${from}_${to}.pdf`);
-      toast({ title: "PDF generado" });
+      const p = await build(key);
+      setPreview(p);
+      if (p.rows.length === 0) toast({ title: "Sin movimientos contabilizados en el rango seleccionado" });
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     } finally { setLoading(null); }
   }
 
-  async function generateBalanceSheet() {
-    if (!tenantId) return;
-    setLoading("balance");
-    try {
-      const { lines } = await fetchEntryLines();
-      const bal = balancesByAccount(lines);
-      const sections: Record<string, any[]> = { asset: [], liability: [], equity: [] };
-      const totals = { asset: 0, liability: 0, equity: 0 };
-      (["asset","liability","equity"] as const).forEach(t => {
-        accounts.filter(a => a.type === t).forEach(a => {
-          const b = bal.get(a.id); if (!b) return;
-          const v = signedBalance(a, b.debit, b.credit);
-          if (v !== 0) { sections[t].push([a.code, a.name, money(v)]); totals[t] += v; }
-        });
-      });
-      const rows: any[] = [];
-      rows.push([{ content: "ACTIVOS", colSpan: 3, styles: { fontStyle: "bold", fillColor: [240,253,250] } }]);
-      rows.push(...sections.asset);
-      rows.push(["", "TOTAL ACTIVOS", money(totals.asset)]);
-      rows.push([{ content: "PASIVOS", colSpan: 3, styles: { fontStyle: "bold", fillColor: [254,242,242] } }]);
-      rows.push(...sections.liability);
-      rows.push(["", "TOTAL PASIVOS", money(totals.liability)]);
-      rows.push([{ content: "CAPITAL", colSpan: 3, styles: { fontStyle: "bold", fillColor: [243,244,246] } }]);
-      rows.push(...sections.equity);
-      rows.push(["", "TOTAL CAPITAL", money(totals.equity)]);
-      rows.push(["", "TOTAL PASIVOS + CAPITAL", money(totals.liability + totals.equity)]);
-
-      const doc = new jsPDF();
-      pdfHeader(doc, "Balance General", `Al ${to}`, tenantName);
-      autoTable(doc, {
-        startY: 34,
-        head: [["Cuenta", "Descripción", "Saldo"]],
-        body: rows,
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [16, 185, 129] },
-        columnStyles: { 2: { halign: "right" } },
-      });
-      doc.save(`balance_general_${to}.pdf`);
-      toast({ title: "PDF generado" });
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally { setLoading(null); }
+  function exportPdf(p: Preview) {
+    const doc = new jsPDF(p.landscape ? { orientation: "landscape" } : undefined);
+    pdfHeader(doc, p.title, p.subtitle, tenantName);
+    const body = p.rows.map(row =>
+      row.map(cell => typeof cell === "string"
+        ? cell
+        : { content: cell.text, colSpan: cell.span ?? 1, styles: { fontStyle: cell.bold ? "bold" as const : "normal" as const } }),
+    );
+    autoTable(doc, {
+      startY: 34,
+      head: [p.head],
+      body: body as any,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [16, 185, 129] },
+      columnStyles: Object.fromEntries(p.rightAligned.map(i => [i, { halign: "right" as const }])),
+    });
+    doc.save(`${p.title.toLowerCase().replace(/\s+/g, "_")}_${from}_${to}.pdf`);
   }
 
-  async function generateJournal() {
-    if (!tenantId) return;
-    setLoading("journal");
-    try {
-      const { entries, lines } = await fetchEntryLines();
-      const linesByEntry = new Map<string, any[]>();
-      lines.forEach(l => {
-        const arr = linesByEntry.get(l.entry_id) || [];
-        arr.push(l); linesByEntry.set(l.entry_id, arr);
-      });
-      const rows: any[] = [];
-      let totalD = 0, totalC = 0;
-      entries.forEach(e => {
-        const ls = linesByEntry.get(e.id) || [];
-        rows.push([{
-          content: `${format(new Date(e.date),"dd/MM/yyyy")} · ${e.entry_number} · ${e.description || ""}`,
-          colSpan: 4, styles: { fontStyle: "bold", fillColor: [243,244,246] }
-        }]);
-        ls.forEach(l => {
-          const a = accountMap.get(l.account_id);
-          totalD += Number(l.debit||0); totalC += Number(l.credit||0);
-          rows.push([
-            a?.code || "", a?.name || "—",
-            Number(l.debit) > 0 ? money(Number(l.debit)) : "",
-            Number(l.credit) > 0 ? money(Number(l.credit)) : "",
-          ]);
-        });
-      });
-      rows.push([{ content: "TOTALES", colSpan: 2, styles: { fontStyle: "bold" } }, money(totalD), money(totalC)]);
-
-      const doc = new jsPDF({ orientation: "landscape" });
-      pdfHeader(doc, "Libro Diario", `${from} a ${to}`, tenantName);
-      autoTable(doc, {
-        startY: 34,
-        head: [["Código", "Cuenta", "Débito", "Crédito"]],
-        body: rows,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [16, 185, 129] },
-        columnStyles: { 2: { halign: "right" }, 3: { halign: "right" } },
-      });
-      doc.save(`libro_diario_${from}_${to}.pdf`);
-      toast({ title: "PDF generado" });
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally { setLoading(null); }
-  }
-
-  async function generateTrialBalance() {
-    if (!tenantId) return;
-    setLoading("trial");
-    try {
-      const { lines } = await fetchEntryLines();
-      const bal = balancesByAccount(lines);
-      const rows: any[] = [];
-      let totD = 0, totC = 0;
-      accounts.filter(a => bal.has(a.id)).sort((a,b)=>a.code.localeCompare(b.code)).forEach(a => {
-        const b = bal.get(a.id)!;
-        totD += b.debit; totC += b.credit;
-        rows.push([a.code, a.name, TYPE_LABEL[a.type]||a.type, money(b.debit), money(b.credit)]);
-      });
-      rows.push([{ content: "TOTALES", colSpan: 3, styles: { fontStyle: "bold" } }, money(totD), money(totC)]);
-
-      const doc = new jsPDF();
-      pdfHeader(doc, "Balance de Comprobación", `${from} a ${to}`, tenantName);
-      autoTable(doc, {
-        startY: 34,
-        head: [["Código","Cuenta","Tipo","Débito","Crédito"]],
-        body: rows,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [16,185,129] },
-        columnStyles: { 3:{halign:"right"}, 4:{halign:"right"} },
-      });
-      doc.save(`balance_comprobacion_${from}_${to}.pdf`);
-      toast({ title: "PDF generado" });
-    } catch (e:any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally { setLoading(null); }
-  }
-
-  const reportCard = (key: string, title: string, desc: string, icon: any, fn: () => void) => {
+  const reportCard = (key: ReportKey, title: string, desc: string, icon: any) => {
     const Icon = icon;
+    const active = preview?.key === key;
     return (
-      <Card className="hover:shadow-card transition-shadow">
+      <Card className={`transition-shadow hover:shadow-card ${active ? "ring-1 ring-primary" : ""}`}>
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -341,9 +242,9 @@ export function AccountingReports({ accounts, tenantName }: Props) {
               <p className="text-[11px] text-muted-foreground">{desc}</p>
             </div>
           </div>
-          <Button size="sm" className="w-full gap-2" onClick={fn} disabled={loading !== null}>
-            {loading === key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileType className="h-3.5 w-3.5" />}
-            Generar PDF
+          <Button size="sm" variant={active ? "default" : "outline"} className="w-full gap-2" onClick={() => show(key)} disabled={loading !== null}>
+            {loading === key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+            Ver reporte
           </Button>
         </CardContent>
       </Card>
@@ -356,11 +257,11 @@ export function AccountingReports({ accounts, tenantName }: Props) {
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label className="text-xs">Desde</Label>
-            <Input type="date" value={from} onChange={(e)=>setFrom(e.target.value)} />
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div>
             <Label className="text-xs">Hasta</Label>
-            <Input type="date" value={to} onChange={(e)=>setTo(e.target.value)} />
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
         </CardContent>
       </Card>
@@ -387,13 +288,77 @@ export function AccountingReports({ accounts, tenantName }: Props) {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {reportCard("income", "Estado de Resultados", "Ingresos y gastos del período", TrendingUp, generateIncomeStatement)}
-        {reportCard("balance", "Balance General", "Activos, pasivos y capital", Scale, generateBalanceSheet)}
-        {reportCard("trial", "Balance Comprobación", "Sumas y saldos por cuenta", BookOpen, generateTrialBalance)}
-        {reportCard("journal", "Libro Diario", "Asientos detallados del período", BookOpen, generateJournal)}
-        {reportCard("ledger", "Libro Mayor", "Saldos por cuenta y período", BookText, generateGeneralLedger)}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {reportCard("income", "Estado de Resultados", "Ingresos, costos y gastos", TrendingUp)}
+        {reportCard("balance", "Balance General", "Activos, pasivos y capital", Scale)}
+        {reportCard("trial", "Balance Comprobación", "Sumas y saldos por cuenta", BookOpen)}
+        {reportCard("journal", "Libro Diario", "Asientos detallados", BookOpen)}
+        {reportCard("ledger", "Libro Mayor", "Movimientos y saldo por cuenta", BookText)}
       </div>
+
+      {preview && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="font-heading font-semibold">{preview.title}</p>
+                <p className="text-xs text-muted-foreground">{tenantName} · {preview.subtitle}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {preview.balanced !== undefined && (
+                  <Badge variant={preview.balanced ? "default" : "destructive"}>
+                    {preview.balanced ? "Cuadrado" : "Descuadre"}
+                  </Badge>
+                )}
+                <Button size="sm" variant="outline" className="gap-2" onClick={() => exportPdf(preview)} disabled={preview.rows.length === 0}>
+                  <FileType className="h-3.5 w-3.5" /> Exportar PDF
+                </Button>
+              </div>
+            </div>
+
+            {preview.rows.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No hay asientos contabilizados en este rango de fechas.
+              </p>
+            ) : (
+              <div className="max-h-[520px] overflow-auto rounded-md border">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-muted/60 backdrop-blur">
+                    <TableRow>
+                      {preview.head.map((h, i) => (
+                        <TableHead key={h} className={`text-xs ${preview.rightAligned.includes(i) ? "text-right" : ""}`}>{h}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {preview.rows.map((row, ri) => (
+                      <TableRow key={ri} className="text-xs">
+                        {row.map((cell, ci) => {
+                          const text = typeof cell === "string" ? cell : cell.text;
+                          const isBold = typeof cell !== "string" && cell.bold;
+                          const span = typeof cell === "string" ? 1 : cell.span ?? 1;
+                          return (
+                            <TableCell
+                              key={ci}
+                              colSpan={span}
+                              className={[
+                                isBold ? "font-semibold" : "",
+                                preview.rightAligned.includes(ci) ? "text-right tabular-nums" : "",
+                              ].join(" ")}
+                            >
+                              {text}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

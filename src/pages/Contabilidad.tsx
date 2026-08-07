@@ -77,7 +77,7 @@ const Contabilidad = () => {
     if (v === "plan") return t("modules.accounting.sections.plan");
     if (v === "operacion") return t("modules.accounting.sections.operation");
     if (v === "analisis") return t("modules.accounting.sections.analysis");
-    if (v === "fiscal") return "Fiscal Cuba";
+    if (v === "fiscal") return "Fiscal";
     return v;
   };
   const periodStatusLabel = (s: string) => {
@@ -122,10 +122,10 @@ const Contabilidad = () => {
   const fetchData = async () => {
     if (!tenantId) return;
     const [accRes, entRes, fyRes, pRes] = await Promise.all([
-      supabase.from("accounting_accounts").select("*").order("code"),
-      supabase.from("journal_entries").select("*").order("date", { ascending: false }).limit(500),
-      supabase.from("fiscal_years").select("*").order("year", { ascending: false }),
-      supabase.from("accounting_periods").select("*").order("start_date"),
+      supabase.from("accounting_accounts").select("*").eq("tenant_id", tenantId).order("code"),
+      supabase.from("journal_entries").select("*").eq("tenant_id", tenantId).order("date", { ascending: false }).limit(500),
+      supabase.from("fiscal_years").select("*").eq("tenant_id", tenantId).order("year", { ascending: false }),
+      supabase.from("accounting_periods").select("*").eq("tenant_id", tenantId).order("start_date"),
     ]);
     if (accRes.data) setAccounts(accRes.data as Account[]);
     if (entRes.data) setEntries(entRes.data as JournalEntry[]);
@@ -687,7 +687,7 @@ const Contabilidad = () => {
         {section === "fiscal" && (
           <Tabs value={subTab} onValueChange={setSubTab} className="space-y-4">
             <TabsList>
-              <TabsTrigger value="onat"><Landmark className="h-3.5 w-3.5 mr-1" />Declaraciones ONAT</TabsTrigger>
+              <TabsTrigger value="onat"><Landmark className="h-3.5 w-3.5 mr-1" />Declaraciones fiscales</TabsTrigger>
               <TabsTrigger value="costos"><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Plantillas de Costos</TabsTrigger>
             </TabsList>
             <TabsContent value="onat" className="space-y-4">
