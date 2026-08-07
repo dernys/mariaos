@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Check, X, Save, Shield } from "lucide-react";
 import { motion } from "framer-motion";
@@ -29,9 +30,12 @@ const ROLES: { value: AppRole; label: string; color: string }[] = [
   { value: "admin", label: "Administrador", color: "bg-primary text-primary-foreground" },
   { value: "gerente", label: "Gerente", color: "bg-info text-info-foreground" },
   { value: "supervisor", label: "Supervisor", color: "bg-warning text-warning-foreground" },
+  { value: "contador", label: "Contador", color: "bg-accent text-accent-foreground" },
   { value: "cajero", label: "Cajero", color: "bg-success text-success-foreground" },
   { value: "inventarista", label: "Inventarista", color: "bg-muted text-muted-foreground" },
+  { value: "empleado", label: "Empleado", color: "bg-secondary text-secondary-foreground" },
 ];
+
 
 const PERMISSION_KEYS = ["can_view", "can_create", "can_edit", "can_delete"] as const;
 const PERMISSION_LABELS: Record<string, string> = {
@@ -47,6 +51,7 @@ export function PermissionsTab() {
   const [selectedRole, setSelectedRole] = useState<AppRole>("admin");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     fetchData();
@@ -111,6 +116,7 @@ export function PermissionsTab() {
         await supabase.from("role_permissions").upsert(data, { onConflict: "role,module_id" });
       }
     }
+    queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
     toast.success("Permisos guardados correctamente");
     await fetchData();
     setSaving(false);

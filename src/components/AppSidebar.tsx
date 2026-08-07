@@ -43,6 +43,8 @@ import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSuperadmin } from "@/hooks/useSuperadmin";
+import { usePermissions } from "@/hooks/usePermissions";
+
 import { TenantSelector } from "@/components/TenantSelector";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -86,7 +88,23 @@ interface MenuGroup {
   items: MenuItem[];
 }
 
-const adminOnlyGroupKeys = new Set(["mariaos"]);
+/** Maps a route to the app_modules slug that governs its visibility. */
+const URL_MODULE_OVERRIDES: Record<string, string> = {
+  app: "dashboard",
+  "command-center": "mariaos",
+  decisions: "mariaos",
+  risk: "mariaos",
+  memory: "mariaos",
+  "digital-twin": "mariaos",
+  workflows: "mariaos",
+  developers: "configuracion",
+};
+
+const moduleForUrl = (url: string) => {
+  const seg = url.split("/")[1] ?? "";
+  return URL_MODULE_OVERRIDES[seg] ?? seg;
+};
+
 
 const menuGroups: MenuGroup[] = [
   {
@@ -190,6 +208,8 @@ export function AppSidebar() {
   const location = useLocation();
   const { profile, roles, signOut } = useAuth();
   const { isSuperadmin } = useSuperadmin();
+  const { canView } = usePermissions();
+
   const { tenant, allTenants, businessType } = useTenantContext();
   const { t } = useTranslation();
   const biz = (businessType || "empresa") as BizType;
@@ -288,11 +308,12 @@ export function AppSidebar() {
 
       <SidebarContent>
         {menuGroups.map((group) => {
-          if (adminOnlyGroupKeys.has(group.labelKey) && !roles.includes("admin") && !isSuperadmin) {
-            return null;
-          }
-          const visible = group.items.filter((it) => !it.types || it.types.includes(biz));
+          const visible = group.items.filter(
+            (it) =>
+              (!it.types || it.types.includes(biz)) && canView(moduleForUrl(it.url))
+          );
           if (visible.length === 0) return null;
+
           return (
             <SidebarGroup key={group.labelKey}>
               <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
@@ -305,14 +326,19 @@ export function AppSidebar() {
           );
         })}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
-            {t("nav.groups.system")}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{systemItems.map(renderItem)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {systemItems.filter((it) => canView(moduleForUrl(it.url))).length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
+              {t("nav.groups.system")}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {systemItems.filter((it) => canView(moduleForUrl(it.url))).map(renderItem)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
 
         {isSuperadmin && (
           <SidebarGroup>

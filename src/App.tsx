@@ -84,11 +84,12 @@ const PageLoader = () => (
   </div>
 );
 
-const P = ({ children }: { children: React.ReactNode }) => (
-  <ProtectedRoute>
+const P = ({ children, m }: { children: React.ReactNode; m?: string }) => (
+  <ProtectedRoute module={m}>
     <Suspense fallback={<PageLoader />}>{children}</Suspense>
   </ProtectedRoute>
 );
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -106,58 +107,59 @@ const App = () => (
               <Route path="/landing" element={<Landing />} />
               <Route path="/marketplace" element={<Suspense fallback={<PageLoader />}><Marketplace /></Suspense>} />
               <Route path="/marketplace/p/:id" element={<Suspense fallback={<PageLoader />}><MarketplaceProduct /></Suspense>} />
-              <Route path="/app" element={<P><Index /></P>} />
-              <Route path="/dashboard" element={<P><Index /></P>} />
-              <Route path="/pos" element={<P><POS /></P>} />
-              <Route path="/inventario" element={<P><Inventario /></P>} />
-              <Route path="/inventario/inteligencia" element={<P><InventoryIntelligence /></P>} />
-              <Route path="/clientes" element={<P><Clientes /></P>} />
-              <Route path="/clientes/:id" element={<P><ClienteDetalle /></P>} />
-              <Route path="/empleados" element={<P><Empleados /></P>} />
-              <Route path="/empleados/:id" element={<P><EmpleadoDetalle /></P>} />
-              <Route path="/proveedores" element={<P><Proveedores /></P>} />
-              <Route path="/proveedores/:id" element={<P><ProveedorDetalle /></P>} />
-              <Route path="/ventas/:id" element={<P><VentaDetalle /></P>} />
-              <Route path="/consignaciones" element={<P><Consignacion /></P>} />
-              <Route path="/tiendas" element={<P><Tiendas /></P>} />
-              <Route path="/almacenes" element={<P><Almacenes /></P>} />
-              <Route path="/configuracion" element={<P><Configuracion /></P>} />
-              <Route path="/roles" element={<P><RolesPermisos /></P>} />
-              <Route path="/turnos" element={<P><Turnos /></P>} />
-              <Route path="/turnos/:id" element={<P><TurnoDetalle /></P>} />
-              <Route path="/contabilidad" element={<P><Contabilidad /></P>} />
-              <Route path="/contabilidad/:section" element={<P><Contabilidad /></P>} />
-              <Route path="/recetas" element={<P><Recetas /></P>} />
-              <Route path="/cocina" element={<P><Cocina /></P>} />
-              <Route path="/mesas" element={<P><Mesas /></P>} />
-              <Route path="/analytics" element={<P><Analytics /></P>} />
-              <Route path="/pedidos-online" element={<P><PedidosOnline /></P>} />
-              <Route path="/transferencias" element={<P><Transferencias /></P>} />
-              <Route path="/compras" element={<P><Compras /></P>} />
-              <Route path="/devoluciones" element={<P><Devoluciones /></P>} />
-              <Route path="/cuentas" element={<P><Cuentas /></P>} />
-              <Route path="/facturas" element={<P><Facturas /></P>} />
-              <Route path="/reportes" element={<P><Reportes /></P>} />
-              <Route path="/fidelizacion" element={<P><Fidelizacion /></P>} />
-              <Route path="/rrhh" element={<P><RRHH /></P>} />
+              <Route path="/app" element={<P m="dashboard"><Index /></P>} />
+              <Route path="/dashboard" element={<P m="dashboard"><Index /></P>} />
+              <Route path="/pos" element={<P m="pos"><POS /></P>} />
+              <Route path="/inventario" element={<P m="inventario"><Inventario /></P>} />
+              <Route path="/inventario/inteligencia" element={<P m="inventario"><InventoryIntelligence /></P>} />
+              <Route path="/clientes" element={<P m="clientes"><Clientes /></P>} />
+              <Route path="/clientes/:id" element={<P m="clientes"><ClienteDetalle /></P>} />
+              <Route path="/empleados" element={<P m="empleados"><Empleados /></P>} />
+              <Route path="/empleados/:id" element={<P m="empleados"><EmpleadoDetalle /></P>} />
+              <Route path="/proveedores" element={<P m="proveedores"><Proveedores /></P>} />
+              <Route path="/proveedores/:id" element={<P m="proveedores"><ProveedorDetalle /></P>} />
+              <Route path="/ventas/:id" element={<P m="ventas"><VentaDetalle /></P>} />
+              <Route path="/consignaciones" element={<P m="consignaciones"><Consignacion /></P>} />
+              <Route path="/tiendas" element={<P m="tiendas"><Tiendas /></P>} />
+              <Route path="/almacenes" element={<P m="almacenes"><Almacenes /></P>} />
+              <Route path="/configuracion" element={<P m="configuracion"><Configuracion /></P>} />
+              <Route path="/roles" element={<P m="roles"><RolesPermisos /></P>} />
+              <Route path="/turnos" element={<P m="turnos"><Turnos /></P>} />
+              <Route path="/turnos/:id" element={<P m="turnos"><TurnoDetalle /></P>} />
+              <Route path="/contabilidad" element={<P m="contabilidad"><Contabilidad /></P>} />
+              <Route path="/contabilidad/:section" element={<P m="contabilidad"><Contabilidad /></P>} />
+              <Route path="/recetas" element={<P m="recetas"><Recetas /></P>} />
+              <Route path="/cocina" element={<P m="cocina"><Cocina /></P>} />
+              <Route path="/mesas" element={<P m="mesas"><Mesas /></P>} />
+              <Route path="/analytics" element={<P m="analytics"><Analytics /></P>} />
+              <Route path="/pedidos-online" element={<P m="pedidos-online"><PedidosOnline /></P>} />
+              <Route path="/transferencias" element={<P m="transferencias"><Transferencias /></P>} />
+              <Route path="/compras" element={<P m="compras"><Compras /></P>} />
+              <Route path="/devoluciones" element={<P m="devoluciones"><Devoluciones /></P>} />
+              <Route path="/cuentas" element={<P m="cuentas"><Cuentas /></P>} />
+              <Route path="/facturas" element={<P m="facturas"><Facturas /></P>} />
+              <Route path="/reportes" element={<P m="reportes"><Reportes /></P>} />
+              <Route path="/fidelizacion" element={<P m="fidelizacion"><Fidelizacion /></P>} />
+              <Route path="/rrhh" element={<P m="rrhh"><RRHH /></P>} />
               <Route path="/rrhh/operativo" element={<Navigate to="/rrhh" replace />} />
-              <Route path="/portal-empleado" element={<P><PortalEmpleado /></P>} />
-              <Route path="/delivery" element={<P><Delivery /></P>} />
+              <Route path="/portal-empleado" element={<P m="portal-empleado"><PortalEmpleado /></P>} />
+              <Route path="/delivery" element={<P m="delivery"><Delivery /></P>} />
               <Route path="/superadmin" element={<P><SuperAdmin /></P>} />
               <Route path="/auditoria" element={<P><Auditoria /></P>} />
               <Route path="/eventos" element={<P><EventStore /></P>} />
-              <Route path="/command-center" element={<P><CommandCenter /></P>} />
-              <Route path="/agents" element={<P><Agents /></P>} />
-              <Route path="/agents/:id" element={<P><AgentDetalle /></P>} />
-              <Route path="/decisions" element={<P><Decisions /></P>} />
-              <Route path="/risk" element={<P><RiskEngine /></P>} />
-              <Route path="/memory" element={<P><BusinessMemory /></P>} />
-              <Route path="/workflows" element={<P><Workflows /></P>} />
-              <Route path="/digital-twin" element={<P><DigitalTwin /></P>} />
-              <Route path="/conteos" element={<P><Conteos /></P>} />
-              <Route path="/operaciones" element={<P><Operaciones /></P>} />
-              <Route path="/tesoreria" element={<P><Tesoreria /></P>} />
-              <Route path="/developers" element={<P><Developers /></P>} />
+              <Route path="/command-center" element={<P m="mariaos"><CommandCenter /></P>} />
+              <Route path="/agents" element={<P m="agents"><Agents /></P>} />
+              <Route path="/agents/:id" element={<P m="agents"><AgentDetalle /></P>} />
+              <Route path="/decisions" element={<P m="mariaos"><Decisions /></P>} />
+              <Route path="/risk" element={<P m="mariaos"><RiskEngine /></P>} />
+              <Route path="/memory" element={<P m="mariaos"><BusinessMemory /></P>} />
+              <Route path="/workflows" element={<P m="mariaos"><Workflows /></P>} />
+              <Route path="/digital-twin" element={<P m="mariaos"><DigitalTwin /></P>} />
+              <Route path="/conteos" element={<P m="conteos"><Conteos /></P>} />
+              <Route path="/operaciones" element={<P m="operaciones"><Operaciones /></P>} />
+              <Route path="/tesoreria" element={<P m="tesoreria"><Tesoreria /></P>} />
+              <Route path="/developers" element={<P m="configuracion"><Developers /></P>} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
