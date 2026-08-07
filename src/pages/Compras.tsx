@@ -207,7 +207,13 @@ export default function Compras() {
       for (const l of payLines) {
         const amt = parseFloat(l.amount) || 0;
         if (amt <= 0) continue;
-        const { error: pe } = await (supabase as any).rpc("register_account_payment", {
+        const ctx = beginOperation({
+          module: "purchasing",
+          operation: "register_account_payment",
+          tenant_id: tenantId,
+          correlationId: `purchase-pay:${pch.id}:${l.id}`,
+        });
+        const { error: pe } = await callFinancialRpc("register_account_payment", {
           p_party_type: "supplier",
           p_party_id: supplierId,
           p_amount: amt,
@@ -217,10 +223,11 @@ export default function Compras() {
           p_reference_type: "purchase",
           p_reference_id: pch.id,
           p_notes: `Pago al crear compra ${code}`,
-        });
-        if (pe) { toast({ title: "Error registrando pago", description: pe.message, variant: "destructive" }); }
+        }, ctx);
+        if (pe) { toast({ title: "Error registrando pago", description: pe, variant: "destructive" }); }
       }
     }
+
 
     // Emit business event for reactive workflows / agents
     try {
