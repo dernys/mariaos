@@ -185,7 +185,7 @@ const Clientes = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {table.paged.map((c) => (
+              {table.rows.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => openDetail(c)}>{c.name}</TableCell>
                   <TableCell className="hidden sm:table-cell">{c.phone || "—"}</TableCell>
@@ -206,14 +206,17 @@ const Clientes = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {table.total === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    <User className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    {loading ? t("common.loading") : "No hay clientes"}
-                  </TableCell>
-                </TableRow>
-              )}
+              <TableDataState
+                colSpan={7}
+                loading={table.loading}
+                error={table.error}
+                empty={!table.loading && table.rows.length === 0}
+                emptyTitle="No hay clientes"
+                emptyHint="Crea tu primer cliente para empezar a registrar ventas a crédito."
+                icon={User}
+                onRetry={() => table.refetch()}
+              />
+
             </TableBody>
           </Table>
           <TablePagination page={table.page} pageSize={table.pageSize} total={table.total}
