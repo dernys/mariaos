@@ -86,13 +86,13 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { data: tenant } = await admin.from("tenants").select("id, name").eq("id", tenantId).maybeSingle();
+    const { data: tenant } = await admin.from("tenants").select("id, name, is_demo").eq("id", tenantId).maybeSingle();
     if (!tenant) {
       return new Response(JSON.stringify({ error: "Tenant no encontrado" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!isDemoTenant(tenant.name)) {
+    if (!isDemoTenant(tenant)) {
       // SEC-001: nunca crear usuarios ni conceder propiedad en tenants reales.
       return new Response(JSON.stringify({ error: "not_a_demo_tenant" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
