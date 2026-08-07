@@ -135,7 +135,7 @@ const Clientes = () => {
     <AppLayout title={t("modules.customers.title")}>
       <div className="space-y-4">
         <StatRow>
-          <MiniStatCard label="Clientes" value={customers.length} icon={UsersIcon} tone="primary" />
+          <MiniStatCard label="Clientes" value={statRows.length} icon={UsersIcon} tone="primary" />
           <MiniStatCard label="Con deuda" value={withDebt} icon={AlertTriangle} tone={withDebt > 0 ? "warning" : "default"} />
           <MiniStatCard label="Saldo por cobrar" value={`$${totalDebt.toLocaleString()}`} icon={Wallet} tone={totalDebt > 0 ? "destructive" : "success"} />
           <MiniStatCard label="Crédito otorgado" value={`$${totalCredit.toLocaleString()}`} tone="default" />
