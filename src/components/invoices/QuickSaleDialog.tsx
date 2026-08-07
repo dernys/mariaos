@@ -67,7 +67,10 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
     if (items.length === 0) return toast.error("Agrega al menos un producto");
     setBusy(true);
     const payments = Number(paid) > 0 ? [{ method, currency: "CUP", amount: Number(paid), exchange_rate: 1 }] : [];
-    const { data, error } = await supabase.rpc("create_quick_sale", {
+    // QW1: la intención abierta al abrir el diálogo da la clave de idempotencia,
+    // así un doble clic o un reintento nunca duplica la venta.
+    const ctx = intent ?? beginSaleIntent(tenantId);
+    const { data, error } = await callFinancialRpc<string>("create_quick_sale", {
       p_tenant_id: tenantId,
       p_customer_id: customerId || null,
       p_employee_id: employeeId || null,
@@ -75,9 +78,9 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
       p_payments: payments as any,
       p_notes: null,
       p_tax_rate: Number(taxRate) || 0,
-    });
-    if (error) { toast.error(error.message); setBusy(false); return; }
-    const saleId = data as unknown as string;
+    }, ctx);
+    if (error || !data) { toast.error(error ?? "No se pudo crear la venta"); setBusy(false); return; }
+    const saleId = data;
     if (issueAfter) {
       const { error: e2 } = await supabase.rpc("issue_invoice", { p_sale_id: saleId, p_series_code: null });
       if (e2) toast.error("Venta creada, pero no se pudo facturar: " + e2.message);
@@ -86,8 +89,10 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
     setBusy(false);
     onOpenChange(false);
     setItems([]); setCustomerId(""); setEmployeeId(""); setPaid("0");
+    setIntent(null);
     onCreated(saleId);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
