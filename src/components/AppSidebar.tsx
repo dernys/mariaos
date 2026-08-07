@@ -304,11 +304,12 @@ export function AppSidebar() {
 
       <SidebarContent>
         {menuGroups.map((group) => {
-          if (adminOnlyGroupKeys.has(group.labelKey) && !roles.includes("admin") && !isSuperadmin) {
-            return null;
-          }
-          const visible = group.items.filter((it) => !it.types || it.types.includes(biz));
+          const visible = group.items.filter(
+            (it) =>
+              (!it.types || it.types.includes(biz)) && canView(moduleForUrl(it.url))
+          );
           if (visible.length === 0) return null;
+
           return (
             <SidebarGroup key={group.labelKey}>
               <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest font-heading">
