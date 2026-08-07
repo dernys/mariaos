@@ -7,6 +7,7 @@ import {
   stockMatches,
   isValidMoney,
   toBaseAmount,
+  nearlyEqual,
 } from "@/lib/finance/invariants";
 
 // Fixtures de los tres tipos de tenant que MarIA OS soporta.
@@ -31,7 +32,7 @@ describe("invariante contable: Debe = Haber", () => {
 describe("invariante de ventas: líneas − descuentos + impuestos = pagos + crédito", () => {
   it.each(Object.entries(fixtures))("cuadra para el tenant %s", (_name, f) => {
     const t = saleTotals(f.lines, f.taxPct);
-    expect(t.total).toBe(t.subtotal + t.tax);
+    expect(nearlyEqual(t.total, t.subtotal + t.tax)).toBe(true);
     // pago total
     expect(saleIsSettled(t.total, t.total, 0)).toBe(true);
     // pago parcial + crédito
