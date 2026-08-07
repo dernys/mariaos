@@ -14,11 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Edit2, Trash2, Truck, Wallet, DollarSign, Package, History, ArrowUpFromLine } from "lucide-react";
-import { useTableState } from "@/hooks/useTableState";
+import { useServerTable, useTableStats } from "@/hooks/useServerTable";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
+import { TableDataState } from "@/components/data/DataState";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
+
 import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 
 interface Supplier {
@@ -39,7 +41,6 @@ export default function Proveedores() {
   const { user } = useAuth();
   const { toast } = useToast();
   const nav = useNavigate();
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [productCounts, setProductCounts] = useState<Record<string, number>>({});
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
@@ -47,17 +48,34 @@ export default function Proveedores() {
   const [payOpen, setPayOpen] = useState(false);
   const [paying, setPaying] = useState<Supplier | null>(null);
 
-  const fetchAll = async () => {
-    const [sR, spR] = await Promise.all([
-      (supabase.from as any)("suppliers").select("*").order("name"),
-      (supabase.from as any)("supplier_products").select("supplier_id"),
-    ]);
-    setSuppliers(sR.data || []);
-    const c: Record<string, number> = {};
-    (spR.data || []).forEach((r: any) => { c[r.supplier_id] = (c[r.supplier_id] || 0) + 1; });
-    setProductCounts(c);
-  };
-  useEffect(() => { fetchAll(); }, []);
+  const table = useServerTable<Supplier>({
+    table: "suppliers",
+    select: "id,name,contact_name,phone,email,rfc,address,balance,is_active",
+    searchColumns: ["name", "contact_name", "phone", "email", "rfc"],
+    orderBy: { column: "name", ascending: true },
+    scope: tenantId,
+    enabled: !!tenantId,
+    baseFilter: (q) => q.eq("tenant_id", tenantId),
+    filterFns: {
+      debt: (q, v) => (v === "with" ? q.gt("balance", 0) : q.lte("balance", 0)),
+      status: (q, v) => q.eq("is_active", v === "active"),
+    },
+  });
+
+  const statsQuery = useTableStats<{ balance: number }>("suppliers", "balance", { scope: tenantId, enabled: !!tenantId, baseFilter: (q) => q.eq("tenant_id", tenantId) });
+  const statRows = statsQuery.data ?? [];
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase.from as any)("supplier_products").select("supplier_id");
+      const c: Record<string, number> = {};
+      (data || []).forEach((r: any) => { c[r.supplier_id] = (c[r.supplier_id] || 0) + 1; });
+      setProductCounts(c);
+    })();
+  }, [tenantId]);
+
+  const fetchAll = () => { table.invalidate(); statsQuery.refetch(); };
+
 
   const openNew = () => {
     setEditing(null);
@@ -98,24 +116,16 @@ export default function Proveedores() {
     toast({ title: "Eliminado" }); fetchAll();
   };
 
-  const totalDebt = suppliers.reduce((a, s) => a + Math.max(0, Number(s.balance) || 0), 0);
-  const withDebt = suppliers.filter((s) => Number(s.balance) > 0).length;
+  const totalDebt = statRows.reduce((a, s) => a + Math.max(0, Number(s.balance) || 0), 0);
+  const withDebt = statRows.filter((s) => Number(s.balance) > 0).length;
   const totalProducts = Object.values(productCounts).reduce((a, b) => a + b, 0);
-
-  const table = useTableState({
-    data: suppliers,
-    searchKeys: ["name", "contact_name", "phone", "email", "rfc"],
-    filterFns: {
-      debt: (s, v) => v === "with" ? Number(s.balance) > 0 : v === "without" ? Number(s.balance) <= 0 : true,
-      status: (s, v) => v === "active" ? s.is_active : v === "inactive" ? !s.is_active : true,
-    },
-  });
 
   return (
     <AppLayout title={t("modules.suppliers.title")}>
       <div className="space-y-4">
         <StatRow>
-          <MiniStatCard label="Proveedores" value={suppliers.length} icon={Truck} tone="primary" />
+          <MiniStatCard label="Proveedores" value={statRows.length} icon={Truck} tone="primary" />
+
           <MiniStatCard label="Con saldo" value={withDebt} icon={Wallet} tone={withDebt > 0 ? "warning" : "default"} />
           <MiniStatCard label="Por pagar" value={`$${totalDebt.toLocaleString()}`} icon={DollarSign} tone={totalDebt > 0 ? "destructive" : "success"} />
           <MiniStatCard label="Productos" value={totalProducts} icon={Package} />
@@ -135,7 +145,7 @@ export default function Proveedores() {
           ]}
           rightSlot={
             <>
-              <ExportButton rows={table.filtered} filename="proveedores" title="Proveedores"
+              <ExportButton rows={table.rows} filename="proveedores" title="Proveedores"
                 columns={[
                   { key: "name", label: "Nombre" }, { key: "contact_name", label: "Contacto" },
                   { key: "phone", label: "Teléfono" }, { key: "email", label: "Email" },
@@ -162,7 +172,7 @@ export default function Proveedores() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {table.paged.map((s) => {
+              {table.rows.map((s) => {
                 const debt = Number(s.balance || 0);
                 return (
                   <TableRow key={s.id}>
@@ -192,11 +202,17 @@ export default function Proveedores() {
                   </TableRow>
                 );
               })}
-              {table.total === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  <Truck className="h-8 w-8 mx-auto mb-2 opacity-30" />Sin proveedores
-                </TableCell></TableRow>
-              )}
+              <TableDataState
+                colSpan={7}
+                loading={table.loading}
+                error={table.error}
+                empty={!table.loading && table.rows.length === 0}
+                emptyTitle="Sin proveedores"
+                emptyHint="Registra proveedores para gestionar compras y cuentas por pagar."
+                icon={Truck}
+                onRetry={() => table.refetch()}
+              />
+
             </TableBody>
           </Table>
           <TablePagination page={table.page} pageSize={table.pageSize} total={table.total}

@@ -21,7 +21,8 @@ import { MiniStatCard } from "@/components/data/MiniStatCard";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
-import { useTableState } from "@/hooks/useTableState";
+import { useServerTable, useTableStats } from "@/hooks/useServerTable";
+import { TableDataState } from "@/components/data/DataState";
 
 interface Invoice {
   id: string;
@@ -44,8 +45,6 @@ interface Invoice {
 const Facturas = () => {
   const { t } = useTranslation();
   const { tenantId } = useTenantContext();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
   const [issueOpen, setIssueOpen] = useState(false);
   const [pendingSales, setPendingSales] = useState<any[]>([]);
   const [selectedSale, setSelectedSale] = useState<string>("");
@@ -54,20 +53,33 @@ const Facturas = () => {
   const [transmittingId, setTransmittingId] = useState<string | null>(null);
   const nav = useNavigate();
 
+  const table = useServerTable<Invoice>({
+    table: "invoices",
+    select:
+      "id, series_code, invoice_number, issue_date, status, customer_name, total, amount_paid, currency, email_sent_at, customer_email, pdf_url, transmission_status, cufe, xml_content",
+    searchColumns: ["invoice_number", "customer_name", "series_code"],
+    orderBy: { column: "issue_date", ascending: false },
+    scope: tenantId,
+    enabled: !!tenantId,
+    baseFilter: (q) => q.eq("tenant_id", tenantId),
+    filterFns: { status: (q, v) => q.eq("status", v) },
+  });
+  const {
+    rows: paged, page, setPage, pageSize, setPageSize, total, search, setSearch, filters, setFilter,
+  } = table;
+  const loading = table.loading;
+
+  const statsQuery = useTableStats<{ status: string; total: number; amount_paid: number; transmission_status: string | null }>(
+    "invoices",
+    "status,total,amount_paid,transmission_status",
+    { scope: tenantId, enabled: !!tenantId, baseFilter: (q) => q.eq("tenant_id", tenantId) },
+  );
+
   const load = async () => {
-    if (!tenantId) return;
-    setLoading(true);
-    const { data } = await supabase
-      .from("invoices")
-      .select("id, series_code, invoice_number, issue_date, status, customer_name, total, amount_paid, currency, email_sent_at, customer_email, pdf_url, transmission_status, cufe, xml_content")
-      .eq("tenant_id", tenantId)
-      .order("issue_date", { ascending: false })
-      .limit(500);
-    setInvoices((data as any) ?? []);
-    setLoading(false);
+    table.invalidate();
+    await statsQuery.refetch();
   };
 
-  useEffect(() => { load(); }, [tenantId]);
 
   const openIssue = async () => {
     if (!tenantId) return;
@@ -112,7 +124,7 @@ const Facturas = () => {
   };
 
   const sendEmail = async (id: string) => {
-    const inv = invoices.find((i) => i.id === id);
+    const inv = paged.find((i) => i.id === id);
     if (!inv?.customer_email) { toast.error("La factura no tiene email del cliente"); return; }
     const full = await fetchFull(id);
     if (!full) return;
@@ -139,7 +151,8 @@ const Facturas = () => {
     await load();
   };
 
-  const issued = invoices.filter((i) => i.status === "issued");
+  const allStats = statsQuery.data ?? [];
+  const issued = allStats.filter((i) => i.status === "issued");
   const totalBilled = issued.reduce((s, i) => s + Number(i.total), 0);
   const totalPaid = issued.reduce((s, i) => s + Number(i.amount_paid), 0);
   const transmitted = issued.filter((i) => i.transmission_status === "transmitted").length;
@@ -163,18 +176,11 @@ const Facturas = () => {
     await load();
   };
 
-  const { paged, page, setPage, pageSize, setPageSize, total, search, setSearch, filters, setFilter, filtered } = useTableState({
-    data: invoices,
-    searchKeys: ["invoice_number", "customer_name", "series_code"],
-    filterFns: {
-      status: (i: any, v) => v === "all" ? true : i.status === v,
-    },
-  });
-
   return (
     <AppLayout title={t("modules.invoices.title")}>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-        <MiniStatCard label="Facturas" value={invoices.length} icon={FileText} />
+        <MiniStatCard label="Facturas" value={allStats.length} icon={FileText} />
+
         <MiniStatCard label="Emitidas" value={issued.length} tone="success" />
         <MiniStatCard label="Transmitidas" value={transmitted} tone="primary" />
         <MiniStatCard label="Total facturado" value={totalBilled.toFixed(2)} tone="primary" />
@@ -208,18 +214,17 @@ const Facturas = () => {
             {
               key: "status",
               label: "Estado",
-              value: filters.status ?? "all",
+              value: filters.status ?? "__all__",
               onChange: (v) => setFilter("status", v),
               options: [
-                { value: "all", label: "Todos" },
-                { value: "issued", label: "Emitidas" },
+                                { value: "issued", label: "Emitidas" },
                 { value: "cancelled", label: "Anuladas" },
               ],
             },
           ]}
           rightSlot={
             <ExportButton
-              rows={filtered}
+              rows={paged}
               filename="facturas"
               title="Facturas"
               columns={[
@@ -252,11 +257,18 @@ const Facturas = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : paged.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Sin facturas</TableCell></TableRow>
-              ) : paged.map((inv) => {
+              <TableDataState
+                colSpan={8}
+                loading={loading}
+                error={table.error}
+                empty={!loading && paged.length === 0}
+                emptyTitle="Sin facturas"
+                emptyHint="Emite tu primera factura desde una venta cobrada."
+                icon={FileText}
+                onRetry={() => table.refetch()}
+              />
+              {paged.map((inv) => {
+
                 const tStatus = inv.transmission_status || "local";
                 return (
                 <TableRow key={inv.id}>
