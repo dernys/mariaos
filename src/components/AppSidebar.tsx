@@ -337,6 +337,14 @@ export function AppSidebar() {
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/eventos")} tooltip="Event Store (shadow)">
+                    <NavLink to="/eventos" className="transition-colors" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                      <Shield className="h-4 w-4" />
+                      {!collapsed && <span>Event Store</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
