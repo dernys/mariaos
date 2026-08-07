@@ -173,18 +173,11 @@ const Facturas = () => {
     await load();
   };
 
-  const { paged, page, setPage, pageSize, setPageSize, total, search, setSearch, filters, setFilter, filtered } = useTableState({
-    data: invoices,
-    searchKeys: ["invoice_number", "customer_name", "series_code"],
-    filterFns: {
-      status: (i: any, v) => v === "all" ? true : i.status === v,
-    },
-  });
-
   return (
     <AppLayout title={t("modules.invoices.title")}>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-        <MiniStatCard label="Facturas" value={invoices.length} icon={FileText} />
+        <MiniStatCard label="Facturas" value={allStats.length} icon={FileText} />
+
         <MiniStatCard label="Emitidas" value={issued.length} tone="success" />
         <MiniStatCard label="Transmitidas" value={transmitted} tone="primary" />
         <MiniStatCard label="Total facturado" value={totalBilled.toFixed(2)} tone="primary" />
