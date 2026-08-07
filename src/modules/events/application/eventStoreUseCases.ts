@@ -2,7 +2,7 @@
 // Los eventos NO escriben estado crítico: solo se observan y se comparan.
 
 import { beginOperation, traceFields } from "@/lib/context/operationContext";
-import { logger } from "@/lib/observability";
+import { observability } from "@/lib/observability";
 import {
   EMPTY_SUMMARY,
   divergencesByEventType,
@@ -94,10 +94,10 @@ export async function publishShadowEvent(
       payload: input.payload ?? {},
       metadata: traceFields(ctx),
     });
-    logger.info("shadow event emitido", { module: "events", operation: input.eventType, event_id: id });
+    observability.info("shadow event emitido", { module: "events", operation: input.eventType, event_id: id });
     return id;
   } catch (error) {
-    logger.error("shadow event falló", { module: "events", operation: input.eventType, error });
+    observability.error("shadow event falló", { module: "events", operation: input.eventType, error });
     return null;
   }
 }
