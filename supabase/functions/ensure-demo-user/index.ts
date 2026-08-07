@@ -70,6 +70,13 @@ serve(async (req) => {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (!isDemoTenant(tenant.name)) {
+      // SEC-001: nunca crear usuarios ni conceder propiedad en tenants reales.
+      return new Response(JSON.stringify({ error: "not_a_demo_tenant" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const slug = slugify(tenant.name);
     const email = `${role}.${slug}@demo.maria-os.app`;
 

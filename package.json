@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsgo -p tsconfig.app.json",
+    "verify": "bun run typecheck && bun run lint && bun run test && bun run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
