@@ -49,6 +49,7 @@ const VentaDetalle = lazy(() => import("./pages/VentaDetalle"));
 const Consignacion = lazy(() => import("./pages/Consignacion"));
 const TurnoDetalle = lazy(() => import("./pages/TurnoDetalle"));
 const Auditoria = lazy(() => import("./pages/Auditoria"));
+const EventStore = lazy(() => import("./pages/EventStore"));
 const CommandCenter = lazy(() => import("./pages/CommandCenter"));
 const Agents = lazy(() => import("./pages/Agents"));
 const AgentDetalle = lazy(() => import("./pages/AgentDetalle"));
