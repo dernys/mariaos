@@ -21,7 +21,8 @@ import { MiniStatCard } from "@/components/data/MiniStatCard";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
-import { useTableState } from "@/hooks/useTableState";
+import { useServerTable, useTableStats } from "@/hooks/useServerTable";
+import { TableDataState } from "@/components/data/DataState";
 
 interface Invoice {
   id: string;
@@ -122,7 +123,7 @@ const Facturas = () => {
   };
 
   const sendEmail = async (id: string) => {
-    const inv = invoices.find((i) => i.id === id);
+    const inv = paged.find((i) => i.id === id);
     if (!inv?.customer_email) { toast.error("La factura no tiene email del cliente"); return; }
     const full = await fetchFull(id);
     if (!full) return;
@@ -149,7 +150,8 @@ const Facturas = () => {
     await load();
   };
 
-  const issued = invoices.filter((i) => i.status === "issued");
+  const allStats = statsQuery.data ?? [];
+  const issued = allStats.filter((i) => i.status === "issued");
   const totalBilled = issued.reduce((s, i) => s + Number(i.total), 0);
   const totalPaid = issued.reduce((s, i) => s + Number(i.amount_paid), 0);
   const transmitted = issued.filter((i) => i.transmission_status === "transmitted").length;
@@ -222,7 +224,7 @@ const Facturas = () => {
           ]}
           rightSlot={
             <ExportButton
-              rows={filtered}
+              rows={paged}
               filename="facturas"
               title="Facturas"
               columns={[
