@@ -166,7 +166,9 @@ export default function Tesoreria() {
           </TabsContent>
 
           <TabsContent value="forecast" className="space-y-3">
+            <CashflowForecastPanel weeks={8} />
             <div className="flex justify-end"><Button onClick={() => setOpenNewFc(true)} size="sm" className="gap-1"><Plus className="h-4 w-4" /> {t("modules.treasury.actions.schedule")}</Button></div>
+
             <Card><CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow><TableHead>{t("modules.treasury.forecast.due")}</TableHead><TableHead>{t("modules.treasury.forecast.type")}</TableHead><TableHead>{t("modules.treasury.forecast.category")}</TableHead><TableHead>{t("modules.treasury.forecast.description")}</TableHead><TableHead className="text-right">{t("modules.treasury.forecast.amount")}</TableHead><TableHead>{t("modules.treasury.forecast.status")}</TableHead></TableRow></TableHeader>
