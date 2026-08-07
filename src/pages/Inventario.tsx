@@ -182,12 +182,14 @@ const Inventario = () => {
   };
 
   const handleDelete = async (p: Product) => {
-    const { error } = await supabase.from("products").delete().eq("id", p.id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    await logActivity({ entity_type: "product", entity_id: p.id, action: t("modules.inventory.activity.deleted"), description: t("modules.inventory.activity.deletedDesc", { name: p.name }), tenant_id: tenantId, performed_by: user?.id });
-    toast({ title: t("modules.inventory.toasts.productDeleted") });
-    fetchData();
+    try {
+      await deleteProductMutation.mutateAsync(p);
+      toast({ title: t("modules.inventory.toasts.productDeleted") });
+    } catch (e: any) {
+      toast({ title: "Error", description: domainMessage(e, t), variant: "destructive" });
+    }
   };
+
 
   const openMovement = (p: Product) => {
     setSelectedProduct(p);
