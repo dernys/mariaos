@@ -16,11 +16,24 @@ function isDemoTenant(name?: string | null) {
   return (name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(DEMO_TENANT_MARKER);
 }
 
+// SEC-003 (docs/security-audit.md): límite de tasa por IP para evitar abuso del
+// endpoint público de demos (por isolate; suficiente para el tráfico esperado).
+const RATE_LIMIT = 20;
+const RATE_WINDOW_MS = 60_000;
+const hits = new Map<string, number[]>();
+function rateLimited(ip: string) {
+  const now = Date.now();
+  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+  recent.push(now);
+  hits.set(ip, recent);
+  return recent.length > RATE_LIMIT;
+}
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 24);
 }
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
