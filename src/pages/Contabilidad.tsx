@@ -77,7 +77,7 @@ const Contabilidad = () => {
     if (v === "plan") return t("modules.accounting.sections.plan");
     if (v === "operacion") return t("modules.accounting.sections.operation");
     if (v === "analisis") return t("modules.accounting.sections.analysis");
-    if (v === "fiscal") return "Fiscal Cuba";
+    if (v === "fiscal") return "Fiscal";
     return v;
   };
   const periodStatusLabel = (s: string) => {
@@ -687,7 +687,7 @@ const Contabilidad = () => {
         {section === "fiscal" && (
           <Tabs value={subTab} onValueChange={setSubTab} className="space-y-4">
             <TabsList>
-              <TabsTrigger value="onat"><Landmark className="h-3.5 w-3.5 mr-1" />Declaraciones ONAT</TabsTrigger>
+              <TabsTrigger value="onat"><Landmark className="h-3.5 w-3.5 mr-1" />Declaraciones fiscales</TabsTrigger>
               <TabsTrigger value="costos"><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Plantillas de Costos</TabsTrigger>
             </TabsList>
             <TabsContent value="onat" className="space-y-4">
