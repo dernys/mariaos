@@ -20,11 +20,13 @@ import { Plus, Edit2, Trash2, User, History, Wallet, AlertTriangle, Users as Use
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { useTableState } from "@/hooks/useTableState";
+import { useServerTable, useTableStats } from "@/hooks/useServerTable";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
+import { TableDataState } from "@/components/data/DataState";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
+
 
 interface Customer {
   id: string;
