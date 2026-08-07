@@ -23,4 +23,29 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  // Fase 3 — Regla de arquitectura (Strangler): dentro de un módulo, la UI y el
+  // dominio no pueden hablar con la base de datos. Solo infrastructure/ puede.
+  {
+    files: ["src/modules/**/ui/**/*.{ts,tsx}", "src/modules/**/domain/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@/integrations/supabase/client",
+              message:
+                "Prohibido acceder a la base de datos desde ui/ o domain/. Usa los casos de uso de application/ y el repositorio de infrastructure/.",
+            },
+          ],
+          patterns: [
+            {
+              group: ["**/integrations/supabase/*", "@supabase/supabase-js"],
+              message: "Acceso a datos solo permitido en src/modules/*/infrastructure/.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );
