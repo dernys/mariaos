@@ -27,6 +27,8 @@ function baseline(overrides: Partial<TwinBaseline> = {}): TwinBaseline {
       { productId: "p1", name: "A", revenue: Money.of(12000, "CUP"), units: 200 },
       { productId: "p2", name: "B", revenue: Money.of(6000, "CUP"), units: 150 },
     ],
+    staleWindow: false,
+    windowTo: new Date().toISOString(),
     computedAt: new Date().toISOString(),
     ...overrides,
   };

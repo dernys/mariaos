@@ -69,6 +69,12 @@ export default function DigitalTwin() {
           <p className="text-sm text-muted-foreground">
             Fase 5: gemelo digital sobre datos reales. Importes tipados con <code>Money</code>, grafo de
             conocimiento y motor de simulación de escenarios.
+            {baseline.staleWindow && baseline.windowTo && (
+              <span className="block text-amber-500 mt-1">
+                Sin ventas en los últimos {baseline.windowDays} días: se analiza la última ventana con
+                actividad (hasta {new Date(baseline.windowTo).toLocaleDateString()}).
+              </span>
+            )}
           </p>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => twin.refetch()} disabled={twin.loading}>
