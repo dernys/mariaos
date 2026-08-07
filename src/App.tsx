@@ -84,11 +84,12 @@ const PageLoader = () => (
   </div>
 );
 
-const P = ({ children }: { children: React.ReactNode }) => (
-  <ProtectedRoute>
+const P = ({ children, m }: { children: React.ReactNode; m?: string }) => (
+  <ProtectedRoute module={m}>
     <Suspense fallback={<PageLoader />}>{children}</Suspense>
   </ProtectedRoute>
 );
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
