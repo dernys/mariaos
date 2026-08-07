@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,217 +7,350 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Activity, TrendingDown, TrendingUp, RefreshCw, Brain, AlertTriangle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useTenant } from "@/hooks/useTenant";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Activity,
+  AlertTriangle,
+  Brain,
+  Network,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAgent } from "@/hooks/useAgent";
+import { useDigitalTwin } from "@/modules/intelligence/ui/useDigitalTwin";
+import type { Money } from "@/modules/shared/domain/money";
 
+const RELATION_LABELS: Record<string, string> = {
+  in_category: "pertenece a",
+  bought: "compró",
+  sold: "vendió",
+  supplies: "suministra",
+  operates: "opera",
+};
 
-interface Baseline {
-  revenue30d: number;
-  cogs30d: number;
-  salesCount: number;
-  avgTicket: number;
-}
-
-interface Intelligence {
-  abc?: { a: number; b: number; c: number };
-  anomalies?: any[];
-  predictions?: any[];
-}
+const TYPE_LABELS: Record<string, string> = {
+  product: "Productos",
+  category: "Categorías",
+  customer: "Clientes",
+  supplier: "Proveedores",
+  store: "Tiendas",
+  employee: "Empleados",
+};
 
 export default function DigitalTwin() {
   const { t } = useTranslation();
-  const tenantId = useTenant();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [baseline, setBaseline] = useState<Baseline | null>(null);
-  const [intel, setIntel] = useState<Intelligence | null>(null);
-  const [priceChange, setPriceChange] = useState(0);
-  const [costChange, setCostChange] = useState(0);
-  const [demandChange, setDemandChange] = useState(0);
-  const { invoke } = useAgent();
+  const [currency] = useState("CUP");
+  const twin = useDigitalTwin(currency);
+  const { baseline, simulation, scenario, patchScenario, resetScenario, stats, insights } = twin;
 
-
-  const loadBaseline = async () => {
-    if (!tenantId) return;
-    const since = new Date(Date.now() - 30 * 86400000).toISOString();
-
-    const [salesRes, itemsRes] = await Promise.all([
-      supabase
-        .from("sales")
-        .select("id, total, status, created_at")
-        .eq("tenant_id", tenantId)
-        .gte("created_at", since)
-        .in("status", ["paid", "partial"]),
-      supabase
-        .from("sale_items")
-        .select("qty, product_id, products!inner(cost, tenant_id), sales!inner(tenant_id, status, created_at)")
-        .gte("created_at", since)
-        .limit(5000),
-    ]);
-
-    const sales = salesRes.data ?? [];
-    const revenue30d = sales.reduce((s, x: any) => s + Number(x.total || 0), 0);
-    const salesCount = sales.length;
-    const items = (itemsRes.data ?? []).filter(
-      (i: any) => i.sales?.tenant_id === tenantId && ["paid", "partial"].includes(i.sales?.status),
-    );
-    const cogs30d = items.reduce(
-      (s, i: any) => s + Number(i.qty || 0) * Number(i.products?.cost || 0),
-      0,
-    );
-    setBaseline({
-      revenue30d,
-      cogs30d,
-      salesCount,
-      avgTicket: salesCount > 0 ? revenue30d / salesCount : 0,
-    });
+  const rebuild = async () => {
+    try {
+      const res = await twin.rebuild.mutateAsync();
+      toast({
+        title: "Grafo reconstruido",
+        description: `${res.nodes} entidades y ${res.edges} relaciones derivadas de datos reales.`,
+      });
+    } catch (e) {
+      toast({
+        title: "No se pudo reconstruir el grafo",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    }
   };
-
-  const loadIntelligence = async () => {
-    if (!tenantId) return;
-    const { data, error } = await invoke<Intelligence>("inventory-intelligence", { tenant_id: tenantId, mode: "all" }, { notify: false });
-    if (error) { console.warn("inventory-intelligence error", error); return; }
-    setIntel(data ?? null);
-  };
-
-
-  useEffect(() => {
-    if (!tenantId) return;
-    setLoading(true);
-    Promise.all([loadBaseline(), loadIntelligence()]).finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenantId]);
-
-  const refresh = async () => {
-    setRefreshing(true);
-    await Promise.all([loadBaseline(), loadIntelligence()]);
-    setRefreshing(false);
-    toast({ title: "Gemelo actualizado", description: "Datos reales recargados" });
-  };
-
-  const sim = useMemo(() => {
-    if (!baseline) return null;
-    const projRevenue = baseline.revenue30d * (1 + priceChange / 100) * (1 + demandChange / 100);
-    const projCost = baseline.cogs30d * (1 + costChange / 100) * (1 + demandChange / 100);
-    const baseProfit = baseline.revenue30d - baseline.cogs30d;
-    const projProfit = projRevenue - projCost;
-    return { projRevenue, projCost, baseProfit, projProfit, delta: projProfit - baseProfit };
-  }, [baseline, priceChange, costChange, demandChange]);
 
   return (
     <AppLayout title={t("nav.items.digitalTwin")}>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-sm text-muted-foreground">
-            Gemelo digital del tenant: usa ventas reales de los últimos 30 días e inteligencia de inventario para simular escenarios.
+            Fase 5: gemelo digital sobre datos reales. Importes tipados con <code>Money</code>, grafo de
+            conocimiento y motor de simulación de escenarios.
           </p>
-          <Button size="sm" variant="outline" onClick={refresh} disabled={refreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
-            Recargar datos
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => twin.refetch()} disabled={twin.loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${twin.loading ? "animate-spin" : ""}`} />
+              Recargar
+            </Button>
+            <Button size="sm" onClick={rebuild} disabled={twin.rebuild.isPending}>
+              <Network className={`h-4 w-4 mr-2 ${twin.rebuild.isPending ? "animate-pulse" : ""}`} />
+              Reconstruir grafo
+            </Button>
+          </div>
         </div>
 
-        {/* Baseline */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Stat label="Ingresos 30d" value={baseline?.revenue30d} loading={loading} />
-          <Stat label="COGS 30d" value={baseline?.cogs30d} loading={loading} />
-          <Stat label="Tickets" value={baseline?.salesCount} loading={loading} integer />
-          <Stat label="Ticket promedio" value={baseline?.avgTicket} loading={loading} />
+          <Stat label={`Ingresos ${baseline.windowDays}d`} money={baseline.revenue} loading={twin.loading} />
+          <Stat label="Ticket promedio" money={baseline.avgTicket} loading={twin.loading} />
+          <Stat
+            label="Margen bruto"
+            text={`${baseline.grossMarginPct.toFixed(1)}%`}
+            loading={twin.loading}
+          />
+          <Stat
+            label="Runway de caja"
+            text={twin.runwayDays === null ? "n/d" : `${twin.runwayDays} días`}
+            loading={twin.loading}
+          />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" /> Variables de simulación
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-xs">Cambio de precio (%)</Label>
-                <Input type="number" value={priceChange} onChange={(e) => setPriceChange(+e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Cambio de costo (%)</Label>
-                <Input type="number" value={costChange} onChange={(e) => setCostChange(+e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Cambio de demanda (%)</Label>
-                <Input type="number" value={demandChange} onChange={(e) => setDemandChange(+e.target.value)} />
-              </div>
-              <p className="text-[11px] text-muted-foreground pt-2">
-                Base = últimos 30 días reales (sin demo). Modifica las variables para proyectar el siguiente período.
-              </p>
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="simulacion">
+          <TabsList>
+            <TabsTrigger value="simulacion">Simulación</TabsTrigger>
+            <TabsTrigger value="grafo">Grafo de conocimiento</TabsTrigger>
+            <TabsTrigger value="senales">Señales</TabsTrigger>
+          </TabsList>
 
-          <Card className="bg-gradient-to-br from-primary/10 via-card to-card border-primary/20">
-            <CardHeader>
-              <CardTitle className="text-base">Resultado proyectado</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {loading || !sim || !baseline ? (
-                <Skeleton className="h-32 w-full" />
-              ) : (
-                <>
-                  <Row label="Ingresos" base={baseline.revenue30d} proj={sim.projRevenue} />
-                  <Row label="Costos" base={baseline.cogs30d} proj={sim.projCost} invert />
-                  <div className="pt-3 border-t border-border/40">
-                    <Row label="Utilidad" base={sim.baseProfit} proj={sim.projProfit} highlight />
-                    <div
-                      className={`mt-2 inline-flex items-center gap-1 text-sm font-semibold ${
-                        sim.delta >= 0 ? "text-emerald-500" : "text-red-500"
-                      }`}
-                    >
-                      {sim.delta >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                      Δ ${sim.delta.toFixed(2)} (
-                      {((sim.delta / Math.abs(sim.baseProfit || 1)) * 100).toFixed(1)}%)
-                    </div>
+          <TabsContent value="simulacion" className="mt-4">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-primary" /> Variables del escenario
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <NumberField
+                    label="Cambio de precio (%)"
+                    value={scenario.priceChangePct}
+                    onChange={(v) => patchScenario({ priceChangePct: v })}
+                  />
+                  <NumberField
+                    label="Cambio de costo (%)"
+                    value={scenario.costChangePct}
+                    onChange={(v) => patchScenario({ costChangePct: v })}
+                  />
+                  <NumberField
+                    label="Cambio de demanda (%)"
+                    value={scenario.demandChangePct}
+                    onChange={(v) => patchScenario({ demandChangePct: v })}
+                  />
+                  <NumberField
+                    label="Cambio de gastos fijos (%)"
+                    value={scenario.fixedCostChangePct}
+                    onChange={(v) => patchScenario({ fixedCostChangePct: v })}
+                  />
+                  <NumberField
+                    label="Horizonte (días)"
+                    value={scenario.horizonDays}
+                    onChange={(v) => patchScenario({ horizonDays: Math.max(1, v) })}
+                  />
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Base: {baseline.orders} tickets y {baseline.units} unidades reales en{" "}
+                      {baseline.windowDays} días.
+                    </p>
+                    <Button size="sm" variant="ghost" onClick={resetScenario}>
+                      Reiniciar
+                    </Button>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                </CardContent>
+              </Card>
 
-        {/* Intelligence */}
+              <Card className="bg-gradient-to-br from-primary/10 via-card to-card border-primary/20">
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    Resultado proyectado · {simulation.horizonDays} días
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {twin.loading ? (
+                    <Skeleton className="h-40 w-full" />
+                  ) : (
+                    <>
+                      <Row label="Ingresos" base={simulation.baseRevenue} proj={simulation.projRevenue} />
+                      <Row label="Costo de ventas" base={simulation.baseCogs} proj={simulation.projCogs} invert />
+                      <Row
+                        label="Gastos fijos"
+                        base={simulation.baseFixedCosts}
+                        proj={simulation.projFixedCosts}
+                        invert
+                      />
+                      <div className="pt-3 border-t border-border/40 space-y-2">
+                        <Row label="Utilidad" base={simulation.baseProfit} proj={simulation.projProfit} highlight />
+                        <div
+                          className={`inline-flex items-center gap-1 text-sm font-semibold ${
+                            simulation.verdict === "worsens" ? "text-destructive" : "text-primary"
+                          }`}
+                        >
+                          {simulation.verdict === "worsens" ? (
+                            <TrendingDown className="h-4 w-4" />
+                          ) : (
+                            <TrendingUp className="h-4 w-4" />
+                          )}
+                          Δ {simulation.profitDelta.format()} ({simulation.profitDeltaPct.toFixed(1)}%)
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-1">
+                          <span>Margen proyectado: {simulation.projMarginPct.toFixed(1)}%</span>
+                          <span>Caja estimada: {simulation.projCash.format()}</span>
+                          <span>
+                            Equilibrio:{" "}
+                            {simulation.breakevenDailyUnits === null
+                              ? "n/d"
+                              : `${simulation.breakevenDailyUnits} uds/día`}
+                          </span>
+                          <span>Concentración top 5: {twin.concentrationPct.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="grafo" className="mt-4 space-y-4">
+            <div className="grid gap-4 md:grid-cols-4">
+              <Stat label="Entidades" text={String(stats.nodeCount)} loading={twin.loading} />
+              <Stat label="Relaciones" text={String(stats.edgeCount)} loading={twin.loading} />
+              <Stat label="Densidad" text={stats.density.toFixed(4)} loading={twin.loading} />
+              <Stat label="Sin conexiones" text={String(stats.isolatedNodes)} loading={twin.loading} />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Network className="h-4 w-4 text-primary" /> Composición del grafo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {stats.byType.length === 0 ? (
+                      <span className="text-sm text-muted-foreground">
+                        Grafo vacío. Pulsa «Reconstruir grafo».
+                      </span>
+                    ) : (
+                      stats.byType.map((tp) => (
+                        <Badge key={tp.type} variant="secondary">
+                          {TYPE_LABELS[tp.type] ?? tp.type}: {tp.count}
+                        </Badge>
+                      ))
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {stats.byRelation.map((r) => (
+                      <Badge key={r.relation} variant="outline">
+                        {RELATION_LABELS[r.relation] ?? r.relation}: {r.count}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-primary" /> Nodos más influyentes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Entidad</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead className="text-right">Grado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {[...twin.topProductsGraph, ...twin.topCustomersGraph].length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-sm text-muted-foreground">
+                            Sin datos todavía.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        [...twin.topProductsGraph, ...twin.topCustomersGraph].map((n) => (
+                          <TableRow key={n.id}>
+                            <TableCell className="font-medium">{n.label}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {TYPE_LABELS[String(n.type)] ?? n.type}
+                            </TableCell>
+                            <TableCell className="text-right font-mono">
+                              {n.importance.toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="senales" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-primary" /> Señales derivadas del grafo
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {twin.loading ? (
+                  <Skeleton className="h-24 w-full" />
+                ) : insights.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Sin riesgos estructurales detectados en el grafo.
+                  </p>
+                ) : (
+                  insights.map((i) => (
+                    <div key={i.code} className="rounded-lg border border-border/60 p-3">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            i.severity === "critical"
+                              ? "destructive"
+                              : i.severity === "warning"
+                                ? "secondary"
+                                : "outline"
+                          }
+                        >
+                          {i.code}
+                        </Badge>
+                        <span className="text-sm font-medium">{i.title}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{i.detail}</p>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Brain className="h-4 w-4 text-primary" /> Inteligencia de inventario
-            </CardTitle>
+            <CardTitle className="text-base">Top productos por ingresos reales</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {twin.loading ? (
               <Skeleton className="h-24 w-full" />
-            ) : !intel ? (
-              <p className="text-sm text-muted-foreground">Sin datos disponibles.</p>
+            ) : baseline.topProducts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sin ventas en la ventana analizada.</p>
             ) : (
-              <div className="grid gap-4 md:grid-cols-3">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Clasificación ABC</p>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">A: {intel.abc?.a ?? 0}</Badge>
-                    <Badge variant="secondary">B: {intel.abc?.b ?? 0}</Badge>
-                    <Badge variant="secondary">C: {intel.abc?.c ?? 0}</Badge>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Anomalías detectadas</p>
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
-                    <span className="text-sm font-semibold">{intel.anomalies?.length ?? 0}</span>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Predicciones generadas</p>
-                  <span className="text-sm font-semibold">{intel.predictions?.length ?? 0}</span>
-                </div>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Producto</TableHead>
+                    <TableHead className="text-right">Unidades</TableHead>
+                    <TableHead className="text-right">Ingresos</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {baseline.topProducts.map((p, idx) => (
+                    <TableRow key={p.productId ?? idx}>
+                      <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell className="text-right font-mono">{p.units}</TableCell>
+                      <TableCell className="text-right font-mono">{p.revenue.format()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>
@@ -226,37 +359,72 @@ export default function DigitalTwin() {
   );
 }
 
-function Stat({ label, value, loading, integer }: { label: string; value?: number; loading: boolean; integer?: boolean }) {
+function NumberField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <Label className="text-xs">{label}</Label>
+      <Input type="number" value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  money,
+  text,
+  loading,
+}: {
+  label: string;
+  money?: Money;
+  text?: string;
+  loading: boolean;
+}) {
   return (
     <Card>
       <CardContent className="pt-4">
         <p className="text-xs text-muted-foreground">{label}</p>
-        {loading || value === undefined ? (
+        {loading ? (
           <Skeleton className="h-7 w-24 mt-1" />
         ) : (
-          <p className="text-xl font-bold font-mono">
-            {integer ? Math.round(value) : `$${value.toFixed(2)}`}
-          </p>
+          <p className="text-xl font-bold font-mono">{money ? money.format() : (text ?? "—")}</p>
         )}
       </CardContent>
     </Card>
   );
 }
 
-function Row({ label, base, proj, invert, highlight }: any) {
-  const positive = invert ? proj < base : proj > base;
+function Row({
+  label,
+  base,
+  proj,
+  invert,
+  highlight,
+}: {
+  label: string;
+  base: Money;
+  proj: Money;
+  invert?: boolean;
+  highlight?: boolean;
+}) {
+  const diff = proj.amount - base.amount;
+  const good = invert ? diff <= 0 : diff >= 0;
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <div className="text-right">
-        <p
-          className={`font-mono ${highlight ? "text-base font-bold" : ""} ${
-            positive ? "text-emerald-500" : "text-red-500"
-          }`}
-        >
-          ${proj.toFixed(2)}
-        </p>
-        <p className="text-[10px] text-muted-foreground">base ${base.toFixed(2)}</p>
+      <span className={highlight ? "font-semibold" : "text-muted-foreground"}>{label}</span>
+      <div className="flex items-center gap-3 font-mono">
+        <span className="text-muted-foreground">{base.format()}</span>
+        <span aria-hidden>→</span>
+        <span className={good ? "text-primary font-semibold" : "text-destructive font-semibold"}>
+          {proj.format()}
+        </span>
       </div>
     </div>
   );
