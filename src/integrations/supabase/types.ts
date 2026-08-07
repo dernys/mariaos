@@ -9050,6 +9050,16 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      my_permissions: {
+        Args: never
+        Returns: {
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_view: boolean
+          slug: string
+        }[]
+      }
       my_vacation_balance: {
         Args: never
         Returns: {
