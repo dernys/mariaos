@@ -10,11 +10,12 @@ const DEMO_PASSWORD = "Demo2026!";
 const ALLOWED_ROLES = new Set(["admin", "gerente", "cajero"]);
 // SEC-001 (docs/security-audit.md): esta función es pública y crea usuarios con
 // contraseña conocida y propiedad del tenant. Debe operar EXCLUSIVAMENTE sobre
-// tenants de demostración; nunca sobre empresas reales.
-const DEMO_TENANT_MARKER = "maria demo";
-function isDemoTenant(name?: string | null) {
-  return (name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(DEMO_TENANT_MARKER);
+// tenants marcados explícitamente como demo (tenants.is_demo = true); nunca
+// sobre empresas reales.
+function isDemoTenant(t?: { is_demo?: boolean | null } | null) {
+  return t?.is_demo === true;
 }
+
 
 // SEC-003 (docs/security-audit.md): límite de tasa por IP para evitar abuso del
 // endpoint público de demos (por isolate; suficiente para el tráfico esperado).
@@ -56,10 +57,11 @@ serve(async (req) => {
     if (action === "list") {
       const { data: tenants } = await admin
         .from("tenants")
-        .select("id, name, business_type")
+        .select("id, name, business_type, is_demo")
         .eq("is_active", true)
+        .eq("is_demo", true)
         .order("name");
-      const items = (tenants ?? []).filter((t: any) => isDemoTenant(t.name)).map((t: any) => {
+      const items = (tenants ?? []).map((t: any) => {
         const slug = slugify(t.name);
         return {
           tenant_id: t.id,
@@ -84,13 +86,13 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { data: tenant } = await admin.from("tenants").select("id, name").eq("id", tenantId).maybeSingle();
+    const { data: tenant } = await admin.from("tenants").select("id, name, is_demo").eq("id", tenantId).maybeSingle();
     if (!tenant) {
       return new Response(JSON.stringify({ error: "Tenant no encontrado" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!isDemoTenant(tenant.name)) {
+    if (!isDemoTenant(tenant)) {
       // SEC-001: nunca crear usuarios ni conceder propiedad en tenants reales.
       return new Response(JSON.stringify({ error: "not_a_demo_tenant" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },

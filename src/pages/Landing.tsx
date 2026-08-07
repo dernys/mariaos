@@ -60,11 +60,55 @@ const platformFeatures = [
 
 // (Sección "Capturas reales" eliminada: el carrusel del tour ya muestra las pantallas reales sin duplicarlas)
 
+interface DemoBusiness {
+  name: string;
+  type: string;
+  products: number;
+  sales: number;
+  revenue: number;
+  employees: number;
+}
+interface DemoStats {
+  tenants: number;
+  products: number;
+  sales: number;
+  revenue: number;
+  journal_entries: number;
+  employees: number;
+  events: number;
+  agents: number;
+  businesses: DemoBusiness[];
+}
+interface DemoTenant {
+  tenant_id: string;
+  name: string;
+  business_type: string;
+  roles: { role: string; email: string }[];
+}
+
+const DEMO_ROLES = [
+  { role: "admin", label: "Administrador", desc: "Acceso total" },
+  { role: "gerente", label: "Gerente", desc: "Operación y reportes" },
+  { role: "cajero", label: "Cajero", desc: "Solo POS y turnos" },
+];
+
+const TYPE_ALIASES: Record<string, string[]> = {
+  bar: ["bar"],
+  restaurant: ["restaurant", "restaurante"],
+  retail: ["empresa", "retail", "tienda"],
+};
+
+const fmtMoney = (n: number) =>
+  new Intl.NumberFormat("es-CU", { maximumFractionDigits: 0 }).format(n || 0);
+
 const Landing = () => {
   const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [selected, setSelected] = useState(0);
+  const [stats, setStats] = useState<DemoStats | null>(null);
+  const [demoTenants, setDemoTenants] = useState<DemoTenant[]>([]);
+  const [demoRole, setDemoRole] = useState("admin");
   const autoplay = useRef(Autoplay({ delay: 4500, stopOnInteraction: false, stopOnMouseEnter: true }));
 
   useEffect(() => {
@@ -76,25 +120,40 @@ const Landing = () => {
     return () => { api.off("select", onSelect); };
   }, [api]);
 
-  const DEMO_EMAILS: Record<string, string> = {
-    bar: "demo-bar@kirabit.app",
-    restaurant: "demo-restaurante@kirabit.app",
-    retail: "demo-empresa@kirabit.app",
-    empresa: "demo-empresa@kirabit.app",
-  };
+  // Métricas reales de las empresas demo (función pública agregada)
+  useEffect(() => {
+    let alive = true;
+    supabase.rpc("public_demo_stats").then(({ data }) => {
+      if (alive && data) setStats(data as unknown as DemoStats);
+    });
+    supabase.functions.invoke("ensure-demo-user", { body: { action: "list" } }).then(({ data }) => {
+      if (alive && data?.tenants) setDemoTenants(data.tenants as DemoTenant[]);
+    });
+    return () => { alive = false; };
+  }, []);
+
+  const findTenant = (type: string) =>
+    demoTenants.find((t) => (TYPE_ALIASES[type] ?? [type]).includes((t.business_type ?? "").toLowerCase()));
+
+  const findBusiness = (type: string) =>
+    stats?.businesses?.find((b) => (TYPE_ALIASES[type] ?? [type]).includes((b.type ?? "").toLowerCase()));
 
   const startDemo = async (type: string) => {
     setDemoLoading(type);
     try {
-      const { error: seedErr } = await supabase.functions.invoke("seed-demo");
-      if (seedErr) throw seedErr;
-      const email = DEMO_EMAILS[type] ?? DEMO_EMAILS.empresa;
+      const tenant = findTenant(type);
+      if (!tenant) throw new Error("Demo no disponible en este momento");
+      const { data, error } = await supabase.functions.invoke("ensure-demo-user", {
+        body: { action: "ensure", tenant_id: tenant.tenant_id, role: demoRole },
+      });
+      if (error) throw error;
+      if (!data?.email) throw new Error(data?.error ?? "No se pudo preparar la demo");
       const { error: loginErr } = await supabase.auth.signInWithPassword({
-        email,
-        password: "demo1234",
+        email: data.email,
+        password: data.password,
       });
       if (loginErr) throw loginErr;
-      toast.success("Demo lista. Bienvenido a MarIA.");
+      toast.success(`Demo de ${tenant.name} lista (rol ${demoRole}).`);
       navigate("/app");
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo iniciar la demo");
@@ -102,6 +161,7 @@ const Landing = () => {
       setDemoLoading(null);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
@@ -362,34 +422,74 @@ const Landing = () => {
               Elige tu tipo de negocio
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Entra a una demo preconfigurada según tu rubro. Sin tarjeta, sin instalaciones.
+              Empresas demo con operación real cargada: catálogo, ventas, turnos, cocina, nómina y contabilidad.
+              Entra con el rol que quieras probar y comprueba los permisos.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {demoBusinessTypes.map((b) => (
+          {/* Selector de rol para probar permisos */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+            {DEMO_ROLES.map((r) => (
               <button
-                key={b.id}
-                onClick={() => startDemo(b.id)}
-                disabled={demoLoading !== null}
-                className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)] disabled:opacity-60 disabled:cursor-wait"
+                key={r.role}
+                onClick={() => setDemoRole(r.role)}
+                className={[
+                  "px-4 py-2 rounded-full border text-xs font-medium transition-colors",
+                  demoRole === r.role
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                ].join(" ")}
               >
-                <div aria-hidden className={`absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${b.accent} opacity-20 blur-3xl group-hover:opacity-40 transition-opacity`} />
-                <div className={`relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br ${b.accent} text-white shadow-lg mb-5`}>
-                  <b.icon className="h-6 w-6" />
-                </div>
-                <h3 className="relative font-heading font-semibold text-lg">{b.title}</h3>
-                <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
-                <div className="relative mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                  {demoLoading === b.id ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Preparando demo…</>
-                  ) : (
-                    <>Entrar a la demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
-                  )}
-                </div>
+                {r.label} <span className="opacity-60">· {r.desc}</span>
               </button>
             ))}
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {demoBusinessTypes.map((b) => {
+              const biz = findBusiness(b.id);
+              return (
+                <button
+                  key={b.id}
+                  onClick={() => startDemo(b.id)}
+                  disabled={demoLoading !== null}
+                  className="group text-left relative rounded-3xl border border-border bg-card p-7 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.35)] disabled:opacity-60 disabled:cursor-wait"
+                >
+                  <div aria-hidden className={`absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${b.accent} opacity-20 blur-3xl group-hover:opacity-40 transition-opacity`} />
+                  <div className={`relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br ${b.accent} text-white shadow-lg mb-5`}>
+                    <b.icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="relative font-heading font-semibold text-lg">{b.title}</h3>
+                  {biz && (
+                    <p className="relative text-xs text-primary font-medium mt-1">{biz.name}</p>
+                  )}
+                  <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
+                  {biz && (
+                    <dl className="relative mt-5 grid grid-cols-3 gap-2 border-t border-border/60 pt-4">
+                      {[
+                        { l: "Productos", v: String(biz.products) },
+                        { l: "Ventas", v: String(biz.sales) },
+                        { l: "Facturado", v: `$${fmtMoney(biz.revenue)}` },
+                      ].map((m) => (
+                        <div key={m.l}>
+                          <dd className="font-heading font-bold text-sm">{m.v}</dd>
+                          <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">{m.l}</dt>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                  <div className="relative mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                    {demoLoading === b.id ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Preparando demo…</>
+                    ) : (
+                      <>Entrar como {demoRole} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
 
           <div className="mt-10 text-center">
             <Link to="/marketplace">
@@ -439,18 +539,31 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Stats reales de las demos */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Datos en vivo</p>
+            <h2 className="font-heading font-bold text-3xl sm:text-4xl tracking-tight">
+              Las demos operan con información real
+            </h2>
+            <p className="mt-3 text-muted-foreground text-sm">
+              Estas cifras se leen directamente de las tres empresas demo del sistema, no son maquetas.
+            </p>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { v: "30+", l: "Módulos integrados" },
-              { v: "3", l: "Modos de POS" },
+              { v: stats ? `$${fmtMoney(stats.revenue)}` : "—", l: "Facturado en las demos" },
+              { v: stats ? String(stats.sales) : "—", l: "Ventas registradas" },
+              { v: stats ? String(stats.products) : "—", l: "Productos en catálogo" },
+              { v: stats ? String(stats.journal_entries) : "—", l: "Asientos contables" },
+              { v: stats ? String(stats.employees) : "—", l: "Empleados con nómina" },
+              { v: stats ? String(stats.events) : "—", l: "Eventos de dominio" },
+              { v: stats ? String(stats.agents) : "—", l: "Agentes de IA activos" },
               { v: "3", l: "Idiomas (ES/EN/PT-BR)" },
-              { v: "IA", l: "Agentes autónomos" },
             ].map((s) => (
               <div key={s.l} className="rounded-2xl border border-border bg-card p-6">
-                <p className="font-heading font-bold text-3xl bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
+                <p className="font-heading font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
                   {s.v}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">{s.l}</p>
@@ -458,6 +571,7 @@ const Landing = () => {
             ))}
           </div>
         </div>
+
       </section>
 
       {/* CTA */}
