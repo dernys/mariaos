@@ -57,10 +57,11 @@ serve(async (req) => {
     if (action === "list") {
       const { data: tenants } = await admin
         .from("tenants")
-        .select("id, name, business_type")
+        .select("id, name, business_type, is_demo")
         .eq("is_active", true)
+        .eq("is_demo", true)
         .order("name");
-      const items = (tenants ?? []).filter((t: any) => isDemoTenant(t.name)).map((t: any) => {
+      const items = (tenants ?? []).map((t: any) => {
         const slug = slugify(t.name);
         return {
           tenant_id: t.id,
