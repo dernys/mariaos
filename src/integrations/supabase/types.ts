@@ -9321,7 +9321,14 @@ export type Database = {
         | "compliance"
         | "procurement"
         | "analytics"
-      app_role: "admin" | "gerente" | "supervisor" | "cajero" | "inventarista"
+      app_role:
+        | "admin"
+        | "gerente"
+        | "supervisor"
+        | "cajero"
+        | "inventarista"
+        | "contador"
+        | "empleado"
       autonomy_level: "manual" | "suggest" | "auto_approve" | "autonomous"
       risk_severity: "low" | "medium" | "high" | "critical"
     }
@@ -9462,7 +9469,15 @@ export const Constants = {
         "procurement",
         "analytics",
       ],
-      app_role: ["admin", "gerente", "supervisor", "cajero", "inventarista"],
+      app_role: [
+        "admin",
+        "gerente",
+        "supervisor",
+        "cajero",
+        "inventarista",
+        "contador",
+        "empleado",
+      ],
       autonomy_level: ["manual", "suggest", "auto_approve", "autonomous"],
       risk_severity: ["low", "medium", "high", "critical"],
     },
