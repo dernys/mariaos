@@ -7,10 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useTenant } from "@/hooks/useTenant";
-import { logActivity } from "@/hooks/useActivityLog";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -28,72 +25,46 @@ import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
-
-interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  description: string | null;
-  category: string | null;
-  price: number;
-  cost: number;
-  stock: number;
-  min_stock: number;
-  warehouse_id: string | null;
-  is_active: boolean;
-  is_online?: boolean;
-  online_stock?: number;
-  image_url?: string | null;
-}
-
-interface Warehouse {
-  id: string;
-  name: string;
-}
-
-interface Store {
-  id: string;
-  name: string;
-}
-
-interface LocationStock {
-  id: string;
-  product_id: string;
-  location_type: string;
-  location_id: string;
-  stock: number;
-}
-
-interface Movement {
-  id: string;
-  movement_type: string;
-  quantity: number;
-  previous_stock: number;
-  new_stock: number;
-  reason: string | null;
-  created_at: string;
-  product_id: string;
-  location_type?: string | null;
-  location_id?: string | null;
-}
+// Fase 3 (Strangler) — esta página ya no habla con la base de datos:
+// consume el módulo de Inventario (dominio + casos de uso + repositorio).
+import {
+  useInventory, useSaveProduct, useDeleteProduct, useRegisterMovement, useUploadProductImage, useInventoryDeps,
+  stockStatus, type Product, type Warehouse, type Store, type LocationStock, type Movement,
+} from "@/modules/inventory";
 
 const statusConfig = (stock: number, min: number) => {
-  if (stock <= 0) return { label: "outOfStock", className: "bg-destructive/10 text-destructive" };
-  if (stock <= min) return { label: "lowStock", className: "bg-warning/10 text-warning" };
-  return { label: "inStock", className: "bg-success/10 text-success" };
+  const status = stockStatus(stock, min);
+  const className =
+    status === "outOfStock" ? "bg-destructive/10 text-destructive"
+    : status === "lowStock" ? "bg-warning/10 text-warning"
+    : "bg-success/10 text-success";
+  return { label: status, className };
 };
+
+/** Traduce los códigos de error del dominio a mensajes de usuario. */
+const domainMessage = (e: any, t: (k: string) => string) => {
+  const code = e?.code ?? e?.message;
+  const map: Record<string, string> = {
+    nameSkuRequired: "modules.inventory.errors.nameSkuRequired",
+    negativeAmounts: "modules.inventory.errors.qtyGtZero",
+    qtyGtZero: "modules.inventory.errors.qtyGtZero",
+    notEnoughStock: "modules.inventory.errors.notEnoughStock",
+  };
+  return map[code] ? t(map[code]) : String(e?.message ?? e);
+};
+
 
 const Inventario = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const tenantId = useTenant();
+  const { tenantId } = useInventoryDeps();
   const { toast } = useToast();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
-  const [locationStocks, setLocationStocks] = useState<LocationStock[]>([]);
-  const [movements, setMovements] = useState<Movement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { products, warehouses, stores, locationStocks, movements, loading, refetch } = useInventory();
+  const saveProductMutation = useSaveProduct();
+  const deleteProductMutation = useDeleteProduct();
+  const registerMovementMutation = useRegisterMovement();
+  const uploadImageMutation = useUploadProductImage();
+  const fetchData = () => { void refetch(); };
   const [search, setSearch] = useState("");
   const [kardexProductId, setKardexProductId] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -106,23 +77,6 @@ const Inventario = () => {
   });
   const [movForm, setMovForm] = useState({ type: "entry", quantity: "0", reason: "" });
 
-  const fetchData = async () => {
-    const [prodRes, whRes, stRes, psRes, movRes] = await Promise.all([
-      supabase.from("products").select("*").order("name"),
-      supabase.from("warehouses").select("id, name").order("name"),
-      supabase.from("stores").select("id, name").order("name"),
-      supabase.from("product_stock").select("*"),
-      supabase.from("inventory_movements").select("*").order("created_at", { ascending: false }).limit(200),
-    ]);
-    if (prodRes.data) setProducts(prodRes.data as Product[]);
-    if (whRes.data) setWarehouses(whRes.data);
-    if (stRes.data) setStores(stRes.data);
-    if (psRes.data) setLocationStocks(psRes.data as LocationStock[]);
-    if (movRes.data) setMovements(movRes.data as Movement[]);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchData(); }, []);
 
   const openNew = () => {
     setEditing(null);
@@ -142,52 +96,40 @@ const Inventario = () => {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.sku.trim()) {
-      toast({ title: t("common.error"), description: t("modules.inventory.errors.nameSkuRequired"), variant: "destructive" });
-      return;
-    }
-    const payload = {
-      name: form.name.trim(), sku: form.sku.trim(), description: form.description || null,
-      category: form.category || null, price: parseFloat(form.price) || 0, cost: parseFloat(form.cost) || 0,
-      stock: parseInt(form.stock) || 0, min_stock: parseInt(form.min_stock) || 0,
-      warehouse_id: form.warehouse_id || null, tenant_id: tenantId,
-      is_online: form.is_online, online_stock: form.is_online ? (parseInt(form.online_stock) || 0) : 0,
-      image_url: form.image_url.trim() || null,
+    const draft = {
+      name: form.name,
+      sku: form.sku,
+      description: form.description,
+      category: form.category,
+      price: parseFloat(form.price) || 0,
+      cost: parseFloat(form.cost) || 0,
+      stock: parseInt(form.stock) || 0,
+      min_stock: parseInt(form.min_stock) || 0,
+      warehouse_id: form.warehouse_id,
+      is_online: form.is_online,
+      online_stock: parseInt(form.online_stock) || 0,
+      image_url: form.image_url,
       is_deliverable: form.is_deliverable,
     };
-
-    if (editing) {
-      const { error } = await supabase.from("products").update(payload).eq("id", editing.id);
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-      await logActivity({ entity_type: "product", entity_id: editing.id, action: t("modules.inventory.activity.updated"), description: t("modules.inventory.activity.updatedDesc", { name: payload.name }), tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: t("modules.inventory.toasts.productUpdated") });
-    } else {
-      const { data, error } = await supabase.from("products").insert(payload).select("id").single();
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-      if (data) {
-        await logActivity({ entity_type: "product", entity_id: data.id, action: t("modules.inventory.activity.created"), description: t("modules.inventory.activity.createdDesc", { name: payload.name, sku: payload.sku }), tenant_id: tenantId, performed_by: user?.id });
-        // Log initial stock as movement
-        if (payload.stock > 0) {
-          await supabase.from("inventory_movements").insert({
-            product_id: data.id, warehouse_id: payload.warehouse_id, movement_type: "entry",
-            quantity: payload.stock, previous_stock: 0, new_stock: payload.stock,
-            reason: t("modules.inventory.activity.initialStock"), tenant_id: tenantId, performed_by: user?.id,
-          });
-        }
-      }
-      toast({ title: t("modules.inventory.toasts.productCreated") });
+    try {
+      await saveProductMutation.mutateAsync({ id: editing?.id ?? null, draft });
+      toast({ title: editing ? t("modules.inventory.toasts.productUpdated") : t("modules.inventory.toasts.productCreated") });
+      setDialogOpen(false);
+    } catch (e: any) {
+      toast({ title: t("common.error"), description: domainMessage(e, t), variant: "destructive" });
     }
-    setDialogOpen(false);
-    fetchData();
   };
+
 
   const handleDelete = async (p: Product) => {
-    const { error } = await supabase.from("products").delete().eq("id", p.id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    await logActivity({ entity_type: "product", entity_id: p.id, action: t("modules.inventory.activity.deleted"), description: t("modules.inventory.activity.deletedDesc", { name: p.name }), tenant_id: tenantId, performed_by: user?.id });
-    toast({ title: t("modules.inventory.toasts.productDeleted") });
-    fetchData();
+    try {
+      await deleteProductMutation.mutateAsync(p);
+      toast({ title: t("modules.inventory.toasts.productDeleted") });
+    } catch (e: any) {
+      toast({ title: "Error", description: domainMessage(e, t), variant: "destructive" });
+    }
   };
+
 
   const openMovement = (p: Product) => {
     setSelectedProduct(p);
@@ -198,31 +140,21 @@ const Inventario = () => {
   const handleMovement = async () => {
     if (!selectedProduct) return;
     const qty = parseInt(movForm.quantity) || 0;
-    if (qty <= 0) { toast({ title: t("common.error"), description: t("modules.inventory.errors.qtyGtZero"), variant: "destructive" }); return; }
-
     const isEntry = movForm.type === "entry";
-    const newStock = isEntry ? selectedProduct.stock + qty : selectedProduct.stock - qty;
-    if (newStock < 0) { toast({ title: t("common.error"), description: t("modules.inventory.errors.notEnoughStock"), variant: "destructive" }); return; }
-
-    const { error: movErr } = await supabase.from("inventory_movements").insert({
-      product_id: selectedProduct.id, warehouse_id: selectedProduct.warehouse_id,
-      movement_type: movForm.type, quantity: qty, previous_stock: selectedProduct.stock,
-      new_stock: newStock, reason: movForm.reason || null, tenant_id: tenantId, performed_by: user?.id,
-    });
-    if (movErr) { toast({ title: "Error", description: movErr.message, variant: "destructive" }); return; }
-
-    await supabase.from("products").update({ stock: newStock }).eq("id", selectedProduct.id);
-    await logActivity({
-      entity_type: "product", entity_id: selectedProduct.id,
-      action: isEntry ? t("modules.inventory.activity.entry") : t("modules.inventory.activity.exit"),
-      description: `${isEntry ? "+" : "-"}${qty} unidades. ${movForm.reason || ""}`.trim(),
-      tenant_id: tenantId, performed_by: user?.id,
-    });
-
-    toast({ title: `${t("modules.inventory.toasts.movementRegistered")}: ${isEntry ? "+" : "-"}${qty}` });
-    setMovementDialogOpen(false);
-    fetchData();
+    try {
+      const plan = await registerMovementMutation.mutateAsync({
+        product: selectedProduct,
+        type: movForm.type as "entry" | "exit",
+        quantity: qty,
+        reason: movForm.reason,
+      });
+      toast({ title: `${t("modules.inventory.toasts.movementRegistered")}: ${plan.delta > 0 ? "+" : ""}${plan.delta}` });
+      setMovementDialogOpen(false);
+    } catch (e: any) {
+      toast({ title: t("common.error"), description: domainMessage(e, t), variant: "destructive" });
+    }
   };
+
 
   const productTable = useTableState({
     data: products,
@@ -601,13 +533,13 @@ const Inventario = () => {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file || !tenantId) return;
-                        const ext = file.name.split(".").pop() || "jpg";
-                        const path = `${tenantId}/${Date.now()}.${ext}`;
-                        const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
-                        if (error) { toast({ title: t("modules.inventory.errors.uploadImage"), description: error.message, variant: "destructive" }); return; }
-                        const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-                        setForm((f) => ({ ...f, image_url: data.publicUrl }));
-                        toast({ title: t("modules.inventory.toasts.imageUploaded") });
+                        try {
+                          const publicUrl = await uploadImageMutation.mutateAsync(file);
+                          setForm((f) => ({ ...f, image_url: publicUrl }));
+                          toast({ title: t("modules.inventory.toasts.imageUploaded") });
+                        } catch (err: any) {
+                          toast({ title: t("modules.inventory.errors.uploadImage"), description: domainMessage(err, t), variant: "destructive" });
+                        }
                       }}
                     />
                     {form.image_url && (
