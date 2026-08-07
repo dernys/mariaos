@@ -8,6 +8,14 @@ const corsHeaders = {
 
 const DEMO_PASSWORD = "Demo2026!";
 const ALLOWED_ROLES = new Set(["admin", "gerente", "cajero"]);
+// SEC-001 (docs/security-audit.md): esta función es pública y crea usuarios con
+// contraseña conocida y propiedad del tenant. Debe operar EXCLUSIVAMENTE sobre
+// tenants de demostración; nunca sobre empresas reales.
+const DEMO_TENANT_MARKER = "maria demo";
+function isDemoTenant(name?: string | null) {
+  return (name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(DEMO_TENANT_MARKER);
+}
+
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
