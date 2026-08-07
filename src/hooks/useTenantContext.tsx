@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { setObservabilityContext } from "@/lib/observability";
 import { useAuth } from "./useAuth";
+
 
 interface TenantInfo {
   id: string;
@@ -79,6 +81,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     load();
   }, [user]);
 
+  // QW2/QW3 — todo log y error posterior lleva tenant y usuario.
+  useEffect(() => {
+    setObservabilityContext({ tenant_id: tenantId, user_id: user?.id ?? null });
+  }, [tenantId, user?.id]);
+
   const setActiveTenantId = (id: string) => {
     const t = allTenants.find((t) => t.id === id);
     if (t) {
@@ -87,6 +94,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("sa_active_tenant", id);
     }
   };
+
 
   return (
     <TenantContext.Provider value={{ tenantId, tenant, allTenants, setActiveTenantId, loading, businessType: tenant?.business_type ?? "empresa" }}>

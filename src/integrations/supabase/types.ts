@@ -4346,6 +4346,39 @@ export type Database = {
           },
         ]
       }
+      operation_idempotency: {
+        Row: {
+          correlation_id: string | null
+          created_at: string
+          id: string
+          idempotency_key: string
+          operation: string
+          result_id: string | null
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          correlation_id?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          operation: string
+          result_id?: string | null
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          correlation_id?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          operation?: string
+          result_id?: string | null
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       operational_checklists: {
         Row: {
           checklist_type: string
@@ -8494,6 +8527,19 @@ export type Database = {
         Args: { p_reason: string; p_sale_id: string }
         Returns: undefined
       }
+      claim_operation: {
+        Args: {
+          p_correlation_id?: string
+          p_idempotency_key: string
+          p_operation: string
+          p_result_id?: string
+          p_tenant_id: string
+        }
+        Returns: {
+          found: boolean
+          result_id: string
+        }[]
+      }
       clock_in: {
         Args: {
           p_employee_id: string
@@ -8584,18 +8630,33 @@ export type Database = {
         }
         Returns: string
       }
-      create_quick_sale: {
-        Args: {
-          p_customer_id: string
-          p_employee_id: string
-          p_items: Json
-          p_notes?: string
-          p_payments?: Json
-          p_tax_rate?: number
-          p_tenant_id: string
-        }
-        Returns: string
-      }
+      create_quick_sale:
+        | {
+            Args: {
+              p_customer_id: string
+              p_employee_id: string
+              p_items: Json
+              p_notes?: string
+              p_payments?: Json
+              p_tax_rate?: number
+              p_tenant_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_correlation_id?: string
+              p_customer_id: string
+              p_employee_id: string
+              p_idempotency_key: string
+              p_items: Json
+              p_notes: string
+              p_payments: Json
+              p_tax_rate: number
+              p_tenant_id: string
+            }
+            Returns: string
+          }
       cu_calculate_cost_sheet: { Args: { p_sheet_id: string }; Returns: number }
       cu_generate_tax_declaration: {
         Args: {
@@ -8908,7 +8969,16 @@ export type Database = {
         Args: { p_tenant: string }
         Returns: number
       }
-      receive_purchase: { Args: { p_purchase_id: string }; Returns: undefined }
+      receive_purchase:
+        | { Args: { p_purchase_id: string }; Returns: undefined }
+        | {
+            Args: {
+              p_correlation_id?: string
+              p_idempotency_key: string
+              p_purchase_id: string
+            }
+            Returns: undefined
+          }
       receive_purchase_consignment: {
         Args: { p_purchase_id: string }
         Returns: undefined
@@ -8925,20 +8995,37 @@ export type Database = {
         Args: { p_customer_id: string; p_points: number; p_sale_id?: string }
         Returns: number
       }
-      register_account_payment: {
-        Args: {
-          p_amount: number
-          p_currency?: string
-          p_exchange_rate?: number
-          p_method?: string
-          p_notes?: string
-          p_party_id: string
-          p_party_type: string
-          p_reference_id?: string
-          p_reference_type?: string
-        }
-        Returns: string
-      }
+      register_account_payment:
+        | {
+            Args: {
+              p_amount: number
+              p_currency?: string
+              p_exchange_rate?: number
+              p_method?: string
+              p_notes?: string
+              p_party_id: string
+              p_party_type: string
+              p_reference_id?: string
+              p_reference_type?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_correlation_id?: string
+              p_currency: string
+              p_exchange_rate: number
+              p_idempotency_key: string
+              p_method: string
+              p_notes: string
+              p_party_id: string
+              p_party_type: string
+              p_reference_id: string
+              p_reference_type: string
+            }
+            Returns: string
+          }
       register_stock_adjustment: {
         Args: {
           p_kind?: string

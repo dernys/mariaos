@@ -18,6 +18,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { useTableState } from "@/hooks/useTableState";
+import { callFinancialRpc } from "@/lib/finance/idempotentRpc";
+import { beginOperation } from "@/lib/context/operationContext";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
@@ -207,7 +209,13 @@ export default function Compras() {
       for (const l of payLines) {
         const amt = parseFloat(l.amount) || 0;
         if (amt <= 0) continue;
-        const { error: pe } = await (supabase as any).rpc("register_account_payment", {
+        const ctx = beginOperation({
+          module: "purchasing",
+          operation: "register_account_payment",
+          tenant_id: tenantId,
+          correlationId: `purchase-pay:${pch.id}:${l.id}`,
+        });
+        const { error: pe } = await callFinancialRpc("register_account_payment", {
           p_party_type: "supplier",
           p_party_id: supplierId,
           p_amount: amt,
@@ -217,10 +225,11 @@ export default function Compras() {
           p_reference_type: "purchase",
           p_reference_id: pch.id,
           p_notes: `Pago al crear compra ${code}`,
-        });
-        if (pe) { toast({ title: "Error registrando pago", description: pe.message, variant: "destructive" }); }
+        }, ctx);
+        if (pe) { toast({ title: "Error registrando pago", description: pe, variant: "destructive" }); }
       }
     }
+
 
     // Emit business event for reactive workflows / agents
     try {
@@ -249,10 +258,23 @@ export default function Compras() {
 
 
   const receive = async (id: string, isConsignment: boolean) => {
-    const fn = isConsignment ? "receive_purchase_consignment" : "receive_purchase";
-    const { error } = await supabase.rpc(fn as any, { p_purchase_id: id });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: isConsignment ? "Consignación recibida" : "Compra recibida y stock actualizado" });
+    if (isConsignment) {
+      const { error } = await supabase.rpc("receive_purchase_consignment" as any, { p_purchase_id: id });
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Consignación recibida" });
+      fetchAll();
+      return;
+    }
+    // QW1: clave derivada de la compra → recibir dos veces no duplica el stock.
+    const ctx = beginOperation({
+      module: "purchasing",
+      operation: "receive_purchase",
+      tenant_id: tenantId,
+      correlationId: `purchase-receive:${id}`,
+    });
+    const { error } = await callFinancialRpc("receive_purchase", { p_purchase_id: id }, ctx);
+    if (error) { toast({ title: "Error", description: error, variant: "destructive" }); return; }
+    toast({ title: "Compra recibida y stock actualizado" });
     fetchAll();
   };
 

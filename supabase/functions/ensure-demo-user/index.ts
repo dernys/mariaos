@@ -8,6 +8,14 @@ const corsHeaders = {
 
 const DEMO_PASSWORD = "Demo2026!";
 const ALLOWED_ROLES = new Set(["admin", "gerente", "cajero"]);
+// SEC-001 (docs/security-audit.md): esta función es pública y crea usuarios con
+// contraseña conocida y propiedad del tenant. Debe operar EXCLUSIVAMENTE sobre
+// tenants de demostración; nunca sobre empresas reales.
+const DEMO_TENANT_MARKER = "maria demo";
+function isDemoTenant(name?: string | null) {
+  return (name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(DEMO_TENANT_MARKER);
+}
+
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -31,7 +39,7 @@ serve(async (req) => {
         .select("id, name, business_type")
         .eq("is_active", true)
         .order("name");
-      const items = (tenants ?? []).map((t: any) => {
+      const items = (tenants ?? []).filter((t: any) => isDemoTenant(t.name)).map((t: any) => {
         const slug = slugify(t.name);
         return {
           tenant_id: t.id,
@@ -62,6 +70,13 @@ serve(async (req) => {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (!isDemoTenant(tenant.name)) {
+      // SEC-001: nunca crear usuarios ni conceder propiedad en tenants reales.
+      return new Response(JSON.stringify({ error: "not_a_demo_tenant" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const slug = slugify(tenant.name);
     const email = `${role}.${slug}@demo.maria-os.app`;
 

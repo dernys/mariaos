@@ -1,0 +1,25 @@
+name: Quality Gate
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verify:
+    name: types · lint · tests · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      # Bloqueantes: un error de tipos o un test roto no entra.
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun run build
+      # Informativo por ahora (deuda de lint preexistente); se vuelve
+      # bloqueante cuando el conteo de avisos llegue a cero.
+      - run: bun run lint
+        continue-on-error: true

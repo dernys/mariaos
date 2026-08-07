@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { callFinancialRpc } from "@/lib/finance/idempotentRpc";
+import { beginOperation } from "@/lib/context/operationContext";
 
 export type PartyType = "customer" | "employee" | "supplier";
 
@@ -106,7 +108,13 @@ export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, par
       for (const l of lines) {
         const amt = parseFloat(l.amount) || 0;
         if (amt <= 0) continue;
-        const { error } = await (supabase as any).rpc("register_account_payment", {
+        // QW1: clave estable por línea de pago → reintentos no duplican cobros.
+        const ctx = beginOperation({
+          module: "finance",
+          operation: "register_account_payment",
+          correlationId: `pay:${partyType}:${partyId}:${referenceId ?? "none"}:${l.id}`,
+        });
+        const { error } = await callFinancialRpc("register_account_payment", {
           p_party_type: partyType,
           p_party_id: partyId,
           p_amount: amt,
@@ -116,9 +124,10 @@ export function MultiPaymentDialog({ open, onOpenChange, partyType, partyId, par
           p_reference_type: referenceType || null,
           p_reference_id: referenceId || null,
           p_notes: notes || null,
-        });
-        if (error) throw error;
+        }, ctx);
+        if (error) throw new Error(error);
       }
+
       toast({ title: t("pos.multiPay.registered"), description: t("pos.multiPay.registeredDesc", { total: totalBase.toFixed(2) }) });
       onOpenChange(false);
       onPaid?.();
