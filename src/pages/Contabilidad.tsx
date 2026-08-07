@@ -122,10 +122,10 @@ const Contabilidad = () => {
   const fetchData = async () => {
     if (!tenantId) return;
     const [accRes, entRes, fyRes, pRes] = await Promise.all([
-      supabase.from("accounting_accounts").select("*").order("code"),
-      supabase.from("journal_entries").select("*").order("date", { ascending: false }).limit(500),
-      supabase.from("fiscal_years").select("*").order("year", { ascending: false }),
-      supabase.from("accounting_periods").select("*").order("start_date"),
+      supabase.from("accounting_accounts").select("*").eq("tenant_id", tenantId).order("code"),
+      supabase.from("journal_entries").select("*").eq("tenant_id", tenantId).order("date", { ascending: false }).limit(500),
+      supabase.from("fiscal_years").select("*").eq("tenant_id", tenantId).order("year", { ascending: false }),
+      supabase.from("accounting_periods").select("*").eq("tenant_id", tenantId).order("start_date"),
     ]);
     if (accRes.data) setAccounts(accRes.data as Account[]);
     if (entRes.data) setEntries(entRes.data as JournalEntry[]);
