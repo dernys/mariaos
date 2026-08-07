@@ -7592,6 +7592,7 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          is_demo: boolean
           logo_url: string | null
           name: string
           phone: string | null
@@ -7609,6 +7610,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           logo_url?: string | null
           name: string
           phone?: string | null
@@ -7626,6 +7628,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           logo_url?: string | null
           name?: string
           phone?: string | null
@@ -9128,6 +9131,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      public_demo_stats: { Args: never; Returns: Json }
       rebuild_general_ledger:
         | { Args: { p_period_id: string }; Returns: number }
         | { Args: { p_period: string; p_tenant: string }; Returns: number }
