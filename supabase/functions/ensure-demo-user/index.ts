@@ -39,7 +39,7 @@ serve(async (req) => {
         .select("id, name, business_type")
         .eq("is_active", true)
         .order("name");
-      const items = (tenants ?? []).map((t: any) => {
+      const items = (tenants ?? []).filter((t: any) => isDemoTenant(t.name)).map((t: any) => {
         const slug = slugify(t.name);
         return {
           tenant_id: t.id,
