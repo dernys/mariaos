@@ -198,31 +198,21 @@ const Inventario = () => {
   const handleMovement = async () => {
     if (!selectedProduct) return;
     const qty = parseInt(movForm.quantity) || 0;
-    if (qty <= 0) { toast({ title: t("common.error"), description: t("modules.inventory.errors.qtyGtZero"), variant: "destructive" }); return; }
-
     const isEntry = movForm.type === "entry";
-    const newStock = isEntry ? selectedProduct.stock + qty : selectedProduct.stock - qty;
-    if (newStock < 0) { toast({ title: t("common.error"), description: t("modules.inventory.errors.notEnoughStock"), variant: "destructive" }); return; }
-
-    const { error: movErr } = await supabase.from("inventory_movements").insert({
-      product_id: selectedProduct.id, warehouse_id: selectedProduct.warehouse_id,
-      movement_type: movForm.type, quantity: qty, previous_stock: selectedProduct.stock,
-      new_stock: newStock, reason: movForm.reason || null, tenant_id: tenantId, performed_by: user?.id,
-    });
-    if (movErr) { toast({ title: "Error", description: movErr.message, variant: "destructive" }); return; }
-
-    await supabase.from("products").update({ stock: newStock }).eq("id", selectedProduct.id);
-    await logActivity({
-      entity_type: "product", entity_id: selectedProduct.id,
-      action: isEntry ? t("modules.inventory.activity.entry") : t("modules.inventory.activity.exit"),
-      description: `${isEntry ? "+" : "-"}${qty} unidades. ${movForm.reason || ""}`.trim(),
-      tenant_id: tenantId, performed_by: user?.id,
-    });
-
-    toast({ title: `${t("modules.inventory.toasts.movementRegistered")}: ${isEntry ? "+" : "-"}${qty}` });
-    setMovementDialogOpen(false);
-    fetchData();
+    try {
+      const plan = await registerMovementMutation.mutateAsync({
+        product: selectedProduct,
+        type: movForm.type as "entry" | "exit",
+        quantity: qty,
+        reason: movForm.reason,
+      });
+      toast({ title: `${t("modules.inventory.toasts.movementRegistered")}: ${plan.delta > 0 ? "+" : ""}${plan.delta}` });
+      setMovementDialogOpen(false);
+    } catch (e: any) {
+      toast({ title: t("common.error"), description: domainMessage(e, t), variant: "destructive" });
+    }
   };
+
 
   const productTable = useTableState({
     data: products,
