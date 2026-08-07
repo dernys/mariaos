@@ -66,6 +66,8 @@ const Clientes = () => {
     searchColumns: ["name", "email", "phone", "rfc"],
     orderBy: { column: "name", ascending: true },
     scope: tenantId,
+    enabled: !!tenantId,
+    baseFilter: (q) => q.eq("tenant_id", tenantId),
     filterFns: {
       status: (q, v) => (v === "debt" ? q.gt("balance", 0) : q.lte("balance", 0)),
     },
@@ -74,7 +76,7 @@ const Clientes = () => {
   const statsQuery = useTableStats<{ balance: number; credit_limit: number }>(
     "customers",
     "balance,credit_limit",
-    { scope: tenantId },
+    { scope: tenantId, enabled: !!tenantId, baseFilter: (q) => q.eq("tenant_id", tenantId) },
   );
   const statRows = statsQuery.data ?? [];
   const totalDebt = statRows.reduce((a, c) => a + Math.max(0, Number(c.balance) || 0), 0);

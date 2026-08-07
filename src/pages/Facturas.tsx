@@ -61,6 +61,7 @@ const Facturas = () => {
     orderBy: { column: "issue_date", ascending: false },
     scope: tenantId,
     enabled: !!tenantId,
+    baseFilter: (q) => q.eq("tenant_id", tenantId),
     filterFns: { status: (q, v) => q.eq("status", v) },
   });
   const {
@@ -71,7 +72,7 @@ const Facturas = () => {
   const statsQuery = useTableStats<{ status: string; total: number; amount_paid: number; transmission_status: string | null }>(
     "invoices",
     "status,total,amount_paid,transmission_status",
-    { scope: tenantId, enabled: !!tenantId },
+    { scope: tenantId, enabled: !!tenantId, baseFilter: (q) => q.eq("tenant_id", tenantId) },
   );
 
   const load = async () => {
@@ -213,11 +214,10 @@ const Facturas = () => {
             {
               key: "status",
               label: "Estado",
-              value: filters.status ?? "all",
+              value: filters.status ?? "__all__",
               onChange: (v) => setFilter("status", v),
               options: [
-                { value: "all", label: "Todos" },
-                { value: "issued", label: "Emitidas" },
+                                { value: "issued", label: "Emitidas" },
                 { value: "cancelled", label: "Anuladas" },
               ],
             },

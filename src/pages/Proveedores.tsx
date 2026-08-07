@@ -54,13 +54,15 @@ export default function Proveedores() {
     searchColumns: ["name", "contact_name", "phone", "email", "rfc"],
     orderBy: { column: "name", ascending: true },
     scope: tenantId,
+    enabled: !!tenantId,
+    baseFilter: (q) => q.eq("tenant_id", tenantId),
     filterFns: {
       debt: (q, v) => (v === "with" ? q.gt("balance", 0) : q.lte("balance", 0)),
       status: (q, v) => q.eq("is_active", v === "active"),
     },
   });
 
-  const statsQuery = useTableStats<{ balance: number }>("suppliers", "balance", { scope: tenantId });
+  const statsQuery = useTableStats<{ balance: number }>("suppliers", "balance", { scope: tenantId, enabled: !!tenantId, baseFilter: (q) => q.eq("tenant_id", tenantId) });
   const statRows = statsQuery.data ?? [];
 
   useEffect(() => {
