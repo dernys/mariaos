@@ -153,7 +153,7 @@ const Clientes = () => {
           rightSlot={
             <>
               <ExportButton
-                rows={table.filtered}
+                rows={table.rows}
                 filename="clientes"
                 title="Clientes"
                 columns={[
