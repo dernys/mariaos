@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { setObservabilityContext } from "@/lib/observability";
 import { useAuth } from "./useAuth";
+
 
 interface TenantInfo {
   id: string;

@@ -2,6 +2,11 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./i18n";
+import { installGlobalErrorHandlers } from "@/lib/observability";
+
+// QW3 — captura global de errores con contexto (tenant/usuario/módulo/correlation).
+installGlobalErrorHandlers();
+
 
 // PWA registration with iframe/preview guard
 const isInIframe = (() => {
