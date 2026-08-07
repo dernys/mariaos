@@ -44,8 +44,6 @@ interface Invoice {
 const Facturas = () => {
   const { t } = useTranslation();
   const { tenantId } = useTenantContext();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
   const [issueOpen, setIssueOpen] = useState(false);
   const [pendingSales, setPendingSales] = useState<any[]>([]);
   const [selectedSale, setSelectedSale] = useState<string>("");
@@ -54,20 +52,32 @@ const Facturas = () => {
   const [transmittingId, setTransmittingId] = useState<string | null>(null);
   const nav = useNavigate();
 
+  const table = useServerTable<Invoice>({
+    table: "invoices",
+    select:
+      "id, series_code, invoice_number, issue_date, status, customer_name, total, amount_paid, currency, email_sent_at, customer_email, pdf_url, transmission_status, cufe, xml_content",
+    searchColumns: ["invoice_number", "customer_name", "series_code"],
+    orderBy: { column: "issue_date", ascending: false },
+    scope: tenantId,
+    enabled: !!tenantId,
+    filterFns: { status: (q, v) => q.eq("status", v) },
+  });
+  const {
+    rows: paged, page, setPage, pageSize, setPageSize, total, search, setSearch, filters, setFilter,
+  } = table;
+  const loading = table.loading;
+
+  const statsQuery = useTableStats<{ status: string; total: number; amount_paid: number; transmission_status: string | null }>(
+    "invoices",
+    "status,total,amount_paid,transmission_status",
+    { scope: tenantId, enabled: !!tenantId },
+  );
+
   const load = async () => {
-    if (!tenantId) return;
-    setLoading(true);
-    const { data } = await supabase
-      .from("invoices")
-      .select("id, series_code, invoice_number, issue_date, status, customer_name, total, amount_paid, currency, email_sent_at, customer_email, pdf_url, transmission_status, cufe, xml_content")
-      .eq("tenant_id", tenantId)
-      .order("issue_date", { ascending: false })
-      .limit(500);
-    setInvoices((data as any) ?? []);
-    setLoading(false);
+    table.invalidate();
+    await statsQuery.refetch();
   };
 
-  useEffect(() => { load(); }, [tenantId]);
 
   const openIssue = async () => {
     if (!tenantId) return;
