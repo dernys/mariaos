@@ -152,7 +152,9 @@ const Contabilidad = () => {
     filterFns: {
       type: (a, v) => a.type === v,
       postable: (a, v) => (v === "yes" ? a.is_postable : !a.is_postable),
+      active: (a, v) => (v === "yes" ? a.is_active : !a.is_active),
     },
+
   });
   const accountsFiltered = !!accountsTable.search.trim() || Object.values(accountsTable.filters).some((v) => v && v !== "__all__");
 
