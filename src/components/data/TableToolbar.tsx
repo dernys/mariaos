@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 export interface FilterOption {
   value: string;
@@ -37,17 +37,15 @@ export function TableToolbar({ search, onSearchChange, searchPlaceholder = "Busc
         />
       </div>
       {filters.map((f) => (
-        <Select key={f.key} value={f.value} onValueChange={f.onChange}>
-          <SelectTrigger className="h-9 w-full sm:w-40 text-xs">
-            <SelectValue placeholder={f.label} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">{f.label}: Todos</SelectItem>
-            {f.options.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          key={f.key}
+          className="w-full sm:w-44"
+          placeholder={f.label}
+          searchPlaceholder={`${f.label}...`}
+          value={f.value === "__all__" ? "__all__" : f.value}
+          onChange={f.onChange}
+          options={[{ value: "__all__", label: `${f.label}: Todos` }, ...f.options]}
+        />
       ))}
       {rightSlot && <div className="flex items-center gap-2 sm:ml-auto">{rightSlot}</div>}
     </div>
