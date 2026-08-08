@@ -7017,9 +7017,13 @@ export type Database = {
       shift_cash_movements: {
         Row: {
           amount: number
+          amount_in_base: number | null
+          category: string
           created_at: string
           currency: string
+          exchange_rate: number
           id: string
+          journal_entry_id: string | null
           movement_type: string
           performed_by: string | null
           reason: string | null
@@ -7028,9 +7032,13 @@ export type Database = {
         }
         Insert: {
           amount: number
+          amount_in_base?: number | null
+          category?: string
           created_at?: string
           currency?: string
+          exchange_rate?: number
           id?: string
+          journal_entry_id?: string | null
           movement_type: string
           performed_by?: string | null
           reason?: string | null
@@ -7039,9 +7047,13 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_in_base?: number | null
+          category?: string
           created_at?: string
           currency?: string
+          exchange_rate?: number
           id?: string
+          journal_entry_id?: string | null
           movement_type?: string
           performed_by?: string | null
           reason?: string | null
@@ -7049,6 +7061,20 @@ export type Database = {
           tenant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "shift_cash_movements_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "general_ledger_view"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "shift_cash_movements_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "shift_cash_movements_shift_id_fkey"
             columns: ["shift_id"]
@@ -9468,6 +9494,7 @@ export type Database = {
         Args: { p_customer_id: string; p_points: number; p_sale_id?: string }
         Returns: number
       }
+      refresh_shift_totals: { Args: { p_shift_id: string }; Returns: undefined }
       register_account_payment:
         | {
             Args: {
@@ -9499,6 +9526,18 @@ export type Database = {
             }
             Returns: string
           }
+      register_shift_cash_movement: {
+        Args: {
+          p_amount: number
+          p_category?: string
+          p_currency?: string
+          p_exchange_rate?: number
+          p_movement_type: string
+          p_reason?: string
+          p_shift_id: string
+        }
+        Returns: Json
+      }
       register_stock_adjustment: {
         Args: {
           p_kind?: string
@@ -9590,8 +9629,16 @@ export type Database = {
         Args: { p_role: string; p_tenant: string }
         Returns: string
       }
+      resolve_account_by_type: {
+        Args: { p_codes?: string[]; p_tenant: string; p_type: string }
+        Returns: string
+      }
       resolve_account_id: {
         Args: { p_code: string; p_tenant_id: string }
+        Returns: string
+      }
+      resolve_cash_counterpart: {
+        Args: { p_category: string; p_tenant: string }
         Returns: string
       }
       resolve_fiscal_rules: {
