@@ -81,3 +81,33 @@ export function useUploadProductImage() {
   const deps = useInventoryDeps();
   return useMutation({ mutationFn: (file: File) => uploadProductImage(deps, file) });
 }
+
+// --- Edición y auditoría de movimientos ---
+import { inventoryMovementAudit } from "../infrastructure/supabaseInventoryRepository";
+
+export interface MovementPatch {
+  reason?: string | null;
+  notes?: string | null;
+  reference_type?: string | null;
+}
+
+export function useUpdateMovement() {
+  const invalidate = useInvalidate();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; patch: MovementPatch }) =>
+      inventoryMovementAudit.updateMovement(vars.id, vars.patch),
+    onSuccess: (_d, vars) => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["inventory", "movement-history", vars.id] });
+    },
+  });
+}
+
+export function useMovementHistory(movementId: string | null) {
+  return useQuery({
+    queryKey: ["inventory", "movement-history", movementId],
+    enabled: !!movementId,
+    queryFn: () => inventoryMovementAudit.loadHistory(movementId!),
+  });
+}

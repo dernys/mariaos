@@ -3365,14 +3365,58 @@ export type Database = {
           },
         ]
       }
+      inventory_movement_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          field: string
+          id: string
+          movement_id: string
+          new_value: string | null
+          old_value: string | null
+          tenant_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          field: string
+          id?: string
+          movement_id: string
+          new_value?: string | null
+          old_value?: string | null
+          tenant_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          field?: string
+          id?: string
+          movement_id?: string
+          new_value?: string | null
+          old_value?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movement_history_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           created_at: string
+          edited_at: string | null
+          edited_by: string | null
           id: string
           location_id: string | null
           location_type: string | null
           movement_type: string
           new_stock: number
+          notes: string | null
           performed_by: string | null
           previous_stock: number
           product_id: string
@@ -3381,15 +3425,19 @@ export type Database = {
           reference_id: string | null
           reference_type: string | null
           tenant_id: string | null
+          updated_at: string
           warehouse_id: string | null
         }
         Insert: {
           created_at?: string
+          edited_at?: string | null
+          edited_by?: string | null
           id?: string
           location_id?: string | null
           location_type?: string | null
           movement_type?: string
           new_stock?: number
+          notes?: string | null
           performed_by?: string | null
           previous_stock?: number
           product_id: string
@@ -3398,15 +3446,19 @@ export type Database = {
           reference_id?: string | null
           reference_type?: string | null
           tenant_id?: string | null
+          updated_at?: string
           warehouse_id?: string | null
         }
         Update: {
           created_at?: string
+          edited_at?: string | null
+          edited_by?: string | null
           id?: string
           location_id?: string | null
           location_type?: string | null
           movement_type?: string
           new_stock?: number
+          notes?: string | null
           performed_by?: string | null
           previous_stock?: number
           product_id?: string
@@ -3415,6 +3467,7 @@ export type Database = {
           reference_id?: string | null
           reference_type?: string | null
           tenant_id?: string | null
+          updated_at?: string
           warehouse_id?: string | null
         }
         Relationships: [
@@ -7002,6 +7055,44 @@ export type Database = {
           },
         ]
       }
+      stock_transfer_events: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          performed_by: string | null
+          status: string
+          tenant_id: string
+          transfer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          performed_by?: string | null
+          status: string
+          tenant_id: string
+          transfer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          performed_by?: string | null
+          status?: string
+          tenant_id?: string
+          transfer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_events_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "stock_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_transfer_items: {
         Row: {
           created_at: string
@@ -7054,9 +7145,16 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           cancelled_at: string | null
+          carrier_driver: string | null
+          carrier_name: string | null
+          carrier_phone: string | null
+          carrier_plate: string | null
+          carrier_vehicle: string | null
           created_at: string
+          created_by: string | null
           destination_id: string
           destination_type: string
+          estimated_arrival: string | null
           id: string
           notes: string | null
           origin_id: string
@@ -7069,6 +7167,7 @@ export type Database = {
           shipped_by: string | null
           status: string
           tenant_id: string
+          tracking_code: string | null
           transfer_number: string
           updated_at: string
         }
@@ -7076,9 +7175,16 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           cancelled_at?: string | null
+          carrier_driver?: string | null
+          carrier_name?: string | null
+          carrier_phone?: string | null
+          carrier_plate?: string | null
+          carrier_vehicle?: string | null
           created_at?: string
+          created_by?: string | null
           destination_id: string
           destination_type: string
+          estimated_arrival?: string | null
           id?: string
           notes?: string | null
           origin_id: string
@@ -7091,6 +7197,7 @@ export type Database = {
           shipped_by?: string | null
           status?: string
           tenant_id: string
+          tracking_code?: string | null
           transfer_number: string
           updated_at?: string
         }
@@ -7098,9 +7205,16 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           cancelled_at?: string | null
+          carrier_driver?: string | null
+          carrier_name?: string | null
+          carrier_phone?: string | null
+          carrier_plate?: string | null
+          carrier_vehicle?: string | null
           created_at?: string
+          created_by?: string | null
           destination_id?: string
           destination_type?: string
+          estimated_arrival?: string | null
           id?: string
           notes?: string | null
           origin_id?: string
@@ -7113,6 +7227,7 @@ export type Database = {
           shipped_by?: string | null
           status?: string
           tenant_id?: string
+          tracking_code?: string | null
           transfer_number?: string
           updated_at?: string
         }
@@ -7865,6 +7980,58 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      warehouse_stores: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          store_id: string
+          tenant_id: string
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          store_id: string
+          tenant_id: string
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          store_id?: string
+          tenant_id?: string
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_stores_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouse_stores_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouse_stores_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       warehouses: {
         Row: {
