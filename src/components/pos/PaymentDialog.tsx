@@ -521,22 +521,31 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                     <input
                       type="checkbox"
                       id="partial"
-                      checked={isPartial}
-                      onChange={(e) => setIsPartial(e.target.checked)}
-                      disabled={!!(selectedCustomer || selectedEmployee)}
-                      className="h-4 w-4 rounded border-input"
+                      checked={isPartial && !!party}
+                      onChange={(e) => {
+                        if (!party) return;
+                        setIsPartial(e.target.checked);
+                      }}
+                      disabled={!party}
+                      className="h-4 w-4 rounded border-input disabled:opacity-50"
                     />
                     <Label htmlFor="partial" className="text-xs cursor-pointer">
                       {t("pos.payment.allowPartial")}
-                      {(selectedCustomer || selectedEmployee) && <span className="ml-1 text-primary">{t("pos.payment.autoActive")}</span>}
+                      {party && <span className="ml-1 text-primary">{t("pos.payment.autoActive")}</span>}
                     </Label>
                   </div>
-                  {isPartial && remaining > 0.01 && (
+                  {isPartial && !!party && remaining > 0.01 && (
                     <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning">
                       {t("pos.payment.balance")}: ${remaining.toFixed(2)}
                     </Badge>
                   )}
                 </div>
+                {!party && (
+                  <p className="text-[10px] text-muted-foreground px-2">
+                    Solo se puede fiar asociando la venta a un cliente o empleado.
+                  </p>
+                )}
+
                 {party && (
                   <div className={`text-[10px] flex items-center justify-between rounded px-2 py-1 ${overLimit ? "bg-destructive/10 text-destructive" : "bg-muted/40 text-muted-foreground"}`}>
                     <span>{t("pos.payment.currentDebt")}: <b>${curBal.toFixed(2)}</b> {limit > 0 && <>· {t("pos.payment.limit")}: <b>${limit.toFixed(2)}</b> · {t("pos.payment.available")}: <b>${(available ?? 0).toFixed(2)}</b></>}{limit === 0 && <> · {t("pos.payment.noLimit")}</>}</span>
