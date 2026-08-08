@@ -479,7 +479,18 @@ const Contabilidad = () => {
                       { value: "no", label: t("modules.accounting.accounts.filters.group") },
                     ],
                   },
+                  {
+                    key: "active",
+                    label: "Estado",
+                    value: accountsTable.filters.active || "__all__",
+                    onChange: (v) => accountsTable.setFilter("active", v),
+                    options: [
+                      { value: "yes", label: "Activas" },
+                      { value: "no", label: "Inactivas" },
+                    ],
+                  },
                 ]}
+
               />
 
               <div className="bg-card rounded-xl shadow-card border overflow-hidden">
