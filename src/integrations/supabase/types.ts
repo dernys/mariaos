@@ -2166,6 +2166,7 @@ export type Database = {
           tenant_id: string | null
           total_spent: number
           updated_at: string
+          user_id: string | null
           visits_count: number
         }
         Insert: {
@@ -2184,6 +2185,7 @@ export type Database = {
           tenant_id?: string | null
           total_spent?: number
           updated_at?: string
+          user_id?: string | null
           visits_count?: number
         }
         Update: {
@@ -2202,6 +2204,7 @@ export type Database = {
           tenant_id?: string | null
           total_spent?: number
           updated_at?: string
+          user_id?: string | null
           visits_count?: number
         }
         Relationships: [
@@ -9373,13 +9376,13 @@ export type Database = {
       }
       place_online_order: {
         Args: {
-          p_customer_email: string
+          p_customer_email?: string
           p_customer_name: string
           p_customer_phone: string
-          p_delivery_address: string
-          p_delivery_type: string
+          p_delivery_address?: string
+          p_delivery_type?: string
           p_items: Json
-          p_notes: string
+          p_notes?: string
           p_tenant_id: string
         }
         Returns: string

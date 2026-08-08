@@ -31,8 +31,10 @@ const NONE: Omit<ModulePermission, "slug"> = {
  * (union of all their roles) from role_permissions.
  */
 export function usePermissions() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, hasRole } = useAuth();
   const { isSuperadmin, loading: saLoading } = useSuperadmin();
+  const isAdmin = hasRole("admin");
+
 
   const query = useQuery({
     queryKey: ["my-permissions", user?.id],
@@ -60,12 +62,14 @@ export function usePermissions() {
   const hasAnyPermission = Object.keys(permissions).length > 0;
 
   const get = (slug?: string): ModulePermission => {
-    if (isSuperadmin) return { slug: slug ?? "*", ...FULL };
+
+    if (isSuperadmin || isAdmin) return { slug: slug ?? "*", ...FULL };
     if (!slug) return { slug: "*", ...FULL };
-    // No matrix configured for this user's roles at all → don't lock them out.
-    if (!hasAnyPermission) return { slug, ...FULL };
+    // Sin matriz configurada: solo administradores tienen acceso implícito.
+    if (!hasAnyPermission) return { slug, ...NONE };
     return permissions[slug] ?? { slug, ...NONE };
   };
+
 
   const can = (slug: string | undefined, action: PermissionAction = "view") => {
     const p = get(slug);
