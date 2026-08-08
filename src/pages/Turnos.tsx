@@ -18,6 +18,9 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { CashMovementDialog } from "@/components/turnos/CashMovementDialog";
+import type { ShiftSummary } from "@/components/turnos/CashFlowPanel";
+
 
 interface SalesShift {
   id: string;
@@ -73,17 +76,9 @@ const Turnos = () => {
   const [pinEmployeeId, setPinEmployeeId] = useState("");
   const [newPin, setNewPin] = useState("");
 
-  // Cash movement
-  const [cashType, setCashType] = useState<"cash_in" | "cash_out">("cash_out");
-  const [cashAmount, setCashAmount] = useState("");
-  const [cashReason, setCashReason] = useState("");
-
   // Summary preview at close
-  const [summary, setSummary] = useState<{
-    opening_cash: number; total_sales: number; total_transactions: number;
-    cash_sales: number; card_sales: number; qr_sales: number;
-    cash_in: number; cash_out: number; returns_cash: number; expected_cash: number;
-  } | null>(null);
+  const [summary, setSummary] = useState<ShiftSummary | null>(null);
+
 
   useEffect(() => { if (user && tenantId) fetchAll(); }, [user, tenantId]);
 
@@ -182,25 +177,24 @@ const Turnos = () => {
   };
 
 
-  const loadSummary = async () => {
-    if (!selectedShift) return;
-    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: selectedShift.id });
+  const loadSummary = async (shiftId: string) => {
+    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: shiftId });
     if (error) { toast.error(error.message); return; }
-    if (data && (data as any[]).length) setSummary((data as any[])[0]);
+    if (data) setSummary(data as unknown as ShiftSummary);
   };
 
   const openCloseDialog = async (shift: SalesShift) => {
     setSelectedShift(shift);
     setSummary(null);
     setShowClose(true);
-    const { data, error } = await supabase.rpc("calculate_shift_summary" as any, { p_shift_id: shift.id });
-    if (error) { toast.error(error.message); return; }
-    if (data && (data as any[]).length) setSummary((data as any[])[0]);
+    await loadSummary(shift.id);
   };
 
-  const openCashDialog = (shift: SalesShift) => {
+  const openCashDialog = async (shift: SalesShift) => {
     setSelectedShift(shift);
+    setSummary(null);
     setShowCash(true);
+    await loadSummary(shift.id);
   };
 
 
@@ -214,23 +208,12 @@ const Turnos = () => {
     if (error) return toast.error(error.message);
     const diff = (data as any)?.cash_difference ?? (parseFloat(closeCash) - (summary?.expected_cash || 0));
     const journalId = (data as any)?.journal_entry_id;
-    await logActivity({ entity_type: "shift", entity_id: selectedShift.id, action: "Cierre Z", description: `Diferencia $${diff.toFixed(2)}${journalId ? ` · Asiento ${journalId.slice(0,8)}` : ""}`, tenant_id: tenantId, performed_by: user?.id });
-    toast.success(`Cierre Z generado · Diferencia: $${Number(diff).toFixed(2)}${journalId ? " · Asiento contable creado" : ""}`);
+    await logActivity({ entity_type: "shift", entity_id: selectedShift.id, action: "Cierre Z", description: `Diferencia $${Number(diff).toFixed(2)}${journalId ? ` · Asiento ${journalId.slice(0,8)}` : ""}`, tenant_id: tenantId, performed_by: user?.id });
+    toast.success(`Cierre Z generado · Diferencia: $${Number(diff).toFixed(2)}${journalId ? " · Asiento contable de descuadre creado" : ""}`);
     setShowClose(false); setCloseCash(""); setCloseNotes(""); setSummary(null);
     fetchAll();
   };
 
-  const submitCashMovement = async () => {
-    if (!selectedShift || !cashAmount || Number(cashAmount) <= 0) return toast.error("Monto inválido");
-    const { error } = await (supabase.from as any)("shift_cash_movements").insert({
-      tenant_id: tenantId, shift_id: selectedShift.id,
-      movement_type: cashType, amount: parseFloat(cashAmount),
-      reason: cashReason || null, performed_by: user?.id,
-    });
-    if (error) return toast.error(error.message);
-    toast.success(cashType === "cash_in" ? "Ingreso registrado" : "Egreso registrado");
-    setShowCash(false); setCashAmount(""); setCashReason(""); setCashType("cash_out");
-  };
 
   if (loading) {
     return (
@@ -300,37 +283,15 @@ const Turnos = () => {
         )}
 
 
-        {/* Cash Movement Dialog */}
-        <Dialog open={showCash} onOpenChange={setShowCash}>
-          <DialogContent className="sm:max-w-sm">
-            <DialogHeader>
-              <DialogTitle>Movimiento de Caja</DialogTitle>
-              <DialogDescription>Registra ingresos o egresos manuales del turno</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant={cashType === "cash_in" ? "default" : "outline"} onClick={() => setCashType("cash_in")} className="gap-1">
-                  <ArrowDownCircle className="h-4 w-4" /> Ingreso
-                </Button>
-                <Button variant={cashType === "cash_out" ? "default" : "outline"} onClick={() => setCashType("cash_out")} className="gap-1">
-                  <ArrowUpCircle className="h-4 w-4" /> Egreso
-                </Button>
-              </div>
-              <div>
-                <Label className="text-xs">Monto</Label>
-                <Input type="number" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0.00" />
-              </div>
-              <div>
-                <Label className="text-xs">Motivo</Label>
-                <Input value={cashReason} onChange={(e) => setCashReason(e.target.value)} placeholder="Pago proveedor, retiro..." />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCash(false)}>Cancelar</Button>
-              <Button onClick={submitCashMovement} className="gradient-brand text-primary-foreground">Registrar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Cash Movement Dialog (contabilizado) */}
+        <CashMovementDialog
+          open={showCash}
+          onOpenChange={setShowCash}
+          shiftId={selectedShift?.id ?? null}
+          availableCash={summary?.expected_cash}
+          onDone={() => { fetchAll(); if (selectedShift) loadSummary(selectedShift.id); }}
+        />
+
 
         {/* Close Shift Dialog with Cuadre */}
         <Dialog open={showClose} onOpenChange={setShowClose}>
@@ -345,7 +306,9 @@ const Turnos = () => {
                   <div className="flex justify-between"><span>Caja inicial</span><span className="font-heading font-semibold">${Number(summary.opening_cash).toFixed(2)}</span></div>
                   <div className="flex justify-between"><span>Ventas en efectivo</span><span className="font-heading font-semibold text-success">+${Number(summary.cash_sales).toFixed(2)}</span></div>
                   <div className="flex justify-between text-muted-foreground"><span>Ventas tarjeta</span><span>${Number(summary.card_sales).toFixed(2)}</span></div>
-                  <div className="flex justify-between text-muted-foreground"><span>Ventas QR</span><span>${Number(summary.qr_sales).toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>Ventas transferencia / QR</span><span>${Number(summary.transfer_sales).toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>Ventas a crédito (fiado)</span><span>${Number(summary.credit_sales).toFixed(2)}</span></div>
+
                   <div className="flex justify-between"><span>Ingresos manuales</span><span className="font-heading font-semibold text-success">+${Number(summary.cash_in).toFixed(2)}</span></div>
                   <div className="flex justify-between"><span>Egresos manuales</span><span className="font-heading font-semibold text-destructive">-${Number(summary.cash_out).toFixed(2)}</span></div>
                   <div className="flex justify-between"><span>Devoluciones efectivo</span><span className="font-heading font-semibold text-destructive">-${Number(summary.returns_cash).toFixed(2)}</span></div>

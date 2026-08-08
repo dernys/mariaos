@@ -18,6 +18,9 @@ import {
 import { Clock, Eye, DollarSign, Undo2, Ban, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { CashFlowPanel, type ShiftSummary } from "@/components/turnos/CashFlowPanel";
+import { CashMovementDialog } from "@/components/turnos/CashMovementDialog";
+
 
 interface SaleRow {
   id: string;
@@ -37,8 +40,10 @@ export default function TurnoDetalle() {
   const nav = useNavigate();
   const { toast } = useToast();
   const [shift, setShift] = useState<any>(null);
-  const [summary, setSummary] = useState<any>(null);
+  const [summary, setSummary] = useState<ShiftSummary | null>(null);
   const [sales, setSales] = useState<SaleRow[]>([]);
+  const [showCash, setShowCash] = useState(false);
+
   const [movements, setMovements] = useState<any[]>([]);
 
   // dialogs
@@ -150,23 +155,43 @@ export default function TurnoDetalle() {
           ]}
         />
 
-        <Tabs defaultValue="ventas">
+        <Tabs defaultValue="caja">
           <TabsList>
+            <TabsTrigger value="caja">Caja y flujo</TabsTrigger>
             <TabsTrigger value="ventas">Ventas ({sales.length})</TabsTrigger>
-            <TabsTrigger value="resumen">Resumen</TabsTrigger>
-            <TabsTrigger value="movimientos">Movimientos ({movements.length})</TabsTrigger>
+            <TabsTrigger value="resumen">Arqueo</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="caja">
+            <CashFlowPanel
+              summary={summary}
+              movements={movements}
+              isOpen={shift.status === "open" && !shift.locked}
+              onNewMovement={() => setShowCash(true)}
+            />
+          </TabsContent>
 
           <TabsContent value="resumen">
             <div className="bg-card rounded-xl border p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-              {summary && Object.entries(summary).map(([k, v]) => (
+              {summary && Object.entries(summary)
+                .filter(([, v]) => typeof v === "number")
+                .map(([k, v]) => (
                 <div key={k} className="bg-muted/40 rounded-lg p-3">
                   <p className="text-[10px] text-muted-foreground capitalize">{k.replace(/_/g, " ")}</p>
-                  <p className="font-heading font-bold mt-0.5">${Number(v as number).toFixed(2)}</p>
+                  <p className="font-heading font-bold mt-0.5">
+                    {k === "transactions" ? Number(v as number) : `$${Number(v as number).toFixed(2)}`}
+                  </p>
                 </div>
               ))}
+              {shift.z_journal_entry_id && (
+                <div className="bg-success/10 border border-success/20 rounded-lg p-3">
+                  <p className="text-[10px] text-muted-foreground">Asiento de descuadre</p>
+                  <p className="font-heading font-bold mt-0.5 text-success">{String(shift.z_journal_entry_id).slice(0, 8)}</p>
+                </div>
+              )}
             </div>
           </TabsContent>
+
 
           <TabsContent value="ventas">
             <div className="bg-card rounded-xl border overflow-hidden">
@@ -247,29 +272,8 @@ export default function TurnoDetalle() {
             </div>
           </TabsContent>
 
-          <TabsContent value="movimientos">
-            <div className="bg-card rounded-xl border overflow-hidden">
-              <Table>
-                <TableHeader><TableRow>
-                  <TableHead className="text-xs">Hora</TableHead>
-                  <TableHead className="text-xs">Tipo</TableHead>
-                  <TableHead className="text-xs">Motivo</TableHead>
-                  <TableHead className="text-xs text-right">Monto</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {movements.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="text-xs">{format(new Date(m.created_at), "HH:mm")}</TableCell>
-                      <TableCell><Badge variant={m.movement_type === "cash_in" ? "default" : "destructive"} className="text-[10px]">{m.movement_type}</Badge></TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{m.reason || "—"}</TableCell>
-                      <TableCell className="text-xs text-right font-bold">${Number(m.amount).toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
-                  {movements.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">Sin movimientos</TableCell></TableRow>}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
+
+
         </Tabs>
       </div>
 
@@ -338,6 +342,15 @@ export default function TurnoDetalle() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CashMovementDialog
+        open={showCash}
+        onOpenChange={setShowCash}
+        shiftId={id ?? null}
+        availableCash={summary?.expected_cash}
+        onDone={fetchAll}
+      />
     </AppLayout>
+
   );
 }
