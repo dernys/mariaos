@@ -7,6 +7,18 @@ import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { useLocale } from "@/hooks/useLocale";
+import { useNavigate } from "react-router-dom";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { LogOut, Settings, ShieldCheck, User as UserIcon, Clock } from "lucide-react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -14,7 +26,9 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, title }: AppLayoutProps) {
-  const { profile } = useAuth();
+  const { profile, user, roles, signOut } = useAuth();
+  const { tenant } = useTenantContext();
+  const nav = useNavigate();
   useGlobalShortcuts();
   useLocale();
 
@@ -25,7 +39,8 @@ export function AppLayout({ children, title }: AppLayoutProps) {
         .join("")
         .slice(0, 2)
         .toUpperCase()
-    : "??";
+    : user?.email?.slice(0, 2).toUpperCase() ?? "??";
+
 
   return (
     <SidebarProvider>
