@@ -156,12 +156,36 @@ const Contabilidad = () => {
   });
   const accountsFiltered = !!accountsTable.search.trim() || Object.values(accountsTable.filters).some((v) => v && v !== "__all__");
 
+  const [entryFrom, setEntryFrom] = useState("");
+  const [entryTo, setEntryTo] = useState("");
+
+  const entriesInRange = useMemo(
+    () =>
+      entries.filter((e) => {
+        const d = (e.date || "").slice(0, 10);
+        if (entryFrom && d < entryFrom) return false;
+        if (entryTo && d > entryTo) return false;
+        return true;
+      }),
+    [entries, entryFrom, entryTo],
+  );
+
   const entriesTable = useTableState<JournalEntry>({
-    data: entries,
+    data: entriesInRange,
     searchKeys: ["entry_number", "description", "series"],
     initialPageSize: 25,
-    filterFns: { status: (e, v) => e.status === v },
+    filterFns: {
+      status: (e, v) => e.status === v,
+      series: (e, v) => (e.series || "") === v,
+      period: (e, v) => e.period_id === v,
+    },
   });
+
+  const entrySeriesOptions = useMemo(() => {
+    const set = new Set(entries.map((e) => e.series).filter((s): s is string => !!s));
+    return Array.from(set).sort().map((s) => ({ value: s, label: s }));
+  }, [entries]);
+
 
   const openNewAcc = (parent?: Account) => {
     setEditingAcc(null);
