@@ -681,12 +681,13 @@ const Inventario = () => {
               <div><Label>{t("modules.inventory.dialog.category")}</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
               <div>
                 <Label>{t("modules.inventory.table.warehouse")}</Label>
-                <Select value={form.warehouse_id} onValueChange={(v) => setForm({ ...form, warehouse_id: v })}>
-                  <SelectTrigger><SelectValue placeholder={t("modules.inventory.dialog.warehouseSelect")} /></SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={warehouseOptions}
+                  value={form.warehouse_id}
+                  onChange={(v) => setForm({ ...form, warehouse_id: v })}
+                  placeholder={t("modules.inventory.dialog.warehouseSelect")}
+                />
+
               </div>
             </div>
             <div className="grid grid-cols-4 gap-3">
