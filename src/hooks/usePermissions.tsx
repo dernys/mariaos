@@ -31,8 +31,10 @@ const NONE: Omit<ModulePermission, "slug"> = {
  * (union of all their roles) from role_permissions.
  */
 export function usePermissions() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, hasRole } = useAuth();
   const { isSuperadmin, loading: saLoading } = useSuperadmin();
+  const isAdmin = hasRole("admin");
+
 
   const query = useQuery({
     queryKey: ["my-permissions", user?.id],
