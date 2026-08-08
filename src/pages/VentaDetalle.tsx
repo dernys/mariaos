@@ -8,8 +8,12 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Receipt, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Receipt, User, Printer } from "lucide-react";
 import { format } from "date-fns";
+import { printThermalReceipt } from "@/lib/printReceipt";
+import { useTenantContext } from "@/hooks/useTenantContext";
+
 
 export default function VentaDetalle() {
   const { t } = useTranslation();
