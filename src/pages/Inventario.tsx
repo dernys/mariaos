@@ -437,6 +437,53 @@ const Inventario = () => {
         </TabsContent>
 
         <TabsContent value="movements" className="space-y-4">
+          <TableToolbar
+            search={movementTable.search}
+            onSearchChange={movementTable.setSearch}
+            searchPlaceholder={t("modules.inventory.searchProduct")}
+            filters={[
+              {
+                key: "movement_type", label: t("modules.inventory.table.type"),
+                value: movementTable.filters.movement_type || "__all__",
+                onChange: (v) => movementTable.setFilter("movement_type", v),
+                options: [
+                  { value: "entry", label: t("modules.inventory.movementType.entry") },
+                  { value: "exit", label: t("modules.inventory.movementType.exit") },
+                  { value: "adjustment", label: t("modules.inventory.movementType.adjustment") },
+                  { value: "transfer", label: t("modules.inventory.movementType.transfer") },
+                ],
+              },
+              {
+                key: "product", label: t("modules.inventory.table.product"),
+                value: movementTable.filters.product || "__all__",
+                onChange: (v) => movementTable.setFilter("product", v),
+                options: productOptions,
+              },
+              {
+                key: "location", label: t("modules.inventory.table.location"),
+                value: movementTable.filters.location || "__all__",
+                onChange: (v) => movementTable.setFilter("location", v),
+                options: locationOptions,
+              },
+            ]}
+            rightSlot={
+              <ExportButton
+                rows={movementTable.filtered}
+                filename="movimientos-inventario"
+                title={t("modules.inventory.tabs.movements")}
+                columns={[
+                  { key: "created_at", label: "Fecha" },
+                  { key: "productName", label: "Producto" },
+                  { key: "movement_type", label: "Tipo" },
+                  { key: "quantity", label: "Cantidad" },
+                  { key: "previous_stock", label: "Anterior" },
+                  { key: "new_stock", label: "Nuevo" },
+                  { key: "locationName", label: "Ubicación" },
+                  { key: "reason", label: "Motivo" },
+                ]}
+              />
+            }
+          />
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
               <TableHeader>
@@ -445,18 +492,20 @@ const Inventario = () => {
                   <TableHead className="text-xs">{t("modules.inventory.table.product")}</TableHead>
                   <TableHead className="text-xs">{t("modules.inventory.table.type")}</TableHead>
                   <TableHead className="text-xs">{t("modules.inventory.table.qty")}</TableHead>
-                  <TableHead className="text-xs">{t("modules.inventory.table.previousStock")}</TableHead>
-                  <TableHead className="text-xs">{t("modules.inventory.table.newStock")}</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell">{t("modules.inventory.table.previousStock")}</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell">{t("modules.inventory.table.newStock")}</TableHead>
+                  <TableHead className="text-xs hidden lg:table-cell">{t("modules.inventory.table.location")}</TableHead>
                   <TableHead className="text-xs hidden sm:table-cell">{t("modules.inventory.table.reason")}</TableHead>
+                  <TableHead className="text-xs w-20">{t("modules.inventory.table.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {movements.map((m) => (
+                {movementTable.paged.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="text-xs text-muted-foreground">
                       {format(new Date(m.created_at), "dd/MM/yy HH:mm")}
                     </TableCell>
-                    <TableCell className="text-xs font-medium">{getProductName(m.product_id)}</TableCell>
+                    <TableCell className="text-xs font-medium">{m.productName}</TableCell>
                     <TableCell>
                       <Badge variant={m.movement_type === "entry" ? "default" : "destructive"} className="text-[10px]">
                         {m.movement_type === "entry" ? t("modules.inventory.movementType.entry") : m.movement_type === "exit" ? t("modules.inventory.movementType.exit") : m.movement_type}
@@ -465,26 +514,80 @@ const Inventario = () => {
                     <TableCell className="text-xs font-heading font-bold">
                       {m.movement_type === "entry" ? "+" : "-"}{m.quantity}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{m.previous_stock}</TableCell>
-                    <TableCell className="text-xs font-heading font-semibold">{m.new_stock}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground hidden md:table-cell">{m.previous_stock}</TableCell>
+                    <TableCell className="text-xs font-heading font-semibold hidden md:table-cell">{m.new_stock}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">{m.locationName}</TableCell>
                     <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">{m.reason || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <button onClick={() => openEditMovement(m)} className="p-1.5 rounded hover:bg-muted transition-colors" title="Editar">
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => setHistoryMovId(m.id)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Historial">
+                          <History className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
-                {movements.length === 0 && (
+                {movementTable.total === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-xs">{t("modules.inventory.table.noMovements")}</TableCell>
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-xs">{t("modules.inventory.table.noMovements")}</TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
+            <TablePagination page={movementTable.page} pageSize={movementTable.pageSize} total={movementTable.total}
+              onPageChange={movementTable.setPage} onPageSizeChange={movementTable.setPageSize} />
           </div>
         </TabsContent>
 
         <TabsContent value="stock" className="space-y-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder={t("modules.inventory.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
+          <TableToolbar
+            search={stockTable.search}
+            onSearchChange={stockTable.setSearch}
+            searchPlaceholder={t("modules.inventory.searchProduct")}
+            filters={[
+              {
+                key: "location_type", label: t("modules.inventory.table.type"),
+                value: stockTable.filters.location_type || "__all__",
+                onChange: (v) => stockTable.setFilter("location_type", v),
+                options: [
+                  { value: "warehouse", label: t("modules.inventory.locationType.warehouse") },
+                  { value: "store", label: t("modules.inventory.locationType.store") },
+                ],
+              },
+              {
+                key: "location", label: t("modules.inventory.table.location"),
+                value: stockTable.filters.location || "__all__",
+                onChange: (v) => stockTable.setFilter("location", v),
+                options: locationOptions,
+              },
+              {
+                key: "level", label: t("modules.inventory.filterStatus"),
+                value: stockTable.filters.level || "__all__",
+                onChange: (v) => stockTable.setFilter("level", v),
+                options: [
+                  { value: "ok", label: t("modules.inventory.inStock") },
+                  { value: "low", label: t("modules.inventory.lowStock") },
+                  { value: "out", label: t("modules.inventory.outOfStock") },
+                ],
+              },
+            ]}
+            rightSlot={
+              <ExportButton
+                rows={stockTable.filtered}
+                filename="stock-por-ubicacion"
+                title={t("modules.inventory.tabs.stock")}
+                columns={[
+                  { key: "sku", label: "SKU" },
+                  { key: "productName", label: "Producto" },
+                  { key: "locationName", label: "Ubicación" },
+                  { key: "stock", label: "Stock" },
+                ]}
+              />
+            }
+          />
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
               <TableHeader>
@@ -497,7 +600,7 @@ const Inventario = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {stockRows.map((r) => (
+                {stockTable.paged.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="text-xs font-heading font-semibold">{r.sku}</TableCell>
                     <TableCell className="text-xs">{r.productName}</TableCell>
@@ -506,23 +609,26 @@ const Inventario = () => {
                     <TableCell className="text-xs font-heading font-bold">{r.stock}</TableCell>
                   </TableRow>
                 ))}
-                {stockRows.length === 0 && (
+                {stockTable.total === 0 && (
                   <TableRow><TableCell colSpan={5} className="text-center py-8 text-xs text-muted-foreground">{t("modules.inventory.table.noStockLocation")}</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
+            <TablePagination page={stockTable.page} pageSize={stockTable.pageSize} total={stockTable.total}
+              onPageChange={stockTable.setPage} onPageSizeChange={stockTable.setPageSize} />
           </div>
         </TabsContent>
 
         <TabsContent value="kardex" className="space-y-4">
           <div className="max-w-md">
             <Label className="text-xs">{t("modules.inventory.kardex.productLabel")}</Label>
-            <Select value={kardexProductId} onValueChange={setKardexProductId}>
-              <SelectTrigger><SelectValue placeholder={t("modules.inventory.kardex.selectProduct")} /></SelectTrigger>
-              <SelectContent>
-                {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={productOptions}
+              value={kardexProductId}
+              onChange={setKardexProductId}
+              placeholder={t("modules.inventory.kardex.selectProduct")}
+              searchPlaceholder={t("modules.inventory.searchProduct")}
+            />
           </div>
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
