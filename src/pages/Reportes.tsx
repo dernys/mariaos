@@ -1,369 +1,355 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
-import { useTenant } from "@/hooks/useTenant";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
-import { ExportButton } from "@/components/data/ExportButton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { DollarSign, TrendingUp, TrendingDown, Package, Users, ShoppingCart, AlertTriangle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line,
+  Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from "recharts";
+import {
+  AlertTriangle, DollarSign, Package, Percent, ShoppingCart, TrendingDown, TrendingUp, Users,
+} from "lucide-react";
+import { useAnalyticsRange } from "@/hooks/useAnalyticsRange";
+import { useSalesAnalytics } from "@/hooks/useSalesAnalytics";
+import { AnalyticsFilterBar } from "@/components/analytics/AnalyticsFilterBar";
+import { ChartCard } from "@/components/analytics/ChartCard";
+import { KpiGrid, KpiTile } from "@/components/analytics/KpiTile";
+import { AnalyticsTable } from "@/components/analytics/AnalyticsTable";
+import {
+  AXIS_TICK, GRID_STROKE, TOOLTIP_STYLE, colorAt, compactMoney, formatMoney,
+} from "@/lib/analytics/chartTheme";
 
-type Sale = { id: string; total: number; subtotal: number; tax: number; created_at: string; customer_id: string | null; employee_id: string | null; status: string };
-type SaleItem = { sale_id: string; product_id: string | null; product_name: string; qty: number; price: number; total: number; created_at: string };
-type SalePayment = { sale_id: string; method: string; amount_in_base: number };
-type Purchase = { total: number; created_at: string; status: string };
-
-const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+const ALL = "__all__";
 
 export default function Reportes() {
   const { t } = useTranslation();
-  const tenantId = useTenant();
-  const [from, setFrom] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
-  const [to, setTo] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [items, setItems] = useState<SaleItem[]>([]);
-  const [payments, setPayments] = useState<SalePayment[]>([]);
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [stockData, setStockData] = useState<any[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [employees, setEmployees] = useState<any[]>([]);
+  const range = useAnalyticsRange("30d");
+  const [storeId, setStoreId] = useState(ALL);
+  const [employeeId, setEmployeeId] = useState(ALL);
+  const [customerId, setCustomerId] = useState(ALL);
+  const a = useSalesAnalytics(range, { storeId, employeeId, customerId });
+  const money = (n: number) => formatMoney(n);
 
-  useEffect(() => {
-    if (!tenantId) return;
-    const f = startOfDay(new Date(from)).toISOString();
-    const t = endOfDay(new Date(to)).toISOString();
-    (async () => {
-      const [s, p, pu, st, cu, em] = await Promise.all([
-        supabase.from("sales").select("id,total,subtotal,tax,created_at,customer_id,employee_id,status").eq("tenant_id", tenantId).gte("created_at", f).lte("created_at", t).in("status", ["paid", "partial"]),
-        supabase.from("sale_payments").select("sale_id,method,amount_in_base,created_at").gte("created_at", f).lte("created_at", t),
-        supabase.from("purchases").select("total,created_at,status").eq("tenant_id", tenantId).gte("created_at", f).lte("created_at", t),
-        supabase.from("product_stock").select("product_id,stock,products(name,sku,price,cost,category,min_stock)").eq("tenant_id", tenantId),
-        supabase.from("customers").select("id,name,total_spent,visits_count,loyalty_points,loyalty_tier,balance,updated_at").eq("tenant_id", tenantId),
-        supabase.from("employees").select("id,name").eq("tenant_id", tenantId),
-      ]);
-      const saleIds = (s.data || []).map((x: any) => x.id);
-      let it: any[] = [];
-      if (saleIds.length) {
-        const { data } = await supabase.from("sale_items").select("sale_id,product_id,product_name,qty,price,total,created_at").in("sale_id", saleIds);
-        it = data || [];
-      }
-      setSales((s.data as any) || []);
-      setItems(it);
-      setPayments(((p.data as any) || []).filter((x: any) => saleIds.includes(x.sale_id)));
-      setPurchases((pu.data as any) || []);
-      setStockData((st.data as any) || []);
-      setCustomers((cu.data as any) || []);
-      setEmployees((em.data as any) || []);
-    })();
-  }, [tenantId, from, to]);
-
-  // KPIs
-  const totalSales = sales.reduce((a, s) => a + Number(s.total), 0);
-  const totalTax = sales.reduce((a, s) => a + Number(s.tax || 0), 0);
-  const txCount = sales.length;
-  const avgTicket = txCount ? totalSales / txCount : 0;
-  const totalPurchases = purchases.filter(p => p.status === "received").reduce((a, p) => a + Number(p.total), 0);
-  const cogs = items.reduce((a, i) => {
-    const sd = stockData.find((x: any) => x.product_id === i.product_id);
-    return a + Number(i.qty) * Number(sd?.products?.cost || 0);
-  }, 0);
-  const grossProfit = totalSales - cogs;
-  const margin = totalSales > 0 ? (grossProfit / totalSales) * 100 : 0;
-
-  // Sales by day
-  const salesByDay = useMemo(() => {
-    const map: Record<string, { date: string; total: number; tx: number }> = {};
-    sales.forEach((s) => {
-      const d = format(new Date(s.created_at), "dd/MM");
-      if (!map[d]) map[d] = { date: d, total: 0, tx: 0 };
-      map[d].total += Number(s.total);
-      map[d].tx += 1;
-    });
-    return Object.values(map);
-  }, [sales]);
-
-  // Top products
-  const topProducts = useMemo(() => {
-    const map: Record<string, { name: string; qty: number; total: number }> = {};
-    items.forEach((i) => {
-      const k = i.product_name;
-      if (!map[k]) map[k] = { name: k, qty: 0, total: 0 };
-      map[k].qty += Number(i.qty);
-      map[k].total += Number(i.total);
-    });
-    return Object.values(map).sort((a, b) => b.total - a.total).slice(0, 20);
-  }, [items]);
-
-  // Sales by employee
-  const salesByEmployee = useMemo(() => {
-    const map: Record<string, { name: string; total: number; tx: number }> = {};
-    sales.forEach((s) => {
-      const emp = employees.find((e) => e.id === s.employee_id);
-      const name = emp?.name || "Sin asignar";
-      if (!map[name]) map[name] = { name, total: 0, tx: 0 };
-      map[name].total += Number(s.total);
-      map[name].tx += 1;
-    });
-    return Object.values(map).sort((a, b) => b.total - a.total);
-  }, [sales, employees]);
-
-  // Sales by payment method
-  const byMethod = useMemo(() => {
-    const map: Record<string, { method: string; total: number }> = {};
-    payments.forEach((p) => {
-      if (!map[p.method]) map[p.method] = { method: p.method, total: 0 };
-      map[p.method].total += Number(p.amount_in_base);
-    });
-    return Object.values(map);
-  }, [payments]);
-
-  // Inventory
-  const invValue = stockData.reduce((a: number, s: any) => a + Number(s.stock) * Number(s.products?.cost || 0), 0);
-  const lowStock = stockData.filter((s: any) => Number(s.stock) <= Number(s.products?.min_stock || 0) && Number(s.products?.min_stock || 0) > 0);
-  const outStock = stockData.filter((s: any) => Number(s.stock) <= 0);
-
-  const productMovement = useMemo(() => {
-    const sold = new Set(items.map((i) => i.product_id));
-    return stockData.map((s: any) => ({
-      sku: s.products?.sku, name: s.products?.name, stock: s.stock,
-      cost: s.products?.cost, value: Number(s.stock) * Number(s.products?.cost || 0),
-      moved: sold.has(s.product_id),
-    }));
-  }, [stockData, items]);
-
-  // ABC analysis
-  const abc = useMemo(() => {
-    const sorted = [...topProducts].sort((a, b) => b.total - a.total);
-    const total = sorted.reduce((a, p) => a + p.total, 0);
-    let acc = 0;
-    return sorted.map((p) => {
-      acc += p.total;
-      const pct = total > 0 ? (acc / total) * 100 : 0;
-      const cls = pct <= 80 ? "A" : pct <= 95 ? "B" : "C";
-      return { ...p, pct, class: cls };
-    });
-  }, [topProducts]);
-
-  // Top customers
-  const customerSales = useMemo(() => {
-    const map: Record<string, { id: string; name: string; total: number; tx: number; lastDate: string }> = {};
-    sales.forEach((s) => {
-      if (!s.customer_id) return;
-      const c = customers.find((x) => x.id === s.customer_id);
-      const name = c?.name || "—";
-      if (!map[s.customer_id]) map[s.customer_id] = { id: s.customer_id, name, total: 0, tx: 0, lastDate: s.created_at };
-      map[s.customer_id].total += Number(s.total);
-      map[s.customer_id].tx += 1;
-      if (s.created_at > map[s.customer_id].lastDate) map[s.customer_id].lastDate = s.created_at;
-    });
-    return Object.values(map).sort((a, b) => b.total - a.total);
-  }, [sales, customers]);
-
-  const inactive = customers.filter((c) => !customerSales.find((cs) => cs.id === c.id));
+  const inactiveCustomers = a.customers.filter((c) => !a.byCustomer.some((cs) => cs.id === c.id));
 
   return (
     <AppLayout title={t("nav.items.reports")}>
       <div className="space-y-4">
-        <Card className="p-3 flex flex-wrap gap-3 items-end">
-          <div>
-            <Label className="text-xs">Desde</Label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-9 text-xs" />
-          </div>
-          <div>
-            <Label className="text-xs">Hasta</Label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-9 text-xs" />
-          </div>
-          <div className="flex gap-2 ml-auto">
-            {[7, 30, 90].map((d) => (
-              <button key={d} onClick={() => { setFrom(format(subDays(new Date(), d), "yyyy-MM-dd")); setTo(format(new Date(), "yyyy-MM-dd")); }}
-                className="text-xs px-3 py-1 rounded border hover:bg-muted">Últimos {d}d</button>
-            ))}
-          </div>
-        </Card>
+        <AnalyticsFilterBar
+          range={range}
+          onRefresh={a.refetch}
+          refreshing={a.fetching}
+          filters={[
+            { key: "store", label: "Tienda", value: storeId, onChange: setStoreId, options: a.stores.map((s) => ({ value: s.id, label: s.name })) },
+            { key: "employee", label: "Empleado", value: employeeId, onChange: setEmployeeId, options: a.employees.map((e) => ({ value: e.id, label: e.name })) },
+            { key: "customer", label: "Cliente", value: customerId, onChange: setCustomerId, options: a.customers.map((c) => ({ value: c.id, label: c.name })) },
+          ]}
+        />
 
         <Tabs defaultValue="ventas" className="space-y-4">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="ventas">Ventas</TabsTrigger>
             <TabsTrigger value="financiero">Financiero</TabsTrigger>
             <TabsTrigger value="inventario">Inventario</TabsTrigger>
             <TabsTrigger value="clientes">Clientes</TabsTrigger>
           </TabsList>
 
+          {/* ---------------- VENTAS ---------------- */}
           <TabsContent value="ventas" className="space-y-4">
-            <StatRow>
-              <MiniStatCard label="Ventas totales" value={`$${totalSales.toLocaleString()}`} icon={DollarSign} tone="success" />
-              <MiniStatCard label="Transacciones" value={txCount} icon={ShoppingCart} tone="primary" />
-              <MiniStatCard label="Ticket promedio" value={`$${avgTicket.toFixed(2)}`} icon={TrendingUp} />
-              <MiniStatCard label="Impuestos" value={`$${totalTax.toFixed(2)}`} />
-            </StatRow>
+            <KpiGrid>
+              <KpiTile label="Ventas totales" value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
+                current={a.kpis.revenue} previous={range.compare ? a.kpis.prevRevenue : undefined}
+                series={a.timeseries.map((p) => p.revenue)} />
+              <KpiTile label="Transacciones" value={String(a.kpis.tx)} icon={ShoppingCart} accentIndex={1}
+                current={a.kpis.tx} previous={range.compare ? a.kpis.prevTx : undefined} />
+              <KpiTile label="Ticket promedio" value={money(a.kpis.avgTicket)} icon={TrendingUp} accentIndex={2}
+                current={a.kpis.avgTicket} previous={range.compare ? a.kpis.prevAvgTicket : undefined} />
+              <KpiTile label="Impuestos" value={money(a.kpis.tax)} icon={Percent} accentIndex={3} />
+            </KpiGrid>
 
-            <Card className="p-4">
-              <h3 className="font-heading font-semibold mb-3">Ventas por día</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={salesByDay}>
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} />
-                </LineChart>
+            <ChartCard title="Evolución de ventas" subtitle={`${range.label} · ${a.kpis.tx} tickets`} loading={a.loading} empty={a.timeseries.length === 0} height={280}>
+              <ResponsiveContainer width="100%" height={280}>
+                <ComposedChart data={a.timeseries}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                  <XAxis dataKey="label" tick={AXIS_TICK} />
+                  <YAxis tick={AXIS_TICK} tickFormatter={compactMoney} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Area name="Ingresos" type="monotone" dataKey="revenue" stroke={colorAt(0)} fill={colorAt(0)} fillOpacity={0.15} strokeWidth={2} />
+                  {range.compare && (
+                    <Line name="Período anterior" type="monotone" dataKey="prevRevenue" stroke={colorAt(3)} strokeDasharray="4 4" strokeWidth={2} dot={false} />
+                  )}
+                </ComposedChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartCard>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <Card className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-heading font-semibold">Top productos</h3>
-                  <ExportButton rows={topProducts} filename="top-productos" title="Top productos"
-                    columns={[{ key: "name", label: "Producto" }, { key: "qty", label: "Cantidad" }, { key: "total", label: "Total" }]} />
-                </div>
-                <Table>
-                  <TableHeader><TableRow><TableHead>Producto</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {topProducts.slice(0, 10).map((p) => (
-                      <TableRow key={p.name}><TableCell className="text-xs">{p.name}</TableCell><TableCell className="text-right text-xs">{p.qty}</TableCell><TableCell className="text-right text-xs font-bold">${p.total.toFixed(2)}</TableCell></TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
-              <Card className="p-4">
-                <h3 className="font-heading font-semibold mb-3">Por método de pago</h3>
-                <ResponsiveContainer width="100%" height={220}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ChartCard title="Métodos de pago" subtitle="Importes en moneda base" loading={a.loading} empty={a.byMethod.length === 0}>
+                <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
-                    <Pie data={byMethod} dataKey="total" nameKey="method" cx="50%" cy="50%" outerRadius={80} label={(e: any) => `${e.method}: $${e.total.toFixed(0)}`}>
-                      {byMethod.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    <Pie data={a.byMethod} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={3}>
+                      {a.byMethod.map((_, i) => <Cell key={i} fill={colorAt(i)} />)}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>
-              </Card>
+              </ChartCard>
+              <ChartCard title="Ventas por día de la semana" loading={a.loading} empty={a.kpis.tx === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={a.byWeekday}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis dataKey="label" tick={AXIS_TICK} />
+                    <YAxis tick={AXIS_TICK} tickFormatter={compactMoney} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
+                      {a.byWeekday.map((_, i) => <Cell key={i} fill={colorAt(i)} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
             </div>
 
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-heading font-semibold">Por empleado</h3>
-                <ExportButton rows={salesByEmployee} filename="ventas-empleado" title="Ventas por empleado"
-                  columns={[{ key: "name", label: "Empleado" }, { key: "tx", label: "Tickets" }, { key: "total", label: "Total" }]} />
-              </div>
-              <Table>
-                <TableHeader><TableRow><TableHead>Empleado</TableHead><TableHead className="text-right">Tickets</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
-                <TableBody>{salesByEmployee.map((e) => (
-                  <TableRow key={e.name}><TableCell className="text-xs">{e.name}</TableCell><TableCell className="text-right text-xs">{e.tx}</TableCell><TableCell className="text-right text-xs font-bold">${e.total.toFixed(2)}</TableCell></TableRow>
-                ))}</TableBody>
-              </Table>
-            </Card>
+            <AnalyticsTable
+              title="Top productos"
+              rows={a.topProducts}
+              loading={a.loading}
+              filename="top-productos"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "revenue", desc: true }}
+              columns={[
+                { key: "name", label: "Producto", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "qty", label: "Unidades", align: "right", sortValue: (r) => r.qty, render: (r) => r.qty, exportValue: (r) => r.qty },
+                { key: "revenue", label: "Ingresos", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
+                { key: "margin", label: "Margen", align: "right", sortValue: (r) => r.margin, render: (r) => `${r.margin.toFixed(1)}%`, exportValue: (r) => r.margin.toFixed(1) },
+              ]}
+            />
+
+            <AnalyticsTable
+              title="Ventas por empleado"
+              rows={a.byEmployee}
+              loading={a.loading}
+              filename="ventas-empleado"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "revenue", desc: true }}
+              columns={[
+                { key: "name", label: "Empleado", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "tx", label: "Tickets", align: "right", sortValue: (r) => r.tx, render: (r) => r.tx, exportValue: (r) => r.tx },
+                { key: "revenue", label: "Total", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
+                { key: "avgTicket", label: "Ticket medio", align: "right", sortValue: (r) => r.avgTicket, render: (r) => money(r.avgTicket), exportValue: (r) => r.avgTicket.toFixed(2) },
+              ]}
+            />
           </TabsContent>
 
+          {/* ---------------- FINANCIERO ---------------- */}
           <TabsContent value="financiero" className="space-y-4">
-            <StatRow>
-              <MiniStatCard label="Ingresos" value={`$${totalSales.toLocaleString()}`} icon={DollarSign} tone="success" />
-              <MiniStatCard label="COGS estimado" value={`$${cogs.toLocaleString()}`} icon={Package} />
-              <MiniStatCard label="Margen bruto" value={`$${grossProfit.toLocaleString()}`} tone={grossProfit > 0 ? "success" : "destructive"} />
-              <MiniStatCard label="% Margen" value={`${margin.toFixed(1)}%`} tone={margin > 30 ? "success" : margin > 10 ? "warning" : "destructive"} icon={TrendingUp} />
-            </StatRow>
-            <Card className="p-4">
-              <h3 className="font-heading font-semibold mb-3">P&amp;L Simplificado</h3>
-              <Table>
-                <TableBody>
-                  <TableRow><TableCell>Ingresos por ventas</TableCell><TableCell className="text-right font-bold">${totalSales.toFixed(2)}</TableCell></TableRow>
-                  <TableRow><TableCell>(-) Costo de mercancía vendida</TableCell><TableCell className="text-right">${cogs.toFixed(2)}</TableCell></TableRow>
-                  <TableRow className="border-t-2"><TableCell className="font-bold">= Margen bruto</TableCell><TableCell className="text-right font-bold text-emerald-500">${grossProfit.toFixed(2)}</TableCell></TableRow>
-                  <TableRow><TableCell>(+) Compras del período</TableCell><TableCell className="text-right">${totalPurchases.toFixed(2)}</TableCell></TableRow>
-                  <TableRow><TableCell>(+) Impuestos cobrados</TableCell><TableCell className="text-right">${totalTax.toFixed(2)}</TableCell></TableRow>
-                </TableBody>
-              </Table>
-            </Card>
-            <Card className="p-4">
-              <h3 className="font-heading font-semibold mb-3">Flujo de caja diario</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={salesByDay}>
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="total" fill="hsl(var(--primary))" />
+            <KpiGrid>
+              <KpiTile label="Ingresos" value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
+                current={a.kpis.revenue} previous={range.compare ? a.kpis.prevRevenue : undefined} />
+              <KpiTile label="COGS estimado" value={money(a.kpis.cogs)} icon={Package} accentIndex={2} />
+              <KpiTile label="Utilidad bruta" value={money(a.kpis.grossProfit)} icon={TrendingUp} accentIndex={4} />
+              <KpiTile label="% Margen" value={`${a.kpis.margin.toFixed(1)}%`} icon={Percent} accentIndex={1} />
+            </KpiGrid>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ChartCard title="Estado de resultados simplificado" subtitle="Derivado de ventas e inventario del período" loading={a.loading} height={220}>
+                <Table>
+                  <TableBody className="text-xs">
+                    <TableRow><TableCell>Ingresos por ventas</TableCell><TableCell className="text-right font-semibold">{money(a.kpis.revenue)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">(-) Impuestos incluidos</TableCell><TableCell className="text-right">{money(a.kpis.tax)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">(-) Costo de mercancía vendida</TableCell><TableCell className="text-right">{money(a.kpis.cogs)}</TableCell></TableRow>
+                    <TableRow className="border-t-2">
+                      <TableCell className="font-semibold">= Utilidad bruta</TableCell>
+                      <TableCell className={`text-right font-bold ${a.kpis.grossProfit >= 0 ? "text-success" : "text-destructive"}`}>{money(a.kpis.grossProfit)}</TableCell>
+                    </TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">Compras recibidas del período</TableCell><TableCell className="text-right">{money(a.purchaseTotals.received)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">Compras pendientes</TableCell><TableCell className="text-right">{money(a.purchaseTotals.pending)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">Pendiente de cobro (fiado)</TableCell><TableCell className="text-right">{money(a.kpis.pendingCollection)}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
+              </ChartCard>
+
+              <ChartCard title="Flujo de ingresos" subtitle="Acumulado del período" loading={a.loading} empty={a.timeseries.length === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <AreaChart data={a.timeseries}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis dataKey="label" tick={AXIS_TICK} />
+                    <YAxis tick={AXIS_TICK} tickFormatter={compactMoney} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Area type="monotone" dataKey="cumulative" stroke={colorAt(0)} fill={colorAt(0)} fillOpacity={0.15} strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+
+            <AnalyticsTable
+              title="Margen por producto"
+              rows={a.topProducts}
+              loading={a.loading}
+              filename="margen-producto"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "profit", desc: true }}
+              columns={[
+                { key: "name", label: "Producto", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "revenue", label: "Ingresos", align: "right", sortValue: (r) => r.revenue, render: (r) => money(r.revenue), exportValue: (r) => r.revenue.toFixed(2) },
+                { key: "cost", label: "Costo", align: "right", sortValue: (r) => r.cost, render: (r) => money(r.cost), exportValue: (r) => r.cost.toFixed(2) },
+                { key: "profit", label: "Utilidad", align: "right", sortValue: (r) => r.profit, render: (r) => <span className={r.profit >= 0 ? "text-success font-semibold" : "text-destructive font-semibold"}>{money(r.profit)}</span>, exportValue: (r) => r.profit.toFixed(2) },
+                { key: "margin", label: "Margen", align: "right", sortValue: (r) => r.margin, render: (r) => <Badge variant={r.margin >= 30 ? "default" : r.margin >= 10 ? "secondary" : "destructive"}>{r.margin.toFixed(1)}%</Badge>, exportValue: (r) => r.margin.toFixed(1) },
+              ]}
+            />
+          </TabsContent>
+
+          {/* ---------------- INVENTARIO ---------------- */}
+          <TabsContent value="inventario" className="space-y-4">
+            <KpiGrid>
+              <KpiTile label="Productos" value={String(a.inventory.list.length)} icon={Package} accentIndex={1} />
+              <KpiTile label="Valor inventario" value={money(a.inventory.value)} icon={DollarSign} accentIndex={0} />
+              <KpiTile label="Stock bajo" value={String(a.inventory.low.length)} icon={TrendingDown} accentIndex={2} />
+              <KpiTile label="Sin stock" value={String(a.inventory.out.length)} icon={AlertTriangle} accentIndex={5} />
+            </KpiGrid>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ChartCard title="Clasificación ABC" subtitle="Concentración de ingresos por producto" loading={a.loading} empty={a.abc.length === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <ComposedChart data={a.abc.slice(0, 20)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis dataKey="name" tick={{ ...AXIS_TICK, fontSize: 9 }} hide />
+                    <YAxis yAxisId="l" tick={AXIS_TICK} tickFormatter={compactMoney} />
+                    <YAxis yAxisId="r" orientation="right" tick={AXIS_TICK} unit="%" domain={[0, 100]} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, n: any) => (n === "% acumulado" ? `${Number(v).toFixed(1)}%` : money(Number(v)))} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar yAxisId="l" name="Ingresos" dataKey="revenue" fill={colorAt(0)} radius={[3, 3, 0, 0]} />
+                    <Line yAxisId="r" name="% acumulado" type="monotone" dataKey="cumulative" stroke={colorAt(2)} strokeWidth={2} dot={false} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="Rotación e inmovilizado" subtitle="Indicadores clave de inventario" loading={a.loading} height={240}>
+                <div className="grid grid-cols-2 gap-3 h-full content-center">
+                  <div className="rounded-lg border p-3">
+                    <p className="text-[10px] uppercase text-muted-foreground">Rotación estimada</p>
+                    <p className="text-xl font-heading font-bold">{a.inventory.rotation.toFixed(2)}x</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-[10px] uppercase text-muted-foreground">Valor inmovilizado</p>
+                    <p className="text-xl font-heading font-bold">{money(a.inventory.idle.reduce((s, p) => s + p.value, 0))}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-[10px] uppercase text-muted-foreground">Sin movimiento</p>
+                    <p className="text-xl font-heading font-bold">{a.inventory.idle.length}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-[10px] uppercase text-muted-foreground">Unidades vendidas</p>
+                    <p className="text-xl font-heading font-bold">{a.kpis.units}</p>
+                  </div>
+                </div>
+              </ChartCard>
+            </div>
+
+            <AnalyticsTable
+              title="Análisis ABC detallado"
+              rows={a.abc}
+              loading={a.loading}
+              filename="analisis-abc"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "revenue", desc: true }}
+              columns={[
+                { key: "name", label: "Producto", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "qty", label: "Unidades", align: "right", sortValue: (r) => r.qty, render: (r) => r.qty, exportValue: (r) => r.qty },
+                { key: "revenue", label: "Ingresos", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
+                { key: "cumulative", label: "% acum.", align: "right", sortValue: (r) => r.cumulative, render: (r) => `${r.cumulative.toFixed(1)}%`, exportValue: (r) => r.cumulative.toFixed(1) },
+                { key: "klass", label: "Clase", sortValue: (r) => r.klass, render: (r) => <Badge variant={r.klass === "A" ? "default" : r.klass === "B" ? "secondary" : "outline"}>{r.klass}</Badge>, exportValue: (r) => r.klass },
+              ]}
+            />
+
+            <AnalyticsTable
+              title="Productos sin movimiento en el período"
+              rows={a.inventory.idle}
+              loading={a.loading}
+              filename="sin-movimiento"
+              searchKeys={(r) => `${r.sku} ${r.name}`}
+              initialSort={{ key: "value", desc: true }}
+              columns={[
+                { key: "sku", label: "SKU", sortValue: (r) => r.sku ?? "", render: (r) => r.sku, exportValue: (r) => r.sku ?? "" },
+                { key: "name", label: "Producto", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "stock", label: "Stock", align: "right", sortValue: (r) => Number(r.stock), render: (r) => r.stock, exportValue: (r) => r.stock },
+                { key: "value", label: "Valor inmovilizado", align: "right", sortValue: (r) => r.value, render: (r) => <span className="font-semibold">{money(r.value)}</span>, exportValue: (r) => r.value.toFixed(2) },
+              ]}
+            />
+
+            <AnalyticsTable
+              title="Alertas de reposición"
+              rows={a.inventory.low}
+              loading={a.loading}
+              filename="stock-bajo"
+              searchKeys={(r) => `${r.sku} ${r.name}`}
+              initialSort={{ key: "stock", desc: false }}
+              columns={[
+                { key: "sku", label: "SKU", sortValue: (r) => r.sku ?? "", render: (r) => r.sku, exportValue: (r) => r.sku ?? "" },
+                { key: "name", label: "Producto", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "stock", label: "Stock", align: "right", sortValue: (r) => Number(r.stock), render: (r) => <span className={Number(r.stock) <= 0 ? "text-destructive font-semibold" : "text-warning font-semibold"}>{r.stock}</span>, exportValue: (r) => r.stock },
+                { key: "min_stock", label: "Mínimo", align: "right", sortValue: (r) => Number(r.min_stock), render: (r) => r.min_stock, exportValue: (r) => r.min_stock },
+              ]}
+            />
+          </TabsContent>
+
+          {/* ---------------- CLIENTES ---------------- */}
+          <TabsContent value="clientes" className="space-y-4">
+            <KpiGrid>
+              <KpiTile label="Clientes registrados" value={String(a.customers.length)} icon={Users} accentIndex={1} />
+              <KpiTile label="Activos en período" value={String(a.byCustomer.length)} icon={TrendingUp} accentIndex={0}
+                current={a.kpis.uniqueCustomers} previous={range.compare ? a.kpis.prevUniqueCustomers : undefined} />
+              <KpiTile label="Inactivos" value={String(inactiveCustomers.length)} icon={TrendingDown} accentIndex={2} invertDelta />
+              <KpiTile label="Ticket promedio" value={money(a.kpis.avgTicket)} icon={DollarSign} accentIndex={3} />
+            </KpiGrid>
+
+            <ChartCard title="Concentración de clientes" subtitle="Top 10 por ingresos del período" loading={a.loading} empty={a.byCustomer.length === 0}>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={a.byCustomer.slice(0, 10)} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                  <XAxis type="number" tick={AXIS_TICK} tickFormatter={compactMoney} />
+                  <YAxis type="category" dataKey="name" tick={AXIS_TICK} width={110} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                  <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
+                    {a.byCustomer.slice(0, 10).map((_, i) => <Cell key={i} fill={colorAt(i)} />)}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
-            </Card>
-          </TabsContent>
+            </ChartCard>
 
-          <TabsContent value="inventario" className="space-y-4">
-            <StatRow>
-              <MiniStatCard label="Productos" value={stockData.length} icon={Package} tone="primary" />
-              <MiniStatCard label="Valor inventario" value={`$${invValue.toLocaleString()}`} icon={DollarSign} tone="success" />
-              <MiniStatCard label="Stock bajo" value={lowStock.length} icon={TrendingDown} tone={lowStock.length > 0 ? "warning" : "default"} />
-              <MiniStatCard label="Sin stock" value={outStock.length} icon={AlertTriangle} tone={outStock.length > 0 ? "destructive" : "default"} />
-            </StatRow>
+            <AnalyticsTable
+              title="Clientes activos"
+              rows={a.byCustomer}
+              loading={a.loading}
+              filename="clientes-activos"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "revenue", desc: true }}
+              columns={[
+                { key: "name", label: "Cliente", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "tx", label: "Compras", align: "right", sortValue: (r) => r.tx, render: (r) => r.tx, exportValue: (r) => r.tx },
+                { key: "revenue", label: "Total gastado", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
+                { key: "avgTicket", label: "Ticket medio", align: "right", sortValue: (r) => r.avgTicket, render: (r) => money(r.avgTicket), exportValue: (r) => r.avgTicket.toFixed(2) },
+                { key: "last", label: "Última visita", sortValue: (r) => r.last, render: (r) => new Date(r.last).toLocaleDateString("es"), exportValue: (r) => new Date(r.last).toLocaleDateString("es") },
+              ]}
+            />
 
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-heading font-semibold">Análisis ABC</h3>
-                <ExportButton rows={abc} filename="abc" title="Análisis ABC" columns={[
-                  { key: "name", label: "Producto" }, { key: "qty", label: "Qty" },
-                  { key: "total", label: "Ventas" }, { key: "pct", label: "% acum", format: (r) => r.pct.toFixed(1) },
-                  { key: "class", label: "Clase" }]} />
-              </div>
-              <Table>
-                <TableHeader><TableRow><TableHead>Producto</TableHead><TableHead className="text-right">Ventas</TableHead><TableHead className="text-right">% acum.</TableHead><TableHead>Clase</TableHead></TableRow></TableHeader>
-                <TableBody>{abc.slice(0, 25).map((p) => (
-                  <TableRow key={p.name}>
-                    <TableCell className="text-xs">{p.name}</TableCell>
-                    <TableCell className="text-right text-xs font-bold">${p.total.toFixed(2)}</TableCell>
-                    <TableCell className="text-right text-xs">{p.pct.toFixed(1)}%</TableCell>
-                    <TableCell><span className={`text-[10px] font-bold px-2 py-0.5 rounded ${p.class === "A" ? "bg-emerald-500/20 text-emerald-500" : p.class === "B" ? "bg-amber-500/20 text-amber-500" : "bg-muted"}`}>{p.class}</span></TableCell>
-                  </TableRow>
-                ))}</TableBody>
-              </Table>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-heading font-semibold">Sin movimiento en período</h3>
-                <ExportButton rows={productMovement.filter((p) => !p.moved && p.stock > 0)} filename="sin-movimiento" title="Productos sin movimiento"
-                  columns={[{ key: "sku", label: "SKU" }, { key: "name", label: "Producto" }, { key: "stock", label: "Stock" }, { key: "value", label: "Valor" }]} />
-              </div>
-              <Table>
-                <TableHeader><TableRow><TableHead>SKU</TableHead><TableHead>Producto</TableHead><TableHead className="text-right">Stock</TableHead><TableHead className="text-right">Valor inmovilizado</TableHead></TableRow></TableHeader>
-                <TableBody>{productMovement.filter((p) => !p.moved && p.stock > 0).slice(0, 25).map((p) => (
-                  <TableRow key={p.sku}><TableCell className="text-xs">{p.sku}</TableCell><TableCell className="text-xs">{p.name}</TableCell><TableCell className="text-right text-xs">{p.stock}</TableCell><TableCell className="text-right text-xs">${p.value.toFixed(2)}</TableCell></TableRow>
-                ))}</TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="clientes" className="space-y-4">
-            <StatRow>
-              <MiniStatCard label="Clientes" value={customers.length} icon={Users} tone="primary" />
-              <MiniStatCard label="Activos en período" value={customerSales.length} icon={TrendingUp} tone="success" />
-              <MiniStatCard label="Inactivos" value={inactive.length} icon={TrendingDown} tone={inactive.length > 0 ? "warning" : "default"} />
-              <MiniStatCard label="Ticket promedio" value={`$${avgTicket.toFixed(2)}`} icon={DollarSign} />
-            </StatRow>
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-heading font-semibold">Top clientes</h3>
-                <ExportButton rows={customerSales} filename="top-clientes" title="Top clientes"
-                  columns={[{ key: "name", label: "Cliente" }, { key: "tx", label: "Compras" }, { key: "total", label: "Total" }, { key: "lastDate", label: "Última compra", format: (r) => format(new Date(r.lastDate), "dd/MM/yyyy") }]} />
-              </div>
-              <Table>
-                <TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead className="text-right">Compras</TableHead><TableHead className="text-right">Total gastado</TableHead><TableHead>Última visita</TableHead></TableRow></TableHeader>
-                <TableBody>{customerSales.slice(0, 25).map((c) => (
-                  <TableRow key={c.id}><TableCell className="text-xs">{c.name}</TableCell><TableCell className="text-right text-xs">{c.tx}</TableCell><TableCell className="text-right text-xs font-bold">${c.total.toFixed(2)}</TableCell><TableCell className="text-xs text-muted-foreground">{format(new Date(c.lastDate), "dd/MM/yy")}</TableCell></TableRow>
-                ))}</TableBody>
-              </Table>
-            </Card>
-            <Card className="p-4">
-              <h3 className="font-heading font-semibold mb-3">Clientes inactivos en período</h3>
-              <Table>
-                <TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead className="text-right">Histórico</TableHead><TableHead>Nivel</TableHead><TableHead className="text-right">Saldo</TableHead></TableRow></TableHeader>
-                <TableBody>{inactive.slice(0, 25).map((c) => (
-                  <TableRow key={c.id}><TableCell className="text-xs">{c.name}</TableCell><TableCell className="text-right text-xs">${Number(c.total_spent || 0).toFixed(2)}</TableCell><TableCell className="text-xs capitalize">{c.loyalty_tier}</TableCell><TableCell className="text-right text-xs">${Number(c.balance || 0).toFixed(2)}</TableCell></TableRow>
-                ))}</TableBody>
-              </Table>
-            </Card>
+            <AnalyticsTable
+              title="Clientes inactivos en el período"
+              rows={inactiveCustomers}
+              loading={a.loading}
+              filename="clientes-inactivos"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "total_spent", desc: true }}
+              columns={[
+                { key: "name", label: "Cliente", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "total_spent", label: "Histórico", align: "right", sortValue: (r) => Number(r.total_spent || 0), render: (r) => money(Number(r.total_spent || 0)), exportValue: (r) => Number(r.total_spent || 0).toFixed(2) },
+                { key: "visits_count", label: "Visitas", align: "right", sortValue: (r) => Number(r.visits_count || 0), render: (r) => r.visits_count ?? 0, exportValue: (r) => r.visits_count ?? 0 },
+                { key: "loyalty_tier", label: "Nivel", sortValue: (r) => r.loyalty_tier ?? "", render: (r) => <Badge variant="outline" className="capitalize">{r.loyalty_tier ?? "—"}</Badge>, exportValue: (r) => r.loyalty_tier ?? "" },
+                { key: "balance", label: "Saldo", align: "right", sortValue: (r) => Number(r.balance || 0), render: (r) => <span className={Number(r.balance || 0) > 0 ? "text-warning font-semibold" : ""}>{money(Number(r.balance || 0))}</span>, exportValue: (r) => Number(r.balance || 0).toFixed(2) },
+              ]}
+            />
           </TabsContent>
         </Tabs>
       </div>
