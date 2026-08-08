@@ -4,9 +4,9 @@ Fecha: 2026-08-08 · Alcance: auditoría en vivo (SQL sobre la base real, tipos,
 
 ## 1. Estado inicial
 
-- 147 tablas en `public`, 56 pantallas, 17 edge functions.
+- 130 tablas y 17 vistas en `public`, 56 pantallas, 17 edge functions.
 - Motor contable operativo por triggers legacy + motor de eventos (`financial_events` + `posting_rules` + `post_financial_event`).
-- 3 tenants demo con datos transaccionales reales (Bar, Restaurante, Empresa comercial).
+- 3 tenants demo con datos transaccionales reales (Bar, Restaurante, Empresa comercial) + 3 tenants demo vacíos.
 - Reportes financieros implementados como RPC `SECURITY DEFINER` con guardas `is_superadmin/is_tenant_member`.
 
 ## 2. Problemas encontrados
@@ -35,7 +35,7 @@ Fecha: 2026-08-08 · Alcance: auditoría en vivo (SQL sobre la base real, tipos,
 | Invariante | Resultado |
 |-----------|-----------|
 | `SUM(debe) = SUM(haber)` global y por asiento | PASS (los 3 tenants) |
-| `ACTIVO = PASIVO + PATRIMONIO + RESULTADO` | PASS (t1 36.600 = 14.820 + 21.780; t2 52.808; t3 620.777) |
+| `ACTIVO = PASIVO + PATRIMONIO + RESULTADO` | PASS (t1 −255 = 24.033,76 − 24.288,76; t2 52.808 = 16.543 + 36.265; t3 574.944,50 = 60.170,14 + 514.774,36) |
 | Ventas `completed` con asiento | PASS (54/54) |
 | Compras `received/partial/paid` con asiento | PASS (las `pending/draft` no deben postear) |
 | Asientos sin tenant | PASS (0) |
@@ -64,8 +64,7 @@ RLS activa en todas las tablas; reportes y certificación con guarda explícita 
 
 ## 8. Testing
 
-- Tests existentes: 66 (7 ficheros) — todos pasaban antes del cambio.
-- Tests nuevos: 4 (`src/lib/finance/payrollInvariants.test.ts`, invariante de cuadre de nómina).
+- Suite actual: **70 tests en 8 ficheros, todos en verde** (66 previos + 4 de invariantes de nómina en `src/lib/finance/payrollInvariants.test.ts`).
 - Certificación en base de datos: 12 comprobaciones vía `certify_financial_integrity`.
 
 ## 9. Errores restantes / deuda técnica
@@ -84,3 +83,7 @@ RLS activa en todas las tablas; reportes y certificación con guarda explícita 
 - **P1** — Devengo de nómina (`accounts_payable` en la aprobación) con su asiento independiente del pago.
 - **P2** — Normalizar la migración divergente y reducir avisos del linter.
 - **P3** — E2E determinista del ciclo empresarial completo.
+
+---
+
+Revalidación 2026-08-08 23:30 UTC: 102 asientos `posted`, 2 en `draft`, 0 asientos sin `tenant_id`, 0 líneas contables huérfanas, 14/14 nóminas pagadas con asiento, 0 ventas `completed` sin asiento, `financial_events` sigue en 0 filas (P1 abierto).
