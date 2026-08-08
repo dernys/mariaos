@@ -9494,6 +9494,7 @@ export type Database = {
         Args: { p_customer_id: string; p_points: number; p_sale_id?: string }
         Returns: number
       }
+      refresh_shift_totals: { Args: { p_shift_id: string }; Returns: undefined }
       register_account_payment:
         | {
             Args: {
