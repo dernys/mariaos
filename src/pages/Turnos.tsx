@@ -254,12 +254,13 @@ const Turnos = () => {
                     <div className="flex items-center gap-3">
                       <div className="text-center">
                         <p className="text-[10px] text-muted-foreground">Inicio</p>
-                        <p className="font-heading font-bold text-xs">${sh.opening_cash}</p>
+                        <p className="font-heading font-bold text-xs">${Number(sh.opening_cash ?? 0).toFixed(2)}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-[10px] text-muted-foreground">Ventas</p>
-                        <p className="font-heading font-bold text-xs text-primary">${sh.total_sales ?? 0}</p>
+                        <p className="font-heading font-bold text-xs text-primary">${Number(sh.total_sales ?? 0).toFixed(2)}</p>
                       </div>
+
                     </div>
                   </div>
                   <div className="flex gap-2 mt-3 justify-end flex-wrap">
