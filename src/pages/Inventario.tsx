@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2, Globe, AlertTriangle, DollarSign, Layers } from "lucide-react";
+import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2, Globe, AlertTriangle, DollarSign, Layers, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,8 +29,10 @@ import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 // consume el módulo de Inventario (dominio + casos de uso + repositorio).
 import {
   useInventory, useSaveProduct, useDeleteProduct, useRegisterMovement, useUploadProductImage, useInventoryDeps,
+  useUpdateMovement, useMovementHistory,
   stockStatus, type Product, type Warehouse, type Store, type LocationStock, type Movement,
 } from "@/modules/inventory";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 const statusConfig = (stock: number, min: number) => {
   const status = stockStatus(stock, min);
