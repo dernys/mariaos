@@ -204,14 +204,94 @@ const Inventario = () => {
   };
 
   // Stock por ubicación: agrupa product_stock con producto y ubicación
-  const stockRows = locationStocks
-    .map((ls) => ({
-      ...ls,
-      productName: products.find((p) => p.id === ls.product_id)?.name || "—",
-      sku: products.find((p) => p.id === ls.product_id)?.sku || "—",
-      locationName: getLocationName(ls.location_type, ls.location_id),
-    }))
-    .filter((r) => r.productName.toLowerCase().includes(search.toLowerCase()) || r.sku.toLowerCase().includes(search.toLowerCase()));
+  const stockRowsAll = useMemo(
+    () =>
+      locationStocks.map((ls) => ({
+        ...ls,
+        productName: products.find((p) => p.id === ls.product_id)?.name || "—",
+        sku: products.find((p) => p.id === ls.product_id)?.sku || "—",
+        locationName: getLocationName(ls.location_type, ls.location_id),
+      })),
+    [locationStocks, products, warehouses, stores],
+  );
+
+  const stockTable = useTableState({
+    data: stockRowsAll,
+    searchKeys: ["productName", "sku", "locationName"],
+    initialPageSize: 25,
+    filterFns: {
+      location_type: (r, v) => (r.location_type || "") === v,
+      location: (r, v) => (r.location_id || "") === v,
+      level: (r, v) => {
+        const s = Number(r.stock || 0);
+        if (v === "out") return s <= 0;
+        if (v === "low") return s > 0 && s <= 5;
+        if (v === "ok") return s > 5;
+        return true;
+      },
+    },
+  });
+
+  const locationOptions = useMemo(
+    () => [
+      ...warehouses.map((w) => ({ value: w.id, label: `${w.name} (almacén)` })),
+      ...stores.map((s) => ({ value: s.id, label: `${s.name} (tienda)` })),
+    ],
+    [warehouses, stores],
+  );
+
+  const productOptions = useMemo(
+    () => products.map((p) => ({ value: p.id, label: p.name, hint: p.sku })),
+    [products],
+  );
+
+  // Movimientos con filtros y paginación
+  const movementRowsAll = useMemo(
+    () =>
+      movements.map((m) => ({
+        ...m,
+        productName: getProductName(m.product_id),
+        locationName: getLocationName(m.location_type, m.location_id),
+      })),
+    [movements, products, warehouses, stores],
+  );
+
+  const movementTable = useTableState({
+    data: movementRowsAll,
+    searchKeys: ["productName", "reason", "movement_type", "locationName"],
+    initialPageSize: 25,
+    filterFns: {
+      movement_type: (m, v) => m.movement_type === v,
+      product: (m, v) => m.product_id === v,
+      location: (m, v) => (m.location_id || "") === v,
+    },
+  });
+
+  // Edición e historial de movimientos
+  const updateMovementMutation = useUpdateMovement();
+  const [editMov, setEditMov] = useState<any | null>(null);
+  const [editMovForm, setEditMovForm] = useState({ reason: "", notes: "" });
+  const [historyMovId, setHistoryMovId] = useState<string | null>(null);
+  const movementHistory = useMovementHistory(historyMovId);
+
+  const openEditMovement = (m: any) => {
+    setEditMov(m);
+    setEditMovForm({ reason: m.reason || "", notes: (m as any).notes || "" });
+  };
+
+  const saveMovementEdit = async () => {
+    if (!editMov) return;
+    try {
+      await updateMovementMutation.mutateAsync({
+        id: editMov.id,
+        patch: { reason: editMovForm.reason || null, notes: editMovForm.notes || null },
+      });
+      toast({ title: t("common.saved", { defaultValue: "Guardado" }) });
+      setEditMov(null);
+    } catch (e: any) {
+      toast({ title: t("common.error"), description: String(e?.message ?? e), variant: "destructive" });
+    }
+  };
 
   const kardexMovements = kardexProductId ? movements.filter((m) => m.product_id === kardexProductId) : [];
 
