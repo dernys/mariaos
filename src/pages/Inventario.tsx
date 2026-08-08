@@ -800,7 +800,59 @@ const Inventario = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Editar movimiento */}
+      <Dialog open={!!editMov} onOpenChange={(o) => !o && setEditMov(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar movimiento</DialogTitle>
+            <DialogDescription>
+              {editMov?.productName} · {editMov ? format(new Date(editMov.created_at), "dd/MM/yy HH:mm") : ""} ·{" "}
+              {editMov?.movement_type} {editMov?.quantity} u.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <p className="text-[11px] text-muted-foreground">
+              Las cantidades de un movimiento no se modifican para preservar la trazabilidad contable: registra un ajuste si hay una diferencia real.
+            </p>
+            <div><Label>{t("modules.inventory.table.reason")}</Label><Input value={editMovForm.reason} onChange={(e) => setEditMovForm({ ...editMovForm, reason: e.target.value })} /></div>
+            <div><Label>Notas</Label><Input value={editMovForm.notes} onChange={(e) => setEditMovForm({ ...editMovForm, notes: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditMov(null)}>{t("modules.inventory.dialog.cancel")}</Button>
+            <Button onClick={saveMovementEdit} className="gradient-brand text-primary-foreground">{t("modules.inventory.dialog.save")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Historial del movimiento */}
+      <Dialog open={!!historyMovId} onOpenChange={(o) => !o && setHistoryMovId(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Historial del movimiento</DialogTitle>
+            <DialogDescription>Cambios registrados sobre este movimiento</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-72 overflow-y-auto">
+            {movementHistory.isLoading && <p className="text-xs text-muted-foreground">{t("common.loading")}</p>}
+            {(movementHistory.data ?? []).map((h: any) => (
+              <div key={h.id} className="border rounded-lg p-2.5 text-xs bg-muted/30">
+                <div className="flex justify-between">
+                  <span className="font-semibold">{h.field}</span>
+                  <span className="text-[10px] text-muted-foreground">{format(new Date(h.created_at), "dd/MM/yy HH:mm")}</span>
+                </div>
+                <p className="text-muted-foreground mt-1">
+                  <span className="line-through">{h.old_value || "—"}</span> → <span className="text-foreground">{h.new_value || "—"}</span>
+                </p>
+              </div>
+            ))}
+            {!movementHistory.isLoading && (movementHistory.data ?? []).length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-6">Sin cambios registrados</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
+
   );
 };
 
