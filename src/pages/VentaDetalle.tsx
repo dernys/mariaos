@@ -19,6 +19,7 @@ export default function VentaDetalle() {
   const { t } = useTranslation();
   const { id } = useParams();
   const nav = useNavigate();
+  const { tenant } = useTenantContext();
   const [sale, setSale] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
@@ -41,9 +42,38 @@ export default function VentaDetalle() {
 
   if (!sale) return <AppLayout title={t("common.sale")}><p className="text-sm text-muted-foreground">{t("common.loading")}</p></AppLayout>;
 
+  const reprint = (widthMm: 58 | 80 = 80) => {
+    printThermalReceipt({
+      ticketNumber: sale.ticket_number || sale.id.slice(0, 8),
+      tenantName: tenant?.name,
+      storeName: sale.store_name || undefined,
+      cashier: sale.employees?.name,
+      customer: sale.customers?.name || "Consumidor final",
+      date: new Date(sale.created_at),
+      items: items.map((i) => ({ name: i.product_name, qty: Number(i.qty), price: Number(i.price), total: Number(i.total) })),
+      subtotal: Number(sale.subtotal || 0),
+      tax: Number(sale.tax || 0),
+      total: Number(sale.total || 0),
+      paid: Number(sale.amount_paid || 0),
+      change: Math.max(0, Number(sale.amount_paid || 0) - Number(sale.total || 0)),
+      payments: payments.map((p) => ({ method: p.method, currency: p.currency, amount: Number(p.amount) })),
+      footer: "Reimpresión de ticket",
+      widthMm,
+    });
+  };
+
   return (
     <AppLayout title={`Venta ${sale.ticket_number || ""}`}>
       <div className="space-y-6">
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => reprint(80)}>
+            <Printer className="h-4 w-4" /> Imprimir ticket 80mm
+          </Button>
+          <Button variant="ghost" size="sm" className="gap-2" onClick={() => reprint(58)}>
+            <Printer className="h-4 w-4" /> 58mm
+          </Button>
+        </div>
+
         <DetailHeader
           icon={Receipt}
           title={sale.ticket_number || sale.id.slice(0, 8)}
