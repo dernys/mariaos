@@ -33,6 +33,8 @@ import CuCostSheetsTab from "@/components/accounting/CuCostSheetsTab";
 import { FinancialKpiPanel } from "@/components/accounting/FinancialKpiPanel";
 import { SmokeTestPanel } from "@/components/accounting/SmokeTestPanel";
 import { AccountingAuditPanel } from "@/components/accounting/AccountingAuditPanel";
+import { FinancialCertificationPanel } from "@/components/accounting/FinancialCertificationPanel";
+
 
 interface Account {
   id: string; code: string; name: string; type: string; nature: string;
@@ -759,7 +761,9 @@ const Contabilidad = () => {
             <TabsContent value="reports" className="space-y-4">
               <FinancialKpiPanel />
               <AccountingAuditPanel />
+              <FinancialCertificationPanel />
               <SmokeTestPanel />
+
               <AccountingReports accounts={accounts as any} />
             </TabsContent>
           </Tabs>
