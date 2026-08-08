@@ -149,9 +149,14 @@ export default function TurnoDetalle() {
           badges={[{ label: shift.status === "open" ? "Abierto" : "Cerrado", variant: shift.status === "open" ? "default" : "secondary" }]}
           kpis={[
             { label: "Caja inicial", value: `$${Number(shift.opening_cash || 0).toFixed(2)}` },
-            { label: "Ventas", value: `$${Number(shift.total_sales || 0).toFixed(2)}`, tone: "primary" },
-            { label: "Transacciones", value: shift.total_transactions || 0 },
-            { label: "Diferencia", value: `$${Number(shift.cash_difference || 0).toFixed(2)}`, tone: Math.abs(Number(shift.cash_difference || 0)) < 0.01 ? "success" : "warning" },
+            { label: "Ventas", value: `$${Number(summary?.total_sales ?? shift.total_sales ?? 0).toFixed(2)}`, tone: "primary" },
+            { label: "Transacciones", value: summary?.transactions ?? shift.total_transactions ?? 0 },
+            {
+              label: shift.status === "open" ? "Efectivo esperado" : "Diferencia",
+              value: `$${Number(shift.status === "open" ? (summary?.expected_cash ?? 0) : (shift.cash_difference ?? 0)).toFixed(2)}`,
+              tone: shift.status === "open" ? "success" : (Math.abs(Number(shift.cash_difference || 0)) < 0.01 ? "success" : "warning"),
+            },
+
           ]}
         />
 
