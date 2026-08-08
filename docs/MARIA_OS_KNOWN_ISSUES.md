@@ -1,6 +1,6 @@
 # MarIA OS — Known Issues
 
-Estado: 2026-08-08 (posterior a las correcciones de integridad financiera).
+Estado: 2026-08-08 23:30 UTC (revalidado con SQL en vivo tras las correcciones de integridad financiera).
 
 ## P0 — Bloqueantes
 Ninguno abierto.
@@ -8,7 +8,7 @@ Ninguno abierto.
 ## P1 — Críticos
 
 ### 1. `financial_events` sin emisores
-- **Problema**: la tabla `financial_events` tiene 0 filas; las reglas `payroll_expense`, `payroll_payment`, `bank_deposit/withdrawal/charge/interest`, `delivery_fee`, `loyalty_accrual` nunca se ejecutan.
+- **Problema**: la tabla `financial_events` tiene 0 filas (confirmado de nuevo el 2026-08-08 23:30 UTC); las reglas `payroll_expense`, `payroll_payment`, `bank_deposit/withdrawal/charge/interest`, `delivery_fee`, `loyalty_accrual` nunca se ejecutan.
 - **Causa raíz**: `post_financial_event` existe y es correcto, pero ningún trigger/RPC inserta eventos.
 - **Impacto**: el posteo real depende de triggers legacy y funciones dedicadas; comisiones de delivery y provisión de fidelización no llegan al mayor.
 - **Solución propuesta**: emitir eventos desde los flujos y retirar el trigger legacy equivalente solo cuando la comparación en modo sombra demuestre paridad (Strangler). Nunca ambos a la vez.

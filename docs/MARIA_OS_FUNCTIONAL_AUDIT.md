@@ -1,6 +1,6 @@
 # MarIA OS — Auditoría Funcional
 
-Fecha: 2026-08-08. Método: consultas SQL sobre la base real (147 tablas), lectura de código y ejecución de la suite de tests. No se marca nada como COMPLETA por la mera existencia de la pantalla.
+Fecha: 2026-08-08 (revalidado 23:30 UTC). Método: consultas SQL sobre la base real (130 tablas + 17 vistas en `public`), 56 pantallas, 17 edge functions, lectura de código y ejecución de la suite de tests (70/70 en verde). No se marca nada como COMPLETA por la mera existencia de la pantalla.
 
 Leyenda: COMPLETA · FUNCIONAL CON DEFECTOS · PARCIAL · MOCK · NO IMPLEMENTADA · ROTA
 
