@@ -152,16 +152,42 @@ const Contabilidad = () => {
     filterFns: {
       type: (a, v) => a.type === v,
       postable: (a, v) => (v === "yes" ? a.is_postable : !a.is_postable),
+      active: (a, v) => (v === "yes" ? a.is_active : !a.is_active),
     },
+
   });
   const accountsFiltered = !!accountsTable.search.trim() || Object.values(accountsTable.filters).some((v) => v && v !== "__all__");
 
+  const [entryFrom, setEntryFrom] = useState("");
+  const [entryTo, setEntryTo] = useState("");
+
+  const entriesInRange = useMemo(
+    () =>
+      entries.filter((e) => {
+        const d = (e.date || "").slice(0, 10);
+        if (entryFrom && d < entryFrom) return false;
+        if (entryTo && d > entryTo) return false;
+        return true;
+      }),
+    [entries, entryFrom, entryTo],
+  );
+
   const entriesTable = useTableState<JournalEntry>({
-    data: entries,
+    data: entriesInRange,
     searchKeys: ["entry_number", "description", "series"],
     initialPageSize: 25,
-    filterFns: { status: (e, v) => e.status === v },
+    filterFns: {
+      status: (e, v) => e.status === v,
+      series: (e, v) => (e.series || "") === v,
+      period: (e, v) => e.period_id === v,
+    },
   });
+
+  const entrySeriesOptions = useMemo(() => {
+    const set = new Set(entries.map((e) => e.series).filter((s): s is string => !!s));
+    return Array.from(set).sort().map((s) => ({ value: s, label: s }));
+  }, [entries]);
+
 
   const openNewAcc = (parent?: Account) => {
     setEditingAcc(null);
@@ -453,7 +479,18 @@ const Contabilidad = () => {
                       { value: "no", label: t("modules.accounting.accounts.filters.group") },
                     ],
                   },
+                  {
+                    key: "active",
+                    label: "Estado",
+                    value: accountsTable.filters.active || "__all__",
+                    onChange: (v) => accountsTable.setFilter("active", v),
+                    options: [
+                      { value: "yes", label: "Activas" },
+                      { value: "no", label: "Inactivas" },
+                    ],
+                  },
                 ]}
+
               />
 
               <div className="bg-card rounded-xl shadow-card border overflow-hidden">
@@ -602,8 +639,52 @@ const Contabilidad = () => {
                       { value: "reversed", label: t("modules.accounting.entries.statuses.reversed") },
                     ],
                   },
+                  {
+                    key: "series",
+                    label: "Serie",
+                    value: entriesTable.filters.series || "__all__",
+                    onChange: (v) => entriesTable.setFilter("series", v),
+                    options: entrySeriesOptions,
+                  },
+                  {
+                    key: "period",
+                    label: "Período",
+                    value: entriesTable.filters.period || "__all__",
+                    onChange: (v) => entriesTable.setFilter("period", v),
+                    options: periods.map((p) => ({ value: p.id, label: p.name })),
+                  },
                 ]}
+                rightSlot={
+                  <div className="flex items-end gap-2 flex-wrap">
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Desde</Label>
+                      <Input type="date" value={entryFrom} onChange={(e) => setEntryFrom(e.target.value)} className="h-9 text-xs w-[140px]" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Hasta</Label>
+                      <Input type="date" value={entryTo} onChange={(e) => setEntryTo(e.target.value)} className="h-9 text-xs w-[140px]" />
+                    </div>
+                    {(entryFrom || entryTo || entriesTable.search || Object.values(entriesTable.filters).some((v) => v && v !== "__all__")) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 text-xs"
+                        onClick={() => {
+                          setEntryFrom("");
+                          setEntryTo("");
+                          entriesTable.setSearch("");
+                          entriesTable.setFilter("status", "__all__");
+                          entriesTable.setFilter("series", "__all__");
+                          entriesTable.setFilter("period", "__all__");
+                        }}
+                      >
+                        Limpiar
+                      </Button>
+                    )}
+                  </div>
+                }
               />
+
 
               <div className="bg-card rounded-xl shadow-card border overflow-hidden">
                 <Table>
