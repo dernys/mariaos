@@ -89,10 +89,13 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const exchangeRates: Record<string, number> = {};
   currencies.forEach((c) => { exchangeRates[c.code] = c.exchange_rate; });
 
-  // Auto-enable partial when client/employee selected (allow leaving credit)
+  // Fiado solo con contraparte: se activa al seleccionar cliente/empleado y se
+  // desactiva automáticamente si la venta queda sin cliente ni empleado.
   useEffect(() => {
     if (partyType !== "none" && selectedParty) setIsPartial(true);
+    else setIsPartial(false);
   }, [partyType, selectedParty]);
+
 
   useEffect(() => {
     if (open) {
