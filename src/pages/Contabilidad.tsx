@@ -626,8 +626,52 @@ const Contabilidad = () => {
                       { value: "reversed", label: t("modules.accounting.entries.statuses.reversed") },
                     ],
                   },
+                  {
+                    key: "series",
+                    label: "Serie",
+                    value: entriesTable.filters.series || "__all__",
+                    onChange: (v) => entriesTable.setFilter("series", v),
+                    options: entrySeriesOptions,
+                  },
+                  {
+                    key: "period",
+                    label: "Período",
+                    value: entriesTable.filters.period || "__all__",
+                    onChange: (v) => entriesTable.setFilter("period", v),
+                    options: periods.map((p) => ({ value: p.id, label: p.name })),
+                  },
                 ]}
+                rightSlot={
+                  <div className="flex items-end gap-2 flex-wrap">
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Desde</Label>
+                      <Input type="date" value={entryFrom} onChange={(e) => setEntryFrom(e.target.value)} className="h-9 text-xs w-[140px]" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Hasta</Label>
+                      <Input type="date" value={entryTo} onChange={(e) => setEntryTo(e.target.value)} className="h-9 text-xs w-[140px]" />
+                    </div>
+                    {(entryFrom || entryTo || entriesTable.search || Object.values(entriesTable.filters).some((v) => v && v !== "__all__")) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 text-xs"
+                        onClick={() => {
+                          setEntryFrom("");
+                          setEntryTo("");
+                          entriesTable.setSearch("");
+                          entriesTable.setFilter("status", "__all__");
+                          entriesTable.setFilter("series", "__all__");
+                          entriesTable.setFilter("period", "__all__");
+                        }}
+                      >
+                        Limpiar
+                      </Button>
+                    )}
+                  </div>
+                }
               />
+
 
               <div className="bg-card rounded-xl shadow-card border overflow-hidden">
                 <Table>
