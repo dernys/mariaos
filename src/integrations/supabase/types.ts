@@ -8949,6 +8949,16 @@ export type Database = {
         Args: { p_reason: string; p_sale_id: string }
         Returns: undefined
       }
+      certify_financial_integrity: {
+        Args: { p_tenant: string }
+        Returns: {
+          actual: number
+          check_name: string
+          detail: string
+          expected: number
+          status: string
+        }[]
+      }
       claim_operation: {
         Args: {
           p_correlation_id?: string
