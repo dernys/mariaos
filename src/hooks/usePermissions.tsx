@@ -62,12 +62,14 @@ export function usePermissions() {
   const hasAnyPermission = Object.keys(permissions).length > 0;
 
   const get = (slug?: string): ModulePermission => {
-    if (isSuperadmin) return { slug: slug ?? "*", ...FULL };
+  const get = (slug?: string): ModulePermission => {
+    if (isSuperadmin || isAdmin) return { slug: slug ?? "*", ...FULL };
     if (!slug) return { slug: "*", ...FULL };
-    // No matrix configured for this user's roles at all → don't lock them out.
-    if (!hasAnyPermission) return { slug, ...FULL };
+    // Sin matriz configurada: solo administradores tienen acceso implícito.
+    if (!hasAnyPermission) return { slug, ...NONE };
     return permissions[slug] ?? { slug, ...NONE };
   };
+
 
   const can = (slug: string | undefined, action: PermissionAction = "view") => {
     const p = get(slug);
