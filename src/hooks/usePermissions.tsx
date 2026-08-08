@@ -62,7 +62,7 @@ export function usePermissions() {
   const hasAnyPermission = Object.keys(permissions).length > 0;
 
   const get = (slug?: string): ModulePermission => {
-  const get = (slug?: string): ModulePermission => {
+
     if (isSuperadmin || isAdmin) return { slug: slug ?? "*", ...FULL };
     if (!slug) return { slug: "*", ...FULL };
     // Sin matriz configurada: solo administradores tienen acceso implícito.
