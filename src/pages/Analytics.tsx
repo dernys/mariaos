@@ -1,187 +1,291 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
-import { useTenantContext } from "@/hooks/useTenantContext";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, LineChart, Line,
+  Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, Pie, PieChart,
+  ResponsiveContainer, Tooltip, XAxis, YAxis, Area, AreaChart, RadialBar, RadialBarChart,
 } from "recharts";
-import { motion } from "framer-motion";
-import { StatCard } from "@/components/StatCard";
 import {
-  DollarSign, ShoppingCart, Package, TrendingUp, Users, ArrowUpRight, ArrowDownRight, Calendar,
+  DollarSign, ShoppingCart, Package, TrendingUp, Users, Percent, Clock, Store, AlertCircle,
 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { useAnalyticsRange } from "@/hooks/useAnalyticsRange";
+import { useSalesAnalytics } from "@/hooks/useSalesAnalytics";
+import { AnalyticsFilterBar } from "@/components/analytics/AnalyticsFilterBar";
+import { ChartCard } from "@/components/analytics/ChartCard";
+import { KpiGrid, KpiTile } from "@/components/analytics/KpiTile";
+import { AnalyticsTable } from "@/components/analytics/AnalyticsTable";
+import {
+  AXIS_TICK, GRID_STROKE, TOOLTIP_STYLE, colorAt, compactMoney, formatMoney,
+} from "@/lib/analytics/chartTheme";
 
-const COLORS = [
-  "hsl(160, 84%, 39%)", "hsl(217, 91%, 60%)", "hsl(38, 92%, 50%)",
-  "hsl(0, 72%, 51%)", "hsl(280, 67%, 55%)", "hsl(170, 70%, 45%)",
-];
+const ALL = "__all__";
 
 const Analytics = () => {
   const { t } = useTranslation();
-  const { tenantId } = useTenantContext();
-  const [sales, setSales] = useState<any[]>([]);
-  const [saleItems, setSaleItems] = useState<any[]>([]);
-  const [period, setPeriod] = useState("7d");
-
-  useEffect(() => {
-    if (!tenantId) return;
-    const fetchData = async () => {
-      const daysAgo = period === "7d" ? 7 : period === "30d" ? 30 : 90;
-      const since = new Date(Date.now() - daysAgo * 86400000).toISOString();
-
-      const [salesRes, itemsRes] = await Promise.all([
-        supabase.from("sales").select("*").eq("tenant_id", tenantId).gte("created_at", since).order("created_at"),
-        supabase.from("sale_items").select("*, sales!inner(tenant_id, created_at)").eq("sales.tenant_id", tenantId).gte("sales.created_at", since),
-      ]);
-      if (salesRes.data) setSales(salesRes.data);
-      if (itemsRes.data) setSaleItems(itemsRes.data);
-    };
-    fetchData();
-  }, [tenantId, period]);
-
-  const totalRevenue = sales.reduce((s, sale) => s + (sale.total || 0), 0);
-  const totalTransactions = sales.length;
-  const avgTicket = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
-  const totalProducts = saleItems.reduce((s, i) => s + (i.qty || 0), 0);
-
-  // Sales by day
-  const salesByDay = useMemo(() => {
-    const map: Record<string, number> = {};
-    sales.forEach((s) => {
-      const day = new Date(s.created_at).toLocaleDateString("es", { weekday: "short" });
-      map[day] = (map[day] || 0) + (s.total || 0);
-    });
-    return Object.entries(map).map(([name, ventas]) => ({ name, ventas }));
-  }, [sales]);
-
-  // Top products
-  const topProducts = useMemo(() => {
-    const map: Record<string, { qty: number; revenue: number }> = {};
-    saleItems.forEach((i) => {
-      const key = i.product_name;
-      if (!map[key]) map[key] = { qty: 0, revenue: 0 };
-      map[key].qty += i.qty || 0;
-      map[key].revenue += i.total || 0;
-    });
-    return Object.entries(map)
-      .map(([name, data]) => ({ name, ...data }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 8);
-  }, [saleItems]);
-
-  // Sales by category (from product_name patterns)
-  const categoryData = useMemo(() => {
-    const map: Record<string, number> = {};
-    saleItems.forEach((i) => {
-      const cat = i.sku?.split("-")[0] || "Otros";
-      map[cat] = (map[cat] || 0) + (i.total || 0);
-    });
-    return Object.entries(map).map(([name, value], idx) => ({
-      name, value, color: COLORS[idx % COLORS.length],
-    }));
-  }, [saleItems]);
-
-  // Payment methods breakdown
-  const paymentBreakdown = useMemo(() => {
-    const map: Record<string, number> = {};
-    sales.forEach((s) => {
-      const method = s.status === "partial" ? "Fiado" : "Completo";
-      map[method] = (map[method] || 0) + 1;
-    });
-    return Object.entries(map).map(([name, value], idx) => ({
-      name, value, color: COLORS[idx % COLORS.length],
-    }));
-  }, [sales]);
+  const range = useAnalyticsRange("30d");
+  const [storeId, setStoreId] = useState(ALL);
+  const [employeeId, setEmployeeId] = useState(ALL);
+  const a = useSalesAnalytics(range, { storeId, employeeId });
+  const money = (n: number) => formatMoney(n);
+  const revenueSeries = a.timeseries.map((p) => p.revenue);
 
   return (
     <AppLayout title={t("nav.items.analytics")}>
       <div className="space-y-4">
-        {/* Period selector */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Periodo:</span>
+        <AnalyticsFilterBar
+          range={range}
+          onRefresh={a.refetch}
+          refreshing={a.fetching}
+          filters={[
+            { key: "store", label: "Tienda", value: storeId, onChange: setStoreId, options: a.stores.map((s) => ({ value: s.id, label: s.name })) },
+            { key: "employee", label: "Empleado", value: employeeId, onChange: setEmployeeId, options: a.employees.map((e) => ({ value: e.id, label: e.name })) },
+          ]}
+        />
+
+        {a.error && (
+          <div className="flex items-center gap-2 text-xs text-destructive border border-destructive/30 bg-destructive/5 rounded-lg p-3">
+            <AlertCircle className="h-4 w-4" /> {a.error.message}
           </div>
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-32 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Últimos 7 días</SelectItem>
-              <SelectItem value="30d">Últimos 30 días</SelectItem>
-              <SelectItem value="90d">Últimos 90 días</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        )}
 
-        {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard title="Ingresos Totales" value={`$${totalRevenue.toLocaleString()}`} change={`${totalTransactions} ventas`} changeType="positive" icon={DollarSign} />
-          <StatCard title="Transacciones" value={String(totalTransactions)} change="periodo seleccionado" changeType="positive" icon={ShoppingCart} />
-          <StatCard title="Productos Vendidos" value={String(totalProducts)} change={`${topProducts.length} diferentes`} changeType="positive" icon={Package} />
-          <StatCard title="Ticket Promedio" value={`$${avgTicket.toFixed(0)}`} change="por venta" changeType="positive" icon={TrendingUp} />
-        </div>
+        <KpiGrid>
+          <KpiTile label="Ingresos" value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
+            current={a.kpis.revenue} previous={range.compare ? a.kpis.prevRevenue : undefined}
+            hint={range.compare ? "vs período anterior" : range.label} series={revenueSeries} />
+          <KpiTile label="Transacciones" value={String(a.kpis.tx)} icon={ShoppingCart} accentIndex={1}
+            current={a.kpis.tx} previous={range.compare ? a.kpis.prevTx : undefined}
+            hint={`${a.kpis.skus} SKU distintos`} series={a.timeseries.map((p) => p.tx)} />
+          <KpiTile label="Ticket promedio" value={money(a.kpis.avgTicket)} icon={TrendingUp} accentIndex={2}
+            current={a.kpis.avgTicket} previous={range.compare ? a.kpis.prevAvgTicket : undefined}
+            series={a.timeseries.map((p) => p.avgTicket)} />
+          <KpiTile label="Margen bruto" value={`${a.kpis.margin.toFixed(1)}%`} icon={Percent} accentIndex={4}
+            hint={`${money(a.kpis.grossProfit)} de utilidad`} />
+        </KpiGrid>
 
-        {/* Charts row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-2 bg-card rounded-xl p-4 shadow-card border">
-            <h2 className="font-heading font-semibold text-sm mb-4">Ventas por Día</h2>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={salesByDay}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="name" tick={{ fill: "hsl(220, 9%, 46%)", fontSize: 11 }} />
-                <YAxis tick={{ fill: "hsl(220, 9%, 46%)", fontSize: 11 }} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(0,0%,100%)", border: "1px solid hsl(220,13%,91%)", borderRadius: "8px", fontSize: "11px" }} />
-                <Bar dataKey="ventas" fill="hsl(160, 84%, 39%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </motion.div>
+        <KpiGrid>
+          <KpiTile label="Unidades vendidas" value={String(a.kpis.units)} icon={Package} accentIndex={1} />
+          <KpiTile label="Clientes únicos" value={String(a.kpis.uniqueCustomers)} icon={Users} accentIndex={3}
+            current={a.kpis.uniqueCustomers} previous={range.compare ? a.kpis.prevUniqueCustomers : undefined} />
+          <KpiTile label="Impuestos" value={money(a.kpis.tax)} icon={Percent} accentIndex={2} />
+          <KpiTile label="Pendiente de cobro" value={money(a.kpis.pendingCollection)} icon={AlertCircle} accentIndex={5} invertDelta />
+        </KpiGrid>
 
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="bg-card rounded-xl p-4 shadow-card border">
-            <h2 className="font-heading font-semibold text-sm mb-4">Por Estado de Pago</h2>
-            <ResponsiveContainer width="100%" height={140}>
-              <PieChart>
-                <Pie data={paymentBreakdown} cx="50%" cy="50%" innerRadius={35} outerRadius={55} paddingAngle={3} dataKey="value">
-                  {paymentBreakdown.map((entry, i) => (<Cell key={i} fill={entry.color} />))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-1.5 mt-2">
-              {paymentBreakdown.map((cat) => (
-                <div key={cat.name} className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: cat.color }} />{cat.name}</span>
-                  <span className="font-heading font-semibold">{cat.value}</span>
-                </div>
-              ))}
+        <Tabs defaultValue="tendencia" className="space-y-4">
+          <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="tendencia">Tendencia</TabsTrigger>
+            <TabsTrigger value="mix">Mix de venta</TabsTrigger>
+            <TabsTrigger value="patrones">Patrones</TabsTrigger>
+            <TabsTrigger value="ranking">Rankings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="tendencia" className="space-y-4">
+            <ChartCard
+              title="Ingresos y transacciones"
+              subtitle={`${range.label} · granularidad ${range.granularity === "day" ? "diaria" : range.granularity === "week" ? "semanal" : "mensual"}`}
+              loading={a.loading}
+              empty={a.timeseries.length === 0}
+              height={300}
+            >
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={a.timeseries}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                  <XAxis dataKey="label" tick={AXIS_TICK} />
+                  <YAxis yAxisId="left" tick={AXIS_TICK} tickFormatter={compactMoney} />
+                  <YAxis yAxisId="right" orientation="right" tick={AXIS_TICK} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, n: any) => (n === "Tickets" ? v : money(Number(v)))} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar yAxisId="left" name="Ingresos" dataKey="revenue" fill={colorAt(0)} radius={[4, 4, 0, 0]} />
+                  {range.compare && (
+                    <Line yAxisId="left" name="Período anterior" type="monotone" dataKey="prevRevenue" stroke={colorAt(3)} strokeWidth={2} strokeDasharray="4 4" dot={false} />
+                  )}
+                  <Line yAxisId="right" name="Tickets" type="monotone" dataKey="tx" stroke={colorAt(1)} strokeWidth={2} dot={false} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ChartCard title="Ingresos acumulados" subtitle="Curva de crecimiento del período" loading={a.loading} empty={a.timeseries.length === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <AreaChart data={a.timeseries}>
+                    <defs>
+                      <linearGradient id="cumGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={colorAt(0)} stopOpacity={0.35} />
+                        <stop offset="100%" stopColor={colorAt(0)} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis dataKey="label" tick={AXIS_TICK} />
+                    <YAxis tick={AXIS_TICK} tickFormatter={compactMoney} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Area type="monotone" dataKey="cumulative" stroke={colorAt(0)} strokeWidth={2} fill="url(#cumGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="Ticket promedio por período" loading={a.loading} empty={a.timeseries.length === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <AreaChart data={a.timeseries}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis dataKey="label" tick={AXIS_TICK} />
+                    <YAxis tick={AXIS_TICK} tickFormatter={compactMoney} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Area type="monotone" dataKey="avgTicket" stroke={colorAt(2)} fill={colorAt(2)} fillOpacity={0.15} strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartCard>
             </div>
-          </motion.div>
-        </div>
+          </TabsContent>
 
-        {/* Top products */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card rounded-xl p-4 shadow-card border">
-          <h2 className="font-heading font-semibold text-sm mb-4">Top Productos por Ingreso</h2>
-          <div className="space-y-3">
-            {topProducts.map((product, i) => (
-              <div key={product.name} className="flex items-center gap-3">
-                <span className="text-xs font-bold text-muted-foreground w-5 font-heading shrink-0">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">{product.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{product.qty} uds vendidas</p>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                  <span className="text-xs font-semibold font-heading text-primary">${product.revenue.toLocaleString()}</span>
-                </div>
-              </div>
-            ))}
-            {topProducts.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-4">No hay datos de ventas en este periodo</p>
-            )}
-          </div>
-        </motion.div>
+          <TabsContent value="mix" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <ChartCard title="Por categoría" subtitle="Participación en ingresos" loading={a.loading} empty={a.byCategory.length === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie data={a.byCategory.slice(0, 6)} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={3}>
+                      {a.byCategory.slice(0, 6).map((_, i) => <Cell key={i} fill={colorAt(i)} />)}
+                    </Pie>
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="Métodos de pago" subtitle="Importe en moneda base" loading={a.loading} empty={a.byMethod.length === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <RadialBarChart data={a.byMethod.slice(0, 6).map((m, i) => ({ ...m, fill: colorAt(i) }))} innerRadius="30%" outerRadius="100%">
+                    <RadialBar dataKey="value" background cornerRadius={4} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} iconSize={8} />
+                  </RadialBarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="Por tienda" subtitle="Ingresos del período" loading={a.loading} empty={a.byStore.length === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={a.byStore.slice(0, 8)} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis type="number" tick={AXIS_TICK} tickFormatter={compactMoney} />
+                    <YAxis type="category" dataKey="name" tick={AXIS_TICK} width={90} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
+                      {a.byStore.slice(0, 8).map((_, i) => <Cell key={i} fill={colorAt(i)} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+
+            <AnalyticsTable
+              title="Rentabilidad por producto"
+              rows={a.topProducts}
+              loading={a.loading}
+              filename="rentabilidad-productos"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "revenue", desc: true }}
+              columns={[
+                { key: "name", label: "Producto", sortValue: (r) => r.name, render: (r) => <span className="font-medium">{r.name}</span>, exportValue: (r) => r.name },
+                { key: "qty", label: "Unidades", align: "right", sortValue: (r) => r.qty, render: (r) => r.qty, exportValue: (r) => r.qty },
+                { key: "revenue", label: "Ingresos", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
+                { key: "cost", label: "Costo", align: "right", sortValue: (r) => r.cost, render: (r) => money(r.cost), exportValue: (r) => r.cost.toFixed(2) },
+                { key: "profit", label: "Utilidad", align: "right", sortValue: (r) => r.profit, render: (r) => <span className={r.profit >= 0 ? "text-success font-semibold" : "text-destructive font-semibold"}>{money(r.profit)}</span>, exportValue: (r) => r.profit.toFixed(2) },
+                { key: "margin", label: "Margen", align: "right", sortValue: (r) => r.margin, render: (r) => <Badge variant={r.margin >= 30 ? "default" : r.margin >= 10 ? "secondary" : "destructive"}>{r.margin.toFixed(1)}%</Badge>, exportValue: (r) => r.margin.toFixed(1) },
+              ]}
+            />
+          </TabsContent>
+
+          <TabsContent value="patrones" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ChartCard title="Ventas por hora" subtitle="Identifica las horas punta" loading={a.loading} empty={a.kpis.tx === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={a.byHour}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis dataKey="label" tick={{ ...AXIS_TICK, fontSize: 9 }} interval={1} />
+                    <YAxis tick={AXIS_TICK} tickFormatter={compactMoney} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Bar dataKey="revenue" fill={colorAt(1)} radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="Ventas por día de la semana" loading={a.loading} empty={a.kpis.tx === 0}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={a.byWeekday}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis dataKey="label" tick={AXIS_TICK} />
+                    <YAxis tick={AXIS_TICK} tickFormatter={compactMoney} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => money(Number(v))} />
+                    <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
+                      {a.byWeekday.map((_, i) => <Cell key={i} fill={colorAt(i)} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+
+            <AnalyticsTable
+              title="Detalle por hora"
+              rows={a.byHour.filter((h) => h.tx > 0)}
+              loading={a.loading}
+              filename="ventas-por-hora"
+              initialSort={{ key: "revenue", desc: true }}
+              columns={[
+                { key: "label", label: "Hora", sortValue: (r) => r.hour, render: (r) => <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 text-muted-foreground" />{r.label}</span>, exportValue: (r) => r.label },
+                { key: "tx", label: "Tickets", align: "right", sortValue: (r) => r.tx, render: (r) => r.tx, exportValue: (r) => r.tx },
+                { key: "revenue", label: "Ingresos", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
+                { key: "avg", label: "Ticket medio", align: "right", sortValue: (r) => (r.tx ? r.revenue / r.tx : 0), render: (r) => money(r.tx ? r.revenue / r.tx : 0), exportValue: (r) => (r.tx ? r.revenue / r.tx : 0).toFixed(2) },
+              ]}
+            />
+          </TabsContent>
+
+          <TabsContent value="ranking" className="space-y-4">
+            <AnalyticsTable
+              title="Desempeño por empleado"
+              rows={a.byEmployee}
+              loading={a.loading}
+              filename="ventas-empleado"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "revenue", desc: true }}
+              columns={[
+                { key: "name", label: "Empleado", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "tx", label: "Tickets", align: "right", sortValue: (r) => r.tx, render: (r) => r.tx, exportValue: (r) => r.tx },
+                { key: "revenue", label: "Ingresos", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
+                { key: "avgTicket", label: "Ticket medio", align: "right", sortValue: (r) => r.avgTicket, render: (r) => money(r.avgTicket), exportValue: (r) => r.avgTicket.toFixed(2) },
+              ]}
+            />
+
+            <AnalyticsTable
+              title="Mejores clientes"
+              rows={a.byCustomer}
+              loading={a.loading}
+              filename="top-clientes"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "revenue", desc: true }}
+              columns={[
+                { key: "name", label: "Cliente", sortValue: (r) => r.name, render: (r) => r.name, exportValue: (r) => r.name },
+                { key: "tx", label: "Compras", align: "right", sortValue: (r) => r.tx, render: (r) => r.tx, exportValue: (r) => r.tx },
+                { key: "revenue", label: "Total", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
+                { key: "avgTicket", label: "Ticket medio", align: "right", sortValue: (r) => r.avgTicket, render: (r) => money(r.avgTicket), exportValue: (r) => r.avgTicket.toFixed(2) },
+                { key: "last", label: "Última compra", sortValue: (r) => r.last, render: (r) => new Date(r.last).toLocaleDateString("es"), exportValue: (r) => new Date(r.last).toLocaleDateString("es") },
+              ]}
+            />
+
+            <AnalyticsTable
+              title="Ingresos por tienda"
+              rows={a.byStore}
+              loading={a.loading}
+              filename="ventas-tienda"
+              searchKeys={(r) => r.name}
+              initialSort={{ key: "revenue", desc: true }}
+              columns={[
+                { key: "name", label: "Tienda", sortValue: (r) => r.name, render: (r) => <span className="inline-flex items-center gap-1"><Store className="h-3 w-3 text-muted-foreground" />{r.name}</span>, exportValue: (r) => r.name },
+                { key: "tx", label: "Tickets", align: "right", sortValue: (r) => r.tx, render: (r) => r.tx, exportValue: (r) => r.tx },
+                { key: "revenue", label: "Ingresos", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
+              ]}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );
