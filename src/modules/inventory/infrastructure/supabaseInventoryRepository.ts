@@ -95,3 +95,20 @@ export const supabaseInventoryRepository: InventoryRepository = {
     return data.publicUrl;
   },
 };
+
+/** Edición y auditoría de movimientos de inventario (no altera cantidades). */
+export const inventoryMovementAudit = {
+  async updateMovement(id: string, patch: { reason?: string | null; notes?: string | null; reference_type?: string | null }) {
+    const { error } = await supabase.from("inventory_movements").update(patch).eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+  async loadHistory(movementId: string) {
+    const { data, error } = await supabase
+      .from("inventory_movement_history")
+      .select("id, field, old_value, new_value, changed_by, created_at")
+      .eq("movement_id", movementId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+};
