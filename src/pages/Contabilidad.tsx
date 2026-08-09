@@ -34,6 +34,8 @@ import { FinancialKpiPanel } from "@/components/accounting/FinancialKpiPanel";
 import { SmokeTestPanel } from "@/components/accounting/SmokeTestPanel";
 import { AccountingAuditPanel } from "@/components/accounting/AccountingAuditPanel";
 import { FinancialCertificationPanel } from "@/components/accounting/FinancialCertificationPanel";
+import { FinancialHealthPanel } from "@/components/accounting/FinancialHealthPanel";
+
 
 
 interface Account {
