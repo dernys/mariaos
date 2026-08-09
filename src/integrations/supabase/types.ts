@@ -9305,6 +9305,16 @@ export type Database = {
           status: string
         }[]
       }
+      financial_health_check_tax: {
+        Args: { p_tenant: string }
+        Returns: {
+          area: string
+          check_name: string
+          detail: string
+          metric: number
+          status: string
+        }[]
+      }
       find_account_by_codes: {
         Args: { p_codes: string[]; p_tenant: string }
         Returns: string
