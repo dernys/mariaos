@@ -73,55 +73,79 @@ export type Database = {
       }
       accounting_accounts: {
         Row: {
+          account_subtype: string | null
+          allows_manual_entry: boolean
           balance: number
           code: string
+          control_role: string | null
           created_at: string
           currency: string | null
           description: string | null
           id: string
           is_active: boolean
+          is_control_account: boolean
           is_postable: boolean
+          is_system: boolean
           level: number
           name: string
           nature: string
           parent_id: string | null
           plan_template: string | null
+          requires_reconciliation: boolean
+          statement_section: string | null
+          tax_category: string | null
           tenant_id: string | null
           type: string
           updated_at: string
         }
         Insert: {
+          account_subtype?: string | null
+          allows_manual_entry?: boolean
           balance?: number
           code: string
+          control_role?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
+          is_control_account?: boolean
           is_postable?: boolean
+          is_system?: boolean
           level?: number
           name: string
           nature?: string
           parent_id?: string | null
           plan_template?: string | null
+          requires_reconciliation?: boolean
+          statement_section?: string | null
+          tax_category?: string | null
           tenant_id?: string | null
           type: string
           updated_at?: string
         }
         Update: {
+          account_subtype?: string | null
+          allows_manual_entry?: boolean
           balance?: number
           code?: string
+          control_role?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
+          is_control_account?: boolean
           is_postable?: boolean
+          is_system?: boolean
           level?: number
           name?: string
           nature?: string
           parent_id?: string | null
           plan_template?: string | null
+          requires_reconciliation?: boolean
+          statement_section?: string | null
+          tax_category?: string | null
           tenant_id?: string | null
           type?: string
           updated_at?: string
@@ -154,6 +178,54 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants_public"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_mappings: {
+        Row: {
+          account_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          mapping_key: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          mapping_key: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          mapping_key?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_mappings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_mappings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trial_balance_view"
+            referencedColumns: ["account_id"]
           },
         ]
       }
@@ -3814,13 +3886,17 @@ export type Database = {
       }
       journal_entries: {
         Row: {
+          correlation_id: string | null
           created_at: string
           created_by: string | null
+          currency: string | null
           date: string
           description: string | null
           entry_number: string
+          exchange_rate: number
           fiscal_year_id: string | null
           id: string
+          metadata: Json
           period_id: string | null
           posted_at: string | null
           posted_by: string | null
@@ -3829,18 +3905,23 @@ export type Database = {
           reversed_by: string | null
           reverses: string | null
           series: string
+          source_module: string | null
           status: string
           tenant_id: string | null
           updated_at: string
         }
         Insert: {
+          correlation_id?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string | null
           date?: string
           description?: string | null
           entry_number: string
+          exchange_rate?: number
           fiscal_year_id?: string | null
           id?: string
+          metadata?: Json
           period_id?: string | null
           posted_at?: string | null
           posted_by?: string | null
@@ -3849,18 +3930,23 @@ export type Database = {
           reversed_by?: string | null
           reverses?: string | null
           series?: string
+          source_module?: string | null
           status?: string
           tenant_id?: string | null
           updated_at?: string
         }
         Update: {
+          correlation_id?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string | null
           date?: string
           description?: string | null
           entry_number?: string
+          exchange_rate?: number
           fiscal_year_id?: string | null
           id?: string
+          metadata?: Json
           period_id?: string | null
           posted_at?: string | null
           posted_by?: string | null
@@ -3869,6 +3955,7 @@ export type Database = {
           reversed_by?: string | null
           reverses?: string | null
           series?: string
+          source_module?: string | null
           status?: string
           tenant_id?: string | null
           updated_at?: string
@@ -3938,30 +4025,48 @@ export type Database = {
           cost_center_id: string | null
           created_at: string
           credit: number
+          currency: string | null
           debit: number
           description: string | null
+          entity_id: string | null
+          entity_type: string | null
           entry_id: string
+          exchange_rate: number
           id: string
+          store_id: string | null
+          warehouse_id: string | null
         }
         Insert: {
           account_id: string
           cost_center_id?: string | null
           created_at?: string
           credit?: number
+          currency?: string | null
           debit?: number
           description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
           entry_id: string
+          exchange_rate?: number
           id?: string
+          store_id?: string | null
+          warehouse_id?: string | null
         }
         Update: {
           account_id?: string
           cost_center_id?: string | null
           created_at?: string
           credit?: number
+          currency?: string | null
           debit?: number
           description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
           entry_id?: string
+          exchange_rate?: number
           id?: string
+          store_id?: string | null
+          warehouse_id?: string | null
         }
         Relationships: [
           {
@@ -9190,6 +9295,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      financial_health_check: {
+        Args: { p_tenant: string }
+        Returns: {
+          area: string
+          check_name: string
+          detail: string
+          metric: number
+          status: string
+        }[]
+      }
+      financial_health_check_tax: {
+        Args: { p_tenant: string }
+        Returns: {
+          area: string
+          check_name: string
+          detail: string
+          metric: number
+          status: string
+        }[]
+      }
       find_account_by_codes: {
         Args: { p_codes: string[]; p_tenant: string }
         Returns: string
@@ -9667,6 +9792,10 @@ export type Database = {
       }
       resolve_fiscal_year_id: {
         Args: { p_date: string; p_tenant: string }
+        Returns: string
+      }
+      resolve_mapped_account: {
+        Args: { p_codes?: string[]; p_key: string; p_tenant: string }
         Returns: string
       }
       resolve_period: {
