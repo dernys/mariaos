@@ -16,8 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import {
   Calendar, DollarSign, Plus, CheckCircle2, Briefcase, Edit2, Trash2, FileText, AlertCircle,
-  Clock, Plane, TrendingUp, LogIn, LogOut, MapPin, XCircle, Users, ShieldCheck,
+  Clock, Plane, TrendingUp, LogIn, LogOut, MapPin, XCircle, Users, ShieldCheck, PenLine,
 } from "lucide-react";
+
 import { format, addDays } from "date-fns";
 import { PayrollEditDialog, type EditablePayroll } from "@/components/rrhh/PayrollEditDialog";
 import { PayrollBatchDialog } from "@/components/rrhh/PayrollBatchDialog";
