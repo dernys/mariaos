@@ -95,7 +95,9 @@ export default function RRHH() {
     deductions: "0",
   });
   const [preview, setPreview] = useState<{ hours: number; base: number; bonus: number; ded: number; gross: number; net: number } | null>(null);
+  const [computing, setComputing] = useState(false);
   const [editPayroll, setEditPayroll] = useState<EditablePayroll | null>(null);
+
   const [detailPayroll, setDetailPayroll] = useState<PayrollRow | null>(null);
   const [signPayroll, setSignPayroll] = useState<PayrollRow | null>(null);
   const [detailKey, setDetailKey] = useState(0);
