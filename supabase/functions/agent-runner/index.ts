@@ -94,6 +94,28 @@ async function gatherContext(supabase: any, tenantId: string, type: string) {
     ctx.suppliers = suppliers ?? [];
   }
 
+  // Logs contables detallados: el maestro de cuentas y la conciliación
+  // operación ↔ contabilidad son la base para diagnósticos y acciones del agente.
+  if (type === "cfo" || type === "compliance") {
+    const [mapping, recon, diag] = await Promise.all([
+      supabase.rpc("accounting_mapping_status", { p_tenant: tenantId }),
+      supabase.rpc("accounting_operation_reconciliation", { p_tenant: tenantId, p_from: null, p_to: null }),
+      supabase.rpc("financial_engine_diagnostics", { p_tenant: tenantId }),
+    ]);
+    ctx.account_master = (mapping.data ?? []).map((r: any) => ({
+      key: r.mapping_key, module: r.module, account: r.account_code, source: r.source,
+      type_ok: r.type_ok, detail: r.detail, remediation: r.remediation,
+    }));
+    ctx.accounting_reconciliation = (recon.data ?? []).map((r: any) => ({
+      module: r.module, documents: r.documents, unposted: r.documents_unposted,
+      documents_amount: r.documents_amount, posted_amount: r.posted_amount,
+      difference: r.difference, status: r.status, detail: r.detail, remediation: r.remediation,
+    }));
+    ctx.financial_diagnostics = (diag.data ?? [])
+      .filter((r: any) => r.status !== "pass" && r.status !== "ok")
+      .map((r: any) => ({ area: r.area, check: r.check_code, status: r.status, severity: r.severity, detail: r.detail }));
+  }
+
   return ctx;
 }
 
