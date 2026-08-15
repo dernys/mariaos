@@ -443,10 +443,10 @@ export function POSRestaurant() {
                 </div>
                 <button onClick={() => setCartOpen(false)} className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"><X className="h-4 w-4" /></button>
               </div>
-              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={t("pos.restaurantView.sendToCash")} extraActions={
+              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={activeOrderId ? `Cobrar orden $${total.toFixed(2)}` : t("pos.restaurantView.sendToCash")} onEditNote={openNote} extraActions={
                 <div className="flex gap-2 mb-2">
                   <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
-                    <Send className="h-3 w-3" /> {t("pos.restaurantView.sendToKitchen")}
+                    <Send className="h-3 w-3" /> {activeOrderId ? "Actualizar cocina" : t("pos.restaurantView.sendToKitchen")}
                   </Button>
                   <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
                     <SplitSquareVertical className="h-3 w-3" /> {t("pos.restaurantView.split")}
@@ -463,11 +463,16 @@ export function POSRestaurant() {
         <div className="p-4 border-b bg-gradient-to-r from-rose-500/10 to-transparent">
           <h2 className="font-heading font-semibold text-sm">🍽️ {t("pos.restaurantView.orderTitle")} {selectedTableName && `— ${selectedTableName}`}</h2>
           <p className="text-[10px] text-muted-foreground">{t("pos.restaurantView.dishesCount", { n: totalItems })} • ${subtotal.toLocaleString()} CUP</p>
+          {activeOrderId && (
+            <Badge variant="outline" className="mt-1 text-[9px] border-emerald-500/40 text-emerald-400">
+              Orden abierta en cocina · pendiente de cobro
+            </Badge>
+          )}
         </div>
-        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={t("pos.restaurantView.sendToCash")} extraActions={
+        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={activeOrderId ? `Cobrar orden $${total.toFixed(2)}` : t("pos.restaurantView.sendToCash")} onEditNote={openNote} extraActions={
           <div className="flex gap-2 mb-2">
             <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
-              <Send className="h-3 w-3" /> {t("pos.restaurantView.kitchen")}
+              <Send className="h-3 w-3" /> {activeOrderId ? "Actualizar cocina" : t("pos.restaurantView.kitchen")}
             </Button>
             <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
               <SplitSquareVertical className="h-3 w-3" /> {t("pos.restaurantView.split")}
@@ -476,8 +481,28 @@ export function POSRestaurant() {
         } />
       </div>
 
-      <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} />
+      <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} kitchenOrderId={activeOrderId} />
       <SplitBillDialog open={splitBillOpen} onOpenChange={setSplitBillOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSplitConfirm={(splits) => { toast({ title: t("pos.restaurantView.splitDone"), description: t("pos.restaurantView.splitDoneDesc", { n: splits.length }) }); }} />
+
+      {/* Modificaciones y sugerencias del plato */}
+      <Dialog open={noteItemId !== null} onOpenChange={(v) => { if (!v) setNoteItemId(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Modificaciones y sugerencias</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={noteDraft}
+            onChange={(e) => setNoteDraft(e.target.value)}
+            placeholder="Sin cebolla, término medio, salsa aparte…"
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNoteItemId(null)}>Cancelar</Button>
+            <Button onClick={saveNote}>Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+
 }
