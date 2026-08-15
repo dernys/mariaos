@@ -205,8 +205,35 @@ const PedidosOnline = () => {
     }
     toast({ title: `Pedido: ${ORDER_STATUS[status]?.label ?? status}` });
     fetchOrders();
+    setTimelineKey((k) => k + 1);
     if (selectedOrder?.id === order.id) setSelectedOrder({ ...selectedOrder, status });
   };
+
+  const autoAssign = async (order: OnlineOrder) => {
+    setBusy(order.id);
+    const { data, error } = await (supabase.rpc as any)("auto_assign_best_rider", { p_order_id: order.id });
+    setBusy(null);
+    if (error) return toast({ title: "No se pudo asignar", description: error.message, variant: "destructive" });
+    const res = data as any;
+    if (!res?.assigned) {
+      return toast({ title: "Sin repartidores disponibles", description: res?.reason ?? "Intenta más tarde o asigna manualmente.", variant: "destructive" });
+    }
+    toast({ title: `Asignado a ${res.rider_name}`, description: `Compatibilidad ${Number(res.score).toFixed(0)} · debe aceptar la entrega.` });
+    fetchOrders();
+    setTimelineKey((k) => k + 1);
+  };
+
+  const cancelDelivery = async (order: OnlineOrder) => {
+    const reason = window.prompt("Motivo de cancelación de la entrega:") ?? undefined;
+    setBusy(order.id);
+    const { error } = await (supabase.rpc as any)("cancel_delivery_assignment", { p_order_id: order.id, p_reason: reason || null });
+    setBusy(null);
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: "Entrega cancelada", description: "El pedido volvió al estado Listo." });
+    fetchOrders();
+    setTimelineKey((k) => k + 1);
+  };
+
 
   const filtered = orders.filter((o) => {
     if (filterStatus !== "all" && o.status !== filterStatus) return false;
