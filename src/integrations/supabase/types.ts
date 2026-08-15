@@ -9525,6 +9525,22 @@ export type Database = {
         Args: { p_profile_code: string; p_tenant_id: string }
         Returns: number
       }
+      apply_as_rider: {
+        Args: {
+          p_avatar_url?: string
+          p_bio?: string
+          p_document_id?: string
+          p_email?: string
+          p_experience_years?: number
+          p_full_name: string
+          p_phone: string
+          p_preferred_zone?: string
+          p_vehicle_details?: string
+          p_vehicle_plate?: string
+          p_vehicle_type: string
+        }
+        Returns: string
+      }
       apply_coupon_to_sale: {
         Args: { p_coupon_id: string; p_discount: number; p_sale_id: string }
         Returns: undefined
@@ -9683,6 +9699,10 @@ export type Database = {
           p_tax_rate?: number
           p_tenant: string
         }
+        Returns: string
+      }
+      confirm_online_order: {
+        Args: { p_order_id: string; p_payments?: Json }
         Returns: string
       }
       create_fiscal_year: {
@@ -10083,19 +10103,39 @@ export type Database = {
         Args: { _method?: string; _notes?: string; _payroll_id: string }
         Returns: string
       }
-      place_online_order: {
-        Args: {
-          p_customer_email?: string
-          p_customer_name: string
-          p_customer_phone: string
-          p_delivery_address?: string
-          p_delivery_type?: string
-          p_items: Json
-          p_notes?: string
-          p_tenant_id: string
-        }
-        Returns: string
-      }
+      place_online_order:
+        | {
+            Args: {
+              p_customer_email?: string
+              p_customer_name: string
+              p_customer_phone: string
+              p_delivery_address?: string
+              p_delivery_type?: string
+              p_items: Json
+              p_notes?: string
+              p_tenant_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_customer_email?: string
+              p_customer_name: string
+              p_customer_phone: string
+              p_delivery_address?: string
+              p_delivery_instructions?: string
+              p_delivery_lat?: number
+              p_delivery_lng?: number
+              p_delivery_type?: string
+              p_items: Json
+              p_notes?: string
+              p_payment_method?: string
+              p_store_id?: string
+              p_tenant_id: string
+              p_zone_id?: string
+            }
+            Returns: string
+          }
       post_financial_event: { Args: { p_event_id: string }; Returns: string }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
       post_payment_journal_entry: {
@@ -10143,6 +10183,17 @@ export type Database = {
         Returns: undefined
       }
       public_demo_stats: { Args: never; Returns: Json }
+      rate_delivery: {
+        Args: {
+          p_comment?: string
+          p_criteria?: Json
+          p_order_id: string
+          p_ratee_role: string
+          p_rater_role: string
+          p_stars: number
+        }
+        Returns: string
+      }
       rebuild_general_ledger:
         | { Args: { p_period_id: string }; Returns: number }
         | { Args: { p_period: string; p_tenant: string }; Returns: number }
@@ -10168,6 +10219,40 @@ export type Database = {
       receive_stock_transfer: {
         Args: { p_transfer_id: string }
         Returns: undefined
+      }
+      recommend_orders_for_rider: {
+        Args: { p_limit?: number }
+        Returns: {
+          assignment_id: string
+          business_name: string
+          delivery_fee: number
+          distance_to_pickup: number
+          dropoff_address: string
+          extra_distance: number
+          online_order_id: string
+          pickup_address: string
+          reasons: Json
+          score: number
+          tenant_id: string
+          total: number
+        }[]
+      }
+      recommend_riders_for_order: {
+        Args: { p_limit?: number; p_order_id: string }
+        Returns: {
+          acceptance_rate: number
+          active_deliveries: number
+          avatar_url: string
+          deliveries_completed: number
+          distance_km: number
+          full_name: string
+          punctuality: number
+          rating_avg: number
+          reasons: Json
+          rider_profile_id: string
+          score: number
+          vehicle_type: string
+        }[]
       }
       recompute_cu_cost_sheet: {
         Args: { p_cost_sheet_id: string }
@@ -10298,6 +10383,15 @@ export type Database = {
           type: string
         }[]
       }
+      request_delivery_assignment: {
+        Args: {
+          p_order_id: string
+          p_reasons?: Json
+          p_rider_profile_id: string
+          p_score?: number
+        }
+        Returns: string
+      }
       request_leave: {
         Args: {
           p_employee_id: string
@@ -10363,6 +10457,18 @@ export type Database = {
         Returns: string
       }
       revert_sale_stock: { Args: { p_sale_id: string }; Returns: undefined }
+      review_rider_application: {
+        Args: { p_notes?: string; p_rider_id: string; p_status: string }
+        Returns: undefined
+      }
+      rider_advance_delivery: {
+        Args: { p_assignment_id: string; p_status: string }
+        Returns: undefined
+      }
+      rider_respond_assignment: {
+        Args: { p_accept: boolean; p_assignment_id: string; p_reason?: string }
+        Returns: undefined
+      }
       sale_returnable_items: {
         Args: { p_sale_id: string }
         Returns: {
@@ -10375,12 +10481,33 @@ export type Database = {
           sale_item_id: string
         }[]
       }
+      sales_channel_summary: {
+        Args: { p_from?: string; p_tenant_id: string; p_to?: string }
+        Returns: {
+          amount: number
+          avg_ticket: number
+          channel: string
+          customers: number
+          fulfillment: string
+          returns_amount: number
+          returns_count: number
+          sales_count: number
+        }[]
+      }
       seed_default_tax_brackets: {
         Args: { _tenant: string; _year?: number }
         Returns: undefined
       }
       set_employee_pin: {
         Args: { _employee_id: string; _pin: string }
+        Returns: undefined
+      }
+      set_online_order_status: {
+        Args: { p_order_id: string; p_reason?: string; p_status: string }
+        Returns: undefined
+      }
+      set_rider_availability: {
+        Args: { p_availability: string }
         Returns: undefined
       }
       settle_consignment_lots: {
@@ -10408,6 +10535,17 @@ export type Database = {
       twin_baseline: {
         Args: { p_days?: number; p_tenant_id: string }
         Returns: Json
+      }
+      update_rider_location: {
+        Args: {
+          p_accuracy?: number
+          p_battery?: number
+          p_heading?: number
+          p_lat: number
+          p_lng: number
+          p_speed?: number
+        }
+        Returns: undefined
       }
       update_shift: {
         Args: {
