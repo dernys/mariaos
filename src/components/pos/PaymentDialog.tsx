@@ -63,9 +63,12 @@ interface PaymentDialogProps {
   tax: number;
   total: number;
   onSaleComplete: () => void;
+  /** Orden de cocina que se está cobrando (bar/restaurante). */
+  kitchenOrderId?: string | null;
 }
 
-export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, onSaleComplete }: PaymentDialogProps) {
+export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, onSaleComplete, kitchenOrderId }: PaymentDialogProps) {
+
   const { t } = useTranslation();
   const { toast } = useToast();
   const { settings: posSettings } = usePOSSettings();
