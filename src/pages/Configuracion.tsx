@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Tag, Percent, Coins, CreditCard, ShoppingCart, Settings2, Scale } from "lucide-react";
+import { Building2, Tag, Percent, Coins, CreditCard, ShoppingCart, Settings2, Scale, Users, Bike } from "lucide-react";
 import { ConfigGeneral } from "@/components/config/ConfigGeneral";
 import { ConfigCategories } from "@/components/config/ConfigCategories";
 import { ConfigTaxRates } from "@/components/config/ConfigTaxRates";
@@ -10,6 +10,9 @@ import { ConfigPaymentMethods } from "@/components/config/ConfigPaymentMethods";
 import { ConfigPOS } from "@/components/config/ConfigPOS";
 import { ConfigModules } from "@/components/config/ConfigModules";
 import { ConfigFiscalRules } from "@/components/config/ConfigFiscalRules";
+import { ConfigHR } from "@/components/config/ConfigHR";
+import { ConfigDelivery } from "@/components/config/ConfigDelivery";
+
 
 
 const Configuracion = () => {
