@@ -57,9 +57,11 @@ interface Props {
   orderId: string | null;
   onOpenChange: (open: boolean) => void;
   onAssigned?: () => void;
+  /** Cancela la entrega activa y crea una nueva con el repartidor elegido */
+  reassign?: boolean;
 }
 
-export const RiderRecommendationDialog = ({ orderId, onOpenChange, onAssigned }: Props) => {
+export const RiderRecommendationDialog = ({ orderId, onOpenChange, onAssigned, reassign = false }: Props) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [recs, setRecs] = useState<RiderRecommendation[]>([]);
@@ -80,21 +82,31 @@ export const RiderRecommendationDialog = ({ orderId, onOpenChange, onAssigned }:
   const assign = async (r: RiderRecommendation) => {
     if (!orderId) return;
     setAssigning(r.rider_profile_id);
-    const { error } = await supabase.rpc("request_delivery_assignment" as any, {
-      p_order_id: orderId,
-      p_rider_profile_id: r.rider_profile_id,
-      p_score: r.score,
-      p_reasons: r.reasons,
-    });
+    const { error } = reassign
+      ? await supabase.rpc("reassign_delivery" as any, {
+          p_order_id: orderId,
+          p_rider_profile_id: r.rider_profile_id,
+          p_reason: "Reasignado por el negocio",
+        })
+      : await supabase.rpc("request_delivery_assignment" as any, {
+          p_order_id: orderId,
+          p_rider_profile_id: r.rider_profile_id,
+          p_score: r.score,
+          p_reasons: r.reasons,
+        });
     setAssigning(null);
     if (error) {
       toast({ title: "No se pudo asignar", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Solicitud enviada", description: `${r.full_name} debe aceptar la entrega.` });
+    toast({
+      title: reassign ? "Entrega reasignada" : "Solicitud enviada",
+      description: `${r.full_name} debe aceptar la entrega.`,
+    });
     onOpenChange(false);
     onAssigned?.();
   };
+
 
   return (
     <Dialog open={!!orderId} onOpenChange={onOpenChange}>
