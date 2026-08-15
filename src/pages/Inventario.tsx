@@ -539,12 +539,12 @@ const Inventario = () => {
                     </TableCell>
                     <TableCell className="text-xs font-medium">{m.productName}</TableCell>
                     <TableCell>
-                      <Badge variant={m.movement_type === "entry" ? "default" : "destructive"} className="text-[10px]">
-                        {m.movement_type === "entry" ? t("modules.inventory.movementType.entry") : m.movement_type === "exit" ? t("modules.inventory.movementType.exit") : m.movement_type}
+                      <Badge variant={movementDelta(m) >= 0 ? "default" : "destructive"} className="text-[10px]">
+                        {movementTypeLabel(m.movement_type)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs font-heading font-bold">
-                      {m.movement_type === "entry" ? "+" : "-"}{m.quantity}
+                      {movementDelta(m) > 0 ? "+" : ""}{movementDelta(m)}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground hidden md:table-cell">{m.previous_stock}</TableCell>
                     <TableCell className="text-xs font-heading font-semibold hidden md:table-cell">{m.new_stock}</TableCell>
