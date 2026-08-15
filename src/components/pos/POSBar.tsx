@@ -346,7 +346,11 @@ export function POSBar() {
                 <div><h2 className="font-heading font-semibold text-sm">🍸 {t("pos.bar.account")}</h2><p className="text-[10px] text-muted-foreground">{t("pos.bar.itemsCount", { n: totalItems })}</p></div>
                 <button onClick={() => setCartOpen(false)} className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"><X className="h-4 w-4" /></button>
               </div>
-              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.bar.taxLabel", { rate: taxRatePct })} />
+              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.bar.taxLabel", { rate: taxRatePct })} checkoutLabel={activeOrderId ? `Cobrar cuenta $${total.toFixed(2)}` : undefined} extraActions={
+                <Button size="sm" variant="outline" className="w-full text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
+                  <Send className="h-3 w-3" /> {activeOrderId ? "Actualizar cuenta abierta" : "Dejar cuenta abierta"}
+                </Button>
+              } />
             </motion.div>
           </>
         )}
@@ -355,13 +359,26 @@ export function POSBar() {
       {/* Desktop Cart */}
       <div className="hidden lg:flex w-80 xl:w-96 bg-card rounded-xl shadow-card border flex-col shrink-0">
         <div className="p-4 border-b bg-gradient-to-r from-amber-500/10 to-transparent">
-          <h2 className="font-heading font-semibold text-sm">🍸 {t("pos.bar.clientAccount")}</h2>
+          <h2 className="font-heading font-semibold text-sm">🍸 {tabName || t("pos.bar.clientAccount")}</h2>
           <p className="text-[10px] text-muted-foreground">{t("pos.bar.itemsCount", { n: totalItems })} • ${subtotal.toLocaleString()} CUP</p>
+          {activeOrderId && <Badge variant="outline" className="mt-1 text-[9px] border-emerald-500/40 text-emerald-400">Cuenta abierta · pendiente de cobro</Badge>}
         </div>
-        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.bar.taxLabel", { rate: taxRatePct })} />
+        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.bar.taxLabel", { rate: taxRatePct })} checkoutLabel={activeOrderId ? `Cobrar cuenta $${total.toFixed(2)}` : undefined} extraActions={
+          <Button size="sm" variant="outline" className="w-full text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
+            <Send className="h-3 w-3" /> {activeOrderId ? "Actualizar cuenta abierta" : "Dejar cuenta abierta"}
+          </Button>
+        } />
       </div>
 
-      <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} />
+      <Dialog open={ordersOpen} onOpenChange={setOrdersOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Cuentas y órdenes abiertas</DialogTitle></DialogHeader>
+          <OpenOrdersPanel onCharge={loadOrder} onAddItems={loadOrder} />
+        </DialogContent>
+      </Dialog>
+
+      <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} kitchenOrderId={activeOrderId} />
+
       <ParkedSalesDialog
         open={parkingOpen}
         onOpenChange={setParkingOpen}
