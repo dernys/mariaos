@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Clock, Play, ArrowRight } from "lucide-react";
+import { Clock, Play, ArrowRight, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useActiveShift } from "@/hooks/useActiveShift";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -15,9 +16,10 @@ interface ShiftRequiredGateProps {
 
 export function ShiftRequiredGate({ children, variant = "empresa" }: ShiftRequiredGateProps) {
   const { t, i18n } = useTranslation();
-  const { shift, loading } = useActiveShift();
+  const { shift, openShifts, selectShift, loading } = useActiveShift();
   const nav = useNavigate();
   const dateLocale = i18n.language.startsWith("pt") ? ptBR : i18n.language.startsWith("en") ? enUS : es;
+
 
   if (loading) {
     return (
