@@ -330,7 +330,7 @@ Deno.serve(async (req) => {
             stock: p.stock,
             min_stock: 5,
             category: p.category,
-            product_type: p.product_type ?? null,
+            product_type: p.product_type ?? "simple",
             is_active: true,
             is_online: cfg.type === "empresa",
             online_stock: p.stock,
