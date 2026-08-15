@@ -264,7 +264,17 @@ export function POSBar() {
           <Button variant="outline" size="icon" onClick={() => setParkingOpen(true)} title={t("pos.bar.parkedTitle")}>
             <Bookmark className="h-4 w-4" />
           </Button>
+          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => setOrdersOpen(true)} title="Órdenes abiertas">
+            <ClipboardList className="h-4 w-4" /> Órdenes
+          </Button>
         </div>
+        <Input
+          value={tabName}
+          onChange={(e) => setTabName(e.target.value)}
+          placeholder="Nombre de la cuenta / cliente (opcional)"
+          className="mb-3 h-8 text-xs bg-card border-amber-500/10"
+        />
+
 
         <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
           {categories.map((cat) => {
