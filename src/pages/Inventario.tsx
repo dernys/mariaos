@@ -469,12 +469,7 @@ const Inventario = () => {
                 key: "movement_type", label: t("modules.inventory.table.type"),
                 value: movementTable.filters.movement_type || "__all__",
                 onChange: (v) => movementTable.setFilter("movement_type", v),
-                options: [
-                  { value: "entry", label: t("modules.inventory.movementType.entry") },
-                  { value: "exit", label: t("modules.inventory.movementType.exit") },
-                  { value: "adjustment", label: t("modules.inventory.movementType.adjustment") },
-                  { value: "transfer", label: t("modules.inventory.movementType.transfer") },
-                ],
+                options: movementTypeOptions,
               },
               {
                 key: "product", label: t("modules.inventory.table.product"),
