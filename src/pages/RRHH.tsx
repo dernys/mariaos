@@ -31,8 +31,10 @@ interface Payroll {
   id: string; employee_id: string; period_start: string; period_end: string;
   base_salary: number; hours_worked: number; bonus: number; deductions: number;
   net_pay: number; status: string; paid_at: string | null;
+  notes?: string | null; payment_method?: string | null; approved_at?: string | null;
   employees?: { name: string; position?: string | null };
 }
+
 interface JobPosition {
   id: string; code: string; name: string; department: string | null; level: string | null;
   base_salary: number; min_salary: number; max_salary: number; description: string | null; is_active: boolean;
