@@ -308,7 +308,7 @@ export function POSRestaurant() {
         </div>
 
         {/* View tabs */}
-        <Tabs value={posView} onValueChange={(v) => setPosView(v as "menu" | "tables")} className="mb-3">
+        <Tabs value={posView} onValueChange={(v) => setPosView(v as "menu" | "tables" | "orders")} className="mb-3">
           <TabsList className="w-full">
             <TabsTrigger value="menu" className="flex-1 text-xs gap-1.5">
               <UtensilsCrossed className="h-3.5 w-3.5" /> {t("pos.restaurantView.menu")}
@@ -316,14 +316,22 @@ export function POSRestaurant() {
             <TabsTrigger value="tables" className="flex-1 text-xs gap-1.5">
               <MapPin className="h-3.5 w-3.5" /> {t("pos.restaurantView.tables")}
             </TabsTrigger>
+            <TabsTrigger value="orders" className="flex-1 text-xs gap-1.5">
+              <ChefHat className="h-3.5 w-3.5" /> Órdenes
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {posView === "tables" ? (
+        {posView === "orders" ? (
+          <div className="overflow-auto flex-1 pb-20 lg:pb-0">
+            <OpenOrdersPanel onCharge={loadOrder} onAddItems={loadOrder} />
+          </div>
+        ) : posView === "tables" ? (
           <div className="overflow-auto flex-1 pb-20 lg:pb-0">
             <FloorMap onTableSelect={handleTableSelect} selectedTableId={selectedTableId} />
           </div>
         ) : (
+
           <>
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
