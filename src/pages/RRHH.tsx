@@ -16,9 +16,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import {
   Calendar, DollarSign, Plus, CheckCircle2, Briefcase, Edit2, Trash2, FileText, AlertCircle,
-  Clock, Plane, TrendingUp, LogIn, LogOut, MapPin, XCircle, Users,
+  Clock, Plane, TrendingUp, LogIn, LogOut, MapPin, XCircle, Users, ShieldCheck,
 } from "lucide-react";
 import { format, addDays } from "date-fns";
+import { PayrollEditDialog, type EditablePayroll } from "@/components/rrhh/PayrollEditDialog";
+import { PayrollBatchDialog } from "@/components/rrhh/PayrollBatchDialog";
+import { useModuleSettings } from "@/hooks/useModuleSettings";
+import { HR_DEFAULTS, type HRSettings } from "@/components/config/ConfigHR";
+
 
 interface Employee { id: string; name: string; salary: number; position: string | null; department: string | null; position_id?: string | null; }
 interface Schedule { id: string; employee_id: string; day_of_week: number; start_time: string; end_time: string; is_active: boolean; employees?: { name: string }; }
@@ -26,8 +31,10 @@ interface Payroll {
   id: string; employee_id: string; period_start: string; period_end: string;
   base_salary: number; hours_worked: number; bonus: number; deductions: number;
   net_pay: number; status: string; paid_at: string | null;
+  notes?: string | null; payment_method?: string | null; approved_at?: string | null;
   employees?: { name: string; position?: string | null };
 }
+
 interface JobPosition {
   id: string; code: string; name: string; department: string | null; level: string | null;
   base_salary: number; min_salary: number; max_salary: number; description: string | null; is_active: boolean;
@@ -89,6 +96,9 @@ export default function RRHH() {
   });
   const [preview, setPreview] = useState<{ hours: number; base: number; bonus: number; ded: number; gross: number; net: number } | null>(null);
   const [computing, setComputing] = useState(false);
+  const [editPayroll, setEditPayroll] = useState<EditablePayroll | null>(null);
+  const { settings: hrSettings } = useModuleSettings<HRSettings>("hr", HR_DEFAULTS);
+
 
   const [selectedEmp, setSelectedEmp] = useState<string>("");
   const [openLeave, setOpenLeave] = useState(false);
@@ -235,13 +245,23 @@ export default function RRHH() {
     toast({ title: t("modules.hr.payroll.generated"), description: t("modules.hr.payroll.generatedDesc", { amount: `$${preview.net.toFixed(2)}` }) });
     setPayDialog(false); load();
   };
+  const approvePayroll = async (p: Payroll) => {
+    const { error } = await (supabase.rpc as any)("approve_payroll_run", { p_payroll_id: p.id });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
+    toast({ title: "Nómina aprobada", description: `${p.employees?.name || "—"} · $${Number(p.net_pay).toFixed(2)}` });
+    load();
+  };
   const payNow = async (p: Payroll) => {
+    if (hrSettings.require_payroll_approval && p.status !== "approved") {
+      return toast({ title: "Aprobación requerida", description: "Aprueba la nómina antes de registrar el pago.", variant: "destructive" });
+    }
     if (!confirm(t("modules.hr.payroll.payConfirm", { name: p.employees?.name || "—", amount: `$${Number(p.net_pay).toFixed(2)}` }))) return;
-    const { error } = await (supabase.rpc as any)("pay_payroll", { _payroll_id: p.id, _method: "transfer", _notes: null });
+    const { error } = await (supabase.rpc as any)("pay_payroll", { _payroll_id: p.id, _method: p.payment_method || hrSettings.payment_method || "transfer", _notes: null });
     if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     toast({ title: t("modules.hr.payroll.paymentRegistered") });
     load();
   };
+
   const cancelPayroll = async (p: Payroll) => {
     if (p.status === "paid") return;
     if (!confirm(t("modules.hr.payroll.cancelConfirm"))) return;
@@ -476,8 +496,10 @@ export default function RRHH() {
           </TabsContent>
 
           <TabsContent value="payroll" className="space-y-3">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <PayrollBatchDialog tenantId={tenantId} defaultBonus={hrSettings.default_bonus} defaultDeductions={hrSettings.default_deductions} onDone={load} />
               <Button onClick={openPayDialog} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />{t("modules.hr.payroll.generate")}</Button>
+
             </div>
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
@@ -517,13 +539,28 @@ export default function RRHH() {
                             </Badge>
                           ) : <span className="text-xs text-muted-foreground">—</span>}
                         </TableCell>
-                        <TableCell><Badge variant={p.status === "paid" ? "default" : "secondary"}>{p.status === "paid" ? t("modules.hr.payroll.statusPaid") : t("modules.hr.payroll.statusPending")}</Badge></TableCell>
+                        <TableCell>
+                          <Badge variant={p.status === "paid" ? "default" : p.status === "approved" ? "outline" : "secondary"}>
+                            {p.status === "paid" ? t("modules.hr.payroll.statusPaid") : p.status === "approved" ? "Aprobada" : t("modules.hr.payroll.statusPending")}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-1 justify-end">
+                            {p.status !== "paid" && (
+                              <Button size="sm" variant="ghost" onClick={() => setEditPayroll(p as EditablePayroll)} className="gap-1" title="Editar nómina">
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {p.status === "pending" && (
+                              <Button size="sm" variant="ghost" onClick={() => approvePayroll(p)} className="gap-1" title="Aprobar nómina">
+                                <ShieldCheck className="h-3 w-3" />
+                              </Button>
+                            )}
                             {p.status !== "paid" && <Button size="sm" variant="outline" onClick={() => payNow(p)} className="gap-1"><CheckCircle2 className="h-3 w-3" />{t("modules.hr.payroll.pay")}</Button>}
                             {p.status !== "paid" && <Button size="sm" variant="ghost" onClick={() => cancelPayroll(p)} className="text-destructive"><Trash2 className="h-3 w-3" /></Button>}
                           </div>
                         </TableCell>
+
                       </TableRow>
                     );
                   })}
@@ -680,13 +717,11 @@ export default function RRHH() {
                     <SelectTrigger><SelectValue placeholder={t("modules.hr.positions.dialog.selectLevel")} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">{t("modules.hr.positions.levels.none")}</SelectItem>
-                      <SelectItem value="junior">{t("modules.hr.positions.levels.junior")}</SelectItem>
-                      <SelectItem value="semi-senior">{t("modules.hr.positions.levels.semi")}</SelectItem>
-                      <SelectItem value="senior">{t("modules.hr.positions.levels.senior")}</SelectItem>
-                      <SelectItem value="lead">{t("modules.hr.positions.levels.lead")}</SelectItem>
-                      <SelectItem value="manager">{t("modules.hr.positions.levels.manager")}</SelectItem>
-                      <SelectItem value="director">{t("modules.hr.positions.levels.director")}</SelectItem>
+                      {(hrSettings.levels?.length ? hrSettings.levels : HR_DEFAULTS.levels).map((lv) => (
+                        <SelectItem key={lv} value={lv}>{lv}</SelectItem>
+                      ))}
                     </SelectContent>
+
                   </Select>
                 </div>
               </div>
@@ -856,7 +891,10 @@ export default function RRHH() {
             <DialogFooter><Button variant="outline" onClick={() => setOpenOvertime(false)}>{t("modules.hr.overtime.dialog.cancel")}</Button><Button onClick={createOvertime} className="gradient-brand text-primary-foreground">{t("modules.hr.overtime.dialog.register")}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <PayrollEditDialog payroll={editPayroll} onOpenChange={(o) => { if (!o) setEditPayroll(null); }} onSaved={load} />
       </div>
+
     </AppLayout>
   );
 }

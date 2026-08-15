@@ -11,10 +11,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Package, Truck, Building2, Eye, Bike, CheckCircle2, ShoppingBag, Ban, Receipt } from "lucide-react";
+import { Package, Truck, Building2, Eye, Bike, CheckCircle2, ShoppingBag, Ban, Receipt, Pencil, Sparkles, RefreshCw, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { RiderRecommendationDialog } from "@/components/delivery/RiderRecommendationDialog";
+import { OrderTimeline } from "@/components/delivery/OrderTimeline";
+import { OrderEditDialog, type EditableOrder } from "@/components/delivery/OrderEditDialog";
+import { useModuleSettings } from "@/hooks/useModuleSettings";
+import { DELIVERY_DEFAULTS, type DeliverySettings } from "@/components/config/ConfigDelivery";
+
 
 interface OnlineOrder {
   id: string;
@@ -94,7 +99,12 @@ const PedidosOnline = () => {
   const [filterType, setFilterType] = useState("all");
   const [search, setSearch] = useState("");
   const [recOrderId, setRecOrderId] = useState<string | null>(null);
+  const [reassignOrderId, setReassignOrderId] = useState<string | null>(null);
+  const [editOrder, setEditOrder] = useState<EditableOrder | null>(null);
+  const [timelineKey, setTimelineKey] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
+  const { settings: dsettings } = useModuleSettings<DeliverySettings>("delivery", DELIVERY_DEFAULTS);
+
 
   const fetchOrders = useCallback(async () => {
     if (!tenantId) return;
@@ -195,8 +205,35 @@ const PedidosOnline = () => {
     }
     toast({ title: `Pedido: ${ORDER_STATUS[status]?.label ?? status}` });
     fetchOrders();
+    setTimelineKey((k) => k + 1);
     if (selectedOrder?.id === order.id) setSelectedOrder({ ...selectedOrder, status });
   };
+
+  const autoAssign = async (order: OnlineOrder) => {
+    setBusy(order.id);
+    const { data, error } = await (supabase.rpc as any)("auto_assign_best_rider", { p_order_id: order.id });
+    setBusy(null);
+    if (error) return toast({ title: "No se pudo asignar", description: error.message, variant: "destructive" });
+    const res = data as any;
+    if (!res?.assigned) {
+      return toast({ title: "Sin repartidores disponibles", description: res?.reason ?? "Intenta más tarde o asigna manualmente.", variant: "destructive" });
+    }
+    toast({ title: `Asignado a ${res.rider_name}`, description: `Compatibilidad ${Number(res.score).toFixed(0)} · debe aceptar la entrega.` });
+    fetchOrders();
+    setTimelineKey((k) => k + 1);
+  };
+
+  const cancelDelivery = async (order: OnlineOrder) => {
+    const reason = window.prompt("Motivo de cancelación de la entrega:") ?? undefined;
+    setBusy(order.id);
+    const { error } = await (supabase.rpc as any)("cancel_delivery_assignment", { p_order_id: order.id, p_reason: reason || null });
+    setBusy(null);
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: "Entrega cancelada", description: "El pedido volvió al estado Listo." });
+    fetchOrders();
+    setTimelineKey((k) => k + 1);
+  };
+
 
   const filtered = orders.filter((o) => {
     if (filterStatus !== "all" && o.status !== filterStatus) return false;
@@ -318,9 +355,14 @@ const PedidosOnline = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => viewDetails(order)}>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Ver detalle" onClick={() => viewDetails(order)}>
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
+                        {!["delivered", "cancelled"].includes(order.status) && (
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Editar pedido" onClick={() => setEditOrder(order as EditableOrder)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                         {!order.sale_id && order.status !== "cancelled" && (
                           <Button
                             size="sm"
@@ -342,15 +384,41 @@ const PedidosOnline = () => {
                           </Button>
                         )}
                         {order.status === "ready" && order.delivery_type === "delivery" && (
-                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setRecOrderId(order.id)}>
-                            <Bike className="h-3 w-3 mr-1" /> Repartidor
-                          </Button>
+                          <>
+                            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setRecOrderId(order.id)}>
+                              <Bike className="h-3 w-3 mr-1" /> Repartidor
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={dsettings.auto_assign ? "default" : "ghost"}
+                              className="h-7 text-[10px]"
+                              disabled={busy === order.id}
+                              title="Asignar automáticamente el mejor repartidor"
+                              onClick={() => autoAssign(order)}
+                            >
+                              {busy === order.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                            </Button>
+                          </>
+                        )}
+                        {["rider_assigned", "in_transit"].includes(order.status) && (
+                          <>
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px]" title="Reasignar repartidor" onClick={() => setReassignOrderId(order.id)}>
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px]" title="Cancelar entrega" disabled={busy === order.id} onClick={() => cancelDelivery(order)}>
+                              <Ban className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setStatus(order, "delivered")}>
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Entregado
+                            </Button>
+                          </>
                         )}
                         {order.status === "ready" && order.delivery_type === "pickup" && (
                           <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setStatus(order, "delivered")}>
                             <CheckCircle2 className="h-3 w-3 mr-1" /> Entregado
                           </Button>
                         )}
+
                         {!["delivered", "cancelled"].includes(order.status) && (
                           <Button
                             size="sm"
@@ -382,14 +450,28 @@ const PedidosOnline = () => {
       <RiderRecommendationDialog
         orderId={recOrderId}
         onOpenChange={(v) => !v && setRecOrderId(null)}
-        onAssigned={fetchOrders}
+        onAssigned={() => { fetchOrders(); setTimelineKey((k) => k + 1); }}
+      />
+
+      <RiderRecommendationDialog
+        orderId={reassignOrderId}
+        reassign
+        onOpenChange={(v) => !v && setReassignOrderId(null)}
+        onAssigned={() => { fetchOrders(); setTimelineKey((k) => k + 1); }}
+      />
+
+      <OrderEditDialog
+        order={editOrder}
+        onOpenChange={(v) => !v && setEditOrder(null)}
+        onSaved={() => { fetchOrders(); setTimelineKey((k) => k + 1); }}
       />
 
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[88vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalle del pedido</DialogTitle>
           </DialogHeader>
+
           {selectedOrder && (
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
@@ -449,7 +531,30 @@ const PedidosOnline = () => {
                 </div>
               </div>
               {selectedOrder.notes && <p className="text-xs text-muted-foreground">Nota: {selectedOrder.notes}</p>}
+
+              <div className="flex flex-wrap gap-2">
+                {!["delivered", "cancelled"].includes(selectedOrder.status) && (
+                  <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => setEditOrder(selectedOrder as EditableOrder)}>
+                    <Pencil className="h-3 w-3" /> Editar pedido
+                  </Button>
+                )}
+                {selectedOrder.delivery_type === "delivery" && !["delivered", "cancelled"].includes(selectedOrder.status) && (
+                  <>
+                    <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => setRecOrderId(selectedOrder.id)}>
+                      <Bike className="h-3 w-3" /> Sugerir repartidor
+                    </Button>
+                    <Button size="sm" variant="ghost" className="gap-1 text-xs" onClick={() => autoAssign(selectedOrder)}>
+                      <Sparkles className="h-3 w-3" /> Asignación automática
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              <div className="border-t pt-3">
+                <OrderTimeline orderId={selectedOrder.id} refreshKey={timelineKey} />
+              </div>
             </div>
+
           )}
         </DialogContent>
       </Dialog>

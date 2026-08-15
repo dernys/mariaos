@@ -4777,6 +4777,59 @@ export type Database = {
           },
         ]
       }
+      online_order_events: {
+        Row: {
+          actor_label: string | null
+          actor_user_id: string | null
+          assignment_id: string | null
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          metadata: Json
+          note: string | null
+          order_id: string
+          tenant_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_label?: string | null
+          actor_user_id?: string | null
+          assignment_id?: string | null
+          created_at?: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          order_id: string
+          tenant_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_label?: string | null
+          actor_user_id?: string | null
+          assignment_id?: string | null
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          order_id?: string
+          tenant_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "online_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       online_order_items: {
         Row: {
           created_at: string
@@ -9532,6 +9585,10 @@ export type Database = {
           status: string
         }[]
       }
+      add_online_order_note: {
+        Args: { p_note: string; p_order_id: string }
+        Returns: string
+      }
       allocate_consignment_for_sale: {
         Args: { p_sale_id: string }
         Returns: undefined
@@ -9564,6 +9621,8 @@ export type Database = {
         Args: { p_approve: boolean; p_leave_id: string; p_reason?: string }
         Returns: undefined
       }
+      approve_payroll_run: { Args: { p_payroll_id: string }; Returns: string }
+      auto_assign_best_rider: { Args: { p_order_id: string }; Returns: Json }
       auto_match_bank_transaction: {
         Args: { p_tx_id: string }
         Returns: string
@@ -9592,6 +9651,10 @@ export type Database = {
         Returns: number
       }
       calculate_shift_summary: { Args: { p_shift_id: string }; Returns: Json }
+      cancel_delivery_assignment: {
+        Args: { p_order_id: string; p_reason?: string }
+        Returns: undefined
+      }
       cancel_sale: {
         Args: { p_reason: string; p_sale_id: string }
         Returns: undefined
@@ -9927,6 +9990,16 @@ export type Database = {
           suggested_reorder: number
         }[]
       }
+      generate_payroll_batch: {
+        Args: {
+          p_bonus?: number
+          p_deductions?: number
+          p_period_end: string
+          p_period_start: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       generate_sepa_xml: {
         Args: { _bank_account_id: string; _payroll_run_ids: string[] }
         Returns: string
@@ -9961,6 +10034,18 @@ export type Database = {
       }
       issue_invoice: {
         Args: { p_sale_id: string; p_series_code?: string }
+        Returns: string
+      }
+      log_online_order_event: {
+        Args: {
+          p_assignment_id?: string
+          p_event_type: string
+          p_from?: string
+          p_metadata?: Json
+          p_note?: string
+          p_order_id: string
+          p_to?: string
+        }
         Returns: string
       }
       mark_invoice_transmitted: {
@@ -10192,6 +10277,14 @@ export type Database = {
           p_ratee_role: string
           p_rater_role: string
           p_stars: number
+        }
+        Returns: string
+      }
+      reassign_delivery: {
+        Args: {
+          p_order_id: string
+          p_reason?: string
+          p_rider_profile_id: string
         }
         Returns: string
       }
@@ -10545,6 +10638,31 @@ export type Database = {
       twin_baseline: {
         Args: { p_days?: number; p_tenant_id: string }
         Returns: Json
+      }
+      update_online_order: {
+        Args: {
+          p_customer_name?: string
+          p_customer_phone?: string
+          p_delivery_address?: string
+          p_delivery_fee?: number
+          p_delivery_instructions?: string
+          p_delivery_type?: string
+          p_notes?: string
+          p_order_id: string
+        }
+        Returns: undefined
+      }
+      update_payroll_run: {
+        Args: {
+          p_base_salary?: number
+          p_bonus?: number
+          p_deductions?: number
+          p_hours_worked?: number
+          p_notes?: string
+          p_payment_method?: string
+          p_payroll_id: string
+        }
+        Returns: string
       }
       update_rider_location: {
         Args: {
