@@ -180,14 +180,32 @@ export function FinancialKpiPanel() {
           <p className="text-xs text-muted-foreground">
             {tr("period", "Período")}: <span className="font-medium">{kpis.period_name ?? "—"}</span> ·{" "}
             {tr("sourceNote", "calculado exclusivamente desde asientos contabilizados")}
+            {activePeriod && activePeriod.entries === 0 && (
+              <span className="text-warning">
+                {" "}· {tr("noEntriesInPeriod", "este período no tiene asientos contabilizados; solo se muestran saldos heredados")}
+              </span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {periods.length > 0 && (
+            <Select value={periodId ?? undefined} onValueChange={setPeriodId}>
+              <SelectTrigger className="h-8 w-[190px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {periods.map((p) => (
+                  <SelectItem key={p.id} value={p.id} className="text-xs">
+                    {p.name} · {p.entries} {tr("entriesShort", "asientos")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Badge variant={kpis.period_status === "open" ? "default" : "secondary"}>
             {kpis.period_status ?? "—"}
           </Badge>
           <Button size="sm" variant="outline" onClick={load}><RefreshCw className="h-3.5 w-3.5" /></Button>
         </div>
+
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
