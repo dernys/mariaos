@@ -95,8 +95,16 @@ export default function RRHH() {
     deductions: "0",
   });
   const [preview, setPreview] = useState<{ hours: number; base: number; bonus: number; ded: number; gross: number; net: number } | null>(null);
-  const [computing, setComputing] = useState(false);
   const [editPayroll, setEditPayroll] = useState<EditablePayroll | null>(null);
+  const [detailPayroll, setDetailPayroll] = useState<PayrollRow | null>(null);
+  const [signPayroll, setSignPayroll] = useState<PayrollRow | null>(null);
+  const [detailKey, setDetailKey] = useState(0);
+  const [tenantName, setTenantName] = useState<string | null>(null);
+  const [signedIds, setSignedIds] = useState<Set<string>>(new Set());
+  const [payFilters, setPayFilters] = useState({ q: "", status: "all", employee: "all", from: "", to: "" });
+  const [payPage, setPayPage] = useState(1);
+  const [payPageSize, setPayPageSize] = useState(25);
+
   const { settings: hrSettings } = useModuleSettings<HRSettings>("hr", HR_DEFAULTS);
 
 
