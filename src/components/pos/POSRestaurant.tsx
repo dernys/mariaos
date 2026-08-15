@@ -57,6 +57,8 @@ export function POSRestaurant() {
   const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const { toast } = useToast();
+  const { shift } = useActiveShift();
+  const cartKey = tenantId ? `pos_rest_cart_${tenantId}` : "";
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
@@ -66,10 +68,35 @@ export function POSRestaurant() {
   const [splitBillOpen, setSplitBillOpen] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedTableName, setSelectedTableName] = useState("");
-  const [posView, setPosView] = useState<"menu" | "tables">("menu");
+  const [posView, setPosView] = useState<"menu" | "tables" | "orders">("menu");
   const [waiterName, setWaiterName] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
+  const [noteItemId, setNoteItemId] = useState<number | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
+
+  // Persistencia del carro: un refresco o cambio de vista no pierde la orden.
+  useEffect(() => {
+    if (!cartKey) return;
+    try {
+      const raw = localStorage.getItem(cartKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setCart(parsed.cart ?? []);
+        setActiveOrderId(parsed.activeOrderId ?? null);
+        setSelectedTableId(parsed.selectedTableId ?? null);
+        setSelectedTableName(parsed.selectedTableName ?? "");
+      }
+    } catch { /* ignore */ }
+  }, [cartKey]);
+
+  useEffect(() => {
+    if (!cartKey) return;
+    try {
+      localStorage.setItem(cartKey, JSON.stringify({ cart, activeOrderId, selectedTableId, selectedTableName }));
+    } catch { /* ignore */ }
+  }, [cart, activeOrderId, selectedTableId, selectedTableName, cartKey]);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -77,6 +104,7 @@ export function POSRestaurant() {
       if (data) setEmployees(data);
     });
   }, [tenantId]);
+
 
   useEffect(() => {
     if (!tenantId) return;
