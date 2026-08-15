@@ -1,14 +1,20 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { useServerTable } from "@/hooks/useServerTable";
+import { TableToolbar } from "@/components/data/TableToolbar";
+import { TablePagination } from "@/components/data/TablePagination";
+import { DataState } from "@/components/data/DataState";
+import { MiniStatCard } from "@/components/data/MiniStatCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search, Undo2, RotateCcw } from "lucide-react";
+import { Undo2, RotateCcw, Receipt, Coins, PackageCheck } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -17,105 +23,220 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 
-interface Sale { id: string; ticket_number: string | null; total: number; status: string; created_at: string; }
-interface SaleItem { id: string; product_id: string | null; product_name: string; qty: number; price: number; total: number; }
-interface ReturnRow { id: string; return_number: string; sale_id: string; total_refunded: number; refund_method: string; reason: string | null; return_type: string; created_at: string; }
+interface Sale {
+  id: string;
+  ticket_number: string | null;
+  total: number;
+  status: string;
+  created_at: string;
+  currency?: string | null;
+  store_id?: string | null;
+  customer_id?: string | null;
+}
+
+interface ReturnableItem {
+  sale_item_id: string;
+  product_id: string | null;
+  product_name: string;
+  price: number;
+  qty_sold: number;
+  qty_returned: number;
+  qty_available: number;
+}
+
+interface ReturnRow {
+  id: string;
+  return_number: string;
+  sale_id: string;
+  total: number;
+  refund_method: string;
+  reason: string | null;
+  status: string;
+  restock: boolean;
+  created_at: string;
+  ticket_number: string | null;
+  sale_date: string | null;
+  customer_name: string | null;
+  performed_by_name: string | null;
+  units_returned: number;
+  lines_returned: number;
+  currency: string | null;
+}
+
+const REFUND_METHODS = [
+  { value: "cash", label: "Efectivo" },
+  { value: "card", label: "Tarjeta" },
+  { value: "transfer", label: "Transferencia" },
+  { value: "credit", label: "Saldo a favor" },
+];
 
 export default function Devoluciones() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [returns, setReturns] = useState<ReturnRow[]>([]);
-  const [search, setSearch] = useState("");
+  const { tenantId } = useTenantContext();
+  const [tab, setTab] = useState("history");
+
+  // ---- Historial: paginación / filtros server-side sobre la vista real
+  const history = useServerTable<ReturnRow>({
+    table: "sale_returns_view",
+    select:
+      "id, return_number, sale_id, total, refund_method, reason, status, restock, created_at, ticket_number, sale_date, customer_name, performed_by_name, units_returned, lines_returned, currency",
+    searchColumns: ["return_number", "ticket_number", "reason", "customer_name"],
+    orderBy: { column: "created_at", ascending: false },
+    initialPageSize: 25,
+    enabled: !!tenantId,
+    scope: tenantId,
+    baseFilter: (q) => q.eq("tenant_id", tenantId),
+    filterFns: {
+      status: (q, v) => q.eq("status", v),
+      refund_method: (q, v) => q.eq("refund_method", v),
+      from: (q, v) => q.gte("created_at", v),
+      to: (q, v) => q.lte("created_at", `${v}T23:59:59`),
+    },
+  });
+
+  // ---- Ventas devolvibles: búsqueda y paginación server-side
+  const salesTable = useServerTable<Sale>({
+    table: "sales",
+    select: "id, ticket_number, total, status, created_at, currency, store_id, customer_id",
+    searchColumns: ["ticket_number"],
+    orderBy: { column: "created_at", ascending: false },
+    initialPageSize: 10,
+    enabled: !!tenantId,
+    scope: tenantId,
+    baseFilter: (q) => q.eq("tenant_id", tenantId).neq("status", "cancelled"),
+    filterFns: {
+      from: (q, v) => q.gte("created_at", v),
+      to: (q, v) => q.lte("created_at", `${v}T23:59:59`),
+    },
+  });
+
+  // ---- Totales del historial (importe devuelto) según filtros de fecha
+  const [totals, setTotals] = useState({ amount: 0, units: 0 });
+  useEffect(() => {
+    if (!tenantId) return;
+    let q: any = supabase.from("sale_returns_view").select("total, units_returned").eq("tenant_id", tenantId);
+    if (history.filters.status && history.filters.status !== "__all__") q = q.eq("status", history.filters.status);
+    if (history.filters.from) q = q.gte("created_at", history.filters.from);
+    if (history.filters.to) q = q.lte("created_at", `${history.filters.to}T23:59:59`);
+    q.then(({ data }: any) => {
+      const rows = (data || []) as { total: number; units_returned: number }[];
+      setTotals({
+        amount: rows.reduce((a, r) => a + Number(r.total || 0), 0),
+        units: rows.reduce((a, r) => a + Number(r.units_returned || 0), 0),
+      });
+    });
+  }, [tenantId, history.filters.status, history.filters.from, history.filters.to, history.total]);
+
+  // ---- Diálogo de devolución
   const [open, setOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
-  const [items, setItems] = useState<SaleItem[]>([]);
-  const [draft, setDraft] = useState<Record<string, { qty: string; restock: boolean }>>({});
+  const [items, setItems] = useState<ReturnableItem[]>([]);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [restock, setRestock] = useState(true);
   const [reason, setReason] = useState("");
   const [refundMethod, setRefundMethod] = useState("cash");
+  const [saving, setSaving] = useState(false);
 
-  const fetchAll = async () => {
-    const [sR, rR] = await Promise.all([
-      supabase.from("sales").select("id, ticket_number, total, status, created_at").order("created_at", { ascending: false }).limit(50),
-      (supabase.from as any)("sale_returns").select("*").order("created_at", { ascending: false }).limit(100),
-    ]);
-    setSales((sR.data || []) as Sale[]);
-    setReturns(rR.data || []);
+  const openReturn = async (s: Sale) => {
+    setSelectedSale(s);
+    setReason("");
+    setRefundMethod("cash");
+    setRestock(true);
+    const { data, error } = await supabase.rpc("sale_returnable_items" as any, { p_sale_id: s.id });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    const its = (data || []) as ReturnableItem[];
+    setItems(its);
+    const d: Record<string, string> = {};
+    its.forEach((i) => { d[i.sale_item_id] = "0"; });
+    setDraft(d);
+    setOpen(true);
   };
 
   const [searchParams] = useSearchParams();
-  useEffect(() => { fetchAll(); }, []);
-
-  // Auto-open dialog when arriving with ?sale=ID (from TurnoDetalle action)
   useEffect(() => {
     const saleId = searchParams.get("sale");
     if (!saleId) return;
     (async () => {
       const { data } = await supabase
         .from("sales")
-        .select("id, ticket_number, total, status, created_at")
+        .select("id, ticket_number, total, status, created_at, currency, store_id, customer_id")
         .eq("id", saleId)
         .maybeSingle();
-      if (data) openReturn(data as Sale);
+      if (data) { setTab("new"); openReturn(data as Sale); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const openReturn = async (s: Sale) => {
-    setSelectedSale(s);
-    setReason(""); setRefundMethod("cash");
-    const { data } = await supabase.from("sale_items").select("id, product_id, product_name, qty, price, total").eq("sale_id", s.id);
-    const its = (data || []) as SaleItem[];
-    setItems(its);
-    const d: Record<string, { qty: string; restock: boolean }> = {};
-    its.forEach((i) => { d[i.id] = { qty: "0", restock: true }; });
-    setDraft(d);
-    setOpen(true);
-  };
+  const totalRefund = useMemo(
+    () => items.reduce((acc, i) => acc + (Number(draft[i.sale_item_id]) || 0) * Number(i.price), 0),
+    [items, draft],
+  );
 
-  const totalRefund = items.reduce((acc, i) => acc + (Number(draft[i.id]?.qty) || 0) * i.price, 0);
+  const overLimit = items.some((i) => (Number(draft[i.sale_item_id]) || 0) > i.qty_available);
+  const nothingToReturn = items.length > 0 && items.every((i) => i.qty_available <= 0);
 
   const submit = async () => {
     if (!selectedSale) return;
     const itemsArr = items
-      .filter((i) => Number(draft[i.id]?.qty) > 0)
-      .map((i) => ({ sale_item_id: i.id, qty: Number(draft[i.id].qty), restock: draft[i.id].restock }));
-    if (!itemsArr.length) { toast({ title: "Ingresa al menos una cantidad a devolver", variant: "destructive" }); return; }
-
-    const allFull = itemsArr.every((it) => {
-      const orig = items.find((x) => x.id === it.sale_item_id);
-      return orig && it.qty === Number(orig.qty);
-    }) && itemsArr.length === items.length;
-
-    const { error } = await supabase.rpc("process_sale_return" as any, {
+      .filter((i) => Number(draft[i.sale_item_id]) > 0)
+      .map((i) => ({ sale_item_id: i.sale_item_id, qty: Number(draft[i.sale_item_id]) }));
+    if (!itemsArr.length) {
+      toast({ title: "Ingresa al menos una cantidad a devolver", variant: "destructive" });
+      return;
+    }
+    if (overLimit) {
+      toast({ title: "Cantidad no permitida", description: "Una línea supera lo disponible a devolver", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.rpc("create_sale_return" as any, {
       p_sale_id: selectedSale.id,
       p_items: itemsArr as any,
       p_reason: reason || null,
       p_refund_method: refundMethod,
-      p_return_type: allFull ? "full" : "partial",
+      p_restock: restock,
+      p_location_type: selectedSale.store_id ? "store" : null,
+      p_location_id: selectedSale.store_id ?? null,
     });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setSaving(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
     toast({ title: "Devolución registrada", description: `Reembolso $${totalRefund.toFixed(2)}` });
-    setOpen(false); fetchAll();
+    setOpen(false);
+    history.refetch();
+    salesTable.refetch();
+    setTab("history");
   };
-
-  const filteredSales = sales.filter((s) =>
-    !search || (s.ticket_number || "").toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <AppLayout title={t("modules.returns.title")}>
-      <Tabs defaultValue="new" className="space-y-4">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="new">{t("modules.returns.tabs.new")}</TabsTrigger>
           <TabsTrigger value="history">{t("modules.returns.tabs.history")}</TabsTrigger>
         </TabsList>
 
+        {/* ---------------- Nueva devolución: selector de venta real ---------------- */}
         <TabsContent value="new" className="space-y-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder={t("modules.returns.searchTicket")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
+          <TableToolbar
+            search={salesTable.search}
+            onSearchChange={salesTable.setSearch}
+            searchPlaceholder={t("modules.returns.searchTicket")}
+            rightSlot={
+              <div className="flex items-center gap-2">
+                <Input type="date" className="h-9 w-36 text-xs" value={salesTable.filters.from || ""}
+                  onChange={(e) => salesTable.setFilter("from", e.target.value)} />
+                <Input type="date" className="h-9 w-36 text-xs" value={salesTable.filters.to || ""}
+                  onChange={(e) => salesTable.setFilter("to", e.target.value)} />
+              </div>
+            }
+          />
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
               <TableHeader>
@@ -128,53 +249,151 @@ export default function Devoluciones() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSales.map((s) => (
+                {salesTable.rows.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="text-xs font-heading font-semibold">{s.ticket_number || s.id.slice(0, 8)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{format(new Date(s.created_at), "dd/MM/yy HH:mm")}</TableCell>
                     <TableCell className="text-xs font-heading font-bold">${Number(s.total).toFixed(2)}</TableCell>
                     <TableCell><Badge variant="outline" className="text-[10px]">{s.status}</Badge></TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline" className="h-7 text-[10px]" disabled={s.status === "cancelled"} onClick={() => openReturn(s)}>
+                      <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => openReturn(s)}>
                         <Undo2 className="h-3 w-3 mr-1" /> Devolver
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))}
+                {!salesTable.loading && salesTable.rows.length === 0 && (
+                  <TableRow><TableCell colSpan={5} className="p-0">
+                    <DataState empty emptyTitle="Sin ventas" emptyHint="Ajusta la búsqueda o el rango de fechas" icon={Receipt} />
+                  </TableCell></TableRow>
+                )}
+                {salesTable.loading && (
+                  <TableRow><TableCell colSpan={5} className="p-0"><DataState loading /></TableCell></TableRow>
+                )}
+                {salesTable.error && (
+                  <TableRow><TableCell colSpan={5} className="p-0">
+                    <DataState error={salesTable.error} onRetry={() => salesTable.refetch()} />
+                  </TableCell></TableRow>
+                )}
               </TableBody>
             </Table>
+            <TablePagination
+              page={salesTable.page}
+              pageSize={salesTable.pageSize}
+              total={salesTable.total}
+              onPageChange={salesTable.setPage}
+              onPageSizeChange={salesTable.setPageSize}
+            />
           </div>
         </TabsContent>
 
+        {/* ---------------- Historial ---------------- */}
         <TabsContent value="history" className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <MiniStatCard label="Devoluciones" value={String(history.total)} icon={Undo2} />
+            <MiniStatCard label="Importe devuelto" value={`$${totals.amount.toFixed(2)}`} icon={Coins} />
+            <MiniStatCard label="Unidades devueltas" value={String(totals.units)} icon={PackageCheck} />
+          </div>
+
+          <TableToolbar
+            search={history.search}
+            onSearchChange={history.setSearch}
+            searchPlaceholder="Buscar por nº, ticket, cliente o motivo..."
+            filters={[
+              {
+                key: "status",
+                label: "Estado",
+                value: history.filters.status || "__all__",
+                onChange: (v) => history.setFilter("status", v),
+                options: [
+                  { value: "completed", label: "Completada" },
+                  { value: "cancelled", label: "Cancelada" },
+                ],
+              },
+              {
+                key: "refund_method",
+                label: "Método",
+                value: history.filters.refund_method || "__all__",
+                onChange: (v) => history.setFilter("refund_method", v),
+                options: REFUND_METHODS,
+              },
+            ]}
+            rightSlot={
+              <div className="flex items-center gap-2">
+                <Input type="date" className="h-9 w-36 text-xs" value={history.filters.from || ""}
+                  onChange={(e) => history.setFilter("from", e.target.value)} />
+                <Input type="date" className="h-9 w-36 text-xs" value={history.filters.to || ""}
+                  onChange={(e) => history.setFilter("to", e.target.value)} />
+              </div>
+            }
+          />
+
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Nº</TableHead>
-                  <TableHead className="text-xs">Tipo</TableHead>
+                  <TableHead className="text-xs">Venta</TableHead>
+                  <TableHead className="text-xs">Cliente</TableHead>
+                  <TableHead className="text-xs">Items</TableHead>
                   <TableHead className="text-xs">Reembolso</TableHead>
                   <TableHead className="text-xs">Método</TableHead>
+                  <TableHead className="text-xs">Estado</TableHead>
+                  <TableHead className="text-xs">Responsable</TableHead>
                   <TableHead className="text-xs">Motivo</TableHead>
                   <TableHead className="text-xs">Fecha</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {returns.map((r) => (
+                {history.rows.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="text-xs font-heading font-semibold">{r.return_number}</TableCell>
-                    <TableCell><Badge variant="outline" className="text-[10px]">{r.return_type === "full" ? "Total" : "Parcial"}</Badge></TableCell>
-                    <TableCell className="text-xs font-heading font-bold">${Number(r.total_refunded).toFixed(2)}</TableCell>
-                    <TableCell className="text-xs">{r.refund_method}</TableCell>
+                    <TableCell className="text-xs">
+                      <div className="font-medium">{r.ticket_number || r.sale_id.slice(0, 8)}</div>
+                      {r.sale_date && (
+                        <div className="text-[10px] text-muted-foreground">{format(new Date(r.sale_date), "dd/MM/yy HH:mm")}</div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs">{r.customer_name || "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {r.lines_returned} línea(s) · {Number(r.units_returned)} u.
+                    </TableCell>
+                    <TableCell className="text-xs font-heading font-bold">${Number(r.total).toFixed(2)}</TableCell>
+                    <TableCell className="text-xs">
+                      {REFUND_METHODS.find((m) => m.value === r.refund_method)?.label || r.refund_method}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={r.status === "cancelled" ? "destructive" : "outline"} className="text-[10px]">
+                        {r.status === "cancelled" ? "Cancelada" : "Completada"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{r.performed_by_name || "—"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{r.reason || "—"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{format(new Date(r.created_at), "dd/MM/yy HH:mm")}</TableCell>
                   </TableRow>
                 ))}
-                {returns.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-xs text-muted-foreground">Sin devoluciones</TableCell></TableRow>
+                {history.loading && (
+                  <TableRow><TableCell colSpan={10} className="p-0"><DataState loading /></TableCell></TableRow>
+                )}
+                {history.error && (
+                  <TableRow><TableCell colSpan={10} className="p-0">
+                    <DataState error={history.error} onRetry={() => history.refetch()} />
+                  </TableCell></TableRow>
+                )}
+                {!history.loading && !history.error && history.rows.length === 0 && (
+                  <TableRow><TableCell colSpan={10} className="p-0">
+                    <DataState empty emptyTitle="Sin devoluciones" emptyHint="Registra una devolución desde una venta real" icon={Undo2} />
+                  </TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              page={history.page}
+              pageSize={history.pageSize}
+              total={history.total}
+              onPageChange={history.setPage}
+              onPageSizeChange={history.setPageSize}
+            />
           </div>
         </TabsContent>
       </Tabs>
@@ -184,39 +403,49 @@ export default function Devoluciones() {
           <DialogHeader>
             <DialogTitle>Devolución de venta</DialogTitle>
             <DialogDescription>
-              Ticket {selectedSale?.ticket_number} · Total ${Number(selectedSale?.total || 0).toFixed(2)}
+              Ticket {selectedSale?.ticket_number || selectedSale?.id.slice(0, 8)} · Total ${Number(selectedSale?.total || 0).toFixed(2)}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
+            {nothingToReturn && (
+              <p className="text-xs text-destructive">Todas las unidades de esta venta ya fueron devueltas.</p>
+            )}
             <div className="bg-card rounded-lg border overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-xs">Producto</TableHead>
                     <TableHead className="text-xs">Vendido</TableHead>
+                    <TableHead className="text-xs">Devuelto</TableHead>
+                    <TableHead className="text-xs">Disponible</TableHead>
                     <TableHead className="text-xs">Precio</TableHead>
                     <TableHead className="text-xs">Devolver</TableHead>
-                    <TableHead className="text-xs">Reponer stock</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((i) => (
-                    <TableRow key={i.id}>
-                      <TableCell className="text-xs">{i.product_name}</TableCell>
-                      <TableCell className="text-xs">{i.qty}</TableCell>
-                      <TableCell className="text-xs">${Number(i.price).toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Input type="number" min="0" max={i.qty} className="h-8 w-20 text-xs"
-                          value={draft[i.id]?.qty || "0"}
-                          onChange={(e) => setDraft({ ...draft, [i.id]: { ...draft[i.id], qty: e.target.value } })} />
-                      </TableCell>
-                      <TableCell>
-                        <input type="checkbox" checked={draft[i.id]?.restock ?? true}
-                          onChange={(e) => setDraft({ ...draft, [i.id]: { ...draft[i.id], restock: e.target.checked } })}
-                          className="h-4 w-4" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {items.map((i) => {
+                    const val = Number(draft[i.sale_item_id]) || 0;
+                    return (
+                      <TableRow key={i.sale_item_id}>
+                        <TableCell className="text-xs">{i.product_name}</TableCell>
+                        <TableCell className="text-xs">{Number(i.qty_sold)}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{Number(i.qty_returned)}</TableCell>
+                        <TableCell className="text-xs font-medium">{Number(i.qty_available)}</TableCell>
+                        <TableCell className="text-xs">${Number(i.price).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max={Number(i.qty_available)}
+                            disabled={Number(i.qty_available) <= 0}
+                            className={`h-8 w-20 text-xs ${val > Number(i.qty_available) ? "border-destructive" : ""}`}
+                            value={draft[i.sale_item_id] ?? "0"}
+                            onChange={(e) => setDraft({ ...draft, [i.sale_item_id]: e.target.value })}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -226,9 +455,7 @@ export default function Devoluciones() {
                 <Select value={refundMethod} onValueChange={setRefundMethod}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cash">Efectivo</SelectItem>
-                    <SelectItem value="card">Tarjeta</SelectItem>
-                    <SelectItem value="credit">Saldo a favor</SelectItem>
+                    {REFUND_METHODS.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -237,6 +464,10 @@ export default function Devoluciones() {
                 <Input value={totalRefund.toFixed(2)} disabled className="font-bold" />
               </div>
             </div>
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} className="h-4 w-4" />
+              Reponer inventario de los productos devueltos
+            </label>
             <div>
               <Label className="text-xs">Motivo</Label>
               <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("modules.returns.reasonPlaceholder")} />
@@ -244,7 +475,11 @@ export default function Devoluciones() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button className="gradient-brand text-primary-foreground" onClick={submit}>
+            <Button
+              className="gradient-brand text-primary-foreground"
+              disabled={saving || overLimit || totalRefund <= 0}
+              onClick={submit}
+            >
               <RotateCcw className="h-3.5 w-3.5 mr-1" /> Confirmar Devolución
             </Button>
           </DialogFooter>
