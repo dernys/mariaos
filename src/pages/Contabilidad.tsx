@@ -33,6 +33,8 @@ import CuCostSheetsTab from "@/components/accounting/CuCostSheetsTab";
 import { FinancialKpiPanel } from "@/components/accounting/FinancialKpiPanel";
 import { AccountingAuditPanel } from "@/components/accounting/AccountingAuditPanel";
 import { FinancialEngineConsole } from "@/components/accounting/FinancialEngineConsole";
+import { AccountMappingTab } from "@/components/accounting/AccountMappingTab";
+import { OperationReconciliationPanel } from "@/components/accounting/OperationReconciliationPanel";
 
 
 
