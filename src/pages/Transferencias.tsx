@@ -737,7 +737,7 @@ export default function Transferencias() {
                     <div key={it.product_id} className="flex justify-between text-xs border-b py-1">
                       <span>{it.product_name || it.product_id}</span>
                       <span className="text-muted-foreground">
-                        {it.quantity_requested} sol. · {it.quantity_received ?? 0} recib.
+                        {it.quantity_requested} sol. · {it.quantity_shipped ?? 0} sal. · {it.quantity_received ?? 0} ent.
                       </span>
                     </div>
                   ))}
