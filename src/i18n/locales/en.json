@@ -1482,7 +1482,9 @@
         "diagnostics": "Full diagnostics",
         "health": "Control center",
         "certification": "Certification",
-        "smoke": "Smoke test"
+        "smoke": "Smoke test",
+        "mapping": "Account master",
+        "reconciliation": "Reconciliation"
       },
       "summary": {
         "checks": "Controls",
@@ -1504,7 +1506,9 @@
         "pass": "Financial engine: PASS",
         "warn": "{{count}} warning(s) detected",
         "fail": "{{count}} control(s) failed"
-      }
+      },
+      "mappingSubtitle": "Checks that every business operation has a valid account assigned in the account master.",
+      "reconSubtitle": "Compares operational documents against generated journal entries and flags what is not posted."
     },
     "status": {
       "pass": "pass",
