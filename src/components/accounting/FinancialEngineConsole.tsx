@@ -335,7 +335,7 @@ export function FinancialEngineConsole() {
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Source)} className="space-y-3">
         <TabsList className="flex-wrap h-auto">
-          {(["diagnostics", "health", "certification", "smoke"] as Source[]).map((s) => (
+          {(["diagnostics", "health", "certification", "smoke", "mapping", "reconciliation"] as Source[]).map((s) => (
             <TabsTrigger key={s} value={s}>
               {tabIcon[s]}
               {t(`finance.engine.tabs.${s}`)}
@@ -343,7 +343,7 @@ export function FinancialEngineConsole() {
           ))}
         </TabsList>
 
-        {(["diagnostics", "health", "certification", "smoke"] as Source[]).map((s) => (
+        {(["diagnostics", "health", "certification", "smoke", "mapping", "reconciliation"] as Source[]).map((s) => (
           <TabsContent key={s} value={s} className="space-y-3">
             <p className="text-xs text-muted-foreground">{t(subtitleKey[s])}</p>
 
