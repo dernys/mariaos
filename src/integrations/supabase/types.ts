@@ -9848,6 +9848,7 @@ export type Database = {
         }
         Returns: string
       }
+      current_actor_label: { Args: never; Returns: string }
       distance_km: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
