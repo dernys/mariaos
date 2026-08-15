@@ -188,7 +188,7 @@ const MarketplaceProduct = () => {
   const stockState = product.online_stock <= 0 ? "out" : product.online_stock <= 5 ? "low" : "ok";
   // Pickup is always guaranteed: if the business has no store flagged for pickup we still
   // allow in-store collection at the tenant's main location.
-  const pickupAvailable = stores.length === 0 || stores.some((s) => s.accepts_pickup) || true;
+  const pickupAvailable = true;
   const deliveryAvailable = stores.some((s) => s.accepts_delivery) && product.is_deliverable !== false;
 
   return (
