@@ -176,11 +176,70 @@ export function POSBar() {
   const handleSaleComplete = () => {
     setCart([]);
     setCartOpen(false);
+    setActiveOrderId(null);
+    setTabName("");
     try {
       if (cartKey) localStorage.removeItem(cartKey);
       localStorage.removeItem("pos_bar_cart_last");
     } catch { /* ignore */ }
   };
+
+  // Envía la cuenta a la barra/cocina: queda abierta hasta que se cobra.
+  const sendToKitchen = async () => {
+    if (cart.length === 0 || !tenantId) return;
+    let orderId = activeOrderId;
+
+    if (!orderId) {
+      const { data: order, error } = await supabase.from("kitchen_orders").insert({
+        tenant_id: tenantId,
+        table_name: tabName || t("pos.bar.account"),
+        status: "pending",
+        priority: "normal",
+        order_code: `BAR-${Date.now().toString().slice(-6)}`,
+        shift_id: shift?.id ?? null,
+        store_id: shift?.store_id ?? null,
+      } as any).select("id").single();
+      if (error || !order) { toast.error(error?.message ?? "No se pudo enviar la orden"); return; }
+      orderId = order.id;
+      setActiveOrderId(order.id);
+    } else {
+      await supabase.from("kitchen_order_items").delete().eq("order_id", orderId);
+      await supabase.from("kitchen_orders").update({ status: "pending", updated_at: new Date().toISOString() } as any).eq("id", orderId);
+    }
+
+    const { error: itemsErr } = await supabase.from("kitchen_order_items").insert(
+      cart.map((i) => ({
+        order_id: orderId!,
+        product_id: i.productId || null,
+        product_name: i.name,
+        sku: i.sku || null,
+        quantity: i.qty,
+        unit_price: i.price,
+      })) as any,
+    );
+    if (itemsErr) { toast.error(itemsErr.message); return; }
+
+    toast.success("Cuenta enviada a la barra");
+    setCart([]);
+    setCartOpen(false);
+    setActiveOrderId(null);
+  };
+
+  const loadOrder = (order: OpenOrder) => {
+    setActiveOrderId(order.id);
+    setTabName(order.table_name || "");
+    setCart(order.items.map((i, idx) => ({
+      id: Date.now() + idx,
+      name: i.product_name,
+      price: Number(i.unit_price || 0),
+      qty: Number(i.quantity || 0),
+      sku: i.sku || undefined,
+      productId: i.product_id || "",
+    })));
+    setOrdersOpen(false);
+    setCartOpen(true);
+  };
+
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
