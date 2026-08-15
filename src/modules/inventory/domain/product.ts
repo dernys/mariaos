@@ -15,6 +15,7 @@ export interface Product {
   is_online?: boolean;
   online_stock?: number;
   image_url?: string | null;
+  images?: string[];
   is_deliverable?: boolean;
 }
 
@@ -120,6 +121,7 @@ export interface ProductDraft {
   is_online?: boolean;
   online_stock?: number;
   image_url?: string | null;
+  images?: string[];
   is_deliverable?: boolean;
 }
 
@@ -141,6 +143,7 @@ export function normalizeProductDraft(draft: ProductDraft): ProductDraft {
     category: draft.category || null,
     warehouse_id: draft.warehouse_id || null,
     image_url: draft.image_url?.trim() || null,
+    images: (draft.images ?? []).map((u) => u.trim()).filter(Boolean),
     is_online: !!draft.is_online,
     online_stock: draft.is_online ? draft.online_stock || 0 : 0,
     is_deliverable: draft.is_deliverable ?? true,
