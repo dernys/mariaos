@@ -554,6 +554,12 @@ const Contabilidad = () => {
               </div>
             </TabsContent>
 
+            <TabsContent value="mappings" className="space-y-4">
+              <AccountMappingTab />
+            </TabsContent>
+
+
+
             <TabsContent value="periods" className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">{t("modules.accounting.periods.countLabel", { years: fiscalYears.length, periods: periods.length })}</p>
