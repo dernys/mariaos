@@ -115,48 +115,106 @@ export function POSRestaurant() {
     return ms && mc;
   }), [products, search, activeCategory]);
 
-  const handleSaleComplete = () => { setCart([]); setCartOpen(false); setSelectedTableId(null); setSelectedTableName(""); };
+  const handleSaleComplete = () => {
+    setCart([]);
+    setCartOpen(false);
+    setSelectedTableId(null);
+    setSelectedTableName("");
+    setActiveOrderId(null);
+    setOrderNotes("");
+    try { if (cartKey) localStorage.removeItem(cartKey); } catch { /* ignore */ }
+  };
 
+  // Envía (o amplía) la orden de cocina sin perder el carro: la orden queda
+  // abierta en "Órdenes" hasta que se cobra.
   const sendToKitchen = async () => {
-    if (cart.length === 0) return;
-    if (!tenantId) return;
+    if (cart.length === 0 || !tenantId) return;
 
-    const { data: order, error } = await supabase.from("kitchen_orders").insert({
-      tenant_id: tenantId,
-      table_id: selectedTableId,
-      table_name: selectedTableName || t("pos.restaurantView.noTable"),
-      status: "pending",
-      priority: "normal",
-      waiter_name: waiterName || null,
-      notes: orderNotes || null,
-    }).select("id").single();
+    let orderId = activeOrderId;
 
-    if (error || !order) {
-      toast({ title: t("common.error"), description: t("pos.restaurantView.orderError"), variant: "destructive" });
-      return;
+    if (!orderId) {
+      const code = `ORD-${Date.now().toString().slice(-6)}`;
+      const { data: order, error } = await supabase.from("kitchen_orders").insert({
+        tenant_id: tenantId,
+        table_id: selectedTableId,
+        table_name: selectedTableName || t("pos.restaurantView.noTable"),
+        status: "pending",
+        priority: "normal",
+        waiter_name: waiterName || null,
+        notes: orderNotes || null,
+        order_code: code,
+        shift_id: shift?.id ?? null,
+        store_id: shift?.store_id ?? null,
+      } as any).select("id").single();
+
+      if (error || !order) {
+        toast({ title: t("common.error"), description: error?.message || t("pos.restaurantView.orderError"), variant: "destructive" });
+        return;
+      }
+      orderId = order.id;
+      setActiveOrderId(order.id);
+    } else {
+      await supabase.from("kitchen_orders").update({
+        status: "pending",
+        notes: orderNotes || null,
+        waiter_name: waiterName || null,
+        updated_at: new Date().toISOString(),
+      } as any).eq("id", orderId);
+      // Reemplaza los renglones para reflejar modificaciones del carro.
+      await supabase.from("kitchen_order_items").delete().eq("order_id", orderId);
     }
 
     const items = cart.map((item) => ({
-      order_id: order.id,
+      order_id: orderId!,
+      product_id: item.productId || null,
       product_name: item.name,
+      sku: item.sku || null,
       quantity: item.qty,
+      unit_price: item.price,
       notes: item.notes || null,
     }));
 
-    await supabase.from("kitchen_order_items").insert(items);
+    const { error: itemsErr } = await supabase.from("kitchen_order_items").insert(items as any);
+    if (itemsErr) {
+      toast({ title: t("common.error"), description: itemsErr.message, variant: "destructive" });
+      return;
+    }
 
-    // Update table status if selected
     if (selectedTableId) {
       await supabase.from("restaurant_tables").update({
         status: "occupied",
-        current_order_id: order.id,
+        current_order_id: orderId,
         occupied_at: new Date().toISOString(),
       }).eq("id", selectedTableId);
     }
 
     toast({ title: t("pos.restaurantView.orderSent"), description: t("pos.restaurantView.orderSentDesc", { n: cart.length }) });
-    setOrderNotes("");
+    setCart([]);
+    setCartOpen(false);
+    setPosView("orders");
   };
+
+  // Recupera una orden abierta en el carro para cobrarla o modificarla.
+  const loadOrder = (order: OpenOrder) => {
+    setActiveOrderId(order.id);
+    setSelectedTableId(order.table_id);
+    setSelectedTableName(order.table_name || "");
+    setWaiterName(order.waiter_name || "");
+    setOrderNotes(order.notes || "");
+    setCart(order.items.map((i, idx) => ({
+      id: Date.now() + idx,
+      name: i.product_name,
+      price: Number(i.unit_price || 0),
+      qty: Number(i.quantity || 0),
+      sku: i.sku || undefined,
+      productId: i.product_id || "",
+      notes: i.notes || undefined,
+    })));
+    setPosView("menu");
+    setCartOpen(true);
+  };
+
+
 
   const handleTableSelect = (table: any) => {
     setSelectedTableId(table.id);
