@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, useId } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -36,19 +36,23 @@ export function useActiveShift() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+  const instanceId = useId();
+
   // Realtime: refresh when this user's shifts change
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel(`shifts-active-${user.id}`)
+      .channel(`shifts-active-${user.id}-${instanceId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "sales_shifts", filter: `user_id=eq.${user.id}` },
-        () => refresh()
+        () => refreshRef.current()
       )
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [user, refresh]);
+  }, [user, instanceId]);
 
   return { shift, loading, refresh };
 }
