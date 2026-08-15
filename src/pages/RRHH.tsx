@@ -514,11 +514,60 @@ export default function RRHH() {
           </TabsContent>
 
           <TabsContent value="payroll" className="space-y-3">
-            <div className="flex justify-end gap-2">
-              <PayrollBatchDialog tenantId={tenantId} defaultBonus={hrSettings.default_bonus} defaultDeductions={hrSettings.default_deductions} onDone={load} />
-              <Button onClick={openPayDialog} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />{t("modules.hr.payroll.generate")}</Button>
-
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 flex-1 min-w-[280px]">
+                <div className="col-span-2 md:col-span-1">
+                  <Label className="text-[11px]">Buscar</Label>
+                  <Input className="h-9" placeholder="Trabajador o comprobante" value={payFilters.q}
+                    onChange={(e) => { setPayPage(1); setPayFilters({ ...payFilters, q: e.target.value }); }} />
+                </div>
+                <div>
+                  <Label className="text-[11px]">Estado</Label>
+                  <Select value={payFilters.status} onValueChange={(v) => { setPayPage(1); setPayFilters({ ...payFilters, status: v }); }}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="pending">Generadas</SelectItem>
+                      <SelectItem value="approved">Aprobadas</SelectItem>
+                      <SelectItem value="paid">Pagadas</SelectItem>
+                      <SelectItem value="cancelled">Anuladas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-[11px]">Trabajador</Label>
+                  <Select value={payFilters.employee} onValueChange={(v) => { setPayPage(1); setPayFilters({ ...payFilters, employee: v }); }}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-[11px]">Desde</Label>
+                  <Input className="h-9" type="date" value={payFilters.from}
+                    onChange={(e) => { setPayPage(1); setPayFilters({ ...payFilters, from: e.target.value }); }} />
+                </div>
+                <div>
+                  <Label className="text-[11px]">Hasta</Label>
+                  <Input className="h-9" type="date" value={payFilters.to}
+                    onChange={(e) => { setPayPage(1); setPayFilters({ ...payFilters, to: e.target.value }); }} />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <PayrollBatchDialog tenantId={tenantId} defaultBonus={hrSettings.default_bonus} defaultDeductions={hrSettings.default_deductions} onDone={load} />
+                <Button onClick={openPayDialog} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />{t("modules.hr.payroll.generate")}</Button>
+              </div>
             </div>
+
+            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+              <span>{filteredPayrolls.length} nómina(s)</span>
+              <span>Neto filtrado: <b className="text-foreground tabular-nums">${filteredNet.toFixed(2)}</b></span>
+              <span>Pendientes de aprobar: <b className="text-foreground">{filteredPayrolls.filter((p) => p.status === "pending").length}</b></span>
+              <span>Aprobadas sin pagar: <b className="text-foreground">{filteredPayrolls.filter((p) => p.status === "approved").length}</b></span>
+            </div>
+
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -537,11 +586,15 @@ export default function RRHH() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payrolls.map((p) => {
+                  {pagedPayrolls.map((p) => {
                     const ap = apFor.get(p.id);
                     return (
-                      <TableRow key={p.id}>
-                        <TableCell className="font-medium">{p.employees?.name}</TableCell>
+                      <TableRow key={p.id} className="cursor-pointer" onClick={() => setDetailPayroll(p)}>
+                        <TableCell className="font-medium">
+                          {p.employees?.name}
+                          {signedIds.has(p.id) && <PenLine className="inline h-3 w-3 ml-1.5 text-emerald-500" />}
+                          {p.receipt_number && <span className="block text-[10px] text-muted-foreground">Nº {p.receipt_number}</span>}
+                        </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{p.employees?.position || "—"}</TableCell>
                         <TableCell className="text-xs">{p.period_start} → {p.period_end}</TableCell>
                         <TableCell className="text-right tabular-nums">{Number(p.hours_worked).toFixed(2)}</TableCell>
@@ -558,35 +611,39 @@ export default function RRHH() {
                           ) : <span className="text-xs text-muted-foreground">—</span>}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={p.status === "paid" ? "default" : p.status === "approved" ? "outline" : "secondary"}>
-                            {p.status === "paid" ? t("modules.hr.payroll.statusPaid") : p.status === "approved" ? "Aprobada" : t("modules.hr.payroll.statusPending")}
+                          <Badge variant={p.status === "paid" ? "default" : p.status === "approved" ? "outline" : p.status === "cancelled" ? "destructive" : "secondary"}>
+                            {PAYROLL_STATUS_LABEL[p.status] || p.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex gap-1 justify-end">
-                            {p.status !== "paid" && (
-                              <Button size="sm" variant="ghost" onClick={() => setEditPayroll(p as EditablePayroll)} className="gap-1" title="Editar nómina">
-                                <Edit2 className="h-3 w-3" />
-                              </Button>
-                            )}
-                            {p.status === "pending" && (
-                              <Button size="sm" variant="ghost" onClick={() => approvePayroll(p)} className="gap-1" title="Aprobar nómina">
-                                <ShieldCheck className="h-3 w-3" />
-                              </Button>
-                            )}
-                            {p.status !== "paid" && <Button size="sm" variant="outline" onClick={() => payNow(p)} className="gap-1"><CheckCircle2 className="h-3 w-3" />{t("modules.hr.payroll.pay")}</Button>}
-                            {p.status !== "paid" && <Button size="sm" variant="ghost" onClick={() => cancelPayroll(p)} className="text-destructive"><Trash2 className="h-3 w-3" /></Button>}
-                          </div>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          <PayrollActionsMenu
+                            payroll={p}
+                            tenantName={tenantName}
+                            requireApproval={hrSettings.require_payroll_approval}
+                            signed={signedIds.has(p.id)}
+                            onDetail={setDetailPayroll}
+                            onEdit={(row) => setEditPayroll(row as EditablePayroll)}
+                            onSign={setSignPayroll}
+                            onRefresh={load}
+                          />
                         </TableCell>
-
                       </TableRow>
                     );
                   })}
-                  {payrolls.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">{t("modules.hr.payroll.empty")}</TableCell></TableRow>}
+                  {filteredPayrolls.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">{t("modules.hr.payroll.empty")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
+              <TablePagination
+                page={payPage}
+                pageSize={payPageSize}
+                total={filteredPayrolls.length}
+                onPageChange={setPayPage}
+                onPageSizeChange={setPayPageSize}
+              />
             </CardContent></Card>
           </TabsContent>
+
+
 
           <TabsContent value="positions" className="space-y-3">
             <div className="flex justify-end">
