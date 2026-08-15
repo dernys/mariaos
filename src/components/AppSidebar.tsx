@@ -9,6 +9,7 @@ import {
   Settings,
   Shield,
   Clock,
+  RefreshCw,
   BookOpen,
   Zap,
   LogOut,
@@ -134,6 +135,7 @@ const menuGroups: MenuGroup[] = [
       { titleKey: "tables", url: "/mesas", icon: MapPin, types: ["restaurante", "restaurant", "bar"] },
       { titleKey: "kitchen", url: "/cocina", icon: ChefHat, types: ["restaurante", "restaurant", "bar"] },
       { titleKey: "shifts", url: "/turnos", icon: Clock },
+      { titleKey: "sync", url: "/sincronizacion", icon: RefreshCw },
     ],
   },
   {

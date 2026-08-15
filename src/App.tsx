@@ -41,6 +41,7 @@ const MarketplaceAuth = lazy(() => import("./pages/MarketplaceAuth"));
 const MisPedidos = lazy(() => import("./pages/MisPedidos"));
 const Repartidor = lazy(() => import("./pages/Repartidor"));
 const Reportes = lazy(() => import("./pages/Reportes"));
+const Sincronizacion = lazy(() => import("./pages/Sincronizacion"));
 const Fidelizacion = lazy(() => import("./pages/Fidelizacion"));
 const RRHH = lazy(() => import("./pages/RRHH"));
 const Delivery = lazy(() => import("./pages/Delivery"));
@@ -167,6 +168,8 @@ const App = () => (
               <Route path="/operaciones" element={<P m="operaciones"><Operaciones /></P>} />
               <Route path="/tesoreria" element={<P m="tesoreria"><Tesoreria /></P>} />
               <Route path="/developers" element={<P m="configuracion"><Developers /></P>} />
+
+              <Route path="/sincronizacion" element={<P m="pos"><Sincronizacion /></P>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
