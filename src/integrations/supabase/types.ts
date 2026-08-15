@@ -9054,6 +9054,58 @@ export type Database = {
           unbalanced_entries: number
         }[]
       }
+      accounting_mapping_catalog: {
+        Args: never
+        Returns: {
+          account_type: string
+          fallback_codes: string[]
+          mapping_key: string
+          module: string
+          operation: string
+          role_alias: string
+          side: string
+          sort_order: number
+        }[]
+      }
+      accounting_mapping_status: {
+        Args: { p_tenant: string }
+        Returns: {
+          account_code: string
+          account_id: string
+          account_name: string
+          account_type: string
+          detail: string
+          expected_type: string
+          last_used: string
+          lines_count: number
+          mapping_key: string
+          module: string
+          operation: string
+          remediation: string
+          side: string
+          source: string
+          type_ok: boolean
+        }[]
+      }
+      accounting_operation_reconciliation: {
+        Args: { p_from?: string; p_tenant: string; p_to?: string }
+        Returns: {
+          detail: string
+          difference: number
+          documents: number
+          documents_amount: number
+          documents_posted: number
+          documents_unposted: number
+          explanation: string
+          module: string
+          posted_amount: number
+          reference_type: string
+          remediation: string
+          sample: Json
+          severity: string
+          status: string
+        }[]
+      }
       allocate_consignment_for_sale: {
         Args: { p_sale_id: string }
         Returns: undefined
@@ -9374,6 +9426,18 @@ export type Database = {
           detail: string
           metric: number
           status: string
+        }[]
+      }
+      financial_kpi_breakdown: {
+        Args: { p_period_id?: string; p_tenant: string }
+        Returns: {
+          account_code: string
+          account_name: string
+          account_type: string
+          bucket: string
+          closing_balance: number
+          credit_total: number
+          debit_total: number
         }[]
       }
       find_account_by_codes: {
@@ -9821,6 +9885,10 @@ export type Database = {
         }
         Returns: string
       }
+      resolve_account_by_pattern: {
+        Args: { p_role: string; p_tenant: string }
+        Returns: string
+      }
       resolve_account_by_role: {
         Args: { p_role: string; p_tenant: string }
         Returns: string
@@ -9900,6 +9968,7 @@ export type Database = {
         Args: { p_declaration_id: string }
         Returns: Json
       }
+      sync_accounting_mappings: { Args: { p_tenant: string }; Returns: number }
       sync_offline_sale: { Args: { p_payload: Json }; Returns: string }
       twin_baseline: {
         Args: { p_days?: number; p_tenant_id: string }
