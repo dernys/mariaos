@@ -13,6 +13,7 @@ import { printThermalReceipt } from "@/lib/printReceipt";
 import { enqueueSale } from "@/lib/offline/db";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { useTranslation } from "react-i18next";
+import { useActiveShift } from "@/hooks/useActiveShift";
 
 interface CartItem {
   id: number;
@@ -72,6 +73,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const { t } = useTranslation();
   const { toast } = useToast();
   const { settings: posSettings } = usePOSSettings();
+  const { shift: activeShift } = useActiveShift();
   const [payments, setPayments] = useState<PaymentLine[]>([
     { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" },
   ]);
@@ -195,15 +197,9 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
       const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single();
 
-      // Validar turno abierto del usuario
-      const { data: openShift } = await supabase
-        .from("sales_shifts")
-        .select("id, store_id, store_name")
-        .eq("user_id", user.id)
-        .eq("status", "open")
-        .order("opened_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Turno abierto seleccionado en el POS (puede ser de otra tienda del negocio)
+      const openShift = activeShift;
+
 
       if (!openShift) {
         toast({

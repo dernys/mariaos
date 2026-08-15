@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Clock, Play, ArrowRight } from "lucide-react";
+import { Clock, Play, ArrowRight, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useActiveShift } from "@/hooks/useActiveShift";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -15,9 +16,10 @@ interface ShiftRequiredGateProps {
 
 export function ShiftRequiredGate({ children, variant = "empresa" }: ShiftRequiredGateProps) {
   const { t, i18n } = useTranslation();
-  const { shift, loading } = useActiveShift();
+  const { shift, openShifts, selectShift, loading } = useActiveShift();
   const nav = useNavigate();
   const dateLocale = i18n.language.startsWith("pt") ? ptBR : i18n.language.startsWith("en") ? enUS : es;
+
 
   if (loading) {
     return (
@@ -53,7 +55,7 @@ export function ShiftRequiredGate({ children, variant = "empresa" }: ShiftRequir
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 text-xs">
+      <div className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 text-xs flex-wrap">
         <div className="flex items-center gap-2 min-w-0">
           <span className="h-2 w-2 rounded-full bg-success animate-pulse shrink-0" />
           <span className="truncate">
@@ -65,11 +67,29 @@ export function ShiftRequiredGate({ children, variant = "empresa" }: ShiftRequir
             </span>
           </span>
         </div>
-        <button onClick={() => nav(`/turnos/${shift.id}`)} className="text-primary font-medium hover:underline shrink-0">
-          {t("pos.shift.view")}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {openShifts.length > 1 && (
+            <Select value={shift.id} onValueChange={(v) => selectShift(v)}>
+              <SelectTrigger className="h-7 text-xs w-[190px]">
+                <Store className="h-3 w-3 mr-1 shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {openShifts.map((s) => (
+                  <SelectItem key={s.id} value={s.id} className="text-xs">
+                    {s.store_name || "—"} · {format(new Date(s.opened_at), "HH:mm")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <button onClick={() => nav(`/turnos/${shift.id}`)} className="text-primary font-medium hover:underline">
+            {t("pos.shift.view")}
+          </button>
+        </div>
       </div>
       {children}
     </div>
   );
+
 }
