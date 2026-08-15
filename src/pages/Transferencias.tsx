@@ -124,7 +124,7 @@ export default function Transferencias() {
       supabase.from("stores").select("id, name").order("name"),
       supabase.from("products").select("id, name, sku").order("name"),
       supabase.from("stock_transfers").select("*").order("created_at", { ascending: false }).limit(300),
-      supabase.from("profiles").select("id, full_name, email"),
+      supabase.from("profiles").select("user_id, full_name"),
       supabase.from("product_stock").select("product_id, location_type, location_id, stock"),
     ]);
     setWarehouses((whR.data || []).map((w) => ({ ...w, type: "warehouse" as LocType })));
@@ -134,26 +134,28 @@ export default function Transferencias() {
     (psR.data || []).forEach((s: any) => { sm[`${s.product_id}|${s.location_type}|${s.location_id}`] = Number(s.stock) || 0; });
     setStockMap(sm);
     const nameMap: Record<string, string> = {};
-    (pfR.data || []).forEach((p: any) => { nameMap[p.id] = p.full_name || p.email || p.id; });
+    (pfR.data || []).forEach((p: any) => { if (p.user_id) nameMap[p.user_id] = p.full_name || p.user_id; });
     setPeople(nameMap);
     const ts = (trR.data || []) as unknown as Transfer[];
     setTransfers(ts);
     if (ts.length) {
       const { data: its } = await supabase
         .from("stock_transfer_items")
-        .select("transfer_id, product_id, quantity_requested, quantity_shipped, quantity_received, products(name)")
+        .select("transfer_id, product_id, product_name, quantity_requested, quantity_shipped, quantity_received")
         .in("transfer_id", ts.map((t) => t.id));
+      const prodNames = new Map((prR.data || []).map((p: any) => [p.id, p.name]));
       const grouped: Record<string, TransferItem[]> = {};
       (its || []).forEach((it: any) => {
         (grouped[it.transfer_id] = grouped[it.transfer_id] || []).push({
           product_id: it.product_id,
-          product_name: it.products?.name,
+          product_name: it.product_name || prodNames.get(it.product_id),
           quantity_requested: Number(it.quantity_requested),
           quantity_shipped: it.quantity_shipped !== null ? Number(it.quantity_shipped) : null,
           quantity_received: it.quantity_received !== null ? Number(it.quantity_received) : null,
         });
       });
       setItems(grouped);
+
     } else {
       setItems({});
     }
