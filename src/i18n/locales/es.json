@@ -118,6 +118,7 @@
       "tables": "Mapa de Mesas",
       "kitchen": "Cocina (KDS)",
       "shifts": "Turnos",
+      "sync": "Sincronización",
       "products": "Productos",
       "inventoryMovements": "Movimientos de inventario",
       "recipes": "Recetas",
