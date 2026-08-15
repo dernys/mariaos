@@ -140,6 +140,7 @@ const menuGroups: MenuGroup[] = [
     labelKey: "inventory",
     items: [
       { titleKey: "products", url: "/inventario", icon: Package },
+      { titleKey: "inventoryMovements", url: "/inventario/movimientos", icon: ArrowUpDown },
       { titleKey: "recipes", url: "/recetas", icon: Utensils, types: ["restaurante", "restaurant", "bar"] },
       { titleKey: "intelligence", url: "/inventario/inteligencia", icon: Brain },
       { titleKey: "counts", url: "/conteos", icon: Shield },
