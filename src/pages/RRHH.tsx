@@ -537,13 +537,28 @@ export default function RRHH() {
                             </Badge>
                           ) : <span className="text-xs text-muted-foreground">—</span>}
                         </TableCell>
-                        <TableCell><Badge variant={p.status === "paid" ? "default" : "secondary"}>{p.status === "paid" ? t("modules.hr.payroll.statusPaid") : t("modules.hr.payroll.statusPending")}</Badge></TableCell>
+                        <TableCell>
+                          <Badge variant={p.status === "paid" ? "default" : p.status === "approved" ? "outline" : "secondary"}>
+                            {p.status === "paid" ? t("modules.hr.payroll.statusPaid") : p.status === "approved" ? "Aprobada" : t("modules.hr.payroll.statusPending")}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-1 justify-end">
+                            {p.status !== "paid" && (
+                              <Button size="sm" variant="ghost" onClick={() => setEditPayroll(p as EditablePayroll)} className="gap-1" title="Editar nómina">
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {p.status === "pending" && (
+                              <Button size="sm" variant="ghost" onClick={() => approvePayroll(p)} className="gap-1" title="Aprobar nómina">
+                                <ShieldCheck className="h-3 w-3" />
+                              </Button>
+                            )}
                             {p.status !== "paid" && <Button size="sm" variant="outline" onClick={() => payNow(p)} className="gap-1"><CheckCircle2 className="h-3 w-3" />{t("modules.hr.payroll.pay")}</Button>}
                             {p.status !== "paid" && <Button size="sm" variant="ghost" onClick={() => cancelPayroll(p)} className="text-destructive"><Trash2 className="h-3 w-3" /></Button>}
                           </div>
                         </TableCell>
+
                       </TableRow>
                     );
                   })}
