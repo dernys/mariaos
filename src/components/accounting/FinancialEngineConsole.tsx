@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { exportCsv } from "@/lib/exportData";
 
 type Status = "pass" | "warn" | "fail" | "info";
-type Source = "diagnostics" | "health" | "certification" | "smoke";
+type Source = "diagnostics" | "health" | "certification" | "smoke" | "mapping" | "reconciliation";
 
 interface EngineRow {
   source: Source;
