@@ -531,7 +531,30 @@ const PedidosOnline = () => {
                 </div>
               </div>
               {selectedOrder.notes && <p className="text-xs text-muted-foreground">Nota: {selectedOrder.notes}</p>}
+
+              <div className="flex flex-wrap gap-2">
+                {!["delivered", "cancelled"].includes(selectedOrder.status) && (
+                  <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => setEditOrder(selectedOrder as EditableOrder)}>
+                    <Pencil className="h-3 w-3" /> Editar pedido
+                  </Button>
+                )}
+                {selectedOrder.delivery_type === "delivery" && !["delivered", "cancelled"].includes(selectedOrder.status) && (
+                  <>
+                    <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => setRecOrderId(selectedOrder.id)}>
+                      <Bike className="h-3 w-3" /> Sugerir repartidor
+                    </Button>
+                    <Button size="sm" variant="ghost" className="gap-1 text-xs" onClick={() => autoAssign(selectedOrder)}>
+                      <Sparkles className="h-3 w-3" /> Asignación automática
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              <div className="border-t pt-3">
+                <OrderTimeline orderId={selectedOrder.id} refreshKey={timelineKey} />
+              </div>
             </div>
+
           )}
         </DialogContent>
       </Dialog>
