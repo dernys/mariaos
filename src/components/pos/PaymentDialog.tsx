@@ -195,15 +195,9 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
       const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single();
 
-      // Validar turno abierto del usuario
-      const { data: openShift } = await supabase
-        .from("sales_shifts")
-        .select("id, store_id, store_name")
-        .eq("user_id", user.id)
-        .eq("status", "open")
-        .order("opened_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Turno abierto seleccionado en el POS (puede ser de otra tienda del negocio)
+      const openShift = activeShift;
+
 
       if (!openShift) {
         toast({
