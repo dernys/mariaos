@@ -1,205 +1,78 @@
+# Auditoría MarIA OS — Informe y plan de corrección
 
-# Rediseño profesional del Marketplace de MarIA OS
+## 1. Arquitectura encontrada
 
-## 1. Diagnóstico del marketplace actual
+- React + Vite + TypeScript, backend Lovable Cloud (Postgres + RLS + RPC + edge functions).
+- Contexto de tenant en `useTenantContext` (superadmin puede conmutar tenant activo; usuario normal toma su `tenant_users`).
+- Dos patrones de listado convivientes:
+  - `useServerTable` (paginación, búsqueda y filtros en base de datos) — usado solo en **Clientes, Facturas, Proveedores**.
+  - `useTableState` (trae todo y filtra/pagina en memoria) — Almacenes, Compras, Contabilidad, Cuentas, Empleados, Inventario, Recetas, Transferencias, y 2 paneles de contabilidad.
+  - Resto de páginas (~40): consultas con `.limit(50/100/200/500)` fijo, sin paginación ni total real.
+- Componentes compartidos ya existentes y reutilizables: `TableToolbar`, `TablePagination`, `DataState`, `SearchableSelect`, `ExportButton`.
 
-**Funciona bien**
-- Multi-tenant real (`tenants_public`, `stores_public`), checkout con RPC `place_online_order` (valida stock, multi-tenant).
-- Geolocalización + cálculo Haversine por tenant.
-- Carrito agrupado por negocio, deep link a `/auth` cuando no hay sesión.
+## 2. Tipos de tenant reales
 
-**Debilidades**
-1. **Diseño desalineado** con el sistema MarIA OS (verde plano emerald + gris, sin tokens semánticos, sin Space Grotesk/DM Sans).
-2. **Buscador débil**: sin autosugerencias, sin búsquedas recientes, sin scope (producto/negocio/categoría).
-3. **Filtros pobres**: solo categoría, negocio, delivery, distancia. Faltan: subcategoría, rango de precio, disponibilidad, sucursal, tipo de entrega, ofertas, rating, marca, tiempo de preparación.
-4. **Sin ordenamiento explícito** (solo orden implícito por distancia).
-5. **Cards básicas**: no muestran sucursal específica, tiempo estimado, badges (oferta/delivery), rating.
-6. **Sin ficha de producto** — no hay galería, descripción extendida, relacionados, info del negocio, variantes.
-7. **Mobile**: filtros viven en la barra superior y se vuelven inmanejables; falta drawer real.
-8. **Sin chips de filtros activos**, sin "limpiar filtros", sin skeletons.
+`bar`, `restaurant`, `empresa` (columna `tenants.business_type`). No hay “cafetería” ni “retail” como tipo: el tenant llamado “Retail MarIA Demo” es `empresa`.
 
-## 2. Arquitectura visual nueva
+## 3. Estado de los datos (verificado con SQL)
 
-Adopta el sistema MarIA OS (memoria del proyecto):
-- **Tema oscuro elegante** con superficie clara opcional para el marketplace público (modo "comercial premium"): bg `slate-950 / navy-deep`, superficies elevadas, acentos `emerald` semánticos vía tokens existentes en `index.css`.
-- Tipografía: Space Grotesk (titulares), DM Sans (cuerpo).
-- Tokens: usar `bg-background`, `text-foreground`, `bg-card`, `border-border`, `text-primary` (nunca `bg-emerald-600` hardcoded).
-- Sombras suaves: nuevo token `--shadow-product`, `--shadow-elevated`.
-- Radii consistentes (`rounded-2xl` para cards, `rounded-full` para chips).
+| Tenant | Tipo | Productos | Categorías | Ventas | Devoluciones | Mesas |
+|---|---|---|---|---|---|---|
+| Bar El Trópico | bar | 32 | 10 | 24 | 0 | 7 |
+| Restaurante La Mesa | restaurant | 34 | 12 | 20 | 0 | 24 |
+| TechStore Cuba | empresa | 30 | 14 | 18 | 0 | 0 |
+| Bar MarIA Demo | bar | 0 | 0 | 0 | 0 | 7 |
+| Restaurante MarIA Demo | restaurant | 0 | 0 | 0 | 0 | 9 |
+| Retail MarIA Demo | empresa | 0 | 0 | 0 | 0 | 0 |
 
-## 3. Estructura de la nueva página
+Integridad referencial: **sin hallazgos negativos** — 0 ventas sin líneas, 0 líneas huérfanas, 0 filas sin `tenant_id`, 0 líneas de venta con producto de otro tenant, 0 clientes sin tenant.
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ HEADER sticky: logo · buscador con autosugest · ubicación · │
-│                 idioma · login · carrito                     │
-├─────────────────────────────────────────────────────────────┤
-│ HERO compacto + chips de categorías destacadas (scroll-x)   │
-├─────────────────────────────────────────────────────────────┤
-│ TOOLBAR sticky: [Filtros] · Ordenar por · Chips activos · X │
-├─────────────────┬───────────────────────────────────────────┤
-│ SIDEBAR FILTROS │ GRID PRODUCTOS (responsive 2/3/4/5)       │
-│ (desktop)       │ Skeleton loaders                          │
-│ Drawer (mobile) │ Estado vacío ilustrado                    │
-└─────────────────┴───────────────────────────────────────────┘
-   FAB carrito mobile · CTA flotante sticky
-```
+Incoherencias reales encontradas:
+- Los 3 tenants “MarIA Demo” tienen mesas y clientes pero **cero categorías, productos, inventario y ventas**: módulos vacíos que aparentan un sistema roto.
+- La creación de un tenant (`trg_tenant_after_insert_bootstrap`) solo clona plan de cuentas, año fiscal y períodos. **No genera nada dependiente del tipo de negocio** (categorías, mesas si aplica, almacén/tienda por defecto, métodos de pago).
 
-## 4. Filtros (sidebar desktop / drawer mobile)
+## 4. Devoluciones — causa raíz confirmada
 
-Componente nuevo `MarketplaceFilters` con secciones colapsables:
-- **Categoría / Subcategoría** (de `product_categories`, jerarquía padre→hijo).
-- **Rango de precio** (slider doble min/max sobre el set visible).
-- **Disponibilidad**: en stock, bajo stock, agotado.
-- **Sucursal** (multi-select de `stores_public`).
-- **Negocio** (multi-select de `tenants_public`).
-- **Tipo de entrega**: delivery / pickup / ambos.
-- **Distancia** (slider 1–25 km, requiere geolocalización).
-- **Ofertas**: solo con descuento (tabla `promotions` activas).
-- **Marca**: cuando exista (campo derivado del nombre/categoría; si no hay, se oculta).
-- **Rating**: ≥3, ≥4, ≥5 (calculado vía agregado de reviews si existe; si no, oculto).
-- **Tiempo estimado**: ≤15 / ≤30 / ≤60 min (usar `pos_settings.kitchen_prep_avg_min` por tenant cuando exista; fallback "—").
+- La UI llama `process_sale_return(p_sale_id, p_items, p_reason, p_refund_method, p_return_type)`; la función real en base de datos es `process_sale_return(p_return_id, p_location_type, p_location_id)` y **solo repone stock** de una devolución ya creada. Por eso **nunca se ha podido registrar una devolución** (0 filas en `sale_returns`).
+- El historial lee columnas que no existen (`total_refunded`, `return_type`); las reales son `total`, `status`, `restock`, `performed_by`.
+- No existe RPC que cree la devolución, valide cantidades ya devueltas, calcule importes ni asocie turno.
+- El listado no tiene paginación, ni filtros, ni búsqueda, ni totales; la pestaña “Nueva” muestra solo las últimas 50 ventas filtradas en memoria por ticket.
+- Sí existen las piezas contables: `post_sale_return_journal_entry`, `trg_post_sale_return_journal`, `notify_sale_return`, `trg_sale_return_to_event`.
 
-Comportamiento:
-- Multi-selección, actualización en vivo (debounced 200 ms).
-- Chips de filtros activos en la toolbar, con `×` individual y "Limpiar todo".
-- Contadores por opción (`Bar (12)`).
+## 5. Multi-tenancy
 
-## 5. Ordenamiento
+RLS activa y correcta en `sales`, `sale_items`, `sale_returns`, `sale_return_items`, `products` (scope por `tenant_users`) con excepciones de superadmin. Puntos a revisar: varias políticas están concedidas al rol `public` (incluye `anon`) en lugar de `authenticated`, y muchas consultas del frontend omiten `.eq("tenant_id", …)` confiando solo en RLS — funciona para usuarios normales, pero para superadmin (que ve todos los tenants) mezcla datos de varios tenants en los listados.
 
-Select compacto con: relevancia, más vendidos (orden por `total_sold` precomputado en vista pública o cálculo client-side), mejor valorados, menor precio, mayor precio, más cercanos, más nuevos, entrega más rápida, mayor descuento.
+## 6. Plan de corrección por fases
 
-## 6. Buscador con autosugerencias
+**Fase A — Devoluciones (crítico)**
+1. Migración: RPC `create_sale_return(p_sale_id, p_items, p_reason, p_refund_method, p_restock, p_location_type, p_location_id)` con `SECURITY DEFINER` que valide pertenencia al tenant, calcule `qty` devuelta acumulada por `sale_item_id`, rechace exceder lo vendido, genere `return_number`, inserte cabecera y líneas con precio real de la venta, registre `performed_by`, y llame a la reposición de stock existente. Vista/RPC auxiliar de cantidades devueltas por línea de venta.
+2. Reescribir `Devoluciones.tsx`: usar el RPC correcto, mostrar por línea “vendido / ya devuelto / disponible a devolver”, y corregir el historial a las columnas reales.
+3. Historial con `useServerTable`: paginación real, búsqueda por nº de devolución/ticket, filtros por rango de fechas, estado, método, cliente y usuario, ordenamiento persistente, total de devoluciones e importe devuelto.
+4. Selector de venta en la pestaña “Nueva” con búsqueda server-side (ticket, cliente, fecha), no solo 50 filas.
 
-Componente nuevo `MarketplaceSearchBar`:
-- Input grande sticky, `cmdk`-style popover.
-- Sugerencias divididas en grupos: **Productos**, **Negocios**, **Categorías**.
-- Coincidencia fuzzy client-side sobre el set ya cargado (rápido, sin RPC extra).
-- Historial local (últimas 5 búsquedas) en `localStorage`.
-- Atajos: `/` para enfocar, `Esc` para cerrar.
+**Fase B — Coherencia de datos por tipo de tenant**
+1. Ampliar el bootstrap de tenant para crear datos iniciales según `business_type`: categorías propias del giro, tienda/almacén por defecto, métodos de pago, y mesas solo para `bar`/`restaurant`.
+2. Completar los 3 tenants “MarIA Demo” con catálogo, inventario, clientes, ventas con líneas/pagos, turnos y al menos una devolución real por tenant, todo generado por cadena de IDs reales (sin IDs fijos) y coherente con el giro. Quitar las mesas del tenant `empresa`.
 
-## 7. Product Card rediseñada
+**Fase C — Paginación y filtros estándar**
+1. Extender `useServerTable` con orden configurable desde la UI y rango de fechas reutilizable, manteniendo el contrato actual.
+2. Migrar por prioridad de volumen: Ventas/turnos, Compras, Inventario y movimientos, Cuentas, Contabilidad (diario/mayor), Pedidos online, RRHH. Cada listado con búsqueda, filtros aplicables, orden estable, `DataState` para loading/vacío/error y `TablePagination`.
 
-`MarketplaceProductCard` con:
-- Imagen (lazy, aspect-square, placeholder por tipo de negocio).
-- Badges top-left: **Oferta -%**, **Delivery**, **Nuevo**.
-- Badge top-right: stock indicator (`En stock`/`Últimas X`/`Agotado` en color semántico).
-- Nombre, descripción 1 línea.
-- Precio + moneda local del tenant (CUP/USD).
-- Footer: nombre del negocio + ícono · distancia · ⭐ rating (si hay) · 🕒 tiempo estimado.
-- Botón `+` (añadir) o stepper si ya está en carrito.
-- Click en card → ficha de producto.
+**Fase D — Aislamiento y KPIs**
+1. Añadir scope explícito `tenant_id` a las consultas de listados y KPIs (imprescindible para el modo superadmin) y estrechar las políticas concedidas a `public` hacia `authenticated` donde no haya acceso anónimo previsto.
+2. Verificar que cada KPI del Dashboard y Reportes derive de tablas reales del tenant activo y cuadre con los listados.
 
-## 8. Ficha de producto (`/marketplace/p/:id`)
+**Fase E — Validación**
+1. Consultas de control post-cambio (huérfanos, cross-tenant, devoluciones > vendido, totales vs listados).
+2. Pruebas de navegador de los flujos clave: crear devolución, paginar con filtros activos, cambiar de tenant.
 
-Página nueva con:
-- Galería (imagen principal + miniaturas, swipe en mobile).
-- Header: nombre, badges, precio con tachado de antes si hay oferta.
-- Selector de cantidad + CTA **Añadir al carrito** sticky en mobile.
-- Pestañas: **Descripción** · **Negocio** (sucursal, dirección, horario, distancia, mapa estático) · **Entrega** (delivery/pickup, zonas, costo).
-- **Productos relacionados** (misma categoría/tenant, 6 items).
-- **Complementarios** (otros productos del mismo tenant, distinta categoría).
-- Breadcrumbs y botón "Volver".
+## 7. Riesgos de migración
 
-## 9. Checkout mejorado
+- No se eliminarán tablas ni columnas: solo se añaden funciones/índices y datos demo.
+- Los datos demo nuevos se insertan solo en tenants con `is_demo` o en los tres tenants “MarIA Demo” vacíos; no se toca ningún dato transaccional existente.
+- Estrechar políticas RLS puede afectar rutas públicas (marketplace); se revisará cada política antes de cambiarla y se hará en una fase aislada y verificable.
 
-- Mantener flujo actual (`place_online_order` RPC, login requerido para confirmar).
-- Stepper visual: Carrito → Datos → Entrega → Confirmación.
-- Pre-rellenar datos con `profiles` del usuario logueado.
-- Mostrar **resumen por negocio** (cada tenant es un sub-pedido).
-- **Pantalla de éxito** rediseñada con número de pedido, próximos pasos, link a "Mis pedidos".
+## 8. Orden de ejecución propuesto
 
-## 10. Estados visuales
-
-- **Skeletons**: 10 cards mientras carga.
-- **Estado vacío de búsqueda**: ilustración + sugerencias para limpiar filtros.
-- **Estado sin negocios en zona**: CTA para ampliar distancia.
-- **Transiciones**: framer-motion fade+slide al cambiar filtros.
-
-## 11. Mobile UX
-
-- Header colapsable al hacer scroll (busca + carrito quedan visibles).
-- Botón **Filtros** abre `Sheet` desde abajo (no lateral) en mobile, con CTA "Mostrar X resultados".
-- Chips de categorías destacadas en scroll horizontal con snap.
-- FAB de carrito + barra inferior con total y CTA siempre visible cuando hay items.
-
-## 12. Integración real (sin datos ficticios)
-
-Confirmaciones:
-- Productos: `products` con `is_online=true`, `is_active=true`, `online_stock>0` (ya hecho).
-- Stock real validado en checkout vía RPC (ya hecho).
-- Sucursales reales: usar `stores_public` para sucursal por producto (warehouse_id→store opcional, fallback: primera sucursal del tenant).
-- Moneda real: `tenants.default_currency` (añadir al `tenants_public` si falta).
-- Tipo de negocio real: ya usado.
-- Promociones reales: `promotions` activas joineadas al producto.
-
-## 13. Validaciones técnicas
-
-- ✅ Multi-tenant: filtros respetan `tenant_id`, checkout sigue creando un pedido por tenant.
-- ✅ i18n: nuevas claves agregadas en `es.json` / `en.json` / `pt-BR.json` bajo `marketplace.*`.
-- ✅ Moneda: usa `useLocale`/`formatCurrency` por tenant.
-- ✅ Delivery: respeta `accepts_delivery` y `delivery_radius_km` de `stores_public`.
-- ✅ Contabilidad / inventario: intacto, sigue pasando por `place_online_order`.
-- ✅ Permisos: público para navegar; RLS de `online_orders` exige `auth.uid()`.
-- ✅ Rendimiento: filtros client-side sobre set ya cargado, memoización con `useMemo`, virtualización solo si >200 items (no por ahora).
-
-## 14. Plan de implementación
-
-**Fase A — Fundaciones**
-1. Crear hook `useMarketplaceData` (productos + tenants + stores + categorías + promos).
-2. Definir tokens visuales del marketplace en `index.css` (variantes claras/oscuras del modo público).
-3. Componentes nuevos en `src/components/marketplace/`:
-   - `MarketplaceHeader.tsx`
-   - `MarketplaceSearchBar.tsx` (con autosugest cmdk)
-   - `MarketplaceFilters.tsx` (sidebar + drawer)
-   - `MarketplaceSortSelect.tsx`
-   - `ActiveFilterChips.tsx`
-   - `MarketplaceProductCard.tsx`
-   - `ProductCardSkeleton.tsx`
-   - `EmptyState.tsx`
-
-**Fase B — Página principal**
-4. Reescribir `src/pages/Marketplace.tsx` componiendo lo anterior.
-
-**Fase C — Detalle**
-5. Crear `src/pages/MarketplaceProduct.tsx` y ruta `/marketplace/p/:id` en `App.tsx`.
-
-**Fase D — Checkout & éxito**
-6. Extraer carrito y checkout a `MarketplaceCartSheet.tsx` con stepper.
-7. Pantalla de éxito rediseñada.
-
-**Fase E — i18n y QA**
-8. Añadir claves a los tres idiomas.
-9. Smoke test con Playwright: navegación pública → filtro → detalle → añadir → login → checkout.
-
-## Detalles técnicos
-
-- Reusar `cmdk` ya disponible vía shadcn `Command`.
-- `Slider` shadcn para rango de precio y distancia.
-- `Sheet` shadcn lado `bottom` en mobile, `left` en desktop.
-- Categorías jerárquicas: `product_categories` tiene `parent_id` (verificar con read_query antes de implementar).
-- Promociones activas: filtro `is_active=true AND now() BETWEEN starts_at AND ends_at`.
-- Tiempo de preparación: usar `pos_settings.avg_prep_minutes` si existe, sino ocultar el filtro y el campo.
-- Rating: si `product_reviews` o similar no existe, se oculta el filtro y el badge — no se inventan estrellas.
-- Marca: si no hay columna `brand`, derivar de la primera palabra del nombre solo si el tenant es `empresa`; si no, ocultar.
-
-## Lista de cambios
-
-**Aplicados (al finalizar)**
-- Marketplace rediseñado mobile-first.
-- 14 filtros + ordenamiento + autosugerencias + chips activos.
-- Cards modernas con badges, stock, distancia, tiempo, sucursal.
-- Ficha de producto con galería, relacionados, info del negocio.
-- Checkout en stepper con resumen por negocio.
-- Skeletons, estados vacíos, transiciones.
-- i18n ES/EN/PT.
-
-**Pendientes / requieren cambios de schema (informar al usuario)**
-- Reviews/ratings (necesita tabla `product_reviews`).
-- Marca (necesita columna `brand` en `products`).
-- Tiempo de preparación por producto (hoy es por tenant).
-- Sucursal exacta por producto (hoy `warehouse_id` → mapeo a sucursal opcional).
-
-## Confirmación necesaria
-
-¿Apruebas este plan tal cual, o quieres priorizar/recortar alguna fase (p.ej. dejar la ficha de producto para una segunda iteración)?
+Fase A → verificar → Fase B → verificar → Fase C (por bloques) → Fase D → Fase E.
