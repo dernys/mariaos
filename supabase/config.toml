@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.ensure-demo-user]
 verify_jwt = false
+
+[functions.public-demo-stats]
+verify_jwt = false

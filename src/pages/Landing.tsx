@@ -134,7 +134,7 @@ const Landing = () => {
   // Métricas reales de las empresas demo (función pública agregada)
   useEffect(() => {
     let alive = true;
-    supabase.rpc("public_demo_stats").then(({ data }) => {
+    supabase.functions.invoke("public-demo-stats").then(({ data }) => {
       if (alive && data) setStats(data as unknown as DemoStats);
     });
     supabase.functions.invoke("ensure-demo-user", { body: { action: "list" } }).then(({ data }) => {

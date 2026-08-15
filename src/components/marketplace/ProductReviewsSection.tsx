@@ -29,11 +29,17 @@ export const ProductReviewsSection = ({ productId, tenantId, ratingAvg, reviewsC
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Columnas públicas: nunca se solicita customer_id (identidad del cliente).
+  const PUBLIC_COLS =
+    "id,tenant_id,product_id,rating,title,comment,is_verified_purchase,is_visible,created_at";
+
   const load = async () => {
     setLoading(true);
+    const { data: session } = await supabase.auth.getSession();
+    const cols = session?.session ? `${PUBLIC_COLS},user_id` : PUBLIC_COLS;
     const { data } = await supabase
       .from("product_reviews" as any)
-      .select("*")
+      .select(cols)
       .eq("product_id", productId)
       .eq("is_visible", true)
       .order("created_at", { ascending: false })
