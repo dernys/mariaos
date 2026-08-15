@@ -457,7 +457,7 @@ export default function Transferencias() {
                       </div>
                     </TableCell>
                     <TableCell className="text-xs hidden md:table-cell">
-                      {its.length} producto(s) · {its.reduce((a, b) => a + b.quantity_requested, 0)} u.
+                      {its.length} producto(s) · sol. {its.reduce((a, b) => a + b.quantity_requested, 0)} · sal. {its.reduce((a, b) => a + (b.quantity_shipped ?? 0), 0)} · ent. {its.reduce((a, b) => a + (b.quantity_received ?? 0), 0)}
                     </TableCell>
                     <TableCell className="text-xs hidden lg:table-cell">
                       <span className="inline-flex items-center gap-1"><User className="h-3 w-3 text-muted-foreground" />{tr.creatorName}</span>
