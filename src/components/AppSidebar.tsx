@@ -144,10 +144,11 @@ const menuGroups: MenuGroup[] = [
       { titleKey: "recipes", url: "/recetas", icon: Utensils, types: ["restaurante", "restaurant", "bar"] },
       { titleKey: "intelligence", url: "/inventario/inteligencia", icon: Brain },
       { titleKey: "counts", url: "/conteos", icon: Shield },
-      { titleKey: "warehouses", url: "/almacenes", icon: Warehouse, types: ["empresa"] },
-      { titleKey: "stores", url: "/tiendas", icon: Store, types: ["empresa"] },
+      { titleKey: "warehouses", url: "/almacenes", icon: Warehouse },
+      { titleKey: "stores", url: "/tiendas", icon: Store },
       { titleKey: "operationsItem", url: "/operaciones", icon: Workflow, types: ["empresa"] },
-      { titleKey: "transfers", url: "/transferencias", icon: ArrowRightLeft, types: ["empresa"] },
+      { titleKey: "transfers", url: "/transferencias", icon: ArrowRightLeft },
+
     ],
   },
   {
