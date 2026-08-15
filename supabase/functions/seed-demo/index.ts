@@ -19,6 +19,8 @@ type DemoConfig = {
   fullName: string;
   tenantName: string;
   tenantSlug: string;
+  storeName: string;
+  warehouseName: string;
   products: Prod[];
   recipes?: Recipe[];
   tables?: TableRow[];
@@ -197,6 +199,8 @@ const DEMOS: DemoConfig[] = [
     fullName: "Demo Bar",
     tenantName: "Bar MarIA Demo",
     tenantSlug: "demo-bar",
+    storeName: "Bar El Trópico — Salón",
+    warehouseName: "Bodega de Bar",
     products: BAR_PRODUCTS,
     recipes: BAR_RECIPES,
     tables: BAR_TABLES,
@@ -217,6 +221,8 @@ const DEMOS: DemoConfig[] = [
     fullName: "Demo Restaurante",
     tenantName: "Restaurante MarIA Demo",
     tenantSlug: "demo-restaurante",
+    storeName: "Restaurante MarIA — Salón",
+    warehouseName: "Almacén de Cocina",
     products: RST_PRODUCTS,
     recipes: RST_RECIPES,
     tables: RST_TABLES,
@@ -238,6 +244,8 @@ const DEMOS: DemoConfig[] = [
     fullName: "Demo Empresa",
     tenantName: "Retail MarIA Demo",
     tenantSlug: "demo-empresa",
+    storeName: "Tienda Retail MarIA — Vedado",
+    warehouseName: "Almacén Central Retail",
     products: EMP_PRODUCTS,
     customers: [
       { name: "María Fernández", phone: "+5355511122", email: "maria@example.com" },
