@@ -152,6 +152,36 @@ export function FinancialEngineConsole() {
           remediation: "none",
         });
       }
+      for (const r of (mapping?.data ?? []) as any[]) {
+        const st: Status = r.source === "unresolved" ? "fail" : r.source === "fallback" || !r.type_ok ? "warn" : "pass";
+        out.push({
+          source: "mapping",
+          area: r.module,
+          code: r.mapping_key,
+          status: st,
+          severity: st === "fail" ? "critical" : st === "warn" ? "medium" : "info",
+          metric: num(r.lines_count),
+          expected: null,
+          detail: `${r.account_code ? `${r.account_code} · ${r.account_name} — ` : ""}${r.detail ?? ""}`,
+          remediation: r.remediation ?? "none",
+        });
+      }
+      for (const r of (recon?.data ?? []) as any[]) {
+        const st = normalizeStatus(r.status);
+        out.push({
+          source: "reconciliation",
+          area: r.module,
+          code: `${r.module}_posting_coverage`,
+          status: st,
+          severity: r.severity ?? severityFromStatus(st),
+          metric: num(r.documents_unposted),
+          expected: 0,
+          detail: `${r.detail ?? ""} · ${r.explanation ?? ""}`,
+          remediation: r.remediation ?? "none",
+        });
+      }
+
+
 
       setRows(out);
       setLastRun(new Date());
