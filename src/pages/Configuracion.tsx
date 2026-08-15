@@ -24,6 +24,8 @@ const Configuracion = () => {
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Building2 className="h-3.5 w-3.5" />General</TabsTrigger>
           <TabsTrigger value="pos" className="gap-1.5 text-xs"><ShoppingCart className="h-3.5 w-3.5" />POS</TabsTrigger>
           <TabsTrigger value="modules" className="gap-1.5 text-xs"><Settings2 className="h-3.5 w-3.5" />Módulos</TabsTrigger>
+          <TabsTrigger value="hr" className="gap-1.5 text-xs"><Users className="h-3.5 w-3.5" />RRHH</TabsTrigger>
+          <TabsTrigger value="delivery" className="gap-1.5 text-xs"><Bike className="h-3.5 w-3.5" />Delivery</TabsTrigger>
           <TabsTrigger value="categories" className="gap-1.5 text-xs"><Tag className="h-3.5 w-3.5" />Categorías</TabsTrigger>
           <TabsTrigger value="taxes" className="gap-1.5 text-xs"><Percent className="h-3.5 w-3.5" />Impuestos</TabsTrigger>
           <TabsTrigger value="fiscal" className="gap-1.5 text-xs"><Scale className="h-3.5 w-3.5" />Motor Fiscal</TabsTrigger>
@@ -32,6 +34,11 @@ const Configuracion = () => {
         </TabsList>
 
         <TabsContent value="general"><ConfigGeneral /></TabsContent>
+        <TabsContent value="pos"><ConfigPOS /></TabsContent>
+        <TabsContent value="modules"><ConfigModules /></TabsContent>
+        <TabsContent value="hr"><ConfigHR /></TabsContent>
+        <TabsContent value="delivery"><ConfigDelivery /></TabsContent>
+
         <TabsContent value="pos"><ConfigPOS /></TabsContent>
         <TabsContent value="modules"><ConfigModules /></TabsContent>
         <TabsContent value="categories"><ConfigCategories /></TabsContent>
