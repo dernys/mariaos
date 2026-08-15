@@ -10,14 +10,14 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Activity, AlertTriangle, CheckCircle2, ChevronDown, Download, Info,
-  Play, ShieldCheck, Stethoscope, XCircle,
+  Activity, AlertTriangle, BookOpen, CheckCircle2, ChevronDown, Download, Info,
+  Play, Scale, ShieldCheck, Stethoscope, XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportCsv } from "@/lib/exportData";
 
 type Status = "pass" | "warn" | "fail" | "info";
-type Source = "diagnostics" | "health" | "certification" | "smoke";
+type Source = "diagnostics" | "health" | "certification" | "smoke" | "mapping" | "reconciliation";
 
 interface EngineRow {
   source: Source;
@@ -81,14 +81,18 @@ export function FinancialEngineConsole() {
     setRunning(true);
     try {
       const call = (fn: string) => (supabase as any).rpc(fn, { p_tenant: tenantId });
-      const [diag, health, cert, smoke] = await Promise.all([
+      const [diag, health, cert, smoke, mapping, recon] = await Promise.all([
         call("financial_engine_diagnostics"),
         call("financial_health_check"),
         call("certify_financial_integrity"),
         call("smoke_test_financial_core"),
+        call("accounting_mapping_status"),
+        (supabase as any).rpc("accounting_operation_reconciliation", {
+          p_tenant: tenantId, p_from: null, p_to: null,
+        }),
       ]);
 
-      const firstError = [diag, health, cert, smoke].find((r) => r?.error)?.error;
+      const firstError = [diag, health, cert, smoke, mapping, recon].find((r) => r?.error)?.error;
       if (firstError) toast.error(firstError.message);
 
       const out: EngineRow[] = [];
@@ -148,6 +152,36 @@ export function FinancialEngineConsole() {
           remediation: "none",
         });
       }
+      for (const r of (mapping?.data ?? []) as any[]) {
+        const st: Status = r.source === "unresolved" ? "fail" : r.source === "fallback" || !r.type_ok ? "warn" : "pass";
+        out.push({
+          source: "mapping",
+          area: r.module,
+          code: r.mapping_key,
+          status: st,
+          severity: st === "fail" ? "critical" : st === "warn" ? "medium" : "info",
+          metric: num(r.lines_count),
+          expected: null,
+          detail: `${r.account_code ? `${r.account_code} · ${r.account_name} — ` : ""}${r.detail ?? ""}`,
+          remediation: r.remediation ?? "none",
+        });
+      }
+      for (const r of (recon?.data ?? []) as any[]) {
+        const st = normalizeStatus(r.status);
+        out.push({
+          source: "reconciliation",
+          area: r.module,
+          code: `${r.module}_posting_coverage`,
+          status: st,
+          severity: r.severity ?? severityFromStatus(st),
+          metric: num(r.documents_unposted),
+          expected: 0,
+          detail: `${r.detail ?? ""} · ${r.explanation ?? ""}`,
+          remediation: r.remediation ?? "none",
+        });
+      }
+
+
 
       setRows(out);
       setLastRun(new Date());
@@ -229,6 +263,8 @@ export function FinancialEngineConsole() {
     health: <Activity className="h-3.5 w-3.5 mr-1" />,
     certification: <ShieldCheck className="h-3.5 w-3.5 mr-1" />,
     smoke: <Play className="h-3.5 w-3.5 mr-1" />,
+    mapping: <BookOpen className="h-3.5 w-3.5 mr-1" />,
+    reconciliation: <Scale className="h-3.5 w-3.5 mr-1" />,
   };
 
   const subtitleKey: Record<Source, string> = {
@@ -236,6 +272,8 @@ export function FinancialEngineConsole() {
     health: "finance.engine.healthSubtitle",
     certification: "finance.engine.certSubtitle",
     smoke: "finance.engine.smokeSubtitle",
+    mapping: "finance.engine.mappingSubtitle",
+    reconciliation: "finance.engine.reconSubtitle",
   };
 
   return (
@@ -297,7 +335,7 @@ export function FinancialEngineConsole() {
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Source)} className="space-y-3">
         <TabsList className="flex-wrap h-auto">
-          {(["diagnostics", "health", "certification", "smoke"] as Source[]).map((s) => (
+          {(["diagnostics", "health", "certification", "smoke", "mapping", "reconciliation"] as Source[]).map((s) => (
             <TabsTrigger key={s} value={s}>
               {tabIcon[s]}
               {t(`finance.engine.tabs.${s}`)}
@@ -305,7 +343,7 @@ export function FinancialEngineConsole() {
           ))}
         </TabsList>
 
-        {(["diagnostics", "health", "certification", "smoke"] as Source[]).map((s) => (
+        {(["diagnostics", "health", "certification", "smoke", "mapping", "reconciliation"] as Source[]).map((s) => (
           <TabsContent key={s} value={s} className="space-y-3">
             <p className="text-xs text-muted-foreground">{t(subtitleKey[s])}</p>
 

@@ -33,6 +33,8 @@ import CuCostSheetsTab from "@/components/accounting/CuCostSheetsTab";
 import { FinancialKpiPanel } from "@/components/accounting/FinancialKpiPanel";
 import { AccountingAuditPanel } from "@/components/accounting/AccountingAuditPanel";
 import { FinancialEngineConsole } from "@/components/accounting/FinancialEngineConsole";
+import { AccountMappingTab } from "@/components/accounting/AccountMappingTab";
+import { OperationReconciliationPanel } from "@/components/accounting/OperationReconciliationPanel";
 
 
 
@@ -61,7 +63,7 @@ const TYPE_COLOR: Record<string, string> = {
 };
 
 const SECTION_VALUES = [
-  { value: "plan", icon: ListTree, subs: ["accounts", "periods"] },
+  { value: "plan", icon: ListTree, subs: ["accounts", "mappings", "periods"] },
   { value: "operacion", icon: ClipboardList, subs: ["entries", "cost_centers", "budgets"] },
   { value: "analisis", icon: BarChart3, subs: ["reports"] },
   { value: "fiscal", icon: Landmark, subs: ["onat", "costos"] },
@@ -444,6 +446,7 @@ const Contabilidad = () => {
           <Tabs value={subTab} onValueChange={setSubTab} className="space-y-4">
             <TabsList>
               <TabsTrigger value="accounts"><ListTree className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.accounts")}</TabsTrigger>
+              <TabsTrigger value="mappings"><Landmark className="h-3.5 w-3.5 mr-1" />{t("finance.mapping.tab", { defaultValue: "Maestro de Cuentas" })}</TabsTrigger>
               <TabsTrigger value="periods"><CalendarClock className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.periods")}</TabsTrigger>
             </TabsList>
 
@@ -550,6 +553,12 @@ const Contabilidad = () => {
                 )}
               </div>
             </TabsContent>
+
+            <TabsContent value="mappings" className="space-y-4">
+              <AccountMappingTab />
+            </TabsContent>
+
+
 
             <TabsContent value="periods" className="space-y-4">
               <div className="flex items-center justify-between">
@@ -762,6 +771,7 @@ const Contabilidad = () => {
             <TabsContent value="reports" className="space-y-4">
               <FinancialKpiPanel />
               <AccountingAuditPanel />
+              <OperationReconciliationPanel />
               <FinancialEngineConsole />
 
               <AccountingReports accounts={accounts as any} />

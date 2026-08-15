@@ -1482,7 +1482,9 @@
         "diagnostics": "Diagnóstico integral",
         "health": "Centro de control",
         "certification": "Certificación",
-        "smoke": "Smoke test"
+        "smoke": "Smoke test",
+        "mapping": "Maestro de cuentas",
+        "reconciliation": "Conciliación"
       },
       "summary": {
         "checks": "Controles",
@@ -1504,7 +1506,9 @@
         "pass": "Motor financiero: APTO",
         "warn": "{{count}} advertencia(s) detectada(s)",
         "fail": "{{count}} control(es) fallido(s)"
-      }
+      },
+      "mappingSubtitle": "Verifica que cada operación de la aplicación tenga asignada una cuenta contable válida en el maestro de cuentas.",
+      "reconSubtitle": "Compara los documentos operativos con los asientos generados y señala los que faltan por contabilizar."
     },
     "status": {
       "pass": "correcto",
