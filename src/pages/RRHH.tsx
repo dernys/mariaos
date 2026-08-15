@@ -245,13 +245,23 @@ export default function RRHH() {
     toast({ title: t("modules.hr.payroll.generated"), description: t("modules.hr.payroll.generatedDesc", { amount: `$${preview.net.toFixed(2)}` }) });
     setPayDialog(false); load();
   };
+  const approvePayroll = async (p: Payroll) => {
+    const { error } = await (supabase.rpc as any)("approve_payroll_run", { p_payroll_id: p.id });
+    if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
+    toast({ title: "Nómina aprobada", description: `${p.employees?.name || "—"} · $${Number(p.net_pay).toFixed(2)}` });
+    load();
+  };
   const payNow = async (p: Payroll) => {
+    if (hrSettings.require_payroll_approval && p.status !== "approved") {
+      return toast({ title: "Aprobación requerida", description: "Aprueba la nómina antes de registrar el pago.", variant: "destructive" });
+    }
     if (!confirm(t("modules.hr.payroll.payConfirm", { name: p.employees?.name || "—", amount: `$${Number(p.net_pay).toFixed(2)}` }))) return;
-    const { error } = await (supabase.rpc as any)("pay_payroll", { _payroll_id: p.id, _method: "transfer", _notes: null });
+    const { error } = await (supabase.rpc as any)("pay_payroll", { _payroll_id: p.id, _method: p.payment_method || hrSettings.payment_method || "transfer", _notes: null });
     if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     toast({ title: t("modules.hr.payroll.paymentRegistered") });
     load();
   };
+
   const cancelPayroll = async (p: Payroll) => {
     if (p.status === "paid") return;
     if (!confirm(t("modules.hr.payroll.cancelConfirm"))) return;
