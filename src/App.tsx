@@ -37,6 +37,7 @@ const Cuentas = lazy(() => import("./pages/Cuentas"));
 const Facturas = lazy(() => import("./pages/Facturas"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const MarketplaceProduct = lazy(() => import("./pages/MarketplaceProduct"));
+const MarketplaceAuth = lazy(() => import("./pages/MarketplaceAuth"));
 const MisPedidos = lazy(() => import("./pages/MisPedidos"));
 const Repartidor = lazy(() => import("./pages/Repartidor"));
 const Reportes = lazy(() => import("./pages/Reportes"));
