@@ -96,43 +96,62 @@ export const ProductReviewsSection = ({ productId, tenantId, ratingAvg, reviewsC
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
-        <p className="text-sm font-medium">
-          {myReview ? t("marketplace.reviews.editYours") : t("marketplace.reviews.writeYours")}
-        </p>
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setRating(n)}
-              className="p-1 hover:scale-110 transition-transform"
-              aria-label={`${n} stars`}
-            >
-              <Star className={`h-6 w-6 ${n <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`} />
-            </button>
-          ))}
+      {!canReview ? (
+        <div className="bg-card border border-border rounded-2xl p-4 space-y-2 text-center">
+          <ShieldCheck className="h-6 w-6 text-primary mx-auto" />
+          <p className="text-sm font-medium">
+            {user ? "Confirma tu correo para poder comentar" : t("marketplace.reviews.loginRequired")}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {user
+              ? "Te enviamos un enlace de verificación al registrarte. Actívalo y vuelve a esta página."
+              : "Solo los compradores con cuenta verificada pueden valorar y comentar productos."}
+          </p>
+          {!user && (
+            <Button asChild size="sm" className="rounded-full mt-1">
+              <Link to={`/marketplace/acceso?next=${encodeURIComponent(location.pathname)}`}>
+                {t("marketplace.createAccount")}
+              </Link>
+            </Button>
+          )}
         </div>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={t("marketplace.reviews.titlePh")}
-          maxLength={120}
-        />
-        <Textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder={t("marketplace.reviews.commentPh")}
-          rows={3}
-          maxLength={1000}
-        />
-        <Button onClick={submit} disabled={submitting || !user} className="rounded-full">
-          {submitting ? t("common.saving") : myReview ? t("common.save") : t("marketplace.reviews.publish")}
-        </Button>
-        {!user && (
-          <p className="text-xs text-muted-foreground">{t("marketplace.reviews.loginRequired")}</p>
-        )}
-      </div>
+      ) : (
+        <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <p className="text-sm font-medium">
+            {myReview ? t("marketplace.reviews.editYours") : t("marketplace.reviews.writeYours")}
+          </p>
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRating(n)}
+                className="p-1 hover:scale-110 transition-transform"
+                aria-label={`${n} stars`}
+              >
+                <Star className={`h-6 w-6 ${n <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`} />
+              </button>
+            ))}
+          </div>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={t("marketplace.reviews.titlePh")}
+            maxLength={120}
+          />
+          <Textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={t("marketplace.reviews.commentPh")}
+            rows={3}
+            maxLength={1000}
+          />
+          <Button onClick={submit} disabled={submitting} className="rounded-full">
+            {submitting ? t("common.saving") : myReview ? t("common.save") : t("marketplace.reviews.publish")}
+          </Button>
+        </div>
+      )}
+
 
       <div className="space-y-3">
         {loading && <p className="text-sm text-muted-foreground">{t("common.loading")}</p>}
