@@ -263,6 +263,8 @@ export function FinancialEngineConsole() {
     health: <Activity className="h-3.5 w-3.5 mr-1" />,
     certification: <ShieldCheck className="h-3.5 w-3.5 mr-1" />,
     smoke: <Play className="h-3.5 w-3.5 mr-1" />,
+    mapping: <BookOpen className="h-3.5 w-3.5 mr-1" />,
+    reconciliation: <Scale className="h-3.5 w-3.5 mr-1" />,
   };
 
   const subtitleKey: Record<Source, string> = {
@@ -270,6 +272,8 @@ export function FinancialEngineConsole() {
     health: "finance.engine.healthSubtitle",
     certification: "finance.engine.certSubtitle",
     smoke: "finance.engine.smokeSubtitle",
+    mapping: "finance.engine.mappingSubtitle",
+    reconciliation: "finance.engine.reconSubtitle",
   };
 
   return (
