@@ -99,7 +99,12 @@ const PedidosOnline = () => {
   const [filterType, setFilterType] = useState("all");
   const [search, setSearch] = useState("");
   const [recOrderId, setRecOrderId] = useState<string | null>(null);
+  const [reassignOrderId, setReassignOrderId] = useState<string | null>(null);
+  const [editOrder, setEditOrder] = useState<EditableOrder | null>(null);
+  const [timelineKey, setTimelineKey] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
+  const { settings: dsettings } = useModuleSettings<DeliverySettings>("delivery", DELIVERY_DEFAULTS);
+
 
   const fetchOrders = useCallback(async () => {
     if (!tenantId) return;
