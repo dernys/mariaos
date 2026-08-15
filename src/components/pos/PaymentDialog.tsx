@@ -13,6 +13,7 @@ import { printThermalReceipt } from "@/lib/printReceipt";
 import { enqueueSale } from "@/lib/offline/db";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { useTranslation } from "react-i18next";
+import { useActiveShift } from "@/hooks/useActiveShift";
 
 interface CartItem {
   id: number;
@@ -72,6 +73,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const { t } = useTranslation();
   const { toast } = useToast();
   const { settings: posSettings } = usePOSSettings();
+  const { shift: activeShift } = useActiveShift();
   const [payments, setPayments] = useState<PaymentLine[]>([
     { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" },
   ]);
