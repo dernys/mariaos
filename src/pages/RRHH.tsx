@@ -496,8 +496,10 @@ export default function RRHH() {
           </TabsContent>
 
           <TabsContent value="payroll" className="space-y-3">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <PayrollBatchDialog tenantId={tenantId} defaultBonus={hrSettings.default_bonus} defaultDeductions={hrSettings.default_deductions} onDone={load} />
               <Button onClick={openPayDialog} className="gradient-brand text-primary-foreground gap-1"><Plus className="h-4 w-4" />{t("modules.hr.payroll.generate")}</Button>
+
             </div>
             <Card><CardContent className="p-0 overflow-x-auto">
               <Table>
