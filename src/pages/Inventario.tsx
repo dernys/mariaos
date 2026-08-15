@@ -60,6 +60,11 @@ const domainMessage = (e: any, t: (k: string) => string) => {
 const Inventario = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [routeTab, setRouteTab] = useState(
+    location.pathname.startsWith("/inventario/movimientos") ? "movements" : "products",
+  );
   const { tenantId } = useInventoryDeps();
   const { toast } = useToast();
   const { products, warehouses, stores, locationStocks, movements, loading, refetch } = useInventory();
