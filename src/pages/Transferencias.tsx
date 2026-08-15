@@ -572,24 +572,36 @@ export default function Transferencias() {
                 </Button>
               </div>
               <div className="space-y-2">
-                {draftItems.map((d, i) => (
-                  <div key={i} className="flex gap-2 items-center">
-                    <SearchableSelect
-                      className="flex-1"
-                      options={productOptions}
-                      value={d.product_id}
-                      onChange={(v) => { const arr = [...draftItems]; arr[i].product_id = v; setDraftItems(arr); }}
-                      placeholder="Producto"
-                      searchPlaceholder="Buscar producto..."
-                    />
-                    <Input type="number" min="1" className="w-24 h-9 text-xs" value={d.quantity}
-                      onChange={(e) => { const arr = [...draftItems]; arr[i].quantity = e.target.value; setDraftItems(arr); }} />
-                    <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setDraftItems(draftItems.filter((_, j) => j !== i))}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                ))}
+                {draftItems.map((d, i) => {
+                  const avail = d.product_id && originId ? stockAt(d.product_id, originType, originId) : null;
+                  const over = avail !== null && Number(d.quantity) > avail;
+                  return (
+                    <div key={i} className="space-y-1">
+                      <div className="flex gap-2 items-center">
+                        <SearchableSelect
+                          className="flex-1"
+                          options={productOptions}
+                          value={d.product_id}
+                          onChange={(v) => { const arr = [...draftItems]; arr[i].product_id = v; setDraftItems(arr); }}
+                          placeholder="Producto"
+                          searchPlaceholder="Buscar producto..."
+                        />
+                        <Input type="number" min="1" className="w-24 h-9 text-xs" value={d.quantity}
+                          onChange={(e) => { const arr = [...draftItems]; arr[i].quantity = e.target.value; setDraftItems(arr); }} />
+                        <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setDraftItems(draftItems.filter((_, j) => j !== i))}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      {avail !== null && (
+                        <p className={`text-[10px] ${over ? "text-destructive" : "text-muted-foreground"}`}>
+                          Disponible en origen: {avail} u.{over ? " · excede el stock disponible" : ""}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+
             </div>
 
             <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
