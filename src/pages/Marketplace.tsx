@@ -27,8 +27,8 @@ import {
   distanceKm,
   formatPrice,
 } from "@/components/marketplace/types";
-import type {
 import { Seo } from "@/components/Seo";
+import type {
   CartItem,
   MarketProduct,
   MarketplaceFilterState,
