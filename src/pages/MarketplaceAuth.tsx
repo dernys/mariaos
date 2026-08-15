@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Seo } from "@/components/Seo";
 
 type View = "login" | "register" | "forgot";
 
@@ -133,6 +134,11 @@ const MarketplaceAuth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Seo
+        title="Crear cuenta de comprador"
+        description="Regístrate como comprador para hacer pedidos en el marketplace, seguir tus entregas y dejar reseñas verificadas de tus compras."
+        path="/marketplace/acceso"
+      />
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
           <div className="h-12 w-12 rounded-xl gradient-brand flex items-center justify-center mb-3">

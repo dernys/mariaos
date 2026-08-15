@@ -28,6 +28,7 @@ import {
   formatPrice,
 } from "@/components/marketplace/types";
 import type {
+import { Seo } from "@/components/Seo";
   CartItem,
   MarketProduct,
   MarketplaceFilterState,
@@ -281,6 +282,17 @@ const Marketplace = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Marketplace — compra en negocios locales"
+        description="Explora productos de bares, restaurantes y tiendas locales: busca por categoría, compara precios y pide con entrega a domicilio o recogida."
+        path="/marketplace"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Marketplace MarIA OS",
+          url: "https://bizzen-aura.lovable.app/marketplace",
+        }}
+      />
       {/* HEADER */}
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">

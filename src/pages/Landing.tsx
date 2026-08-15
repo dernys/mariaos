@@ -14,6 +14,7 @@ import mariaLogo from "@/assets/maria-logo.png";
 import heroBg from "@/assets/landing-hero-bg.jpg";
 
 import { Clock4 } from "lucide-react";
+import { Seo } from "@/components/Seo";
 
 const moduleSlides = [
   { img: "/landing/modules/dashboard.jpg", icon: BarChart3, title: "Dashboard Ejecutivo", desc: "Indicadores del negocio en vivo: ventas, ticket promedio, margen bruto, valor de inventario y rendimiento por tienda, con comparativa entre periodos.", features: ["KPIs con deltas", "Rangos y comparativas", "Desglose por tienda"] },
@@ -176,6 +177,20 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
+      <Seo
+        title="MarIA OS — Sistema operativo empresarial con IA para Cuba y LatAm"
+        description="POS, inventario, contabilidad de partida doble, RRHH, delivery y agentes de IA en una sola plataforma. Prueba las demos reales por tipo de negocio."
+        path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "MarIA OS",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: "https://bizzen-aura.lovable.app/",
+          publisher: { "@type": "Organization", name: "Kirabit" },
+        }}
+      />
       {/* Nav */}
       <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-background/70 border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
