@@ -71,7 +71,7 @@ export const MarketplaceCartSheet = ({
     if (!user) {
       toast({ title: t("marketplace.toasts.loginRequired"), description: t("marketplace.toasts.needAccount") });
       onOpenChange(false);
-      navigate("/auth");
+      navigate("/marketplace/acceso");
       return;
     }
     setStep("info");

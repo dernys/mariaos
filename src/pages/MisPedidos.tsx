@@ -98,7 +98,7 @@ const MisPedidos = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate("/auth");
+      navigate("/marketplace/acceso");
       return;
     }
     load();
