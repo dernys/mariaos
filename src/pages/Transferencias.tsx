@@ -244,12 +244,68 @@ export default function Transferencias() {
     fetchAll();
   };
 
-  const receive = async (id: string) => {
-    const { error } = await supabase.rpc("receive_stock_transfer", { p_transfer_id: id });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Transferencia recibida y stock actualizado" });
-    fetchAll();
+  /** Abre el diálogo de salida (envío) o entrada (recepción) con cantidades por producto. */
+  const openFlow = (tr: Transfer, mode: "ship" | "receive") => {
+    const its = items[tr.id] || [];
+    const qty: Record<string, string> = {};
+    its.forEach((it) => {
+      qty[it.product_id] = String(
+        mode === "ship"
+          ? it.quantity_shipped ?? it.quantity_requested
+          : it.quantity_received ?? it.quantity_shipped ?? it.quantity_requested,
+      );
+    });
+    setFlowQty(qty);
+    setFlow({ transfer: tr, mode });
   };
+
+  const confirmFlow = async () => {
+    if (!flow) return;
+    const { transfer: tr, mode } = flow;
+    const its = items[tr.id] || [];
+    const parsed = its.map((it) => ({ ...it, qty: Number(flowQty[it.product_id] ?? 0) }));
+    if (parsed.some((p) => !Number.isFinite(p.qty) || p.qty < 0)) {
+      toast({ title: "Cantidades inválidas", variant: "destructive" }); return;
+    }
+    if (!parsed.some((p) => p.qty > 0)) {
+      toast({ title: "Indica al menos una cantidad mayor que cero", variant: "destructive" }); return;
+    }
+
+    if (mode === "ship") {
+      const overflow = parsed.find((p) => p.qty > stockAt(p.product_id, tr.origin_type, tr.origin_id));
+      if (overflow) {
+        toast({
+          title: "Stock insuficiente en origen",
+          description: `${overflow.product_name}: disponible ${stockAt(overflow.product_id, tr.origin_type, tr.origin_id)}`,
+          variant: "destructive",
+        });
+        return;
+      }
+      for (const p of parsed) {
+        const { error } = await supabase.from("stock_transfer_items")
+          .update({ quantity_shipped: p.qty })
+          .eq("transfer_id", tr.id).eq("product_id", p.product_id);
+        if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      }
+      const { error } = await supabase.from("stock_transfers").update({
+        status: "in_transit", shipped_at: new Date().toISOString(), shipped_by: user?.id,
+      } as any).eq("id", tr.id);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Salida registrada", description: "Transferencia en tránsito" });
+    } else {
+      for (const p of parsed) {
+        const { error } = await supabase.from("stock_transfer_items")
+          .update({ quantity_received: p.qty })
+          .eq("transfer_id", tr.id).eq("product_id", p.product_id);
+        if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      }
+      const { error } = await supabase.rpc("receive_stock_transfer", { p_transfer_id: tr.id });
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Entrada registrada", description: "Stock de origen y destino actualizado" });
+    }
+    setFlow(null); setFlowQty({}); fetchAll();
+  };
+
 
   const locName = (type: string, id: string) => {
     const list = type === "warehouse" ? warehouses : stores;
