@@ -355,9 +355,14 @@ const PedidosOnline = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => viewDetails(order)}>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Ver detalle" onClick={() => viewDetails(order)}>
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
+                        {!["delivered", "cancelled"].includes(order.status) && (
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Editar pedido" onClick={() => setEditOrder(order as EditableOrder)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                         {!order.sale_id && order.status !== "cancelled" && (
                           <Button
                             size="sm"
@@ -379,15 +384,41 @@ const PedidosOnline = () => {
                           </Button>
                         )}
                         {order.status === "ready" && order.delivery_type === "delivery" && (
-                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setRecOrderId(order.id)}>
-                            <Bike className="h-3 w-3 mr-1" /> Repartidor
-                          </Button>
+                          <>
+                            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setRecOrderId(order.id)}>
+                              <Bike className="h-3 w-3 mr-1" /> Repartidor
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={dsettings.auto_assign ? "default" : "ghost"}
+                              className="h-7 text-[10px]"
+                              disabled={busy === order.id}
+                              title="Asignar automáticamente el mejor repartidor"
+                              onClick={() => autoAssign(order)}
+                            >
+                              {busy === order.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                            </Button>
+                          </>
+                        )}
+                        {["rider_assigned", "in_transit"].includes(order.status) && (
+                          <>
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px]" title="Reasignar repartidor" onClick={() => setReassignOrderId(order.id)}>
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px]" title="Cancelar entrega" disabled={busy === order.id} onClick={() => cancelDelivery(order)}>
+                              <Ban className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setStatus(order, "delivered")}>
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Entregado
+                            </Button>
+                          </>
                         )}
                         {order.status === "ready" && order.delivery_type === "pickup" && (
                           <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setStatus(order, "delivered")}>
                             <CheckCircle2 className="h-3 w-3 mr-1" /> Entregado
                           </Button>
                         )}
+
                         {!["delivered", "cancelled"].includes(order.status) && (
                           <Button
                             size="sm"
