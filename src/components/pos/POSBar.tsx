@@ -67,6 +67,11 @@ export function POSBar() {
   const [cartOpen, setCartOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [parkingOpen, setParkingOpen] = useState(false);
+  const [ordersOpen, setOrdersOpen] = useState(false);
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
+  const [tabName, setTabName] = useState("");
+  const { shift } = useActiveShift();
+
 
   // Tenant-scoped cart persistence: re-hydrate when tenant becomes known.
   useEffect(() => {
