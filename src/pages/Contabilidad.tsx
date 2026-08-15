@@ -446,6 +446,7 @@ const Contabilidad = () => {
           <Tabs value={subTab} onValueChange={setSubTab} className="space-y-4">
             <TabsList>
               <TabsTrigger value="accounts"><ListTree className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.accounts")}</TabsTrigger>
+              <TabsTrigger value="mappings"><Landmark className="h-3.5 w-3.5 mr-1" />{t("finance.mapping.tab", { defaultValue: "Maestro de Cuentas" })}</TabsTrigger>
               <TabsTrigger value="periods"><CalendarClock className="h-3.5 w-3.5 mr-1" />{t("modules.accounting.tabs.periods")}</TabsTrigger>
             </TabsList>
 
