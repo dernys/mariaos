@@ -142,6 +142,18 @@ export function POSRestaurant() {
   const total = subtotal + tax;
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
 
+  const openNote = (id: number) => {
+    setNoteItemId(id);
+    setNoteDraft(cart.find((i) => i.id === id)?.notes || "");
+  };
+  const saveNote = () => {
+    setCart((prev) => prev.map((i) => (i.id === noteItemId ? { ...i, notes: noteDraft.trim() || undefined } : i)));
+    setNoteItemId(null);
+    setNoteDraft("");
+  };
+
+
+
   const filtered = useMemo(() => products.filter((p) => {
     const ms = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
     const mc = activeCategory === "Todos" || p.category === activeCategory;
