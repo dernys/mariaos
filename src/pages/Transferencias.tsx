@@ -359,19 +359,50 @@ export default function Transferencias() {
     </div>
   );
 
+  const kpis = useMemo(() => {
+    const sum = (arr: TransferItem[], key: "quantity_shipped" | "quantity_received" | "quantity_requested") =>
+      arr.reduce((a, b) => a + (Number(b[key] ?? 0) || 0), 0);
+    let out = 0, inn = 0, transit = 0, pending = 0;
+    transfers.forEach((tr) => {
+      const its = items[tr.id] || [];
+      if (tr.status === "in_transit") { transit++; out += sum(its, "quantity_shipped"); }
+      if (tr.status === "requested" || tr.status === "approved") pending++;
+      if (tr.status === "received") {
+        out += sum(its, "quantity_shipped") || sum(its, "quantity_requested");
+        inn += sum(its, "quantity_received") || sum(its, "quantity_requested");
+      }
+    });
+    return { out, inn, transit, pending };
+  }, [transfers, items]);
+
   return (
     <AppLayout title={t("nav.items.transfers")}>
       <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
         <div>
           <h2 className="text-lg font-heading font-semibold">Transferencias de Stock</h2>
-          <p className="text-xs text-muted-foreground">Mueve inventario entre almacenes y tiendas con seguimiento y transportación</p>
+          <p className="text-xs text-muted-foreground">Mueve inventario entre almacenes y tiendas con seguimiento de entradas y salidas</p>
         </div>
         <Button size="sm" onClick={() => { resetForm(); setOpen(true); }} className="gap-1 gradient-brand text-primary-foreground">
           <Plus className="h-3.5 w-3.5" /> Nueva Transferencia
         </Button>
       </div>
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        {[
+          { label: "Pendientes", value: kpis.pending },
+          { label: "En tránsito", value: kpis.transit },
+          { label: "Unidades salidas", value: kpis.out },
+          { label: "Unidades entradas", value: kpis.inn },
+        ].map((k) => (
+          <div key={k.label} className="bg-card border rounded-xl p-3 shadow-card">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{k.label}</p>
+            <p className="text-xl font-heading font-semibold">{k.value}</p>
+          </div>
+        ))}
+      </div>
+
       <div className="space-y-4">
+
         <TableToolbar
           search={table.search}
           onSearchChange={table.setSearch}
