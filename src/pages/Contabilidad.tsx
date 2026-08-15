@@ -63,7 +63,7 @@ const TYPE_COLOR: Record<string, string> = {
 };
 
 const SECTION_VALUES = [
-  { value: "plan", icon: ListTree, subs: ["accounts", "periods"] },
+  { value: "plan", icon: ListTree, subs: ["accounts", "mappings", "periods"] },
   { value: "operacion", icon: ClipboardList, subs: ["entries", "cost_centers", "budgets"] },
   { value: "analisis", icon: BarChart3, subs: ["reports"] },
   { value: "fiscal", icon: Landmark, subs: ["onat", "costos"] },
