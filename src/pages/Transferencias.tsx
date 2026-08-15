@@ -639,6 +639,57 @@ export default function Transferencias() {
         </DialogContent>
       </Dialog>
 
+      {/* Salida / Entrada con cantidades */}
+      <Dialog open={!!flow} onOpenChange={(o) => { if (!o) { setFlow(null); setFlowQty({}); } }}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {flow?.mode === "ship" ? "Registrar salida" : "Registrar entrada"} · {flow?.transfer.transfer_number}
+            </DialogTitle>
+            <DialogDescription>
+              {flow
+                ? flow.mode === "ship"
+                  ? `Cantidades que salen de ${locName(flow.transfer.origin_type, flow.transfer.origin_id)}`
+                  : `Cantidades recibidas en ${locName(flow.transfer.destination_type, flow.transfer.destination_id)} (descuenta el origen y suma el destino)`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {flow && (
+            <div className="space-y-2">
+              {(items[flow.transfer.id] || []).map((it) => {
+                const avail = stockAt(it.product_id, flow.transfer.origin_type, flow.transfer.origin_id);
+                return (
+                  <div key={it.product_id} className="border rounded-lg p-2 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{it.product_name || it.product_id}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Solicitado {it.quantity_requested}
+                          {it.quantity_shipped !== null ? ` · Enviado ${it.quantity_shipped}` : ""}
+                          {flow.mode === "ship" ? ` · Disponible origen ${avail}` : ""}
+                        </p>
+                      </div>
+                      <Input
+                        type="number" min="0" className="w-24 h-9 text-xs"
+                        value={flowQty[it.product_id] ?? ""}
+                        onChange={(e) => setFlowQty({ ...flowQty, [it.product_id]: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setFlow(null); setFlowQty({}); }}>Cancelar</Button>
+            <Button className="gradient-brand text-primary-foreground" onClick={confirmFlow}>
+              {flow?.mode === "ship" ? "Confirmar salida" : "Confirmar entrada"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       {/* Seguimiento */}
       <Dialog open={!!tracking} onOpenChange={(o) => !o && setTracking(null)}>
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
