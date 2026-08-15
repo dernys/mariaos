@@ -10,8 +10,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Activity, AlertTriangle, CheckCircle2, ChevronDown, Download, Info,
-  Play, ShieldCheck, Stethoscope, XCircle,
+  Activity, AlertTriangle, BookOpen, CheckCircle2, ChevronDown, Download, Info,
+  Play, Scale, ShieldCheck, Stethoscope, XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportCsv } from "@/lib/exportData";
