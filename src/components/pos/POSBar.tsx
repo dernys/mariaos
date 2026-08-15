@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, X, Beer, Wine, GlassWater, Coffee, Martini, Flame, Bookmark, ScanLine } from "lucide-react";
+import { Search, ShoppingCart, X, Beer, Wine, GlassWater, Coffee, Martini, Flame, Bookmark, ScanLine, ClipboardList, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
