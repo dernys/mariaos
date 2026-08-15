@@ -37,6 +37,8 @@ const Cuentas = lazy(() => import("./pages/Cuentas"));
 const Facturas = lazy(() => import("./pages/Facturas"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const MarketplaceProduct = lazy(() => import("./pages/MarketplaceProduct"));
+const MisPedidos = lazy(() => import("./pages/MisPedidos"));
+const Repartidor = lazy(() => import("./pages/Repartidor"));
 const Reportes = lazy(() => import("./pages/Reportes"));
 const Fidelizacion = lazy(() => import("./pages/Fidelizacion"));
 const RRHH = lazy(() => import("./pages/RRHH"));
@@ -107,6 +109,8 @@ const App = () => (
               <Route path="/landing" element={<Landing />} />
               <Route path="/marketplace" element={<Suspense fallback={<PageLoader />}><Marketplace /></Suspense>} />
               <Route path="/marketplace/p/:id" element={<Suspense fallback={<PageLoader />}><MarketplaceProduct /></Suspense>} />
+              <Route path="/marketplace/mis-pedidos" element={<Suspense fallback={<PageLoader />}><MisPedidos /></Suspense>} />
+              <Route path="/marketplace/repartidor" element={<Suspense fallback={<PageLoader />}><Repartidor /></Suspense>} />
               <Route path="/app" element={<P m="dashboard"><Index /></P>} />
               <Route path="/dashboard" element={<P m="dashboard"><Index /></P>} />
               <Route path="/pos" element={<P m="pos"><POS /></P>} />
