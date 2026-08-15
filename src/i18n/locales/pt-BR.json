@@ -119,6 +119,7 @@
       "kitchen": "Cozinha (KDS)",
       "shifts": "Turnos",
       "products": "Produtos",
+      "inventoryMovements": "Movimentos de estoque",
       "recipes": "Receitas",
       "intelligence": "Inteligência",
       "counts": "Inventários físicos",
