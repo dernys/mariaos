@@ -2264,6 +2264,7 @@ export type Database = {
         Row: {
           address: string | null
           balance: number
+          client_uuid: string | null
           created_at: string
           credit_limit: number
           email: string | null
@@ -2283,6 +2284,7 @@ export type Database = {
         Insert: {
           address?: string | null
           balance?: number
+          client_uuid?: string | null
           created_at?: string
           credit_limit?: number
           email?: string | null
@@ -2302,6 +2304,7 @@ export type Database = {
         Update: {
           address?: string | null
           balance?: number
+          client_uuid?: string | null
           created_at?: string
           credit_limit?: number
           email?: string | null
@@ -3650,6 +3653,7 @@ export type Database = {
       }
       inventory_movements: {
         Row: {
+          client_uuid: string | null
           created_at: string
           edited_at: string | null
           edited_by: string | null
@@ -3671,6 +3675,7 @@ export type Database = {
           warehouse_id: string | null
         }
         Insert: {
+          client_uuid?: string | null
           created_at?: string
           edited_at?: string | null
           edited_by?: string | null
@@ -3692,6 +3697,7 @@ export type Database = {
           warehouse_id?: string | null
         }
         Update: {
+          client_uuid?: string | null
           created_at?: string
           edited_at?: string | null
           edited_by?: string | null
@@ -7126,6 +7132,7 @@ export type Database = {
       }
       sale_returns: {
         Row: {
+          client_uuid: string | null
           created_at: string
           id: string
           performed_by: string | null
@@ -7139,6 +7146,7 @@ export type Database = {
           total: number
         }
         Insert: {
+          client_uuid?: string | null
           created_at?: string
           id?: string
           performed_by?: string | null
@@ -7152,6 +7160,7 @@ export type Database = {
           total?: number
         }
         Update: {
+          client_uuid?: string | null
           created_at?: string
           id?: string
           performed_by?: string | null
@@ -7336,6 +7345,7 @@ export type Database = {
           cash_difference: number | null
           cash_in_total: number | null
           cash_out_total: number | null
+          client_uuid: string | null
           closed_at: string | null
           closing_cash: number | null
           created_at: string
@@ -7364,6 +7374,7 @@ export type Database = {
           cash_difference?: number | null
           cash_in_total?: number | null
           cash_out_total?: number | null
+          client_uuid?: string | null
           closed_at?: string | null
           closing_cash?: number | null
           created_at?: string
@@ -7392,6 +7403,7 @@ export type Database = {
           cash_difference?: number | null
           cash_in_total?: number | null
           cash_out_total?: number | null
+          client_uuid?: string | null
           closed_at?: string | null
           closing_cash?: number | null
           created_at?: string
@@ -7523,6 +7535,7 @@ export type Database = {
           amount: number
           amount_in_base: number | null
           category: string
+          client_uuid: string | null
           created_at: string
           currency: string
           exchange_rate: number
@@ -7538,6 +7551,7 @@ export type Database = {
           amount: number
           amount_in_base?: number | null
           category?: string
+          client_uuid?: string | null
           created_at?: string
           currency?: string
           exchange_rate?: number
@@ -7553,6 +7567,7 @@ export type Database = {
           amount?: number
           amount_in_base?: number | null
           category?: string
+          client_uuid?: string | null
           created_at?: string
           currency?: string
           exchange_rate?: number
@@ -10517,6 +10532,15 @@ export type Database = {
         Returns: Json
       }
       sync_accounting_mappings: { Args: { p_tenant: string }; Returns: number }
+      sync_offline_operation: {
+        Args: {
+          p_client_uuid: string
+          p_payload?: Json
+          p_tenant_id: string
+          p_type: string
+        }
+        Returns: Json
+      }
       sync_offline_sale: { Args: { p_payload: Json }; Returns: string }
       twin_baseline: {
         Args: { p_days?: number; p_tenant_id: string }

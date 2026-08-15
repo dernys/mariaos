@@ -118,6 +118,7 @@
       "tables": "Table Map",
       "kitchen": "Kitchen (KDS)",
       "shifts": "Shifts",
+      "sync": "Sync center",
       "products": "Products",
       "inventoryMovements": "Inventory movements",
       "recipes": "Recipes",
