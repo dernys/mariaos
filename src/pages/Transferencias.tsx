@@ -440,15 +440,16 @@ export default function Transferencias() {
                           <Route className="h-3 w-3 mr-1" /> Seguimiento
                         </Button>
                         {tr.status === "requested" && (
-                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => changeStatus(tr.id, "in_transit")}>
-                            <Truck className="h-3 w-3 mr-1" /> Enviar
+                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => openFlow(tr, "ship")}>
+                            <Truck className="h-3 w-3 mr-1" /> Registrar salida
                           </Button>
                         )}
                         {(tr.status === "in_transit" || tr.status === "approved") && (
-                          <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => receive(tr.id)}>
-                            <CheckCircle2 className="h-3 w-3 mr-1" /> Recibir
+                          <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => openFlow(tr, "receive")}>
+                            <CheckCircle2 className="h-3 w-3 mr-1" /> Registrar entrada
                           </Button>
                         )}
+
                         {tr.status !== "received" && tr.status !== "cancelled" && (
                           <>
                             <Button
