@@ -96,6 +96,9 @@ export default function RRHH() {
   });
   const [preview, setPreview] = useState<{ hours: number; base: number; bonus: number; ded: number; gross: number; net: number } | null>(null);
   const [computing, setComputing] = useState(false);
+  const [editPayroll, setEditPayroll] = useState<EditablePayroll | null>(null);
+  const { settings: hrSettings } = useModuleSettings<HRSettings>("hr", HR_DEFAULTS);
+
 
   const [selectedEmp, setSelectedEmp] = useState<string>("");
   const [openLeave, setOpenLeave] = useState(false);
