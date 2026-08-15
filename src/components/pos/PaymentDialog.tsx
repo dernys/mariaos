@@ -344,6 +344,20 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         }
       }
 
+      // Cierra la orden de cocina asociada y libera la mesa.
+      if (kitchenOrderId) {
+        const { error: billErr } = await (supabase.rpc as any)("bill_kitchen_order", {
+          p_order_id: kitchenOrderId,
+          p_sale_id: sale.id,
+        });
+        if (billErr) {
+          console.error("bill_kitchen_order error:", billErr);
+          toast({ title: "Venta registrada", description: "No se pudo cerrar la orden de cocina: " + billErr.message });
+        }
+      }
+
+
+
       // Imprimir ticket térmico (si está habilitado en ajustes POS)
       if (posSettings.auto_print_receipt) {
         try {
