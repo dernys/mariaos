@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, MessageSquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ interface CartItem {
   name: string;
   price: number;
   qty: number;
+  notes?: string;
 }
 
 interface CartContentProps {
@@ -22,9 +23,11 @@ interface CartContentProps {
   taxLabel?: string;
   checkoutLabel?: string;
   extraActions?: ReactNode;
+  /** Cuando se define, cada línea permite anotar modificaciones/sugerencias. */
+  onEditNote?: (id: number) => void;
 }
 
-export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total, onCheckout, taxLabel, checkoutLabel, extraActions }: CartContentProps) {
+export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total, onCheckout, taxLabel, checkoutLabel, extraActions, onEditNote }: CartContentProps) {
   const { t } = useTranslation();
   const fmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
   return (
@@ -42,6 +45,7 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{item.name}</p>
                 <p className="text-[10px] text-muted-foreground">${item.price.toLocaleString()} {t("pos.cart.each")}</p>
+                {item.notes && <p className="text-[10px] text-amber-400 italic truncate">“{item.notes}”</p>}
               </div>
               <div className="flex items-center gap-1">
                 <button onClick={() => updateQty(item.id, -1)} className="h-7 w-7 rounded bg-background border flex items-center justify-center hover:bg-muted transition-colors active:scale-95">
@@ -53,12 +57,18 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
                 </button>
               </div>
               <p className="text-xs font-heading font-bold w-16 text-right">${(item.price * item.qty).toLocaleString()}</p>
+              {onEditNote && (
+                <button onClick={() => onEditNote(item.id)} title="Modificaciones / sugerencias" className="text-muted-foreground hover:text-primary transition-colors p-1">
+                  <MessageSquarePlus className="h-3.5 w-3.5" />
+                </button>
+              )}
               <button onClick={() => removeItem(item.id)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </motion.div>
           ))}
         </AnimatePresence>
+
         {cart.length === 0 && (
           <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
             <ShoppingCart className="h-8 w-8 mb-2 opacity-30" />

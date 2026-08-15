@@ -63,9 +63,12 @@ interface PaymentDialogProps {
   tax: number;
   total: number;
   onSaleComplete: () => void;
+  /** Orden de cocina que se está cobrando (bar/restaurante). */
+  kitchenOrderId?: string | null;
 }
 
-export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, onSaleComplete }: PaymentDialogProps) {
+export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, onSaleComplete, kitchenOrderId }: PaymentDialogProps) {
+
   const { t } = useTranslation();
   const { toast } = useToast();
   const { settings: posSettings } = usePOSSettings();
@@ -340,6 +343,20 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           toast({ title: t("pos.payment.errors.stockWarn"), description: t("pos.payment.errors.stockWarnDesc", { msg: stockErr.message }) });
         }
       }
+
+      // Cierra la orden de cocina asociada y libera la mesa.
+      if (kitchenOrderId) {
+        const { error: billErr } = await (supabase.rpc as any)("bill_kitchen_order", {
+          p_order_id: kitchenOrderId,
+          p_sale_id: sale.id,
+        });
+        if (billErr) {
+          console.error("bill_kitchen_order error:", billErr);
+          toast({ title: "Venta registrada", description: "No se pudo cerrar la orden de cocina: " + billErr.message });
+        }
+      }
+
+
 
       // Imprimir ticket térmico (si está habilitado en ajustes POS)
       if (posSettings.auto_print_receipt) {

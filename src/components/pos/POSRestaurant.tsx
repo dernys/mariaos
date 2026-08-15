@@ -14,6 +14,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useActiveShift } from "@/hooks/useActiveShift";
+import { OpenOrdersPanel, type OpenOrder } from "./OpenOrdersPanel";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+
 
 interface Product {
   id: string;
@@ -57,6 +62,8 @@ export function POSRestaurant() {
   const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const { toast } = useToast();
+  const { shift } = useActiveShift();
+  const cartKey = tenantId ? `pos_rest_cart_${tenantId}` : "";
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
@@ -66,10 +73,35 @@ export function POSRestaurant() {
   const [splitBillOpen, setSplitBillOpen] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedTableName, setSelectedTableName] = useState("");
-  const [posView, setPosView] = useState<"menu" | "tables">("menu");
+  const [posView, setPosView] = useState<"menu" | "tables" | "orders">("menu");
   const [waiterName, setWaiterName] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
+  const [noteItemId, setNoteItemId] = useState<number | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
+
+  // Persistencia del carro: un refresco o cambio de vista no pierde la orden.
+  useEffect(() => {
+    if (!cartKey) return;
+    try {
+      const raw = localStorage.getItem(cartKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setCart(parsed.cart ?? []);
+        setActiveOrderId(parsed.activeOrderId ?? null);
+        setSelectedTableId(parsed.selectedTableId ?? null);
+        setSelectedTableName(parsed.selectedTableName ?? "");
+      }
+    } catch { /* ignore */ }
+  }, [cartKey]);
+
+  useEffect(() => {
+    if (!cartKey) return;
+    try {
+      localStorage.setItem(cartKey, JSON.stringify({ cart, activeOrderId, selectedTableId, selectedTableName }));
+    } catch { /* ignore */ }
+  }, [cart, activeOrderId, selectedTableId, selectedTableName, cartKey]);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -77,6 +109,7 @@ export function POSRestaurant() {
       if (data) setEmployees(data);
     });
   }, [tenantId]);
+
 
   useEffect(() => {
     if (!tenantId) return;
@@ -109,54 +142,124 @@ export function POSRestaurant() {
   const total = subtotal + tax;
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
 
+  const openNote = (id: number) => {
+    setNoteItemId(id);
+    setNoteDraft(cart.find((i) => i.id === id)?.notes || "");
+  };
+  const saveNote = () => {
+    setCart((prev) => prev.map((i) => (i.id === noteItemId ? { ...i, notes: noteDraft.trim() || undefined } : i)));
+    setNoteItemId(null);
+    setNoteDraft("");
+  };
+
+
+
   const filtered = useMemo(() => products.filter((p) => {
     const ms = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
     const mc = activeCategory === "Todos" || p.category === activeCategory;
     return ms && mc;
   }), [products, search, activeCategory]);
 
-  const handleSaleComplete = () => { setCart([]); setCartOpen(false); setSelectedTableId(null); setSelectedTableName(""); };
+  const handleSaleComplete = () => {
+    setCart([]);
+    setCartOpen(false);
+    setSelectedTableId(null);
+    setSelectedTableName("");
+    setActiveOrderId(null);
+    setOrderNotes("");
+    try { if (cartKey) localStorage.removeItem(cartKey); } catch { /* ignore */ }
+  };
 
+  // Envía (o amplía) la orden de cocina sin perder el carro: la orden queda
+  // abierta en "Órdenes" hasta que se cobra.
   const sendToKitchen = async () => {
-    if (cart.length === 0) return;
-    if (!tenantId) return;
+    if (cart.length === 0 || !tenantId) return;
 
-    const { data: order, error } = await supabase.from("kitchen_orders").insert({
-      tenant_id: tenantId,
-      table_id: selectedTableId,
-      table_name: selectedTableName || t("pos.restaurantView.noTable"),
-      status: "pending",
-      priority: "normal",
-      waiter_name: waiterName || null,
-      notes: orderNotes || null,
-    }).select("id").single();
+    let orderId = activeOrderId;
 
-    if (error || !order) {
-      toast({ title: t("common.error"), description: t("pos.restaurantView.orderError"), variant: "destructive" });
-      return;
+    if (!orderId) {
+      const code = `ORD-${Date.now().toString().slice(-6)}`;
+      const { data: order, error } = await supabase.from("kitchen_orders").insert({
+        tenant_id: tenantId,
+        table_id: selectedTableId,
+        table_name: selectedTableName || t("pos.restaurantView.noTable"),
+        status: "pending",
+        priority: "normal",
+        waiter_name: waiterName || null,
+        notes: orderNotes || null,
+        order_code: code,
+        shift_id: shift?.id ?? null,
+        store_id: shift?.store_id ?? null,
+      } as any).select("id").single();
+
+      if (error || !order) {
+        toast({ title: t("common.error"), description: error?.message || t("pos.restaurantView.orderError"), variant: "destructive" });
+        return;
+      }
+      orderId = order.id;
+      setActiveOrderId(order.id);
+    } else {
+      await supabase.from("kitchen_orders").update({
+        status: "pending",
+        notes: orderNotes || null,
+        waiter_name: waiterName || null,
+        updated_at: new Date().toISOString(),
+      } as any).eq("id", orderId);
+      // Reemplaza los renglones para reflejar modificaciones del carro.
+      await supabase.from("kitchen_order_items").delete().eq("order_id", orderId);
     }
 
     const items = cart.map((item) => ({
-      order_id: order.id,
+      order_id: orderId!,
+      product_id: item.productId || null,
       product_name: item.name,
+      sku: item.sku || null,
       quantity: item.qty,
+      unit_price: item.price,
       notes: item.notes || null,
     }));
 
-    await supabase.from("kitchen_order_items").insert(items);
+    const { error: itemsErr } = await supabase.from("kitchen_order_items").insert(items as any);
+    if (itemsErr) {
+      toast({ title: t("common.error"), description: itemsErr.message, variant: "destructive" });
+      return;
+    }
 
-    // Update table status if selected
     if (selectedTableId) {
       await supabase.from("restaurant_tables").update({
         status: "occupied",
-        current_order_id: order.id,
+        current_order_id: orderId,
         occupied_at: new Date().toISOString(),
       }).eq("id", selectedTableId);
     }
 
     toast({ title: t("pos.restaurantView.orderSent"), description: t("pos.restaurantView.orderSentDesc", { n: cart.length }) });
-    setOrderNotes("");
+    setCart([]);
+    setCartOpen(false);
+    setPosView("orders");
   };
+
+  // Recupera una orden abierta en el carro para cobrarla o modificarla.
+  const loadOrder = (order: OpenOrder) => {
+    setActiveOrderId(order.id);
+    setSelectedTableId(order.table_id);
+    setSelectedTableName(order.table_name || "");
+    setWaiterName(order.waiter_name || "");
+    setOrderNotes(order.notes || "");
+    setCart(order.items.map((i, idx) => ({
+      id: Date.now() + idx,
+      name: i.product_name,
+      price: Number(i.unit_price || 0),
+      qty: Number(i.quantity || 0),
+      sku: i.sku || undefined,
+      productId: i.product_id || "",
+      notes: i.notes || undefined,
+    })));
+    setPosView("menu");
+    setCartOpen(true);
+  };
+
+
 
   const handleTableSelect = (table: any) => {
     setSelectedTableId(table.id);
@@ -217,7 +320,7 @@ export function POSRestaurant() {
         </div>
 
         {/* View tabs */}
-        <Tabs value={posView} onValueChange={(v) => setPosView(v as "menu" | "tables")} className="mb-3">
+        <Tabs value={posView} onValueChange={(v) => setPosView(v as "menu" | "tables" | "orders")} className="mb-3">
           <TabsList className="w-full">
             <TabsTrigger value="menu" className="flex-1 text-xs gap-1.5">
               <UtensilsCrossed className="h-3.5 w-3.5" /> {t("pos.restaurantView.menu")}
@@ -225,14 +328,22 @@ export function POSRestaurant() {
             <TabsTrigger value="tables" className="flex-1 text-xs gap-1.5">
               <MapPin className="h-3.5 w-3.5" /> {t("pos.restaurantView.tables")}
             </TabsTrigger>
+            <TabsTrigger value="orders" className="flex-1 text-xs gap-1.5">
+              <ChefHat className="h-3.5 w-3.5" /> Órdenes
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {posView === "tables" ? (
+        {posView === "orders" ? (
+          <div className="overflow-auto flex-1 pb-20 lg:pb-0">
+            <OpenOrdersPanel onCharge={loadOrder} onAddItems={loadOrder} />
+          </div>
+        ) : posView === "tables" ? (
           <div className="overflow-auto flex-1 pb-20 lg:pb-0">
             <FloorMap onTableSelect={handleTableSelect} selectedTableId={selectedTableId} />
           </div>
         ) : (
+
           <>
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -344,10 +455,10 @@ export function POSRestaurant() {
                 </div>
                 <button onClick={() => setCartOpen(false)} className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"><X className="h-4 w-4" /></button>
               </div>
-              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={t("pos.restaurantView.sendToCash")} extraActions={
+              <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={activeOrderId ? `Cobrar orden $${total.toFixed(2)}` : t("pos.restaurantView.sendToCash")} onEditNote={openNote} extraActions={
                 <div className="flex gap-2 mb-2">
                   <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
-                    <Send className="h-3 w-3" /> {t("pos.restaurantView.sendToKitchen")}
+                    <Send className="h-3 w-3" /> {activeOrderId ? "Actualizar cocina" : t("pos.restaurantView.sendToKitchen")}
                   </Button>
                   <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
                     <SplitSquareVertical className="h-3 w-3" /> {t("pos.restaurantView.split")}
@@ -364,11 +475,16 @@ export function POSRestaurant() {
         <div className="p-4 border-b bg-gradient-to-r from-rose-500/10 to-transparent">
           <h2 className="font-heading font-semibold text-sm">🍽️ {t("pos.restaurantView.orderTitle")} {selectedTableName && `— ${selectedTableName}`}</h2>
           <p className="text-[10px] text-muted-foreground">{t("pos.restaurantView.dishesCount", { n: totalItems })} • ${subtotal.toLocaleString()} CUP</p>
+          {activeOrderId && (
+            <Badge variant="outline" className="mt-1 text-[9px] border-emerald-500/40 text-emerald-400">
+              Orden abierta en cocina · pendiente de cobro
+            </Badge>
+          )}
         </div>
-        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={t("pos.restaurantView.sendToCash")} extraActions={
+        <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={activeOrderId ? `Cobrar orden $${total.toFixed(2)}` : t("pos.restaurantView.sendToCash")} onEditNote={openNote} extraActions={
           <div className="flex gap-2 mb-2">
             <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
-              <Send className="h-3 w-3" /> {t("pos.restaurantView.kitchen")}
+              <Send className="h-3 w-3" /> {activeOrderId ? "Actualizar cocina" : t("pos.restaurantView.kitchen")}
             </Button>
             <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
               <SplitSquareVertical className="h-3 w-3" /> {t("pos.restaurantView.split")}
@@ -377,8 +493,28 @@ export function POSRestaurant() {
         } />
       </div>
 
-      <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} />
+      <PaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSaleComplete={handleSaleComplete} kitchenOrderId={activeOrderId} />
       <SplitBillDialog open={splitBillOpen} onOpenChange={setSplitBillOpen} cart={cart} subtotal={subtotal} tax={tax} total={total} onSplitConfirm={(splits) => { toast({ title: t("pos.restaurantView.splitDone"), description: t("pos.restaurantView.splitDoneDesc", { n: splits.length }) }); }} />
+
+      {/* Modificaciones y sugerencias del plato */}
+      <Dialog open={noteItemId !== null} onOpenChange={(v) => { if (!v) setNoteItemId(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Modificaciones y sugerencias</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={noteDraft}
+            onChange={(e) => setNoteDraft(e.target.value)}
+            placeholder="Sin cebolla, término medio, salsa aparte…"
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNoteItemId(null)}>Cancelar</Button>
+            <Button onClick={saveNote}>Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+
 }

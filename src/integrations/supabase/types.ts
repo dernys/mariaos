@@ -4199,27 +4199,36 @@ export type Database = {
           id: string
           notes: string | null
           order_id: string
+          product_id: string | null
           product_name: string
           quantity: number
+          sku: string | null
           status: string
+          unit_price: number
         }
         Insert: {
           created_at?: string
           id?: string
           notes?: string | null
           order_id: string
+          product_id?: string | null
           product_name: string
           quantity?: number
+          sku?: string | null
           status?: string
+          unit_price?: number
         }
         Update: {
           created_at?: string
           id?: string
           notes?: string | null
           order_id?: string
+          product_id?: string | null
           product_name?: string
           quantity?: number
+          sku?: string | null
           status?: string
+          unit_price?: number
         }
         Relationships: [
           {
@@ -4235,11 +4244,16 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          customer_id: string | null
           id: string
           notes: string | null
+          order_code: string | null
           priority: string
+          sale_id: string | null
+          shift_id: string | null
           started_at: string | null
           status: string
+          store_id: string | null
           table_id: string | null
           table_name: string
           tenant_id: string | null
@@ -4249,11 +4263,16 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string
+          customer_id?: string | null
           id?: string
           notes?: string | null
+          order_code?: string | null
           priority?: string
+          sale_id?: string | null
+          shift_id?: string | null
           started_at?: string | null
           status?: string
+          store_id?: string | null
           table_id?: string | null
           table_name?: string
           tenant_id?: string | null
@@ -4263,11 +4282,16 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string
+          customer_id?: string | null
           id?: string
           notes?: string | null
+          order_code?: string | null
           priority?: string
+          sale_id?: string | null
+          shift_id?: string | null
           started_at?: string | null
           status?: string
+          store_id?: string | null
           table_id?: string | null
           table_name?: string
           tenant_id?: string | null
@@ -4275,6 +4299,20 @@ export type Database = {
           waiter_name?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "kitchen_orders_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kitchen_orders_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_ar_aging"
+            referencedColumns: ["sale_id"]
+          },
           {
             foreignKeyName: "kitchen_orders_table_id_fkey"
             columns: ["table_id"]
@@ -6043,6 +6081,8 @@ export type Database = {
           prep_minutes: number | null
           price: number
           product_type: string
+          recipe_notes: string | null
+          recipe_yield: number
           sku: string
           stock: number
           store_id: string | null
@@ -6077,6 +6117,8 @@ export type Database = {
           prep_minutes?: number | null
           price?: number
           product_type?: string
+          recipe_notes?: string | null
+          recipe_yield?: number
           sku: string
           stock?: number
           store_id?: string | null
@@ -6111,6 +6153,8 @@ export type Database = {
           prep_minutes?: number | null
           price?: number
           product_type?: string
+          recipe_notes?: string | null
+          recipe_yield?: number
           sku?: string
           stock?: number
           store_id?: string | null
@@ -9035,6 +9079,10 @@ export type Database = {
         Returns: number
       }
       award_loyalty_points: { Args: { p_sale_id: string }; Returns: number }
+      bill_kitchen_order: {
+        Args: { p_order_id: string; p_sale_id: string }
+        Returns: undefined
+      }
       bootstrap_tenant_accounting: { Args: { p_tenant: string }; Returns: Json }
       br_generate_nfe: { Args: { p_sale_id: string }; Returns: string }
       br_generate_sped_ecd: {
