@@ -296,9 +296,26 @@ const Inventario = () => {
 
   const kardexMovements = kardexProductId ? movements.filter((m) => m.product_id === kardexProductId) : [];
 
+  // Pestaña controlada por ruta: /inventario/movimientos abre Movimientos directamente
+  const TAB_ROUTES: Record<string, string> = {
+    products: "/inventario",
+    stock: "/inventario",
+    kardex: "/inventario",
+    movements: "/inventario/movimientos",
+  };
+  const activeTab = location.pathname.startsWith("/inventario/movimientos") ? "movements" : routeTab;
+
   return (
     <AppLayout title={t("modules.inventory.title")}>
-      <Tabs defaultValue="products" className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => {
+          setRouteTab(v);
+          const target = TAB_ROUTES[v] ?? "/inventario";
+          if (target !== location.pathname) navigate(target, { replace: true });
+        }}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="products">{t("modules.inventory.tabs.products")}</TabsTrigger>
           <TabsTrigger value="stock">{t("modules.inventory.tabs.stock")}</TabsTrigger>
