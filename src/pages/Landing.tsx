@@ -265,7 +265,7 @@ const Landing = () => {
                 </div>
               </div>
               <img
-                src="/landing/modules/dashboard.png"
+                src="/landing/modules/dashboard.jpg"
                 alt="Dashboard ejecutivo de MarIA con KPIs, ventas y alertas en tiempo real"
                 width={1600}
                 height={900}
