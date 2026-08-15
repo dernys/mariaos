@@ -10103,39 +10103,25 @@ export type Database = {
         Args: { _method?: string; _notes?: string; _payroll_id: string }
         Returns: string
       }
-      place_online_order:
-        | {
-            Args: {
-              p_customer_email?: string
-              p_customer_name: string
-              p_customer_phone: string
-              p_delivery_address?: string
-              p_delivery_type?: string
-              p_items: Json
-              p_notes?: string
-              p_tenant_id: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_customer_email?: string
-              p_customer_name: string
-              p_customer_phone: string
-              p_delivery_address?: string
-              p_delivery_instructions?: string
-              p_delivery_lat?: number
-              p_delivery_lng?: number
-              p_delivery_type?: string
-              p_items: Json
-              p_notes?: string
-              p_payment_method?: string
-              p_store_id?: string
-              p_tenant_id: string
-              p_zone_id?: string
-            }
-            Returns: string
-          }
+      place_online_order: {
+        Args: {
+          p_customer_email?: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_delivery_address?: string
+          p_delivery_instructions?: string
+          p_delivery_lat?: number
+          p_delivery_lng?: number
+          p_delivery_type?: string
+          p_items: Json
+          p_notes?: string
+          p_payment_method?: string
+          p_store_id?: string
+          p_tenant_id: string
+          p_zone_id?: string
+        }
+        Returns: string
+      }
       post_financial_event: { Args: { p_event_id: string }; Returns: string }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
       post_payment_journal_entry: {
