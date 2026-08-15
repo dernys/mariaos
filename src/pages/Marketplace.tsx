@@ -49,6 +49,8 @@ const Marketplace = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(24);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -175,6 +177,30 @@ const Marketplace = () => {
       }
     });
   }, [data.products, filters, userPos, tenantDistances, promoIndex, storesByTenant]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize]
+  );
+
+  // Reset to first page whenever the result set changes
+  useEffect(() => { setPage(1); }, [filters, pageSize]);
+
+  const goToPage = (n: number) => {
+    setPage(Math.min(Math.max(1, n), totalPages));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const pageNumbers = useMemo(() => {
+    const nums: (number | "gap")[] = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) nums.push(i);
+      else if (nums[nums.length - 1] !== "gap") nums.push("gap");
+    }
+    return nums;
+  }, [totalPages, currentPage]);
 
   const addToCart = (p: MarketProduct) => {
     setCart((prev) => {
@@ -432,7 +458,7 @@ const Marketplace = () => {
               <EmptyState hasActiveFilters={hasActiveFilters} onClear={clearFilters} />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                {filtered.map((p, i) => {
+                {paginated.map((p, i) => {
                   const inCart = cart.find((c) => c.id === p.id);
                   const isNew =
                     p.created_at &&
@@ -452,6 +478,67 @@ const Marketplace = () => {
                     />
                   );
                 })}
+              </div>
+            )}
+
+            {!data.loading && filtered.length > 0 && (
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border pt-4">
+                <p className="text-xs text-muted-foreground">
+                  {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} / {filtered.length} {t("marketplace.results")}
+                </p>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    aria-label="Página anterior"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  {pageNumbers.map((n, idx) =>
+                    n === "gap" ? (
+                      <span key={`gap-${idx}`} className="px-1 text-xs text-muted-foreground">…</span>
+                    ) : (
+                      <Button
+                        key={n}
+                        variant={n === currentPage ? "default" : "outline"}
+                        size="sm"
+                        className="h-8 min-w-8 rounded-full px-2 text-xs"
+                        onClick={() => goToPage(n)}
+                        aria-current={n === currentPage ? "page" : undefined}
+                      >
+                        {n}
+                      </Button>
+                    )
+                  )}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    aria-label="Página siguiente"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Por página</span>
+                  <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                    <SelectTrigger className="h-8 w-[72px] rounded-full text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[12, 24, 48, 96].map((n) => (
+                        <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
           </section>
