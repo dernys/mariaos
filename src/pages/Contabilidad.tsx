@@ -31,10 +31,9 @@ import { BudgetsTab } from "@/components/accounting/BudgetsTab";
 import CuTaxDeclarationsTab from "@/components/accounting/CuTaxDeclarationsTab";
 import CuCostSheetsTab from "@/components/accounting/CuCostSheetsTab";
 import { FinancialKpiPanel } from "@/components/accounting/FinancialKpiPanel";
-import { SmokeTestPanel } from "@/components/accounting/SmokeTestPanel";
 import { AccountingAuditPanel } from "@/components/accounting/AccountingAuditPanel";
-import { FinancialCertificationPanel } from "@/components/accounting/FinancialCertificationPanel";
-import { FinancialHealthPanel } from "@/components/accounting/FinancialHealthPanel";
+import { FinancialEngineConsole } from "@/components/accounting/FinancialEngineConsole";
+
 
 
 
@@ -763,13 +762,11 @@ const Contabilidad = () => {
             <TabsContent value="reports" className="space-y-4">
               <FinancialKpiPanel />
               <AccountingAuditPanel />
-              <FinancialHealthPanel />
-              <FinancialCertificationPanel />
-
-              <SmokeTestPanel />
+              <FinancialEngineConsole />
 
               <AccountingReports accounts={accounts as any} />
             </TabsContent>
+
           </Tabs>
         )}
 

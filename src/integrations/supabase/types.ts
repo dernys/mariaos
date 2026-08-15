@@ -9343,6 +9343,19 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      financial_engine_diagnostics: {
+        Args: { p_tenant: string }
+        Returns: {
+          area: string
+          check_code: string
+          detail: string
+          expected: number
+          metric: number
+          remediation: string
+          severity: string
+          status: string
+        }[]
+      }
       financial_health_check: {
         Args: { p_tenant: string }
         Returns: {

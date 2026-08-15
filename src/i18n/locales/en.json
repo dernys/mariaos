@@ -470,20 +470,42 @@
     "hr": {
       "title": "Human Resources",
       "subtitle": "End-to-end people management: positions, clock-in, leave, contracts and payroll.",
-      "banners": { "toPay": "To pay", "withoutPos": "{{count}} employee(s) without position" },
+      "banners": {
+        "toPay": "To pay",
+        "withoutPos": "{{count}} employee(s) without position"
+      },
       "kpis": {
-        "employees": "Employees", "positions": "Positions", "onShift": "On shift",
-        "leavesPending": "Pending leave", "contractsActive": "Active contracts", "monthlyPayroll": "Monthly payroll"
+        "employees": "Employees",
+        "positions": "Positions",
+        "onShift": "On shift",
+        "leavesPending": "Pending leave",
+        "contractsActive": "Active contracts",
+        "monthlyPayroll": "Monthly payroll"
       },
       "tabs": {
-        "summary": "Summary", "clockIn": "Clock-in", "vacations": "Leave",
-        "payroll": "Payroll", "positions": "Positions", "contracts": "Contracts",
-        "schedules": "Schedules", "overtime": "Overtime"
+        "summary": "Summary",
+        "clockIn": "Clock-in",
+        "vacations": "Leave",
+        "payroll": "Payroll",
+        "positions": "Positions",
+        "contracts": "Contracts",
+        "schedules": "Schedules",
+        "overtime": "Overtime"
       },
-      "days": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      "days": [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
       "summary": {
-        "byDept": "Headcount by department", "employeesCount": "{{count}} employees",
-        "noDept": "Unassigned", "noEmployees": "No employees registered.",
+        "byDept": "Headcount by department",
+        "employeesCount": "{{count}} employees",
+        "noDept": "Unassigned",
+        "noEmployees": "No employees registered.",
         "nextActions": "Next actions",
         "withoutPosMsg": "{{count}} employee(s) without job position — classify them in",
         "positionsLink": "Positions",
@@ -492,115 +514,299 @@
         "allUpToDate": "All caught up."
       },
       "clockIn": {
-        "employee": "Employee", "selectPlaceholder": "Select...",
-        "clockIn": "Clock in", "clockOut": "Clock out",
-        "openSince": "Shift open since", "noGeo": "no geo",
-        "header": { "employee": "Employee", "in": "In", "out": "Out", "hours": "Hours", "geo": "Geo" },
-        "openBadge": "Open", "geoYes": "Yes", "empty": "No clock-in records",
-        "inRegistered": "Clock-in recorded", "outRegistered": "Clock-out recorded"
+        "employee": "Employee",
+        "selectPlaceholder": "Select...",
+        "clockIn": "Clock in",
+        "clockOut": "Clock out",
+        "openSince": "Shift open since",
+        "noGeo": "no geo",
+        "header": {
+          "employee": "Employee",
+          "in": "In",
+          "out": "Out",
+          "hours": "Hours",
+          "geo": "Geo"
+        },
+        "openBadge": "Open",
+        "geoYes": "Yes",
+        "empty": "No clock-in records",
+        "inRegistered": "Clock-in recorded",
+        "outRegistered": "Clock-out recorded"
       },
       "leaves": {
         "newRequest": "New request",
-        "header": { "employee": "Employee", "type": "Type", "from": "From", "to": "To", "days": "Days", "status": "Status", "actions": "Actions" },
+        "header": {
+          "employee": "Employee",
+          "type": "Type",
+          "from": "From",
+          "to": "To",
+          "days": "Days",
+          "status": "Status",
+          "actions": "Actions"
+        },
         "empty": "No requests",
-        "dialogTitle": "New leave request", "reason": "Reason", "submit": "Request",
-        "types": { "vacation": "Vacation", "sick": "Sick", "personal": "Personal", "maternity": "Maternity", "paternity": "Paternity", "unpaid": "Unpaid", "other": "Other" },
-        "statuses": { "pending": "Pending", "approved": "Approved", "rejected": "Rejected" }
+        "dialogTitle": "New leave request",
+        "reason": "Reason",
+        "submit": "Request",
+        "types": {
+          "vacation": "Vacation",
+          "sick": "Sick",
+          "personal": "Personal",
+          "maternity": "Maternity",
+          "paternity": "Paternity",
+          "unpaid": "Unpaid",
+          "other": "Other"
+        },
+        "statuses": {
+          "pending": "Pending",
+          "approved": "Approved",
+          "rejected": "Rejected"
+        }
       },
       "payroll": {
         "generate": "Generate payroll",
-        "header": { "employee": "Employee", "position": "Position", "period": "Period", "hours": "Hours", "base": "Base", "bonus": "Bonus", "deductions": "Deduct.", "net": "Net", "ap": "AP", "status": "Status", "actions": "Actions" },
-        "apPaid": "Paid", "apCancelled": "Cancelled", "apDueAt": "Due",
-        "statusPaid": "Paid", "statusPending": "Pending",
-        "pay": "Pay", "empty": "No payrolls generated",
+        "header": {
+          "employee": "Employee",
+          "position": "Position",
+          "period": "Period",
+          "hours": "Hours",
+          "base": "Base",
+          "bonus": "Bonus",
+          "deductions": "Deduct.",
+          "net": "Net",
+          "ap": "AP",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "apPaid": "Paid",
+        "apCancelled": "Cancelled",
+        "apDueAt": "Due",
+        "statusPaid": "Paid",
+        "statusPending": "Pending",
+        "pay": "Pay",
+        "empty": "No payrolls generated",
         "dialog": {
           "title": "Generate payroll",
           "desc": "Computes the amount from worked hours, bonuses and deductions. A payable will be created automatically when saving.",
-          "employee": "Employee", "selectEmployee": "Select employee",
-          "noPos": "no position", "warnNoPos": "⚠ There are employees without a position: assign one before generating their payroll.",
-          "from": "From", "to": "To",
-          "bonus": "Bonuses (+)", "bonusHint": "Commissions, extra rewards",
-          "deductions": "Deductions (-)", "deductionsHint": "Advances, fines, discounts",
-          "compute": "Compute payroll", "computing": "Computing...",
-          "hoursWorked": "Hours worked", "baseSalaryPeriod": "Base salary (period)",
-          "plusBonus": "(+) Bonuses", "gross": "Gross",
-          "minusDed": "(-) Deductions", "netToPay": "Net to pay",
+          "employee": "Employee",
+          "selectEmployee": "Select employee",
+          "noPos": "no position",
+          "warnNoPos": "⚠ There are employees without a position: assign one before generating their payroll.",
+          "from": "From",
+          "to": "To",
+          "bonus": "Bonuses (+)",
+          "bonusHint": "Commissions, extra rewards",
+          "deductions": "Deductions (-)",
+          "deductionsHint": "Advances, fines, discounts",
+          "compute": "Compute payroll",
+          "computing": "Computing...",
+          "hoursWorked": "Hours worked",
+          "baseSalaryPeriod": "Base salary (period)",
+          "plusBonus": "(+) Bonuses",
+          "gross": "Gross",
+          "minusDed": "(-) Deductions",
+          "netToPay": "Net to pay",
           "willCreateAP": "A payable will be created due {{date}}.",
-          "save": "Save payroll", "cancel": "Cancel"
+          "save": "Save payroll",
+          "cancel": "Cancel"
         },
-        "missingData": "Missing data", "selectEmpRange": "Select employee and range",
-        "noPosTitle": "Employee without position", "noPosDesc": "First assign a job position in Employees or in the Positions tab.",
+        "missingData": "Missing data",
+        "selectEmpRange": "Select employee and range",
+        "noPosTitle": "Employee without position",
+        "noPosDesc": "First assign a job position in Employees or in the Positions tab.",
         "computeFirst": "Compute the payroll first",
-        "generated": "Payroll generated", "generatedDesc": "Net: {{amount}} · Payable created.",
+        "generated": "Payroll generated",
+        "generatedDesc": "Net: {{amount}} · Payable created.",
         "payConfirm": "Pay {{name}}'s payroll for {{amount}}?",
         "paymentRegistered": "Payment recorded",
         "cancelConfirm": "Void this payroll and its payable?"
       },
       "positions": {
         "newBtn": "New position",
-        "header": { "code": "Code", "name": "Name", "dept": "Department", "level": "Level", "base": "Base", "range": "Range", "status": "Status", "actions": "Actions" },
+        "header": {
+          "code": "Code",
+          "name": "Name",
+          "dept": "Department",
+          "level": "Level",
+          "base": "Base",
+          "range": "Range",
+          "status": "Status",
+          "actions": "Actions"
+        },
         "empty": "You haven't created any job positions yet",
         "dialog": {
-          "titleNew": "New job position", "titleEdit": "Edit position",
+          "titleNew": "New job position",
+          "titleEdit": "Edit position",
           "desc": "Classify available positions in the company with their salary range.",
-          "code": "Code *", "level": "Level", "selectLevel": "Select",
-          "name": "Position name *", "dept": "Department",
-          "baseSalary": "Base salary", "minSalary": "Min. salary", "maxSalary": "Max. salary",
+          "code": "Code *",
+          "level": "Level",
+          "selectLevel": "Select",
+          "name": "Position name *",
+          "dept": "Department",
+          "baseSalary": "Base salary",
+          "minSalary": "Min. salary",
+          "maxSalary": "Max. salary",
           "description": "Description / responsibilities",
-          "save": "Save", "cancel": "Cancel"
+          "save": "Save",
+          "cancel": "Cancel"
         },
-        "levels": { "none": "No level", "junior": "Junior", "semi": "Semi-Senior", "senior": "Senior", "lead": "Lead", "manager": "Manager", "director": "Director" },
+        "levels": {
+          "none": "No level",
+          "junior": "Junior",
+          "semi": "Semi-Senior",
+          "senior": "Senior",
+          "lead": "Lead",
+          "manager": "Manager",
+          "director": "Director"
+        },
         "codeNameRequired": "Code and name required",
-        "updated": "Position updated", "created": "Position created",
+        "updated": "Position updated",
+        "created": "Position created",
         "deleteConfirm": "Delete position? Employees with this position will be left unclassified."
       },
       "contracts": {
         "newBtn": "New contract",
-        "header": { "employee": "Employee", "type": "Type", "start": "Start", "end": "End", "baseSalary": "Base salary", "status": "Status" },
+        "header": {
+          "employee": "Employee",
+          "type": "Type",
+          "start": "Start",
+          "end": "End",
+          "baseSalary": "Base salary",
+          "status": "Status"
+        },
         "empty": "No contracts",
-        "dialog": { "title": "New contract", "employee": "Employee", "type": "Type", "start": "Start", "end": "End (optional)", "baseSalary": "Base salary", "weeklyHours": "Weekly hours", "create": "Create", "cancel": "Cancel" },
-        "types": { "indefinite": "Indefinite", "fixed": "Fixed term", "temporary": "Temporary", "part_time": "Part time", "internship": "Internship", "freelance": "Freelance" }
+        "dialog": {
+          "title": "New contract",
+          "employee": "Employee",
+          "type": "Type",
+          "start": "Start",
+          "end": "End (optional)",
+          "baseSalary": "Base salary",
+          "weeklyHours": "Weekly hours",
+          "create": "Create",
+          "cancel": "Cancel"
+        },
+        "types": {
+          "indefinite": "Indefinite",
+          "fixed": "Fixed term",
+          "temporary": "Temporary",
+          "part_time": "Part time",
+          "internship": "Internship",
+          "freelance": "Freelance"
+        }
       },
       "schedules": {
         "newBtn": "New schedule",
-        "header": { "employee": "Employee", "day": "Day", "start": "Start", "end": "End", "actions": "Actions" },
+        "header": {
+          "employee": "Employee",
+          "day": "Day",
+          "start": "Start",
+          "end": "End",
+          "actions": "Actions"
+        },
         "empty": "No schedules configured",
-        "dialog": { "title": "New schedule", "employee": "Employee", "selectEmployee": "Select", "dayOfWeek": "Day of week", "startTime": "Start time", "endTime": "End time", "save": "Save" },
+        "dialog": {
+          "title": "New schedule",
+          "employee": "Employee",
+          "selectEmployee": "Select",
+          "dayOfWeek": "Day of week",
+          "startTime": "Start time",
+          "endTime": "End time",
+          "save": "Save"
+        },
         "selectEmpError": "Select employee"
       },
       "overtime": {
         "registerBtn": "Record",
-        "header": { "employee": "Employee", "date": "Date", "hours": "Hours", "factor": "Factor", "status": "Status" },
+        "header": {
+          "employee": "Employee",
+          "date": "Date",
+          "hours": "Hours",
+          "factor": "Factor",
+          "status": "Status"
+        },
         "empty": "No records",
-        "dialog": { "title": "Record overtime", "employee": "Employee", "selectEmployee": "Select...", "date": "Date", "hours": "Hours", "factor": "Factor", "reason": "Reason", "register": "Record", "cancel": "Cancel" },
-        "statuses": { "pending": "Pending", "approved": "Approved", "paid": "Paid", "rejected": "Rejected" }
+        "dialog": {
+          "title": "Record overtime",
+          "employee": "Employee",
+          "selectEmployee": "Select...",
+          "date": "Date",
+          "hours": "Hours",
+          "factor": "Factor",
+          "reason": "Reason",
+          "register": "Record",
+          "cancel": "Cancel"
+        },
+        "statuses": {
+          "pending": "Pending",
+          "approved": "Approved",
+          "paid": "Paid",
+          "rejected": "Rejected"
+        }
       }
     },
     "accounting": {
-      "summary": { "assets": "Assets", "liabilities": "Liabilities", "income": "Income", "expenses": "Expenses" },
-      "sections": { "plan": "Chart of Accounts", "operation": "Operation", "analysis": "Analysis" },
-      "types": { "asset": "Asset", "liability": "Liability", "equity": "Equity", "income": "Income", "expense": "Expense" },
+      "summary": {
+        "assets": "Assets",
+        "liabilities": "Liabilities",
+        "income": "Income",
+        "expenses": "Expenses"
+      },
+      "sections": {
+        "plan": "Chart of Accounts",
+        "operation": "Operation",
+        "analysis": "Analysis"
+      },
+      "types": {
+        "asset": "Asset",
+        "liability": "Liability",
+        "equity": "Equity",
+        "income": "Income",
+        "expense": "Expense"
+      },
       "tabs": {
-        "accounts": "Accounts", "periods": "Fiscal Years & Periods",
-        "entries": "Entries", "costCenters": "Cost Centers", "budgets": "Budgets",
+        "accounts": "Accounts",
+        "periods": "Fiscal Years & Periods",
+        "entries": "Entries",
+        "costCenters": "Cost Centers",
+        "budgets": "Budgets",
         "reports": "Financial Reports"
       },
       "accounts": {
         "countLabel": "{{total}} accounts · {{postable}} postable",
-        "importTemplate": "Import Template", "newAccount": "New Account",
+        "importTemplate": "Import Template",
+        "newAccount": "New Account",
         "searchPlaceholder": "Search by code or name…",
-        "filters": { "type": "Type", "nature": "Nature", "postable": "Postable", "group": "Group" },
-        "header": { "code": "Code", "name": "Name", "type": "Type", "nature": "Nature", "balance": "Balance", "actions": "Actions" },
-        "imputable": "Postable", "group": "Group",
+        "filters": {
+          "type": "Type",
+          "nature": "Nature",
+          "postable": "Postable",
+          "group": "Group"
+        },
+        "header": {
+          "code": "Code",
+          "name": "Name",
+          "type": "Type",
+          "nature": "Nature",
+          "balance": "Balance",
+          "actions": "Actions"
+        },
+        "imputable": "Postable",
+        "group": "Group",
         "empty": "No accounts. Import a template to get started.",
         "subAccount": "Sub-account"
       },
       "periods": {
         "countLabel": "{{years}} fiscal years · {{periods}} periods",
-        "newFy": "New Fiscal Year", "current": "Current",
-        "closeTitle": "Close", "reopenTitle": "Reopen",
+        "newFy": "New Fiscal Year",
+        "current": "Current",
+        "closeTitle": "Close",
+        "reopenTitle": "Reopen",
         "empty": "Create your first fiscal year",
-        "statuses": { "open": "Open", "closed": "Closed" }
+        "statuses": {
+          "open": "Open",
+          "closed": "Closed"
+        }
       },
       "entries": {
         "countLabel": "{{count}} entries",
@@ -608,53 +814,95 @@
         "needFy": "First create a fiscal year in Chart of Accounts → Fiscal Years & Periods.",
         "searchPlaceholder": "Search by number, description or series…",
         "filterStatus": "Status",
-        "header": { "number": "Number", "date": "Date", "description": "Description", "status": "Status" },
-        "reversalBadge": "Reversal", "reversedBadge": "Voided",
-        "post": "Post", "reverse": "Reverse",
-        "statuses": { "draft": "Draft", "posted": "Posted", "reversed": "Reversed" },
+        "header": {
+          "number": "Number",
+          "date": "Date",
+          "description": "Description",
+          "status": "Status"
+        },
+        "reversalBadge": "Reversal",
+        "reversedBadge": "Voided",
+        "post": "Post",
+        "reverse": "Reverse",
+        "statuses": {
+          "draft": "Draft",
+          "posted": "Posted",
+          "reversed": "Reversed"
+        },
         "empty": "No accounting entries"
       },
       "accountDialog": {
-        "titleNew": "New Account", "titleEdit": "Edit Account",
+        "titleNew": "New Account",
+        "titleEdit": "Edit Account",
         "desc": "Hierarchical chart of accounts",
-        "code": "Code *", "type": "Type *", "name": "Name *",
-        "parent": "Parent account (optional)", "noneRoot": "— None (root) —",
+        "code": "Code *",
+        "type": "Type *",
+        "name": "Name *",
+        "parent": "Parent account (optional)",
+        "noneRoot": "— None (root) —",
         "postable": "Postable account",
         "postableHint": "When off it will be a group and won't accept direct entries"
       },
       "templateDialog": {
-        "title": "Import chart of accounts", "desc": "Load a predefined template",
-        "options": { "cu_onat": "Cuba - ONAT (MSMEs / TCP)", "es_pgc": "Spain - PGC SMEs", "mx_sat": "Mexico - SAT", "niif_generic": "IFRS (generic LATAM)" },
+        "title": "Import chart of accounts",
+        "desc": "Load a predefined template",
+        "options": {
+          "cu_onat": "Cuba - ONAT (MSMEs / TCP)",
+          "es_pgc": "Spain - PGC SMEs",
+          "mx_sat": "Mexico - SAT",
+          "niif_generic": "IFRS (generic LATAM)"
+        },
         "import": "Import"
       },
       "fyDialog": {
-        "title": "New fiscal year", "desc": "12 monthly periods will be created",
-        "year": "Year", "startMonth": "Start month", "create": "Create"
+        "title": "New fiscal year",
+        "desc": "12 monthly periods will be created",
+        "year": "Year",
+        "startMonth": "Start month",
+        "create": "Create"
       },
       "entryDialog": {
-        "title": "New Accounting Entry", "desc": "Double-entry: debits = credits",
-        "date": "Date", "series": "Series", "description": "Description",
-        "period": "Period", "noPeriod": "⚠ No period for this date",
-        "lines": "Lines", "addLine": "Line",
-        "account": "Account (postable)", "selectAccount": "Select",
-        "debit": "Debit", "credit": "Credit", "note": "Note",
-        "debits": "Debits", "credits": "Credits",
-        "balanced": "Balanced ✓", "notBalanced": "Not balanced",
+        "title": "New Accounting Entry",
+        "desc": "Double-entry: debits = credits",
+        "date": "Date",
+        "series": "Series",
+        "description": "Description",
+        "period": "Period",
+        "noPeriod": "⚠ No period for this date",
+        "lines": "Lines",
+        "addLine": "Line",
+        "account": "Account (postable)",
+        "selectAccount": "Select",
+        "debit": "Debit",
+        "credit": "Credit",
+        "note": "Note",
+        "debits": "Debits",
+        "credits": "Credits",
+        "balanced": "Balanced ✓",
+        "notBalanced": "Not balanced",
         "postOnSave": "Post on save",
         "postOnSaveHint": "If off it's saved as a draft",
-        "registerAndPost": "Record & Post", "saveDraft": "Save Draft"
+        "registerAndPost": "Record & Post",
+        "saveDraft": "Save Draft"
       },
       "entryDetail": {
-        "title": "Entry {{number}}", "noDescription": "No description",
-        "account": "Account", "debit": "Debit", "credit": "Credit"
+        "title": "Entry {{number}}",
+        "noDescription": "No description",
+        "account": "Account",
+        "debit": "Debit",
+        "credit": "Credit"
       },
       "toasts": {
         "codeNameRequired": "Code and name required",
-        "accountCreated": "Account created", "accountUpdated": "Account updated",
-        "accountDeleted": "Account deleted", "deleteError": "Cannot delete",
+        "accountCreated": "Account created",
+        "accountUpdated": "Account updated",
+        "accountDeleted": "Account deleted",
+        "deleteError": "Cannot delete",
         "balanceError": "Debits and credits must be equal and > 0",
-        "noPeriodTitle": "No period", "noPeriodDesc": "Create a fiscal year that covers this date",
-        "periodClosedTitle": "Period closed", "periodClosedDesc": "\"{{name}}\" is {{status}}",
+        "noPeriodTitle": "No period",
+        "noPeriodDesc": "Create a fiscal year that covers this date",
+        "periodClosedTitle": "Period closed",
+        "periodClosedDesc": "\"{{name}}\" is {{status}}",
         "entryCreateError": "Error creating entry",
         "lineError": "Line error",
         "postedFail": "Could not post",
@@ -664,8 +912,10 @@
         "reverseReasonPrompt": "Reversal reason (min. 3 characters):",
         "reversed": "Entry reversed",
         "fyCreated": "Fiscal year {{year}} created with 12 periods",
-        "periodClosed": "Period closed", "periodOpened": "Period reopened",
-        "templateImported": "Template imported", "templateImportedCount": "{{count}} accounts added"
+        "periodClosed": "Period closed",
+        "periodOpened": "Period reopened",
+        "templateImported": "Template imported",
+        "templateImportedCount": "{{count}} accounts added"
       }
     }
   },
@@ -816,7 +1066,11 @@
     "phonePh": "+1 555 555 5555",
     "email": "Email",
     "emailPh": "you@email.com",
-    "deliveryType": "Delivery type",
+    "deliveryType": {
+      "any": "Any",
+      "delivery": "Home delivery",
+      "pickup": "Store pickup"
+    },
     "pickup": "Pickup",
     "pickupHint": "Pick up at the store",
     "delivery": "Delivery",
@@ -865,10 +1119,23 @@
     "pickupUnavailable": "Pickup not available",
     "deliveryAvailable": "Up to {{km}} km radius",
     "deliveryUnavailable": "No delivery available",
-    "badge": { "new": "New", "delivery": "Delivery" },
-    "stock": { "last": "Last {{n}}", "out": "Out of stock" },
-    "tab": { "business": "Business", "delivery": "Delivery" },
-    "step": { "info": "Your info", "delivery": "Delivery", "review": "Review" },
+    "badge": {
+      "new": "New",
+      "delivery": "Delivery"
+    },
+    "stock": {
+      "last": "Last {{n}}",
+      "out": "Out of stock"
+    },
+    "tab": {
+      "business": "Business",
+      "delivery": "Delivery"
+    },
+    "step": {
+      "info": "Your info",
+      "delivery": "Delivery",
+      "review": "Review"
+    },
     "sort": {
       "label": "Sort",
       "relevance": "Relevance",
@@ -910,8 +1177,11 @@
       "empty": "No reviews yet. Be the first!",
       "loginRequired": "Sign in to leave a review"
     },
-    "availability": { "any": "Any", "in_stock": "In stock", "low_stock": "Low stock" },
-    "deliveryType": { "any": "Any", "delivery": "Home delivery", "pickup": "Store pickup" },
+    "availability": {
+      "any": "Any",
+      "in_stock": "In stock",
+      "low_stock": "Low stock"
+    },
     "search": {
       "recent": "Recent searches",
       "clearHistory": "Clear history",
@@ -1187,6 +1457,178 @@
       "active": "Active shift",
       "since": "since {{time}}",
       "view": "View shift"
+    }
+  },
+  "finance": {
+    "engine": {
+      "title": "Financial Engine · Audit Console",
+      "subtitle": "Full diagnostics, financial health, integrity certification and smoke test of the accounting core using the active company's real data.",
+      "runAll": "Run full audit",
+      "run": "Run",
+      "running": "Analyzing…",
+      "export": "Export CSV",
+      "lastRun": "Last run: {{time}}",
+      "score": "Integrity score",
+      "search": "Search control, area or recommendation…",
+      "filterAll": "All",
+      "filterIssues": "With issues",
+      "filterCritical": "Critical",
+      "empty": "Run the audit to evaluate the financial engine with real data.",
+      "noResults": "No control matches the filter.",
+      "metric": "measured",
+      "expected": "expected",
+      "remediation": "Recommended action",
+      "tabs": {
+        "diagnostics": "Full diagnostics",
+        "health": "Control center",
+        "certification": "Certification",
+        "smoke": "Smoke test"
+      },
+      "summary": {
+        "checks": "Controls",
+        "passed": "Passed",
+        "warnings": "Warnings",
+        "failed": "Failed",
+        "critical": "Critical"
+      },
+      "verdict": {
+        "pass": "PASS",
+        "warn": "WITH WARNINGS",
+        "fail": "FAIL"
+      },
+      "diagnosticsSubtitle": "40 real controls: structure, periods, double entry, ledger, sales, purchases, payroll, treasury, AR/AP, inventory, tax and multicurrency.",
+      "healthSubtitle": "Cross-cutting core diagnostics: chart of accounts, double entry, ledger, operational modules, tax, multicurrency and tenant isolation.",
+      "certSubtitle": "Certifies financial invariants: double entry, accounting equation, sales and purchase traceability, multicurrency and inventory.",
+      "smokeSubtitle": "End-to-end validation of the Financial Core: profile, chart of accounts, periods, posting rules, ledger balance and triggers.",
+      "toast": {
+        "pass": "Financial engine: PASS",
+        "warn": "{{count}} warning(s) detected",
+        "fail": "{{count}} control(s) failed"
+      }
+    },
+    "status": {
+      "pass": "pass",
+      "warn": "warning",
+      "fail": "fail",
+      "info": "info",
+      "PASS": "pass",
+      "WARNING": "warning",
+      "CRITICAL": "critical"
+    },
+    "severity": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "info": "Info"
+    },
+    "areas": {
+      "structure": "Accounting structure",
+      "periods": "Fiscal years and periods",
+      "double_entry": "Double entry",
+      "ledger": "Ledger and balance",
+      "sales": "Sales",
+      "purchases": "Purchases",
+      "payroll": "Payroll",
+      "accounts_payable": "Accounts payable",
+      "accounts_receivable": "Accounts receivable",
+      "inventory": "Inventory",
+      "tax": "Tax",
+      "treasury": "Treasury and cash",
+      "multicurrency": "Multicurrency",
+      "security": "Tenant isolation",
+      "accounting": "Double-entry engine",
+      "chart_of_accounts": "Chart of accounts",
+      "mapping": "Accounting mapping"
+    },
+    "checks": {
+      "accounting_profile": "Accounting profile applied",
+      "chart_of_accounts": "Chart of accounts (total / postable)",
+      "hierarchy_orphans": "Hierarchy without orphan accounts",
+      "duplicate_codes": "Unique account codes",
+      "accounting_mappings": "Accounting mappings configured",
+      "posting_rules": "Active posting rules",
+      "current_fiscal_year": "Current fiscal year",
+      "periods_generated": "Periods generated for the year",
+      "stale_open_periods": "Past periods still open",
+      "double_entry_global": "Global debit = credit (debit / credit)",
+      "unbalanced_entries": "Unbalanced entries",
+      "postings_on_invalid_accounts": "Lines on postable, active accounts",
+      "cross_tenant_lines": "No lines from another company",
+      "entries_without_tenant": "Entries with company assigned",
+      "draft_entries": "Entries pending posting",
+      "entry_number_uniqueness": "Entry numbering without duplicates",
+      "reversal_traceability": "Reversal traceability",
+      "journal_fx_rate": "Valid exchange rate on entries",
+      "balance_equation": "Assets = Liabilities + Equity + Result",
+      "net_income": "Net income (revenue / expenses)",
+      "projection_rows": "Ledger projection generated",
+      "projection_balanced": "Ledger balanced (debit / credit)",
+      "sales_posted": "Completed sales posted",
+      "sale_totals": "Total = subtotal + tax",
+      "sale_lines_match": "Sale lines match subtotal",
+      "sales_fx_consistency": "Currency and conversion on sales",
+      "purchases_posted": "Received purchases posted",
+      "payroll_posted": "Paid payroll posted",
+      "shifts_z_posted": "Z closings posted",
+      "shift_cash_variance": "Accumulated cash variance",
+      "overpaid_bills": "Payments not exceeding amount",
+      "overdue_payables": "Overdue payables (count / amount)",
+      "receivables_exposure": "Credit exposure (customers / balance / over limit)",
+      "negative_customer_balance": "Consistent customer balances",
+      "negative_stock": "No negative stock",
+      "stock_below_min": "Products below minimum",
+      "fiscal_rules_configured": "Fiscal rules configured",
+      "pending_declarations": "Pending tax declarations",
+      "bank_accounts_mapped": "Bank accounts linked to the chart",
+      "unmatched_bank_tx": "Unreconciled bank transactions",
+      "accounts_active": "Active accounts",
+      "double_entry": "Debit = Credit per entry",
+      "double_entry_per_entry": "Double entry per entry",
+      "orphan_lines": "Lines with a valid entry",
+      "mappings_defined": "Accounting mappings defined",
+      "sales_fx_defined": "Currency and rate on sales",
+      "journal_tenant_scope": "Entry tenant isolation",
+      "accounts_payable_consistency": "Accounts payable consistency",
+      "fx_consistency": "Multicurrency consistency",
+      "inventory_continuity": "Inventory continuity",
+      "accounting_profile_code": "Accounting profile code",
+      "fiscal_periods": "Fiscal periods",
+      "ledger_balance": "Ledger balance",
+      "operational_triggers": "Operational triggers connected",
+      "financial_events": "Financial events"
+    },
+    "remediation": {
+      "apply_accounting_profile": "Apply an accounting profile to the company in Settings → Accounting.",
+      "import_chart_template": "Import a chart of accounts template in Accounting Plan → Accounts.",
+      "fix_hierarchy": "Review accounts with a missing parent and reassign their hierarchy.",
+      "fix_duplicate_codes": "Rename duplicate codes: the code must be unique per company.",
+      "configure_mappings": "Define accounting mappings per operation (sale, purchase, cash, payroll).",
+      "configure_posting_rules": "Review and activate the posting rules of the accounting profile.",
+      "create_fiscal_year": "Create the current fiscal year and generate its 12 periods.",
+      "close_accounting_period": "Close past periods to lock the accounting information.",
+      "reverse_and_repost": "Fix through a traceable reversal and post the operation again.",
+      "fix_account_flags": "Mark the used accounts as postable and active, or reassign the lines.",
+      "contact_support": "Structural issue: requires technical review before operating.",
+      "post_journal_entry": "Post or discard draft entries.",
+      "set_exchange_rate": "Register the currency exchange rate in Settings → Currencies.",
+      "rebuild_general_ledger": "Run the general ledger rebuild.",
+      "repost_sales": "Post the affected sales again from the sale detail.",
+      "repost_purchases": "Receive/post the affected purchases again.",
+      "repost_payroll": "Pay the payroll again to generate its journal entry.",
+      "review_sales": "Review the flagged sales: totals, taxes and lines.",
+      "close_shift_z": "Run the Z closing for closed shifts without an entry.",
+      "review_shifts": "Review cash variances per shift and their justification.",
+      "review_payables": "Review payments registered against payables.",
+      "pay_overdue": "Prioritize payment of overdue debts.",
+      "review_receivables": "Review customer credit and authorized limits.",
+      "adjust_stock": "Fix negative stock with a count or inventory adjustment.",
+      "replenish_stock": "Create purchase orders for products below minimum.",
+      "configure_fiscal_rules": "Configure the country fiscal rules in Settings → Tax.",
+      "submit_declarations": "Complete and submit the pending tax declarations.",
+      "map_bank_accounts": "Link each bank account to its accounting account.",
+      "reconcile_bank": "Reconcile the pending bank transactions.",
+      "none": "No action required."
     }
   }
 }

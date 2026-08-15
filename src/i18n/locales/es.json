@@ -470,20 +470,42 @@
     "hr": {
       "title": "Recursos Humanos",
       "subtitle": "Gestión integral del capital humano: puestos, fichaje, vacaciones, contratos y nóminas.",
-      "banners": { "toPay": "Por pagar", "withoutPos": "{{count}} empleado(s) sin puesto" },
+      "banners": {
+        "toPay": "Por pagar",
+        "withoutPos": "{{count}} empleado(s) sin puesto"
+      },
       "kpis": {
-        "employees": "Empleados", "positions": "Puestos", "onShift": "En turno",
-        "leavesPending": "Vacaciones pend.", "contractsActive": "Contratos act.", "monthlyPayroll": "Nómina mensual"
+        "employees": "Empleados",
+        "positions": "Puestos",
+        "onShift": "En turno",
+        "leavesPending": "Vacaciones pend.",
+        "contractsActive": "Contratos act.",
+        "monthlyPayroll": "Nómina mensual"
       },
       "tabs": {
-        "summary": "Resumen", "clockIn": "Fichaje", "vacations": "Vacaciones",
-        "payroll": "Nóminas", "positions": "Puestos", "contracts": "Contratos",
-        "schedules": "Horarios", "overtime": "Horas extras"
+        "summary": "Resumen",
+        "clockIn": "Fichaje",
+        "vacations": "Vacaciones",
+        "payroll": "Nóminas",
+        "positions": "Puestos",
+        "contracts": "Contratos",
+        "schedules": "Horarios",
+        "overtime": "Horas extras"
       },
-      "days": ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+      "days": [
+        "Domingo",
+        "Lunes",
+        "Martes",
+        "Miércoles",
+        "Jueves",
+        "Viernes",
+        "Sábado"
+      ],
       "summary": {
-        "byDept": "Plantilla por departamento", "employeesCount": "{{count}} empleados",
-        "noDept": "Sin asignar", "noEmployees": "Sin empleados registrados.",
+        "byDept": "Plantilla por departamento",
+        "employeesCount": "{{count}} empleados",
+        "noDept": "Sin asignar",
+        "noEmployees": "Sin empleados registrados.",
         "nextActions": "Próximas acciones",
         "withoutPosMsg": "{{count}} empleado(s) sin puesto laboral — clasifícalos en",
         "positionsLink": "Puestos",
@@ -492,115 +514,299 @@
         "allUpToDate": "Todo al día."
       },
       "clockIn": {
-        "employee": "Empleado", "selectPlaceholder": "Selecciona...",
-        "clockIn": "Marcar entrada", "clockOut": "Marcar salida",
-        "openSince": "Turno abierto desde", "noGeo": "sin geo",
-        "header": { "employee": "Empleado", "in": "Entrada", "out": "Salida", "hours": "Horas", "geo": "Geo" },
-        "openBadge": "Abierto", "geoYes": "Sí", "empty": "Sin registros de fichaje",
-        "inRegistered": "Entrada registrada", "outRegistered": "Salida registrada"
+        "employee": "Empleado",
+        "selectPlaceholder": "Selecciona...",
+        "clockIn": "Marcar entrada",
+        "clockOut": "Marcar salida",
+        "openSince": "Turno abierto desde",
+        "noGeo": "sin geo",
+        "header": {
+          "employee": "Empleado",
+          "in": "Entrada",
+          "out": "Salida",
+          "hours": "Horas",
+          "geo": "Geo"
+        },
+        "openBadge": "Abierto",
+        "geoYes": "Sí",
+        "empty": "Sin registros de fichaje",
+        "inRegistered": "Entrada registrada",
+        "outRegistered": "Salida registrada"
       },
       "leaves": {
         "newRequest": "Nueva solicitud",
-        "header": { "employee": "Empleado", "type": "Tipo", "from": "Desde", "to": "Hasta", "days": "Días", "status": "Estado", "actions": "Acciones" },
+        "header": {
+          "employee": "Empleado",
+          "type": "Tipo",
+          "from": "Desde",
+          "to": "Hasta",
+          "days": "Días",
+          "status": "Estado",
+          "actions": "Acciones"
+        },
         "empty": "Sin solicitudes",
-        "dialogTitle": "Nueva solicitud de ausencia", "reason": "Motivo", "submit": "Solicitar",
-        "types": { "vacation": "Vacaciones", "sick": "Enfermedad", "personal": "Personal", "maternity": "Maternidad", "paternity": "Paternidad", "unpaid": "Sin sueldo", "other": "Otro" },
-        "statuses": { "pending": "Pendiente", "approved": "Aprobado", "rejected": "Rechazado" }
+        "dialogTitle": "Nueva solicitud de ausencia",
+        "reason": "Motivo",
+        "submit": "Solicitar",
+        "types": {
+          "vacation": "Vacaciones",
+          "sick": "Enfermedad",
+          "personal": "Personal",
+          "maternity": "Maternidad",
+          "paternity": "Paternidad",
+          "unpaid": "Sin sueldo",
+          "other": "Otro"
+        },
+        "statuses": {
+          "pending": "Pendiente",
+          "approved": "Aprobado",
+          "rejected": "Rechazado"
+        }
       },
       "payroll": {
         "generate": "Generar nómina",
-        "header": { "employee": "Empleado", "position": "Puesto", "period": "Período", "hours": "Horas", "base": "Base", "bonus": "Bonos", "deductions": "Deducc.", "net": "Neto", "ap": "CxP", "status": "Estado", "actions": "Acciones" },
-        "apPaid": "Pagada", "apCancelled": "Anulada", "apDueAt": "Vence",
-        "statusPaid": "Pagado", "statusPending": "Pendiente",
-        "pay": "Pagar", "empty": "Sin nóminas generadas",
+        "header": {
+          "employee": "Empleado",
+          "position": "Puesto",
+          "period": "Período",
+          "hours": "Horas",
+          "base": "Base",
+          "bonus": "Bonos",
+          "deductions": "Deducc.",
+          "net": "Neto",
+          "ap": "CxP",
+          "status": "Estado",
+          "actions": "Acciones"
+        },
+        "apPaid": "Pagada",
+        "apCancelled": "Anulada",
+        "apDueAt": "Vence",
+        "statusPaid": "Pagado",
+        "statusPending": "Pendiente",
+        "pay": "Pagar",
+        "empty": "Sin nóminas generadas",
         "dialog": {
           "title": "Generar nómina",
           "desc": "Calcula el monto en base a horas trabajadas, bonos y deducciones. Al guardar se creará una cuenta por pagar automáticamente.",
-          "employee": "Empleado", "selectEmployee": "Selecciona empleado",
-          "noPos": "sin puesto", "warnNoPos": "⚠ Hay empleados sin puesto: asígnaselo antes de generar su nómina.",
-          "from": "Desde", "to": "Hasta",
-          "bonus": "Bonos (+)", "bonusHint": "Comisiones, premios extra",
-          "deductions": "Deducciones (-)", "deductionsHint": "Adelantos, multas, descuentos",
-          "compute": "Calcular nómina", "computing": "Calculando...",
-          "hoursWorked": "Horas trabajadas", "baseSalaryPeriod": "Salario base (período)",
-          "plusBonus": "(+) Bonos", "gross": "Bruto",
-          "minusDed": "(-) Deducciones", "netToPay": "Neto a pagar",
+          "employee": "Empleado",
+          "selectEmployee": "Selecciona empleado",
+          "noPos": "sin puesto",
+          "warnNoPos": "⚠ Hay empleados sin puesto: asígnaselo antes de generar su nómina.",
+          "from": "Desde",
+          "to": "Hasta",
+          "bonus": "Bonos (+)",
+          "bonusHint": "Comisiones, premios extra",
+          "deductions": "Deducciones (-)",
+          "deductionsHint": "Adelantos, multas, descuentos",
+          "compute": "Calcular nómina",
+          "computing": "Calculando...",
+          "hoursWorked": "Horas trabajadas",
+          "baseSalaryPeriod": "Salario base (período)",
+          "plusBonus": "(+) Bonos",
+          "gross": "Bruto",
+          "minusDed": "(-) Deducciones",
+          "netToPay": "Neto a pagar",
           "willCreateAP": "Se creará una cuenta por pagar con vencimiento {{date}}.",
-          "save": "Guardar nómina", "cancel": "Cancelar"
+          "save": "Guardar nómina",
+          "cancel": "Cancelar"
         },
-        "missingData": "Faltan datos", "selectEmpRange": "Selecciona empleado y rango",
-        "noPosTitle": "Empleado sin puesto", "noPosDesc": "Asigna primero un puesto laboral en Empleados o en la pestaña Puestos.",
+        "missingData": "Faltan datos",
+        "selectEmpRange": "Selecciona empleado y rango",
+        "noPosTitle": "Empleado sin puesto",
+        "noPosDesc": "Asigna primero un puesto laboral en Empleados o en la pestaña Puestos.",
         "computeFirst": "Calcula primero la nómina",
-        "generated": "Nómina generada", "generatedDesc": "Neto: {{amount}} · Cuenta por pagar creada.",
+        "generated": "Nómina generada",
+        "generatedDesc": "Neto: {{amount}} · Cuenta por pagar creada.",
         "payConfirm": "¿Pagar nómina de {{name}} por {{amount}}?",
         "paymentRegistered": "Pago registrado",
         "cancelConfirm": "¿Anular esta nómina y su cuenta por pagar?"
       },
       "positions": {
         "newBtn": "Nuevo puesto",
-        "header": { "code": "Código", "name": "Nombre", "dept": "Departamento", "level": "Nivel", "base": "Base", "range": "Rango", "status": "Estado", "actions": "Acciones" },
+        "header": {
+          "code": "Código",
+          "name": "Nombre",
+          "dept": "Departamento",
+          "level": "Nivel",
+          "base": "Base",
+          "range": "Rango",
+          "status": "Estado",
+          "actions": "Acciones"
+        },
         "empty": "Aún no has creado puestos laborales",
         "dialog": {
-          "titleNew": "Nuevo puesto laboral", "titleEdit": "Editar puesto",
+          "titleNew": "Nuevo puesto laboral",
+          "titleEdit": "Editar puesto",
           "desc": "Clasifica los puestos disponibles en la empresa con su rango salarial.",
-          "code": "Código *", "level": "Nivel", "selectLevel": "Selecciona",
-          "name": "Nombre del puesto *", "dept": "Departamento",
-          "baseSalary": "Salario base", "minSalary": "Salario mín.", "maxSalary": "Salario máx.",
+          "code": "Código *",
+          "level": "Nivel",
+          "selectLevel": "Selecciona",
+          "name": "Nombre del puesto *",
+          "dept": "Departamento",
+          "baseSalary": "Salario base",
+          "minSalary": "Salario mín.",
+          "maxSalary": "Salario máx.",
           "description": "Descripción / responsabilidades",
-          "save": "Guardar", "cancel": "Cancelar"
+          "save": "Guardar",
+          "cancel": "Cancelar"
         },
-        "levels": { "none": "Sin nivel", "junior": "Junior", "semi": "Semi-Senior", "senior": "Senior", "lead": "Líder / Jefe", "manager": "Gerente", "director": "Director" },
+        "levels": {
+          "none": "Sin nivel",
+          "junior": "Junior",
+          "semi": "Semi-Senior",
+          "senior": "Senior",
+          "lead": "Líder / Jefe",
+          "manager": "Gerente",
+          "director": "Director"
+        },
         "codeNameRequired": "Código y nombre obligatorios",
-        "updated": "Puesto actualizado", "created": "Puesto creado",
+        "updated": "Puesto actualizado",
+        "created": "Puesto creado",
         "deleteConfirm": "¿Eliminar puesto? Los empleados con este puesto quedarán sin clasificación."
       },
       "contracts": {
         "newBtn": "Nuevo contrato",
-        "header": { "employee": "Empleado", "type": "Tipo", "start": "Inicio", "end": "Fin", "baseSalary": "Salario base", "status": "Estado" },
+        "header": {
+          "employee": "Empleado",
+          "type": "Tipo",
+          "start": "Inicio",
+          "end": "Fin",
+          "baseSalary": "Salario base",
+          "status": "Estado"
+        },
         "empty": "Sin contratos",
-        "dialog": { "title": "Nuevo contrato", "employee": "Empleado", "type": "Tipo", "start": "Inicio", "end": "Fin (opcional)", "baseSalary": "Salario base", "weeklyHours": "Horas semanales", "create": "Crear", "cancel": "Cancelar" },
-        "types": { "indefinite": "Indefinido", "fixed": "Fijo (con fin)", "temporary": "Temporal", "part_time": "Tiempo parcial", "internship": "Prácticas", "freelance": "Autónomo" }
+        "dialog": {
+          "title": "Nuevo contrato",
+          "employee": "Empleado",
+          "type": "Tipo",
+          "start": "Inicio",
+          "end": "Fin (opcional)",
+          "baseSalary": "Salario base",
+          "weeklyHours": "Horas semanales",
+          "create": "Crear",
+          "cancel": "Cancelar"
+        },
+        "types": {
+          "indefinite": "Indefinido",
+          "fixed": "Fijo (con fin)",
+          "temporary": "Temporal",
+          "part_time": "Tiempo parcial",
+          "internship": "Prácticas",
+          "freelance": "Autónomo"
+        }
       },
       "schedules": {
         "newBtn": "Nuevo horario",
-        "header": { "employee": "Empleado", "day": "Día", "start": "Inicio", "end": "Fin", "actions": "Acciones" },
+        "header": {
+          "employee": "Empleado",
+          "day": "Día",
+          "start": "Inicio",
+          "end": "Fin",
+          "actions": "Acciones"
+        },
         "empty": "Sin horarios configurados",
-        "dialog": { "title": "Nuevo horario", "employee": "Empleado", "selectEmployee": "Selecciona", "dayOfWeek": "Día de la semana", "startTime": "Hora inicio", "endTime": "Hora fin", "save": "Guardar" },
+        "dialog": {
+          "title": "Nuevo horario",
+          "employee": "Empleado",
+          "selectEmployee": "Selecciona",
+          "dayOfWeek": "Día de la semana",
+          "startTime": "Hora inicio",
+          "endTime": "Hora fin",
+          "save": "Guardar"
+        },
         "selectEmpError": "Selecciona empleado"
       },
       "overtime": {
         "registerBtn": "Registrar",
-        "header": { "employee": "Empleado", "date": "Fecha", "hours": "Horas", "factor": "Factor", "status": "Estado" },
+        "header": {
+          "employee": "Empleado",
+          "date": "Fecha",
+          "hours": "Horas",
+          "factor": "Factor",
+          "status": "Estado"
+        },
         "empty": "Sin registros",
-        "dialog": { "title": "Registrar horas extras", "employee": "Empleado", "selectEmployee": "Selecciona...", "date": "Fecha", "hours": "Horas", "factor": "Factor", "reason": "Motivo", "register": "Registrar", "cancel": "Cancelar" },
-        "statuses": { "pending": "Pendiente", "approved": "Aprobado", "paid": "Pagado", "rejected": "Rechazado" }
+        "dialog": {
+          "title": "Registrar horas extras",
+          "employee": "Empleado",
+          "selectEmployee": "Selecciona...",
+          "date": "Fecha",
+          "hours": "Horas",
+          "factor": "Factor",
+          "reason": "Motivo",
+          "register": "Registrar",
+          "cancel": "Cancelar"
+        },
+        "statuses": {
+          "pending": "Pendiente",
+          "approved": "Aprobado",
+          "paid": "Pagado",
+          "rejected": "Rechazado"
+        }
       }
     },
     "accounting": {
-      "summary": { "assets": "Activos", "liabilities": "Pasivos", "income": "Ingresos", "expenses": "Gastos" },
-      "sections": { "plan": "Plan Contable", "operation": "Operación", "analysis": "Análisis" },
-      "types": { "asset": "Activo", "liability": "Pasivo", "equity": "Capital", "income": "Ingreso", "expense": "Gasto" },
+      "summary": {
+        "assets": "Activos",
+        "liabilities": "Pasivos",
+        "income": "Ingresos",
+        "expenses": "Gastos"
+      },
+      "sections": {
+        "plan": "Plan Contable",
+        "operation": "Operación",
+        "analysis": "Análisis"
+      },
+      "types": {
+        "asset": "Activo",
+        "liability": "Pasivo",
+        "equity": "Capital",
+        "income": "Ingreso",
+        "expense": "Gasto"
+      },
       "tabs": {
-        "accounts": "Cuentas", "periods": "Ejercicios y Períodos",
-        "entries": "Asientos", "costCenters": "Centros de Costo", "budgets": "Presupuestos",
+        "accounts": "Cuentas",
+        "periods": "Ejercicios y Períodos",
+        "entries": "Asientos",
+        "costCenters": "Centros de Costo",
+        "budgets": "Presupuestos",
         "reports": "Reportes Financieros"
       },
       "accounts": {
         "countLabel": "{{total}} cuentas · {{postable}} imputables",
-        "importTemplate": "Importar Plantilla", "newAccount": "Nueva Cuenta",
+        "importTemplate": "Importar Plantilla",
+        "newAccount": "Nueva Cuenta",
         "searchPlaceholder": "Buscar por código o nombre…",
-        "filters": { "type": "Tipo", "nature": "Naturaleza", "postable": "Imputable", "group": "Grupo" },
-        "header": { "code": "Código", "name": "Nombre", "type": "Tipo", "nature": "Naturaleza", "balance": "Saldo", "actions": "Acciones" },
-        "imputable": "Imputable", "group": "Grupo",
+        "filters": {
+          "type": "Tipo",
+          "nature": "Naturaleza",
+          "postable": "Imputable",
+          "group": "Grupo"
+        },
+        "header": {
+          "code": "Código",
+          "name": "Nombre",
+          "type": "Tipo",
+          "nature": "Naturaleza",
+          "balance": "Saldo",
+          "actions": "Acciones"
+        },
+        "imputable": "Imputable",
+        "group": "Grupo",
         "empty": "No hay cuentas. Importa una plantilla para empezar.",
         "subAccount": "Subcuenta"
       },
       "periods": {
         "countLabel": "{{years}} ejercicios · {{periods}} períodos",
-        "newFy": "Nuevo Ejercicio", "current": "Actual",
-        "closeTitle": "Cerrar", "reopenTitle": "Reabrir",
+        "newFy": "Nuevo Ejercicio",
+        "current": "Actual",
+        "closeTitle": "Cerrar",
+        "reopenTitle": "Reabrir",
         "empty": "Crea tu primer ejercicio fiscal",
-        "statuses": { "open": "Abierto", "closed": "Cerrado" }
+        "statuses": {
+          "open": "Abierto",
+          "closed": "Cerrado"
+        }
       },
       "entries": {
         "countLabel": "{{count}} asientos",
@@ -608,53 +814,95 @@
         "needFy": "Crea primero un ejercicio fiscal en Plan Contable → Ejercicios y Períodos.",
         "searchPlaceholder": "Buscar por número, descripción o serie…",
         "filterStatus": "Estado",
-        "header": { "number": "Número", "date": "Fecha", "description": "Descripción", "status": "Estado" },
-        "reversalBadge": "Reversión", "reversedBadge": "Anulado",
-        "post": "Postear", "reverse": "Reversar",
-        "statuses": { "draft": "Borrador", "posted": "Posteado", "reversed": "Reversado" },
+        "header": {
+          "number": "Número",
+          "date": "Fecha",
+          "description": "Descripción",
+          "status": "Estado"
+        },
+        "reversalBadge": "Reversión",
+        "reversedBadge": "Anulado",
+        "post": "Postear",
+        "reverse": "Reversar",
+        "statuses": {
+          "draft": "Borrador",
+          "posted": "Posteado",
+          "reversed": "Reversado"
+        },
         "empty": "Sin asientos contables"
       },
       "accountDialog": {
-        "titleNew": "Nueva Cuenta", "titleEdit": "Editar Cuenta",
+        "titleNew": "Nueva Cuenta",
+        "titleEdit": "Editar Cuenta",
         "desc": "Plan de cuentas jerárquico",
-        "code": "Código *", "type": "Tipo *", "name": "Nombre *",
-        "parent": "Cuenta padre (opcional)", "noneRoot": "— Ninguna (raíz) —",
+        "code": "Código *",
+        "type": "Tipo *",
+        "name": "Nombre *",
+        "parent": "Cuenta padre (opcional)",
+        "noneRoot": "— Ninguna (raíz) —",
         "postable": "Cuenta imputable",
         "postableHint": "Si está desactivada será un grupo y no aceptará asientos directos"
       },
       "templateDialog": {
-        "title": "Importar plan contable", "desc": "Carga una plantilla predefinida",
-        "options": { "cu_onat": "Cuba - ONAT (MIPYMES / TCP)", "es_pgc": "España - PGC PYMES", "mx_sat": "México - SAT", "niif_generic": "NIIF (genérico LATAM)" },
+        "title": "Importar plan contable",
+        "desc": "Carga una plantilla predefinida",
+        "options": {
+          "cu_onat": "Cuba - ONAT (MIPYMES / TCP)",
+          "es_pgc": "España - PGC PYMES",
+          "mx_sat": "México - SAT",
+          "niif_generic": "NIIF (genérico LATAM)"
+        },
         "import": "Importar"
       },
       "fyDialog": {
-        "title": "Nuevo ejercicio fiscal", "desc": "Se crearán 12 períodos mensuales",
-        "year": "Año", "startMonth": "Mes inicio", "create": "Crear"
+        "title": "Nuevo ejercicio fiscal",
+        "desc": "Se crearán 12 períodos mensuales",
+        "year": "Año",
+        "startMonth": "Mes inicio",
+        "create": "Crear"
       },
       "entryDialog": {
-        "title": "Nuevo Asiento Contable", "desc": "Partida doble: débitos = créditos",
-        "date": "Fecha", "series": "Serie", "description": "Descripción",
-        "period": "Período", "noPeriod": "⚠ Sin período para esta fecha",
-        "lines": "Líneas", "addLine": "Línea",
-        "account": "Cuenta (imputable)", "selectAccount": "Seleccionar",
-        "debit": "Débito", "credit": "Crédito", "note": "Nota",
-        "debits": "Débitos", "credits": "Créditos",
-        "balanced": "Balanceado ✓", "notBalanced": "No balanceado",
+        "title": "Nuevo Asiento Contable",
+        "desc": "Partida doble: débitos = créditos",
+        "date": "Fecha",
+        "series": "Serie",
+        "description": "Descripción",
+        "period": "Período",
+        "noPeriod": "⚠ Sin período para esta fecha",
+        "lines": "Líneas",
+        "addLine": "Línea",
+        "account": "Cuenta (imputable)",
+        "selectAccount": "Seleccionar",
+        "debit": "Débito",
+        "credit": "Crédito",
+        "note": "Nota",
+        "debits": "Débitos",
+        "credits": "Créditos",
+        "balanced": "Balanceado ✓",
+        "notBalanced": "No balanceado",
         "postOnSave": "Postear al guardar",
         "postOnSaveHint": "Si está apagado se guarda como borrador",
-        "registerAndPost": "Registrar y Postear", "saveDraft": "Guardar Borrador"
+        "registerAndPost": "Registrar y Postear",
+        "saveDraft": "Guardar Borrador"
       },
       "entryDetail": {
-        "title": "Asiento {{number}}", "noDescription": "Sin descripción",
-        "account": "Cuenta", "debit": "Débito", "credit": "Crédito"
+        "title": "Asiento {{number}}",
+        "noDescription": "Sin descripción",
+        "account": "Cuenta",
+        "debit": "Débito",
+        "credit": "Crédito"
       },
       "toasts": {
         "codeNameRequired": "Código y nombre requeridos",
-        "accountCreated": "Cuenta creada", "accountUpdated": "Cuenta actualizada",
-        "accountDeleted": "Cuenta eliminada", "deleteError": "No se puede eliminar",
+        "accountCreated": "Cuenta creada",
+        "accountUpdated": "Cuenta actualizada",
+        "accountDeleted": "Cuenta eliminada",
+        "deleteError": "No se puede eliminar",
         "balanceError": "Los débitos y créditos deben ser iguales y > 0",
-        "noPeriodTitle": "Sin período", "noPeriodDesc": "Crea un ejercicio fiscal que cubra esta fecha",
-        "periodClosedTitle": "Período cerrado", "periodClosedDesc": "\"{{name}}\" está {{status}}",
+        "noPeriodTitle": "Sin período",
+        "noPeriodDesc": "Crea un ejercicio fiscal que cubra esta fecha",
+        "periodClosedTitle": "Período cerrado",
+        "periodClosedDesc": "\"{{name}}\" está {{status}}",
         "entryCreateError": "Error creando asiento",
         "lineError": "Error en líneas",
         "postedFail": "No se posteó",
@@ -664,8 +912,10 @@
         "reverseReasonPrompt": "Motivo de la reversión (mín. 3 caracteres):",
         "reversed": "Asiento reversado",
         "fyCreated": "Ejercicio {{year}} creado con 12 períodos",
-        "periodClosed": "Período cerrado", "periodOpened": "Período reabierto",
-        "templateImported": "Plan importado", "templateImportedCount": "{{count}} cuentas agregadas"
+        "periodClosed": "Período cerrado",
+        "periodOpened": "Período reabierto",
+        "templateImported": "Plan importado",
+        "templateImportedCount": "{{count}} cuentas agregadas"
       }
     }
   },
@@ -816,7 +1066,11 @@
     "phonePh": "+53 5555 5555",
     "email": "Email",
     "emailPh": "tu@email.com",
-    "deliveryType": "Tipo de entrega",
+    "deliveryType": {
+      "any": "Cualquiera",
+      "delivery": "A domicilio",
+      "pickup": "Recogida en local"
+    },
     "pickup": "Recogida",
     "pickupHint": "Recoge en el local",
     "delivery": "Delivery",
@@ -927,11 +1181,6 @@
       "any": "Cualquiera",
       "in_stock": "En stock",
       "low_stock": "Pocas unidades"
-    },
-    "deliveryType": {
-      "any": "Cualquiera",
-      "delivery": "A domicilio",
-      "pickup": "Recogida en local"
     },
     "search": {
       "recent": "Búsquedas recientes",
@@ -1208,6 +1457,178 @@
       "active": "Turno activo",
       "since": "desde {{time}}",
       "view": "Ver turno"
+    }
+  },
+  "finance": {
+    "engine": {
+      "title": "Motor Financiero · Consola de Auditoría",
+      "subtitle": "Diagnóstico integral, salud financiera, certificación de integridad y smoke test del núcleo contable con los datos reales de la empresa activa.",
+      "runAll": "Ejecutar auditoría completa",
+      "run": "Ejecutar",
+      "running": "Analizando…",
+      "export": "Exportar CSV",
+      "lastRun": "Última ejecución: {{time}}",
+      "score": "Índice de integridad",
+      "search": "Buscar control, área o recomendación…",
+      "filterAll": "Todos",
+      "filterIssues": "Con incidencias",
+      "filterCritical": "Críticos",
+      "empty": "Ejecuta la auditoría para evaluar el motor financiero con datos reales.",
+      "noResults": "Ningún control coincide con el filtro.",
+      "metric": "medido",
+      "expected": "esperado",
+      "remediation": "Acción recomendada",
+      "tabs": {
+        "diagnostics": "Diagnóstico integral",
+        "health": "Centro de control",
+        "certification": "Certificación",
+        "smoke": "Smoke test"
+      },
+      "summary": {
+        "checks": "Controles",
+        "passed": "Correctos",
+        "warnings": "Advertencias",
+        "failed": "Fallidos",
+        "critical": "Críticos"
+      },
+      "verdict": {
+        "pass": "APTO",
+        "warn": "CON AVISOS",
+        "fail": "NO APTO"
+      },
+      "diagnosticsSubtitle": "40 controles reales: estructura, períodos, partida doble, mayor, ventas, compras, nómina, tesorería, CxC/CxP, inventario, fiscalidad y multimoneda.",
+      "healthSubtitle": "Diagnóstico transversal del núcleo: plan de cuentas, partida doble, mayor, módulos operativos, fiscalidad, multimoneda y aislamiento por empresa.",
+      "certSubtitle": "Certifica las invariantes financieras: partida doble, ecuación patrimonial, trazabilidad de ventas y compras, multimoneda e inventario.",
+      "smokeSubtitle": "Validación end-to-end del Financial Core: perfil, plan de cuentas, períodos, reglas de posteo, cuadre del mayor y triggers.",
+      "toast": {
+        "pass": "Motor financiero: APTO",
+        "warn": "{{count}} advertencia(s) detectada(s)",
+        "fail": "{{count}} control(es) fallido(s)"
+      }
+    },
+    "status": {
+      "pass": "correcto",
+      "warn": "aviso",
+      "fail": "fallo",
+      "info": "informativo",
+      "PASS": "correcto",
+      "WARNING": "aviso",
+      "CRITICAL": "crítico"
+    },
+    "severity": {
+      "critical": "Crítica",
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja",
+      "info": "Informativa"
+    },
+    "areas": {
+      "structure": "Estructura contable",
+      "periods": "Ejercicios y períodos",
+      "double_entry": "Partida doble",
+      "ledger": "Libro mayor y balance",
+      "sales": "Ventas",
+      "purchases": "Compras",
+      "payroll": "Nómina",
+      "accounts_payable": "Cuentas por pagar",
+      "accounts_receivable": "Cuentas por cobrar",
+      "inventory": "Inventario",
+      "tax": "Fiscalidad",
+      "treasury": "Tesorería y caja",
+      "multicurrency": "Multimoneda",
+      "security": "Aislamiento multiempresa",
+      "accounting": "Motor de partida doble",
+      "chart_of_accounts": "Maestro de cuentas",
+      "mapping": "Mapeo contable"
+    },
+    "checks": {
+      "accounting_profile": "Perfil contable aplicado",
+      "chart_of_accounts": "Plan de cuentas (total / imputables)",
+      "hierarchy_orphans": "Jerarquía sin cuentas huérfanas",
+      "duplicate_codes": "Códigos de cuenta únicos",
+      "accounting_mappings": "Mapeos contables configurados",
+      "posting_rules": "Reglas de posteo activas",
+      "current_fiscal_year": "Ejercicio fiscal vigente",
+      "periods_generated": "Períodos del ejercicio generados",
+      "stale_open_periods": "Períodos vencidos sin cerrar",
+      "double_entry_global": "Debe = Haber global (debe / haber)",
+      "unbalanced_entries": "Asientos descuadrados",
+      "postings_on_invalid_accounts": "Líneas sobre cuentas imputables y activas",
+      "cross_tenant_lines": "Sin líneas de otra empresa",
+      "entries_without_tenant": "Asientos con empresa asignada",
+      "draft_entries": "Asientos pendientes de contabilizar",
+      "entry_number_uniqueness": "Numeración de asientos sin duplicados",
+      "reversal_traceability": "Trazabilidad de reversos",
+      "journal_fx_rate": "Tipo de cambio válido en asientos",
+      "balance_equation": "Activo = Pasivo + Patrimonio + Resultado",
+      "net_income": "Resultado del ejercicio (ingresos / gastos)",
+      "projection_rows": "Proyección del mayor generada",
+      "projection_balanced": "Mayor cuadrado (debe / haber)",
+      "sales_posted": "Ventas completadas contabilizadas",
+      "sale_totals": "Total = subtotal + impuesto",
+      "sale_lines_match": "Líneas de venta cuadran con el subtotal",
+      "sales_fx_consistency": "Moneda y conversión en ventas",
+      "purchases_posted": "Compras recibidas contabilizadas",
+      "payroll_posted": "Nóminas pagadas contabilizadas",
+      "shifts_z_posted": "Cierres Z contabilizados",
+      "shift_cash_variance": "Descuadre acumulado de caja",
+      "overpaid_bills": "Pagos no superiores al importe",
+      "overdue_payables": "Deudas vencidas (nº / importe)",
+      "receivables_exposure": "Exposición a crédito (clientes / saldo / sobre límite)",
+      "negative_customer_balance": "Saldos de clientes coherentes",
+      "negative_stock": "Existencias no negativas",
+      "stock_below_min": "Productos bajo mínimo",
+      "fiscal_rules_configured": "Reglas fiscales configuradas",
+      "pending_declarations": "Declaraciones fiscales pendientes",
+      "bank_accounts_mapped": "Cuentas bancarias vinculadas al plan",
+      "unmatched_bank_tx": "Movimientos bancarios sin conciliar",
+      "accounts_active": "Cuentas activas",
+      "double_entry": "Debe = Haber por asiento",
+      "double_entry_per_entry": "Partida doble por asiento",
+      "orphan_lines": "Líneas con asiento válido",
+      "mappings_defined": "Mapeos contables definidos",
+      "sales_fx_defined": "Moneda y tipo de cambio en ventas",
+      "journal_tenant_scope": "Aislamiento multiempresa de asientos",
+      "accounts_payable_consistency": "Coherencia de cuentas por pagar",
+      "fx_consistency": "Coherencia multimoneda",
+      "inventory_continuity": "Continuidad de inventario",
+      "accounting_profile_code": "Código de perfil contable",
+      "fiscal_periods": "Períodos fiscales",
+      "ledger_balance": "Cuadre del libro mayor",
+      "operational_triggers": "Triggers operativos conectados",
+      "financial_events": "Eventos financieros"
+    },
+    "remediation": {
+      "apply_accounting_profile": "Aplica un perfil contable a la empresa desde Configuración → Contabilidad.",
+      "import_chart_template": "Importa una plantilla de plan de cuentas en Plan Contable → Cuentas.",
+      "fix_hierarchy": "Revisa las cuentas con cuenta padre inexistente y reasigna su jerarquía.",
+      "fix_duplicate_codes": "Renombra los códigos duplicados: el código debe ser único por empresa.",
+      "configure_mappings": "Define los mapeos contables por operación (venta, compra, caja, nómina).",
+      "configure_posting_rules": "Revisa y activa las reglas de posteo del perfil contable.",
+      "create_fiscal_year": "Crea el ejercicio fiscal vigente y genera sus 12 períodos.",
+      "close_accounting_period": "Cierra los períodos vencidos para blindar la información contable.",
+      "reverse_and_repost": "Corrige mediante reverso trazable y vuelve a contabilizar la operación.",
+      "fix_account_flags": "Marca las cuentas usadas como imputables y activas, o reasigna las líneas.",
+      "contact_support": "Incidencia estructural: requiere revisión técnica antes de operar.",
+      "post_journal_entry": "Contabiliza o descarta los asientos en borrador.",
+      "set_exchange_rate": "Registra el tipo de cambio de la moneda en Configuración → Monedas.",
+      "rebuild_general_ledger": "Ejecuta la reconstrucción del libro mayor.",
+      "repost_sales": "Vuelve a contabilizar las ventas afectadas desde el detalle de la venta.",
+      "review_sales": "Revisa las ventas señaladas: totales, impuestos y líneas.",
+      "repost_purchases": "Vuelve a recibir/contabilizar las compras afectadas.",
+      "repost_payroll": "Vuelve a pagar la nómina para generar su asiento contable.",
+      "close_shift_z": "Ejecuta el cierre Z de los turnos cerrados sin asiento.",
+      "review_shifts": "Revisa los descuadres de caja por turno y su justificación.",
+      "review_payables": "Revisa los pagos registrados sobre cuentas por pagar.",
+      "pay_overdue": "Prioriza el pago de las deudas vencidas.",
+      "review_receivables": "Revisa el crédito de clientes y los límites autorizados.",
+      "adjust_stock": "Ajusta las existencias negativas con un conteo o ajuste de inventario.",
+      "replenish_stock": "Genera órdenes de compra para los productos bajo mínimo.",
+      "configure_fiscal_rules": "Configura las reglas fiscales del país en Configuración → Fiscalidad.",
+      "submit_declarations": "Completa y presenta las declaraciones fiscales pendientes.",
+      "map_bank_accounts": "Vincula cada cuenta bancaria a su cuenta contable.",
+      "reconcile_bank": "Concilia los movimientos bancarios pendientes.",
+      "none": "Sin acción requerida."
     }
   }
 }
