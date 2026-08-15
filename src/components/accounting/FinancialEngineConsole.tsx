@@ -81,14 +81,18 @@ export function FinancialEngineConsole() {
     setRunning(true);
     try {
       const call = (fn: string) => (supabase as any).rpc(fn, { p_tenant: tenantId });
-      const [diag, health, cert, smoke] = await Promise.all([
+      const [diag, health, cert, smoke, mapping, recon] = await Promise.all([
         call("financial_engine_diagnostics"),
         call("financial_health_check"),
         call("certify_financial_integrity"),
         call("smoke_test_financial_core"),
+        call("accounting_mapping_status"),
+        (supabase as any).rpc("accounting_operation_reconciliation", {
+          p_tenant: tenantId, p_from: null, p_to: null,
+        }),
       ]);
 
-      const firstError = [diag, health, cert, smoke].find((r) => r?.error)?.error;
+      const firstError = [diag, health, cert, smoke, mapping, recon].find((r) => r?.error)?.error;
       if (firstError) toast.error(firstError.message);
 
       const out: EngineRow[] = [];
