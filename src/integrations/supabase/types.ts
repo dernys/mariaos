@@ -5306,6 +5306,59 @@ export type Database = {
           },
         ]
       }
+      payroll_events: {
+        Row: {
+          actor_label: string | null
+          actor_user_id: string | null
+          created_at: string
+          employee_id: string | null
+          event_type: string
+          from_status: string | null
+          id: string
+          metadata: Json
+          note: string | null
+          payroll_id: string
+          tenant_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_label?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          employee_id?: string | null
+          event_type: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          payroll_id: string
+          tenant_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_label?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          employee_id?: string | null
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          payroll_id?: string
+          tenant_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_events_payroll_id_fkey"
+            columns: ["payroll_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payroll_run_concepts: {
         Row: {
           concept_id: string | null
@@ -5518,6 +5571,62 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_signatures: {
+        Row: {
+          created_at: string
+          document_ref: string | null
+          employee_id: string | null
+          evidence_url: string | null
+          id: string
+          method: string
+          notes: string | null
+          payroll_id: string
+          registered_by: string | null
+          signed_at: string
+          signer_name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document_ref?: string | null
+          employee_id?: string | null
+          evidence_url?: string | null
+          id?: string
+          method?: string
+          notes?: string | null
+          payroll_id: string
+          registered_by?: string | null
+          signed_at?: string
+          signer_name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document_ref?: string | null
+          employee_id?: string | null
+          evidence_url?: string | null
+          id?: string
+          method?: string
+          notes?: string | null
+          payroll_id?: string
+          registered_by?: string | null
+          signed_at?: string
+          signer_name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_signatures_payroll_id_fkey"
+            columns: ["payroll_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -9655,6 +9764,10 @@ export type Database = {
         Args: { p_order_id: string; p_reason?: string }
         Returns: undefined
       }
+      cancel_payroll_run: {
+        Args: { p_payroll_id: string; p_reason?: string }
+        Returns: string
+      }
       cancel_sale: {
         Args: { p_reason: string; p_sale_id: string }
         Returns: undefined
@@ -9857,6 +9970,14 @@ export type Database = {
         Args: { p_tenant_id: string }
         Returns: Json
       }
+      duplicate_payroll_run: {
+        Args: {
+          p_payroll_id: string
+          p_period_end?: string
+          p_period_start?: string
+        }
+        Returns: string
+      }
       emit_domain_event: {
         Args: {
           p_aggregate_id: string
@@ -10045,6 +10166,17 @@ export type Database = {
           p_metadata?: Json
           p_note?: string
           p_order_id: string
+          p_to?: string
+        }
+        Returns: string
+      }
+      log_payroll_event: {
+        Args: {
+          p_event_type: string
+          p_from?: string
+          p_metadata?: Json
+          p_note?: string
+          p_payroll_id: string
           p_to?: string
         }
         Returns: string
@@ -10353,6 +10485,7 @@ export type Database = {
         Args: { p_cost_sheet_id: string }
         Returns: Json
       }
+      recompute_payroll_run: { Args: { p_payroll_id: string }; Returns: Json }
       redeem_loyalty_points: {
         Args: { p_customer_id: string; p_points: number; p_sale_id?: string }
         Returns: number
@@ -10389,6 +10522,17 @@ export type Database = {
             }
             Returns: string
           }
+      register_payroll_signature: {
+        Args: {
+          p_document_ref?: string
+          p_evidence_url?: string
+          p_method?: string
+          p_notes?: string
+          p_payroll_id: string
+          p_signer_name?: string
+        }
+        Returns: string
+      }
       register_shift_cash_movement: {
         Args: {
           p_amount: number
@@ -10551,6 +10695,10 @@ export type Database = {
         Args: { p_entry_id: string; p_reason: string }
         Returns: string
       }
+      revert_payroll_payment: {
+        Args: { p_payroll_id: string; p_reason?: string }
+        Returns: string
+      }
       revert_sale_stock: { Args: { p_sale_id: string }; Returns: undefined }
       review_rider_application: {
         Args: { p_notes?: string; p_rider_id: string; p_status: string }
@@ -10639,6 +10787,10 @@ export type Database = {
       twin_baseline: {
         Args: { p_days?: number; p_tenant_id: string }
         Returns: Json
+      }
+      unapprove_payroll_run: {
+        Args: { p_payroll_id: string; p_reason?: string }
+        Returns: string
       }
       update_online_order: {
         Args: {
