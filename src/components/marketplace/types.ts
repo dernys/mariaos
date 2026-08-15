@@ -5,6 +5,7 @@ export interface MarketProduct {
   price: number;
   category: string | null;
   image_url: string | null;
+  images?: unknown;
   online_stock: number;
   tenant_id: string;
   is_deliverable: boolean | null;
