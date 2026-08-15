@@ -43,6 +43,7 @@ const MarketplaceProduct = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [activeImg, setActiveImg] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -52,7 +53,7 @@ const MarketplaceProduct = () => {
       try {
         const { data: p } = await supabase
           .from("products")
-          .select("id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable, sku, warehouse_id, store_id, brand, prep_minutes, created_at")
+          .select("id, name, description, price, category, image_url, images, online_stock, tenant_id, is_deliverable, sku, warehouse_id, store_id, brand, prep_minutes, created_at")
           .eq("id", id)
           .eq("is_online", true)
           .eq("is_active", true)
@@ -65,7 +66,7 @@ const MarketplaceProduct = () => {
           supabase.from("stores_public" as any).select("*").eq("tenant_id", p.tenant_id),
           supabase
             .from("products")
-            .select("id, name, description, price, category, image_url, online_stock, tenant_id, is_deliverable, sku, warehouse_id, store_id, brand, prep_minutes, created_at")
+            .select("id, name, description, price, category, image_url, images, online_stock, tenant_id, is_deliverable, sku, warehouse_id, store_id, brand, prep_minutes, created_at")
             .eq("tenant_id", p.tenant_id)
             .eq("is_online", true)
             .eq("is_active", true)
@@ -108,6 +109,19 @@ const MarketplaceProduct = () => {
       );
     }
   }, []);
+
+  const gallery = useMemo(() => {
+    if (!product) return [] as string[];
+    const extra = Array.isArray((product as any).images)
+      ? ((product as any).images as any[])
+          .map((i) => (typeof i === "string" ? i : i?.url))
+          .filter((u): u is string => typeof u === "string" && u.length > 0)
+      : [];
+    const all = [product.image_url, ...extra].filter((u): u is string => !!u);
+    return Array.from(new Set(all));
+  }, [product]);
+
+  useEffect(() => { setActiveImg(0); }, [product?.id]);
 
   const tenantsMap = useMemo(() => (tenant ? { [tenant.id]: tenant } : {}), [tenant]);
 
@@ -172,6 +186,10 @@ const MarketplaceProduct = () => {
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const stockState = product.online_stock <= 0 ? "out" : product.online_stock <= 5 ? "low" : "ok";
+  // Pickup is always guaranteed: if the business has no store flagged for pickup we still
+  // allow in-store collection at the tenant's main location.
+  const pickupAvailable = true;
+  const deliveryAvailable = stores.some((s) => s.accepts_delivery) && product.is_deliverable !== false;
 
   return (
     <div className="min-h-screen bg-background pb-32 md:pb-12">
@@ -205,8 +223,8 @@ const MarketplaceProduct = () => {
           {/* Gallery */}
           <div className="bg-card border border-border rounded-2xl overflow-hidden">
             <div className="aspect-square bg-gradient-to-br from-primary/5 to-accent/10 relative">
-              {product.image_url ? (
-                <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+              {gallery.length > 0 ? (
+                <img src={gallery[Math.min(activeImg, gallery.length - 1)]} alt={`${product.name} – imagen ${activeImg + 1}`} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-7xl opacity-50">
                   {tenant ? bizIcon(tenant.business_type) : "📦"}
@@ -218,6 +236,22 @@ const MarketplaceProduct = () => {
                 </span>
               )}
             </div>
+            {gallery.length > 1 && (
+              <div className="flex gap-2 p-3 overflow-x-auto">
+                {gallery.map((url, i) => (
+                  <button
+                    key={url + i}
+                    onClick={() => setActiveImg(i)}
+                    aria-label={`Imagen ${i + 1}`}
+                    className={`h-16 w-16 shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
+                      i === activeImg ? "border-primary" : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <img src={url} alt={`${product.name} miniatura ${i + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Info */}
@@ -238,7 +272,8 @@ const MarketplaceProduct = () => {
               {product.category && (
                 <Badge variant="outline" className="gap-1"><Tag className="h-3 w-3" /> {product.category}</Badge>
               )}
-              {product.is_deliverable !== false && (
+              <Badge variant="outline" className="gap-1"><Building2 className="h-3 w-3" /> {t("marketplace.pickup")}</Badge>
+              {deliveryAvailable && (
                 <Badge variant="outline" className="gap-1"><Truck className="h-3 w-3" /> {t("marketplace.badge.delivery")}</Badge>
               )}
               {product.prep_minutes != null && product.prep_minutes > 0 && (
@@ -283,10 +318,26 @@ const MarketplaceProduct = () => {
             </div>
 
             <Tabs defaultValue="business" className="pt-3">
-              <TabsList className="grid grid-cols-2 w-full">
+              <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="business">{t("marketplace.tab.business")}</TabsTrigger>
+                <TabsTrigger value="description">Descripción</TabsTrigger>
                 <TabsTrigger value="delivery">{t("marketplace.tab.delivery")}</TabsTrigger>
               </TabsList>
+              <TabsContent value="description" className="pt-3 text-sm">
+                <div className="bg-card border border-border rounded-xl p-3 space-y-2">
+                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                    {product.description?.trim() || "Este producto aún no tiene una descripción ampliada."}
+                  </p>
+                  <dl className="grid grid-cols-2 gap-2 pt-2 text-xs">
+                    {product.sku && (<><dt className="text-muted-foreground">SKU</dt><dd className="font-medium">{product.sku}</dd></>)}
+                    {product.brand && (<><dt className="text-muted-foreground">Marca</dt><dd className="font-medium">{product.brand}</dd></>)}
+                    {product.category && (<><dt className="text-muted-foreground">Categoría</dt><dd className="font-medium">{product.category}</dd></>)}
+                    {product.prep_minutes != null && product.prep_minutes > 0 && (
+                      <><dt className="text-muted-foreground">Preparación</dt><dd className="font-medium">{product.prep_minutes} min</dd></>
+                    )}
+                  </dl>
+                </div>
+              </TabsContent>
               <TabsContent value="business" className="space-y-3 pt-3 text-sm">
                 {tenant && (
                   <div className="bg-card border border-border rounded-xl p-3">
@@ -305,21 +356,21 @@ const MarketplaceProduct = () => {
                   <Building2 className="h-4 w-4 text-primary" />
                   <div className="flex-1">
                     <p className="font-medium">{t("marketplace.pickup")}</p>
-                    <p className="text-xs text-muted-foreground">{stores.some((s) => s.accepts_pickup) ? t("marketplace.pickupAvailable") : t("marketplace.pickupUnavailable")}</p>
+                    <p className="text-xs text-muted-foreground">{t("marketplace.pickupAvailable")}</p>
                   </div>
-                  {stores.some((s) => s.accepts_pickup) && <Check className="h-4 w-4 text-primary" />}
+                  {pickupAvailable && <Check className="h-4 w-4 text-primary" />}
                 </div>
                 <div className="bg-card border border-border rounded-xl p-3 flex items-center gap-2">
                   <Truck className="h-4 w-4 text-primary" />
                   <div className="flex-1">
                     <p className="font-medium">{t("marketplace.delivery")}</p>
                     <p className="text-xs text-muted-foreground">
-                      {stores.some((s) => s.accepts_delivery) && product.is_deliverable !== false
-                        ? t("marketplace.deliveryAvailable", { km: Math.max(...stores.map((s) => s.delivery_radius_km || 0)) })
+                      {deliveryAvailable
+                        ? t("marketplace.deliveryAvailable", { km: Math.max(0, ...stores.map((s) => s.delivery_radius_km || 0)) })
                         : t("marketplace.deliveryUnavailable")}
                     </p>
                   </div>
-                  {stores.some((s) => s.accepts_delivery) && product.is_deliverable !== false && <Check className="h-4 w-4 text-primary" />}
+                  {deliveryAvailable && <Check className="h-4 w-4 text-primary" />}
                 </div>
               </TabsContent>
             </Tabs>

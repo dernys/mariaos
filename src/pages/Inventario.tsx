@@ -82,13 +82,14 @@ const Inventario = () => {
   const [form, setForm] = useState({
     name: "", sku: "", description: "", category: "", price: "0", cost: "0",
     stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true,
+    images: [] as string[],
   });
   const [movForm, setMovForm] = useState({ type: "entry", quantity: "0", reason: "" });
 
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true });
+    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true, images: [] });
     setDialogOpen(true);
   };
 
@@ -99,6 +100,9 @@ const Inventario = () => {
       price: String(p.price), cost: String(p.cost), stock: String(p.stock), min_stock: String(p.min_stock),
       warehouse_id: p.warehouse_id || "", is_online: p.is_online || false, online_stock: String(p.online_stock || 0), image_url: p.image_url || "",
       is_deliverable: (p as any).is_deliverable ?? true,
+      images: Array.isArray((p as any).images)
+        ? ((p as any).images as any[]).map((i) => (typeof i === "string" ? i : i?.url)).filter((u: any): u is string => typeof u === "string" && !!u)
+        : [],
     });
     setDialogOpen(true);
   };
@@ -117,6 +121,7 @@ const Inventario = () => {
       is_online: form.is_online,
       online_stock: parseInt(form.online_stock) || 0,
       image_url: form.image_url,
+      images: form.images,
       is_deliverable: form.is_deliverable,
     };
     try {
@@ -783,6 +788,47 @@ const Inventario = () => {
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Imágenes secundarias (galería del marketplace) */}
+              <div className="pt-2 border-t space-y-2">
+                <Label className="text-xs font-medium">Imágenes secundarias (galería)</Label>
+                <p className="text-[11px] text-muted-foreground">La principal se muestra primero; estas completan la galería del producto en el marketplace.</p>
+                {form.images.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {form.images.map((url, i) => (
+                      <div key={url + i} className="relative">
+                        <img src={url} alt={`secundaria ${i + 1}`} className="h-16 w-16 rounded-lg object-cover border" />
+                        <button
+                          type="button"
+                          aria-label="Quitar imagen"
+                          onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }))}
+                          className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs leading-none"
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="text-xs"
+                  onChange={async (e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    if (!files.length || !tenantId) return;
+                    try {
+                      const urls: string[] = [];
+                      for (const file of files) urls.push(await uploadImageMutation.mutateAsync(file));
+                      setForm((f) => ({ ...f, images: [...f.images, ...urls].slice(0, 8) }));
+                      toast({ title: t("modules.inventory.toasts.imageUploaded") });
+                    } catch (err: any) {
+                      toast({ title: t("modules.inventory.errors.uploadImage"), description: domainMessage(err, t), variant: "destructive" });
+                    } finally {
+                      e.target.value = "";
+                    }
+                  }}
+                />
               </div>
             </div>
 

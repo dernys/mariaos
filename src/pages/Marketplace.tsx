@@ -278,10 +278,10 @@ const Marketplace = () => {
           <div className="flex items-center gap-2 shrink-0">
             {!user && (
               <>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="rounded-full text-xs hidden sm:inline-flex">
+                <Button variant="ghost" size="sm" onClick={() => navigate("/marketplace/acceso")} className="rounded-full text-xs hidden sm:inline-flex">
                   {t("marketplace.login")}
                 </Button>
-                <Button size="sm" onClick={() => navigate("/auth?view=register")} className="rounded-full text-xs hidden sm:inline-flex">
+                <Button size="sm" onClick={() => navigate("/marketplace/acceso?view=register")} className="rounded-full text-xs hidden sm:inline-flex">
                   {t("marketplace.createAccount")}
                 </Button>
               </>

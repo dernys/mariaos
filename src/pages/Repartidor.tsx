@@ -48,7 +48,7 @@ const Repartidor = () => {
   const [mine, setMine] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!user) navigate("/auth");
+    if (!user) navigate("/marketplace/acceso");
   }, [user, navigate]);
 
   useEffect(() => {
