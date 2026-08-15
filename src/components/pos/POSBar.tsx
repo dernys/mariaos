@@ -14,6 +14,10 @@ import { offlineDB, snapshotProducts } from "@/lib/offline/db";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useActiveShift } from "@/hooks/useActiveShift";
+import { OpenOrdersPanel, type OpenOrder } from "./OpenOrdersPanel";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 
 interface Product {
   id: string;
