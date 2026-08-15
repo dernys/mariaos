@@ -21,19 +21,19 @@ import {
 import { format, addDays } from "date-fns";
 import { PayrollEditDialog, type EditablePayroll } from "@/components/rrhh/PayrollEditDialog";
 import { PayrollBatchDialog } from "@/components/rrhh/PayrollBatchDialog";
+import { PayrollActionsMenu } from "@/components/rrhh/PayrollActionsMenu";
+import { PayrollDetailDialog } from "@/components/rrhh/PayrollDetailDialog";
+import { PayrollSignatureDialog } from "@/components/rrhh/PayrollSignatureDialog";
+import { PAYROLL_STATUS_LABEL, type PayrollRow } from "@/components/rrhh/payrollTypes";
+import { TablePagination } from "@/components/data/TablePagination";
 import { useModuleSettings } from "@/hooks/useModuleSettings";
 import { HR_DEFAULTS, type HRSettings } from "@/components/config/ConfigHR";
 
 
 interface Employee { id: string; name: string; salary: number; position: string | null; department: string | null; position_id?: string | null; }
 interface Schedule { id: string; employee_id: string; day_of_week: number; start_time: string; end_time: string; is_active: boolean; employees?: { name: string }; }
-interface Payroll {
-  id: string; employee_id: string; period_start: string; period_end: string;
-  base_salary: number; hours_worked: number; bonus: number; deductions: number;
-  net_pay: number; status: string; paid_at: string | null;
-  notes?: string | null; payment_method?: string | null; approved_at?: string | null;
-  employees?: { name: string; position?: string | null };
-}
+type Payroll = PayrollRow;
+
 
 interface JobPosition {
   id: string; code: string; name: string; department: string | null; level: string | null;
