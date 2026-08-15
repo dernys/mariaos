@@ -450,14 +450,28 @@ const PedidosOnline = () => {
       <RiderRecommendationDialog
         orderId={recOrderId}
         onOpenChange={(v) => !v && setRecOrderId(null)}
-        onAssigned={fetchOrders}
+        onAssigned={() => { fetchOrders(); setTimelineKey((k) => k + 1); }}
+      />
+
+      <RiderRecommendationDialog
+        orderId={reassignOrderId}
+        reassign
+        onOpenChange={(v) => !v && setReassignOrderId(null)}
+        onAssigned={() => { fetchOrders(); setTimelineKey((k) => k + 1); }}
+      />
+
+      <OrderEditDialog
+        order={editOrder}
+        onOpenChange={(v) => !v && setEditOrder(null)}
+        onSaved={() => { fetchOrders(); setTimelineKey((k) => k + 1); }}
       />
 
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[88vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalle del pedido</DialogTitle>
           </DialogHeader>
+
           {selectedOrder && (
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
