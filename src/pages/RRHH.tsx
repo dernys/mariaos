@@ -157,6 +157,33 @@ export default function RRHH() {
   const empName = (id: string) => employees.find((x) => x.id === id)?.name || "—";
   const openShift = useMemo(() => attendance.find((a) => a.employee_id === selectedEmp && !a.check_out), [attendance, selectedEmp]);
 
+  const filteredPayrolls = useMemo(() => {
+    const q = payFilters.q.trim().toLowerCase();
+    return payrolls.filter((p) => {
+      if (payFilters.status !== "all" && p.status !== payFilters.status) return false;
+      if (payFilters.employee !== "all" && p.employee_id !== payFilters.employee) return false;
+      if (payFilters.from && p.period_end < payFilters.from) return false;
+      if (payFilters.to && p.period_start > payFilters.to) return false;
+      if (q) {
+        const hay = `${p.employees?.name || ""} ${p.receipt_number || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [payrolls, payFilters]);
+
+  const filteredNet = useMemo(
+    () => filteredPayrolls.reduce((a, p) => a + (Number(p.net_pay) || 0), 0),
+    [filteredPayrolls]
+  );
+
+  const pagedPayrolls = useMemo(
+    () => filteredPayrolls.slice((payPage - 1) * payPageSize, payPage * payPageSize),
+    [filteredPayrolls, payPage, payPageSize]
+  );
+
+
+
   const saveSchedule = async () => {
     if (!schedForm.employee_id) return toast({ title: t("modules.hr.schedules.selectEmpError"), variant: "destructive" });
     const { error } = await supabase.from("work_schedules").insert({
