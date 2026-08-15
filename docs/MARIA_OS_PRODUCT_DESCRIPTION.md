@@ -29,7 +29,18 @@ Diferencial: **la operación diaria tributa automáticamente a la contabilidad**
 
 ## 2. Módulos por categoría
 
+Todas las imágenes de este documento son capturas reales de la aplicación en funcionamiento sobre las empresas demo, tomadas el 2026-08-15.
+
+![Dashboard ejecutivo](/landing/modules/dashboard.jpg)
+
 ### Operaciones y ventas
+
+![Punto de Venta](/landing/modules/pos.jpg)
+
+![Cocina (KDS)](/landing/modules/cocina.jpg)
+
+![Turnos y caja](/landing/modules/turnos.jpg)
+
 - 🟢 **POS adaptable por rubro**: modo Bar (cuentas y consumiciones), Restaurante (mapa de mesas, comandas, división de cuentas) y Retail (SKU y código de barras). Turno obligatorio para vender, ventas aparcadas, atajos de teclado, mobile-first.
 - 🟢 **Pagos**: efectivo, tarjeta, QR, transferencia, crédito y **pagos divididos**; multimoneda (CUP, USD, EUR) con tasa de cambio configurable. El crédito exige cliente o empleado asociado.
 - 🟢 **Ticket térmico** e impresión de recibo desde la venta y desde la venta rápida.
@@ -38,6 +49,15 @@ Diferencial: **la operación diaria tributa automáticamente a la contabilidad**
 - 🟢 **Devoluciones** de venta con reintegro de stock y contra-asiento contable.
 
 ### Inventario y suministro
+
+![Inventario y kardex](/landing/modules/inventario.jpg)
+
+![Transferencias entre almacenes](/landing/modules/transferencias.jpg)
+
+![Recetas y escandallo](/landing/modules/recetas.jpg)
+
+![Compras y proveedores](/landing/modules/compras.jpg)
+
 - 🟢 **Catálogo y stock por ubicación** (tienda y almacén), con almacenes asociables a una o varias tiendas.
 - 🟢 **Kardex valorizado y movimientos auditables** (entradas, salidas, ajustes) con historial completo.
 - 🟢 **Transferencias** entre almacenes y tiendas con envío, recepción, transportista y consola de integridad de existencias.
@@ -47,6 +67,15 @@ Diferencial: **la operación diaria tributa automáticamente a la contabilidad**
 - 🟡 **Inteligencia de inventario**: pronóstico de demanda y sugerencia de reposición asistida por IA.
 
 ### Finanzas y contabilidad
+
+![Contabilidad y maestro de cuentas](/landing/modules/contabilidad.jpg)
+
+![Reportes financieros](/landing/modules/reportes.jpg)
+
+![Tesorería](/landing/modules/tesoreria.jpg)
+
+![Facturación](/landing/modules/facturas.jpg)
+
 - 🟢 **Contabilidad de partida doble** con maestro de cuentas configurable, plantillas de plan contable, ejercicios y periodos fiscales con cierre.
 - 🟢 **Mapeo operación → cuenta**: cada tipo de operación (venta, costo de venta, compra, caja, nómina, impuestos) se asigna a la cuenta que la empresa decida; la aplicación deja de estar "cableada".
 - 🟢 **Libro diario y libro mayor** completos, con conciliación por operación.
@@ -58,6 +87,15 @@ Diferencial: **la operación diaria tributa automáticamente a la contabilidad**
 - ⚪ Conciliación bancaria automatizada a escala y facturación de suscripciones.
 
 ### Comercial: clientes, marketplace y delivery
+
+![Marketplace público](/landing/modules/marketplace.jpg)
+
+![Pedidos online](/landing/modules/pedidos-online.jpg)
+
+![Delivery y repartidores](/landing/modules/delivery.jpg)
+
+![Clientes (CRM)](/landing/modules/clientes.jpg)
+
 - 🟢 **CRM**: clientes con saldo, crédito otorgado, deuda, fidelización por puntos y timeline de actividad.
 - 🟢 **Marketplace público (PWA)**: catálogo multi-empresa con búsqueda, filtros, paginación, geolocalización, galería de imágenes por producto, entrega a domicilio o recogida en local y reseñas solo de usuarios registrados.
 - 🟢 **Registro de compradores** con validación por correo; los usuarios de negocio los crea el superadmin o el administrador de cada empresa (sin auto-registro empresarial).
@@ -65,11 +103,23 @@ Diferencial: **la operación diaria tributa automáticamente a la contabilidad**
 - ⚪ Pago online dentro del marketplace (hoy es captura de pedido y cobro en entrega/local).
 
 ### Personas
+
+![Recursos humanos y nóminas](/landing/modules/rrhh.jpg)
+
 - 🟢 **RRHH**: empleados, puestos, contratos, fichaje, horarios, vacaciones y horas extras.
 - 🟢 **Nóminas** con ciclo Borrador → Aprobada → Pagada, generación por lotes, edición, documento PDF y registro de firma (física o digital), con asiento contable asociado.
 - 🟢 **Portal del empleado**.
 
 ### Inteligencia y automatización
+
+![Command Center de IA](/landing/modules/command-center.jpg)
+
+![Digital Twin](/landing/modules/digital-twin.jpg)
+
+![Motor de riesgo](/landing/modules/risk.jpg)
+
+![Agentes de IA](/landing/modules/agents.jpg)
+
 - 🟡 **Command Center de IA**: 7 agentes especializados por empresa (CFO, inventario, operaciones, marketplace, cumplimiento, compras, analítica) con acciones registradas y decisiones sugeridas al dueño.
 - 🟡 **Digital Twin**: simulación de precio, costo, demanda y gastos fijos sobre datos reales, con P&L proyectado, punto de equilibrio y concentración de ventas.
 - 🟡 **Motor de riesgo**: escaneo de descuadres contables, stock negativo, anomalías de caja y accesos inusuales.
@@ -77,6 +127,11 @@ Diferencial: **la operación diaria tributa automáticamente a la contabilidad**
 - 🟡 **Workflows y webhooks**: motor implementado; sin flujos configurados en producción todavía.
 
 ### Plataforma y confianza
+
+![Roles y permisos](/landing/modules/roles.jpg)
+
+![Analytics](/landing/modules/analytics.jpg)
+
 - 🟢 **Multi-empresa con aislamiento estricto** (Row-Level Security en todas las tablas) y selector de contexto para el superadmin.
 - 🟢 **RBAC real**: matriz de permisos por módulo y acción resuelta en el servidor; el menú se adapta al tipo de negocio de cada empresa.
 - 🟢 **Auditoría** de actividad de usuarios y operaciones.
