@@ -262,6 +262,20 @@ const Inventario = () => {
     [movements, products, warehouses, stores],
   );
 
+  // Etiqueta legible para cualquier tipo de movimiento (incl. los generados por POS/recetas/compras)
+  const movementTypeLabel = (type: string) =>
+    t(`modules.inventory.movementType.${type}`, {
+      defaultValue: type.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()),
+    });
+
+  // Opciones reales presentes en los datos, para que el filtro nunca quede vacío ni desalineado
+  const movementTypeOptions = useMemo(() => {
+    const types = Array.from(new Set(movements.map((m) => m.movement_type).filter(Boolean)));
+    return types.sort().map((type) => ({ value: type, label: movementTypeLabel(type) }));
+  }, [movements, t]);
+
+
+
   const movementTable = useTableState({
     data: movementRowsAll,
     searchKeys: ["productName", "reason", "movement_type", "locationName"],
