@@ -141,9 +141,17 @@ export default function RRHH() {
     setContracts((ct.data as any) || []);
     setOvertime((ot.data as any) || []);
     if (!selectedEmp && e.data?.length) setSelectedEmp(e.data[0].id);
+
+    const [tn, sg] = await Promise.all([
+      supabase.from("tenants").select("name").eq("id", tenantId).maybeSingle(),
+      (supabase.from as any)("payroll_signatures").select("payroll_id").eq("tenant_id", tenantId),
+    ]);
+    setTenantName((tn.data as any)?.name ?? null);
+    setSignedIds(new Set((((sg.data as any) || []) as any[]).map((r) => r.payroll_id)));
   };
 
   useEffect(() => { load(); }, [tenantId]);
+
 
   const empName = (id: string) => employees.find((x) => x.id === id)?.name || "—";
   const openShift = useMemo(() => attendance.find((a) => a.employee_id === selectedEmp && !a.check_out), [attendance, selectedEmp]);
