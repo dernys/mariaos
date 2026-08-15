@@ -16,17 +16,28 @@ import heroBg from "@/assets/landing-hero-bg.jpg";
 import { Clock4 } from "lucide-react";
 
 const moduleSlides = [
-  { img: "/landing/modules/dashboard.png", icon: BarChart3, title: "Dashboard Ejecutivo", desc: "Indicadores clave de tu negocio en vivo: ventas del día, top productos, alertas de stock y rendimiento por sucursal.", features: ["KPIs en tiempo real", "Gráficos interactivos", "Alertas inteligentes"] },
-  { img: "/landing/modules/pos.png", icon: ShoppingCart, title: "Punto de Venta Adaptable", desc: "POS especializado para Bar, Restaurante y Retail. Cobro veloz con pagos divididos, multimoneda y atajos de teclado.", features: ["3 modos especializados", "Multi-pago y multimoneda", "Atajos y mobile-first"] },
-  { img: "/landing/modules/restaurante.png", icon: ChefHat, title: "Mapa de Mesas y Salón", desc: "Visualiza tu salón en tiempo real: mesas libres, ocupadas, servidas y esperando cuenta. Asignación de meseros con un clic.", features: ["Mapa visual del salón", "Estados en tiempo real", "Asignación de meseros"] },
-  { img: "/landing/modules/inventario.png", icon: Package, title: "Inventario Inteligente", desc: "Control total: stock por almacén, recetas (BOM), kardex, movimientos auditables y alertas automáticas de bajo stock.", features: ["Kardex y movimientos", "Recetas (BOM)", "Alertas de stock bajo"] },
-  { img: "/landing/modules/marketplace.png", icon: Globe, title: "Marketplace Online", desc: "Tienda pública PWA con geolocalización para que tus clientes te encuentren y pidan online en tu ciudad.", features: ["Geolocalización nativa", "Catálogo multi-tenant", "Instalable como app"] },
-  { img: "/landing/modules/facturacion.png", icon: Receipt, title: "Facturación Electrónica", desc: "Emite facturas locales y electrónicas con UBL 2.1, XML firmado y transmisión por webhook a tu PAC. PDF profesional incluido.", features: ["UBL 2.1 + XML", "Envío por email", "Cobros y estado"] },
-  { img: "/landing/modules/clientes.png", icon: Users, title: "Gestión de Clientes (CRM)", desc: "Saldos, crédito otorgado, deudas, fidelización y timeline de actividad por cliente con un panel claro y rápido.", features: ["Crédito y saldos", "Programa de puntos", "Historial completo"] },
-  { img: "/landing/modules/empleados.png", icon: Users, title: "RRHH y Nómina", desc: "Empleados, puestos, salarios, adelantos y nómina mensual integrada. Control de asistencia y horarios incluido.", features: ["Nómina automática", "Adelantos y bonos", "Asistencia y horarios"] },
-  { img: "/landing/modules/turnos.png", icon: Clock4, title: "Turnos y Caja", desc: "Apertura y cierre de turnos por tienda y cajero, con conteo de caja inicial, ventas y diferencias auditables.", features: ["Caja por turno", "Multi-tienda", "Cierre auditado"] },
-  { img: "/landing/modules/delivery.png", icon: Truck, title: "Delivery y Repartos", desc: "Coordina pedidos, repartidores y zonas en tiempo real. Asignación con un clic y seguimiento por estado.", features: ["Zonas configurables", "Asignación realtime", "Estado por pedido"] },
+  { img: "/landing/modules/dashboard.jpg", icon: BarChart3, title: "Dashboard Ejecutivo", desc: "Indicadores del negocio en vivo: ventas, ticket promedio, margen bruto, valor de inventario y rendimiento por tienda, con comparativa entre periodos.", features: ["KPIs con deltas", "Rangos y comparativas", "Desglose por tienda"] },
+  { img: "/landing/modules/pos.jpg", icon: ShoppingCart, title: "Punto de Venta Adaptable", desc: "POS especializado para Bar, Restaurante y Retail. Turno obligatorio, ventas aparcadas, pagos divididos, multimoneda e impresión de ticket.", features: ["3 modos por rubro", "Multi-pago y multimoneda", "Ticket térmico"] },
+  { img: "/landing/modules/cocina.jpg", icon: ChefHat, title: "Cocina (KDS) y Mesas", desc: "Comandas enviadas a cocina en tiempo real, con estados, notas por ítem, seguimiento de la orden y cobro directo desde la comanda.", features: ["Realtime multi-dispositivo", "Notas y modificaciones", "Cobro de comanda"] },
+  { img: "/landing/modules/inventario.jpg", icon: Package, title: "Inventario y Kardex", desc: "Stock por ubicación, kardex valorizado, movimientos auditables, lotes y series, conteos físicos y alertas de stock bajo.", features: ["Stock por almacén", "Kardex y movimientos", "Alertas de reposición"] },
+  { img: "/landing/modules/transferencias.jpg", icon: Truck, title: "Transferencias y Almacenes", desc: "Traslados entre almacenes y tiendas con envío, recepción, transportista y consola de integridad de existencias.", features: ["Envío y recepción", "Trazabilidad completa", "Consola de integridad"] },
+  { img: "/landing/modules/recetas.jpg", icon: Utensils, title: "Recetas y Escandallo", desc: "Recetas como mezcla de productos de stock, con costo teórico, margen calculado y descuento automático de ingredientes al vender.", features: ["Escandallo en vivo", "Costo y margen", "Descuento por venta"] },
+  { img: "/landing/modules/compras.jpg", icon: Receipt, title: "Compras y Proveedores", desc: "Órdenes de compra, recepción de mercancía, generación automática de cuentas por pagar y control de pagos a proveedores.", features: ["OC y recepción", "Cuentas por pagar", "Historial por proveedor"] },
+  { img: "/landing/modules/contabilidad.jpg", icon: Wallet, title: "Contabilidad y Maestro de Cuentas", desc: "Partida doble real: maestro de cuentas configurable, mapeo de operaciones a cuentas, libro diario, mayor y consola de auditoría del motor financiero.", features: ["Mapeo operación→cuenta", "Diario y mayor", "Consola de auditoría"] },
+  { img: "/landing/modules/reportes.jpg", icon: BarChart3, title: "Reportes Financieros", desc: "Estado de Resultados, Balance General, Balance de Comprobación, Libro Diario y Libro Mayor calculados en el servidor y exportables.", features: ["P&L y balance", "Comprobación cuadrada", "Exportación CSV/PDF"] },
+  { img: "/landing/modules/turnos.jpg", icon: Clock4, title: "Turnos y Flujo de Caja", desc: "Apertura y cierre por tienda y cajero, movimientos de caja categorizados y asiento contable por cada movimiento registrado.", features: ["Un turno abierto por tienda", "Caja contabilizada", "Cierre auditado"] },
+  { img: "/landing/modules/facturas.jpg", icon: Receipt, title: "Facturación", desc: "Facturación a partir de ventas realizadas, ventas rápidas con múltiples pagos, PDF profesional y transmisión electrónica UBL 2.1.", features: ["Factura desde venta", "PDF y email", "UBL 2.1 + XML"] },
+  { img: "/landing/modules/tesoreria.jpg", icon: Wallet, title: "Tesorería", desc: "Posición de caja y bancos, cuentas por cobrar y por pagar y proyección de flujo con datos del libro mayor.", features: ["Caja y bancos", "CxC y CxP", "Proyección de flujo"] },
+  { img: "/landing/modules/clientes.jpg", icon: Users, title: "Clientes (CRM)", desc: "Saldos, crédito otorgado, fidelización y timeline de actividad por cliente. El crédito en POS exige cliente o empleado asociado.", features: ["Crédito y saldos", "Puntos y fidelización", "Timeline de actividad"] },
+  { img: "/landing/modules/rrhh.jpg", icon: Users, title: "RRHH y Nóminas", desc: "Empleados, puestos, contratos, fichaje, vacaciones, horas extras y nóminas con ciclo Borrador → Aprobada → Pagada y firma registrada.", features: ["Nómina por lotes", "Aprobación y firma", "Fichaje y horarios"] },
+  { img: "/landing/modules/pedidos-online.jpg", icon: Globe, title: "Pedidos Online y Delivery", desc: "Captura de pedidos del marketplace, asignación sugerida de repartidor, historial de acciones y seguimiento de estado en tiempo real.", features: ["Sugerencia de repartidor", "Historial y acciones", "Seguimiento realtime"] },
+  { img: "/landing/modules/marketplace.jpg", icon: Globe, title: "Marketplace Público", desc: "Tienda pública PWA con búsqueda, filtros, paginación, reseñas verificadas, entrega a domicilio o recogida y registro de comprador.", features: ["Filtros y paginación", "Reseñas de compradores", "Delivery o recogida"] },
+  { img: "/landing/modules/command-center.jpg", icon: Bot, title: "Command Center de IA", desc: "Agentes especializados (CFO, inventario, operaciones, cumplimiento…) con acciones registradas, decisiones sugeridas y señales operativas.", features: ["7 agentes por empresa", "Decisiones sugeridas", "Acciones auditadas"] },
+  { img: "/landing/modules/digital-twin.jpg", icon: Brain, title: "Digital Twin", desc: "Simula precio, costo, demanda y gastos fijos sobre tus datos reales y obtén P&L proyectado, punto de equilibrio y concentración de ventas.", features: ["Escenarios what-if", "Punto de equilibrio", "Grafo de conocimiento"] },
+  { img: "/landing/modules/risk.jpg", icon: Shield, title: "Motor de Riesgo", desc: "Escáner de riesgos operativos y contables: descuadres, accesos inusuales, stock negativo y anomalías de caja con alertas gestionables.", features: ["Escaneo bajo demanda", "Alertas gestionables", "Foco antifraude"] },
+  { img: "/landing/modules/roles.jpg", icon: Shield, title: "Roles y Permisos", desc: "Matriz RBAC por módulo y acción resuelta en el servidor, con módulos visibles según el tipo de negocio de cada empresa.", features: ["Matriz por módulo", "Resolución server-side", "Menú por tipo de negocio"] },
 ];
+
 
 const demoBusinessTypes = [
   { id: "bar", icon: Store, title: "Bar / Cafetería", desc: "Cuentas abiertas, comanda rápida y cobro por consumición.", accent: "from-amber-500 to-orange-500" },
@@ -254,7 +265,7 @@ const Landing = () => {
                 </div>
               </div>
               <img
-                src="/landing/modules/dashboard.png"
+                src="/landing/modules/dashboard.jpg"
                 alt="Dashboard ejecutivo de MarIA con KPIs, ventas y alertas en tiempo real"
                 width={1600}
                 height={900}
@@ -570,9 +581,40 @@ const Landing = () => {
               </div>
             ))}
           </div>
+
+          {/* Métricas verificadas de la plataforma */}
+          <div className="mt-14 rounded-3xl border border-border bg-card/60 p-8 sm:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">Ingeniería verificada</p>
+                <h3 className="font-heading font-bold text-2xl sm:text-3xl tracking-tight">La plataforma por dentro</h3>
+              </div>
+              <p className="text-xs text-muted-foreground max-w-sm">
+                Cifras medidas sobre la base de datos y el código del sistema, no estimaciones de marketing.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { v: "137", l: "Tablas de negocio con aislamiento por empresa" },
+                { v: "396", l: "Políticas de seguridad a nivel de fila (RLS)" },
+                { v: "231", l: "Funciones de negocio ejecutadas en el servidor" },
+                { v: "228", l: "Disparadores de integridad y auditoría" },
+                { v: "56k+", l: "Líneas de código de aplicación" },
+                { v: "100%", l: "Paridad débito = crédito en el libro diario" },
+                { v: "17", l: "Funciones serverless (IA, fiscal, integraciones)" },
+                { v: "3", l: "Idiomas: español, inglés y portugués (BR)" },
+              ].map((s) => (
+                <div key={s.l}>
+                  <p className="font-heading font-bold text-2xl sm:text-3xl text-primary">{s.v}</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{s.l}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
       </section>
+
 
       {/* CTA */}
       <section id="contacto" className="py-24">
