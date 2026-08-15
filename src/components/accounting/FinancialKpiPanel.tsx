@@ -38,12 +38,21 @@ interface BreakdownRow {
   closing_balance: number;
 }
 
+interface PeriodOption {
+  id: string;
+  name: string;
+  status: string | null;
+  entries: number;
+}
+
 export function FinancialKpiPanel() {
   const { t, i18n } = useTranslation();
   const tenantId = useTenant();
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [breakdown, setBreakdown] = useState<BreakdownRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [periods, setPeriods] = useState<PeriodOption[]>([]);
+  const [periodId, setPeriodId] = useState<string | null>(null);
 
   const tr = (key: string, fallback: string) =>
     t(`finance.kpi.${key}`, { defaultValue: fallback }) as string;
@@ -54,17 +63,54 @@ export function FinancialKpiPanel() {
     [i18n.language],
   );
 
+  // Los períodos se listan con su número de asientos contabilizados para que el
+  // contador no vea "0" simplemente porque el mes en curso aún no tiene actividad.
+  useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: periodRows }, { data: entryRows }] = await Promise.all([
+        supabase
+          .from("accounting_periods")
+          .select("id, name, status, start_date")
+          .eq("tenant_id", tenantId)
+          .order("start_date", { ascending: false })
+          .limit(36),
+        supabase
+          .from("journal_entries")
+          .select("period_id")
+          .eq("tenant_id", tenantId)
+          .eq("status", "posted")
+          .limit(5000),
+      ]);
+      if (cancelled) return;
+      const counts = new Map<string, number>();
+      for (const row of (entryRows ?? []) as { period_id: string | null }[]) {
+        if (row.period_id) counts.set(row.period_id, (counts.get(row.period_id) ?? 0) + 1);
+      }
+      const opts: PeriodOption[] = ((periodRows ?? []) as any[]).map((p) => ({
+        id: p.id as string,
+        name: (p.name as string) ?? "—",
+        status: (p.status as string) ?? null,
+        entries: counts.get(p.id as string) ?? 0,
+      }));
+      setPeriods(opts);
+      setPeriodId((prev) => prev ?? (opts.find((o) => o.entries > 0)?.id ?? opts[0]?.id ?? null));
+    })();
+    return () => { cancelled = true; };
+  }, [tenantId]);
+
   const load = useCallback(async () => {
     if (!tenantId) return;
     setLoading(true);
     const [kpiRes, bdRes] = await Promise.all([
-      (supabase as any).rpc("get_financial_kpis", { p_tenant: tenantId, p_period_id: null }),
-      (supabase as any).rpc("financial_kpi_breakdown", { p_tenant: tenantId, p_period_id: null }),
+      (supabase as any).rpc("get_financial_kpis", { p_tenant: tenantId, p_period_id: periodId }),
+      (supabase as any).rpc("financial_kpi_breakdown", { p_tenant: tenantId, p_period_id: periodId }),
     ]);
     setKpis((kpiRes.data as unknown as Kpis) ?? null);
     setBreakdown(((bdRes.data ?? []) as BreakdownRow[]) || []);
     setLoading(false);
-  }, [tenantId]);
+  }, [tenantId, periodId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -79,6 +125,9 @@ export function FinancialKpiPanel() {
       </Card>
     );
   }
+
+  const activePeriod = periods.find((p) => p.id === (periodId ?? kpis.period_id));
+
 
   const tiles = [
     {
