@@ -294,7 +294,19 @@
         "entry": "Entry",
         "exit": "Exit",
         "adjustment": "Adjustment",
-        "transfer": "Transfer"
+        "transfer": "Transfer",
+        "sale": "Sale (POS)",
+        "purchase": "Purchase",
+        "recipe_consumption": "Recipe consumption",
+        "loss": "Loss",
+        "breakage": "Breakage",
+        "expired": "Expired",
+        "theft": "Theft",
+        "transfer_in": "Transfer in",
+        "transfer_out": "Transfer out",
+        "return": "Return",
+        "count": "Stock count",
+        "initial_stock": "Initial stock"
       },
       "locationType": {
         "warehouse": "Warehouse",

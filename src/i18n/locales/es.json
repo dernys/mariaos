@@ -294,7 +294,19 @@
         "entry": "Entrada",
         "exit": "Salida",
         "adjustment": "Ajuste",
-        "transfer": "Transferencia"
+        "transfer": "Transferencia",
+        "sale": "Venta (POS)",
+        "purchase": "Compra",
+        "recipe_consumption": "Consumo por receta",
+        "loss": "Pérdida",
+        "breakage": "Rotura",
+        "expired": "Caducado",
+        "theft": "Hurto",
+        "transfer_in": "Traslado entrada",
+        "transfer_out": "Traslado salida",
+        "return": "Devolución",
+        "count": "Conteo físico",
+        "initial_stock": "Stock inicial"
       },
       "locationType": {
         "warehouse": "Almacén",

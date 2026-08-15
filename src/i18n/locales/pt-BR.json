@@ -294,7 +294,19 @@
         "entry": "Entrada",
         "exit": "Saída",
         "adjustment": "Ajuste",
-        "transfer": "Transferência"
+        "transfer": "Transferência",
+        "sale": "Venda (POS)",
+        "purchase": "Compra",
+        "recipe_consumption": "Consumo por receita",
+        "loss": "Perda",
+        "breakage": "Quebra",
+        "expired": "Vencido",
+        "theft": "Furto",
+        "transfer_in": "Transferência entrada",
+        "transfer_out": "Transferência saída",
+        "return": "Devolução",
+        "count": "Contagem física",
+        "initial_stock": "Estoque inicial"
       },
       "locationType": {
         "warehouse": "Depósito",
