@@ -893,7 +893,10 @@ export default function RRHH() {
             <DialogFooter><Button variant="outline" onClick={() => setOpenOvertime(false)}>{t("modules.hr.overtime.dialog.cancel")}</Button><Button onClick={createOvertime} className="gradient-brand text-primary-foreground">{t("modules.hr.overtime.dialog.register")}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <PayrollEditDialog payroll={editPayroll} onOpenChange={(o) => { if (!o) setEditPayroll(null); }} onSaved={load} />
       </div>
+
     </AppLayout>
   );
 }
