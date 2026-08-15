@@ -91,10 +91,14 @@ export default function Transferencias() {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [items, setItems] = useState<Record<string, TransferItem[]>>({});
   const [people, setPeople] = useState<Record<string, string>>({});
+  const [stockMap, setStockMap] = useState<Record<string, number>>({});
   const [open, setOpen] = useState(false);
   const [tracking, setTracking] = useState<Transfer | null>(null);
   const [events, setEvents] = useState<TransferEvent[]>([]);
   const [carrierEdit, setCarrierEdit] = useState<Transfer | null>(null);
+  /** Transferencia en proceso de envío (salida) o recepción (entrada) con cantidades editables. */
+  const [flow, setFlow] = useState<{ transfer: Transfer; mode: "ship" | "receive" } | null>(null);
+  const [flowQty, setFlowQty] = useState<Record<string, string>>({});
 
   // Form
   const [originType, setOriginType] = useState<LocType>("warehouse");
@@ -110,17 +114,25 @@ export default function Transferencias() {
     { product_id: "", quantity: "1" },
   ]);
 
+  const stockKey = (productId: string, type: string, id: string) => `${productId}|${type}|${id}`;
+  const stockAt = (productId: string, type: string, id: string) =>
+    stockMap[stockKey(productId, type, id)] ?? 0;
+
   const fetchAll = async () => {
-    const [whR, stR, prR, trR, pfR] = await Promise.all([
+    const [whR, stR, prR, trR, pfR, psR] = await Promise.all([
       supabase.from("warehouses").select("id, name").order("name"),
       supabase.from("stores").select("id, name").order("name"),
       supabase.from("products").select("id, name, sku").order("name"),
       supabase.from("stock_transfers").select("*").order("created_at", { ascending: false }).limit(300),
       supabase.from("profiles").select("id, full_name, email"),
+      supabase.from("product_stock").select("product_id, location_type, location_id, stock"),
     ]);
     setWarehouses((whR.data || []).map((w) => ({ ...w, type: "warehouse" as LocType })));
     setStores((stR.data || []).map((s) => ({ ...s, type: "store" as LocType })));
     setProducts(prR.data || []);
+    const sm: Record<string, number> = {};
+    (psR.data || []).forEach((s: any) => { sm[`${s.product_id}|${s.location_type}|${s.location_id}`] = Number(s.stock) || 0; });
+    setStockMap(sm);
     const nameMap: Record<string, string> = {};
     (pfR.data || []).forEach((p: any) => { nameMap[p.id] = p.full_name || p.email || p.id; });
     setPeople(nameMap);
@@ -142,10 +154,13 @@ export default function Transferencias() {
         });
       });
       setItems(grouped);
+    } else {
+      setItems({});
     }
   };
 
   useEffect(() => { fetchAll(); }, []);
+
 
   const openTracking = async (tr: Transfer) => {
     setTracking(tr);
