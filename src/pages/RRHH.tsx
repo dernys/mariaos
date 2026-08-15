@@ -123,7 +123,7 @@ export default function RRHH() {
     const [e, s, p, jp, ap, att, lv, ct, ot] = await Promise.all([
       supabase.from("employees").select("id,name,salary,position,department,position_id").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
       supabase.from("work_schedules").select("*, employees(name)").eq("tenant_id", tenantId).order("day_of_week"),
-      supabase.from("payroll_runs").select("*, employees(name, position)").eq("tenant_id", tenantId).order("period_end", { ascending: false }),
+      supabase.from("payroll_runs").select("*, employees(name, position, department, document_id)").eq("tenant_id", tenantId).order("period_end", { ascending: false }),
       (supabase.from as any)("job_positions").select("*").eq("tenant_id", tenantId).order("name"),
       (supabase.from as any)("accounts_payable").select("id, party_id, source_id, amount, amount_paid, status, due_date, description").eq("tenant_id", tenantId).eq("source_type", "payroll"),
       supabase.from("employee_attendance").select("*").eq("tenant_id", tenantId).order("check_in", { ascending: false }).limit(100),
