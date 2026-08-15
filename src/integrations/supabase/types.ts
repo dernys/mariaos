@@ -2221,6 +2221,45 @@ export type Database = {
           },
         ]
       }
+      customer_addresses: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          instructions: string | null
+          is_default: boolean
+          label: string
+          latitude: number | null
+          longitude: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          is_default?: boolean
+          label?: string
+          latitude?: number | null
+          longitude?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          is_default?: boolean
+          label?: string
+          latitude?: number | null
+          longitude?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -2298,37 +2337,88 @@ export type Database = {
       }
       delivery_assignments: {
         Row: {
+          accepted_at: string | null
+          actual_minutes: number | null
           assigned_at: string
+          cancel_reason: string | null
+          cancelled_at: string | null
           delivered_at: string | null
+          dropoff_address: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_minutes: number | null
           id: string
+          instructions: string | null
           notes: string | null
           online_order_id: string
           picked_up_at: string | null
+          pickup_address: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          recommendation_reasons: Json | null
+          recommendation_score: number | null
+          rejected_at: string | null
+          requested_at: string | null
           rider_id: string | null
+          rider_profile_id: string | null
           status: string
           tenant_id: string
           zone_id: string | null
         }
         Insert: {
+          accepted_at?: string | null
+          actual_minutes?: number | null
           assigned_at?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           delivered_at?: string | null
+          dropoff_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          estimated_minutes?: number | null
           id?: string
+          instructions?: string | null
           notes?: string | null
           online_order_id: string
           picked_up_at?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          recommendation_reasons?: Json | null
+          recommendation_score?: number | null
+          rejected_at?: string | null
+          requested_at?: string | null
           rider_id?: string | null
+          rider_profile_id?: string | null
           status?: string
           tenant_id: string
           zone_id?: string | null
         }
         Update: {
+          accepted_at?: string | null
+          actual_minutes?: number | null
           assigned_at?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           delivered_at?: string | null
+          dropoff_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          estimated_minutes?: number | null
           id?: string
+          instructions?: string | null
           notes?: string | null
           online_order_id?: string
           picked_up_at?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          recommendation_reasons?: Json | null
+          recommendation_score?: number | null
+          rejected_at?: string | null
+          requested_at?: string | null
           rider_id?: string | null
+          rider_profile_id?: string | null
           status?: string
           tenant_id?: string
           zone_id?: string | null
@@ -2346,6 +2436,13 @@ export type Database = {
             columns: ["rider_id"]
             isOneToOne: false
             referencedRelation: "delivery_riders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_assignments_rider_profile_id_fkey"
+            columns: ["rider_profile_id"]
+            isOneToOne: false
+            referencedRelation: "rider_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -2437,6 +2534,76 @@ export type Database = {
             columns: ["rider_id"]
             isOneToOne: false
             referencedRelation: "delivery_riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_ratings: {
+        Row: {
+          assignment_id: string | null
+          comment: string | null
+          created_at: string
+          criteria: Json
+          id: string
+          online_order_id: string | null
+          ratee_role: string
+          rater_role: string
+          rater_user_id: string | null
+          rider_profile_id: string | null
+          stars: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          comment?: string | null
+          created_at?: string
+          criteria?: Json
+          id?: string
+          online_order_id?: string | null
+          ratee_role: string
+          rater_role: string
+          rater_user_id?: string | null
+          rider_profile_id?: string | null
+          stars: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string | null
+          comment?: string | null
+          created_at?: string
+          criteria?: Json
+          id?: string
+          online_order_id?: string | null
+          ratee_role?: string
+          rater_role?: string
+          rater_user_id?: string | null
+          rider_profile_id?: string | null
+          stars?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_ratings_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_ratings_online_order_id_fkey"
+            columns: ["online_order_id"]
+            isOneToOne: false
+            referencedRelation: "online_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_ratings_rider_profile_id_fkey"
+            columns: ["rider_profile_id"]
+            isOneToOne: false
+            referencedRelation: "rider_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -4661,15 +4828,26 @@ export type Database = {
       }
       online_orders: {
         Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          confirmed_at: string | null
           created_at: string
           customer_email: string | null
           customer_id: string | null
           customer_name: string
           customer_phone: string
+          delivered_at: string | null
           delivery_address: string | null
+          delivery_fee: number
+          delivery_instructions: string | null
+          delivery_lat: number | null
+          delivery_lng: number | null
           delivery_type: string
           id: string
           notes: string | null
+          payment_method: string
+          ready_at: string | null
+          sale_id: string | null
           status: string
           store_id: string | null
           subtotal: number
@@ -4678,17 +4856,29 @@ export type Database = {
           total: number
           updated_at: string
           user_id: string
+          zone_id: string | null
         }
         Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_id?: string | null
           customer_name: string
           customer_phone: string
+          delivered_at?: string | null
           delivery_address?: string | null
+          delivery_fee?: number
+          delivery_instructions?: string | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_type?: string
           id?: string
           notes?: string | null
+          payment_method?: string
+          ready_at?: string | null
+          sale_id?: string | null
           status?: string
           store_id?: string | null
           subtotal?: number
@@ -4697,17 +4887,29 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id: string
+          zone_id?: string | null
         }
         Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string
           customer_phone?: string
+          delivered_at?: string | null
           delivery_address?: string | null
+          delivery_fee?: number
+          delivery_instructions?: string | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_type?: string
           id?: string
           notes?: string | null
+          payment_method?: string
+          ready_at?: string | null
+          sale_id?: string | null
           status?: string
           store_id?: string | null
           subtotal?: number
@@ -4716,6 +4918,7 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id?: string
+          zone_id?: string | null
         }
         Relationships: [
           {
@@ -4724,6 +4927,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_orders_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_orders_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_ar_aging"
+            referencedColumns: ["sale_id"]
           },
           {
             foreignKeyName: "online_orders_store_id_fkey"
@@ -4751,6 +4968,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_orders_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -6535,6 +6759,114 @@ export type Database = {
           },
         ]
       }
+      rider_profiles: {
+        Row: {
+          availability: string
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          current_lat: number | null
+          current_lng: number | null
+          deliveries_cancelled: number
+          deliveries_completed: number
+          destination_lat: number | null
+          destination_lng: number | null
+          document_id: string | null
+          email: string | null
+          experience_years: number
+          full_name: string
+          id: string
+          location_updated_at: string | null
+          max_active_deliveries: number
+          offers_accepted: number
+          offers_received: number
+          on_time_deliveries: number
+          phone: string
+          preferred_zone: string | null
+          rating_avg: number
+          ratings_count: number
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          vehicle_details: string | null
+          vehicle_plate: string | null
+          vehicle_type: string
+        }
+        Insert: {
+          availability?: string
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          deliveries_cancelled?: number
+          deliveries_completed?: number
+          destination_lat?: number | null
+          destination_lng?: number | null
+          document_id?: string | null
+          email?: string | null
+          experience_years?: number
+          full_name: string
+          id?: string
+          location_updated_at?: string | null
+          max_active_deliveries?: number
+          offers_accepted?: number
+          offers_received?: number
+          on_time_deliveries?: number
+          phone: string
+          preferred_zone?: string | null
+          rating_avg?: number
+          ratings_count?: number
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vehicle_details?: string | null
+          vehicle_plate?: string | null
+          vehicle_type?: string
+        }
+        Update: {
+          availability?: string
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          deliveries_cancelled?: number
+          deliveries_completed?: number
+          destination_lat?: number | null
+          destination_lng?: number | null
+          document_id?: string | null
+          email?: string | null
+          experience_years?: number
+          full_name?: string
+          id?: string
+          location_updated_at?: string | null
+          max_active_deliveries?: number
+          offers_accepted?: number
+          offers_received?: number
+          on_time_deliveries?: number
+          phone?: string
+          preferred_zone?: string | null
+          rating_avg?: number
+          ratings_count?: number
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_details?: string | null
+          vehicle_plate?: string | null
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
       risk_alerts: {
         Row: {
           category: string
@@ -6855,6 +7187,7 @@ export type Database = {
           cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          channel: string
           client_uuid: string | null
           cost_center_id: string | null
           created_at: string
@@ -6862,8 +7195,10 @@ export type Database = {
           customer_id: string | null
           employee_id: string | null
           exchange_rate: number
+          fulfillment: string
           id: string
           notes: string | null
+          online_order_id: string | null
           shift_id: string | null
           status: string
           store_id: string | null
@@ -6882,6 +7217,7 @@ export type Database = {
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          channel?: string
           client_uuid?: string | null
           cost_center_id?: string | null
           created_at?: string
@@ -6889,8 +7225,10 @@ export type Database = {
           customer_id?: string | null
           employee_id?: string | null
           exchange_rate?: number
+          fulfillment?: string
           id?: string
           notes?: string | null
+          online_order_id?: string | null
           shift_id?: string | null
           status?: string
           store_id?: string | null
@@ -6909,6 +7247,7 @@ export type Database = {
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          channel?: string
           client_uuid?: string | null
           cost_center_id?: string | null
           created_at?: string
@@ -6916,8 +7255,10 @@ export type Database = {
           customer_id?: string | null
           employee_id?: string | null
           exchange_rate?: number
+          fulfillment?: string
           id?: string
           notes?: string | null
+          online_order_id?: string | null
           shift_id?: string | null
           status?: string
           store_id?: string | null
@@ -6951,6 +7292,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_online_order_id_fkey"
+            columns: ["online_order_id"]
+            isOneToOne: false
+            referencedRelation: "online_orders"
             referencedColumns: ["id"]
           },
           {
