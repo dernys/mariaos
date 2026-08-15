@@ -24,6 +24,7 @@ import type {
   MarketProduct, Tenant, StorePublic, CartItem, Promotion,
 } from "@/components/marketplace/types";
 import { buildPromoIndex } from "@/hooks/useMarketplaceData";
+import { Seo, SITE_URL } from "@/components/Seo";
 
 const MarketplaceProduct = () => {
   const { id } = useParams<{ id: string }>();
@@ -191,8 +192,47 @@ const MarketplaceProduct = () => {
   const pickupAvailable = true;
   const deliveryAvailable = stores.some((s) => s.accepts_delivery) && product.is_deliverable !== false;
 
+  const seoDescription = (product.description?.trim() || `${product.name}${tenant ? ` en ${tenant.name}` : ""}. Pide con entrega a domicilio o recogida en tienda.`).slice(0, 155);
+  const seoImage = product.image_url ?? undefined;
+
   return (
     <div className="min-h-screen bg-background pb-32 md:pb-12">
+      <Seo
+        title={`${product.name}${tenant ? ` — ${tenant.name}` : ""}`}
+        description={seoDescription}
+        path={`/marketplace/p/${product.id}`}
+        type="product"
+        image={seoImage}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.name,
+          description: product.description ?? seoDescription,
+          image: product.image_url ? [product.image_url] : undefined,
+          sku: product.sku ?? undefined,
+          brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+          category: product.category ?? undefined,
+          offers: {
+            "@type": "Offer",
+            url: `${SITE_URL}/marketplace/p/${product.id}`,
+            price: product.price,
+            priceCurrency: "CUP",
+            availability:
+              product.online_stock > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+            seller: tenant ? { "@type": "Organization", name: tenant.name } : undefined,
+          },
+          aggregateRating:
+            (product.reviews_count ?? 0) > 0 && product.rating_avg
+              ? {
+                  "@type": "AggregateRating",
+                  ratingValue: Number(product.rating_avg.toFixed(2)),
+                  reviewCount: product.reviews_count,
+                }
+              : undefined,
+        }}
+      />
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/85 backdrop-blur border-b border-border">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
