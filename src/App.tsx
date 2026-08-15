@@ -111,6 +111,7 @@ const App = () => (
               <Route path="/dashboard" element={<P m="dashboard"><Index /></P>} />
               <Route path="/pos" element={<P m="pos"><POS /></P>} />
               <Route path="/inventario" element={<P m="inventario"><Inventario /></P>} />
+              <Route path="/inventario/movimientos" element={<P m="inventario"><Inventario /></P>} />
               <Route path="/inventario/inteligencia" element={<P m="inventario"><InventoryIntelligence /></P>} />
               <Route path="/clientes" element={<P m="clientes"><Clientes /></P>} />
               <Route path="/clientes/:id" element={<P m="clientes"><ClienteDetalle /></P>} />

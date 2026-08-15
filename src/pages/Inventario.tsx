@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, Filter, Plus, ArrowUpDown, ArrowRightLeft, Package, Edit2, Trash2, Globe, AlertTriangle, DollarSign, Layers, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,11 @@ const domainMessage = (e: any, t: (k: string) => string) => {
 const Inventario = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [routeTab, setRouteTab] = useState(
+    location.pathname.startsWith("/inventario/movimientos") ? "movements" : "products",
+  );
   const { tenantId } = useInventoryDeps();
   const { toast } = useToast();
   const { products, warehouses, stores, locationStocks, movements, loading, refetch } = useInventory();
@@ -256,6 +262,33 @@ const Inventario = () => {
     [movements, products, warehouses, stores],
   );
 
+  // Etiqueta legible para cualquier tipo de movimiento (incl. los generados por POS/recetas/compras)
+  const movementTypeLabel = (type: string) =>
+    t(`modules.inventory.movementType.${type}`, {
+      defaultValue: String(type).replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()),
+    });
+
+  /** Variación real de stock: usa new-previous cuando existe, si no el signo del tipo. */
+  const movementDelta = (m: any) => {
+    const prev = Number(m.previous_stock);
+    const next = Number(m.new_stock);
+    if (Number.isFinite(prev) && Number.isFinite(next) && next !== prev) return Number((next - prev).toFixed(2));
+    const qty = Math.abs(Number(m.quantity) || 0);
+    const isOut = ["exit", "sale", "recipe_consumption", "loss", "breakage", "expired", "theft", "transfer_out"].includes(
+      m.movement_type,
+    );
+    return Number((isOut ? -qty : qty).toFixed(2));
+  };
+
+
+  // Opciones reales presentes en los datos, para que el filtro nunca quede vacío ni desalineado
+  const movementTypeOptions = useMemo(() => {
+    const types = Array.from(new Set(movements.map((m) => m.movement_type).filter(Boolean)));
+    return types.sort().map((type) => ({ value: type, label: movementTypeLabel(type) }));
+  }, [movements, t]);
+
+
+
   const movementTable = useTableState({
     data: movementRowsAll,
     searchKeys: ["productName", "reason", "movement_type", "locationName"],
@@ -295,9 +328,26 @@ const Inventario = () => {
 
   const kardexMovements = kardexProductId ? movements.filter((m) => m.product_id === kardexProductId) : [];
 
+  // Pestaña controlada por ruta: /inventario/movimientos abre Movimientos directamente
+  const TAB_ROUTES: Record<string, string> = {
+    products: "/inventario",
+    stock: "/inventario",
+    kardex: "/inventario",
+    movements: "/inventario/movimientos",
+  };
+  const activeTab = location.pathname.startsWith("/inventario/movimientos") ? "movements" : routeTab;
+
   return (
     <AppLayout title={t("modules.inventory.title")}>
-      <Tabs defaultValue="products" className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => {
+          setRouteTab(v);
+          const target = TAB_ROUTES[v] ?? "/inventario";
+          if (target !== location.pathname) navigate(target, { replace: true });
+        }}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="products">{t("modules.inventory.tabs.products")}</TabsTrigger>
           <TabsTrigger value="stock">{t("modules.inventory.tabs.stock")}</TabsTrigger>
@@ -446,12 +496,7 @@ const Inventario = () => {
                 key: "movement_type", label: t("modules.inventory.table.type"),
                 value: movementTable.filters.movement_type || "__all__",
                 onChange: (v) => movementTable.setFilter("movement_type", v),
-                options: [
-                  { value: "entry", label: t("modules.inventory.movementType.entry") },
-                  { value: "exit", label: t("modules.inventory.movementType.exit") },
-                  { value: "adjustment", label: t("modules.inventory.movementType.adjustment") },
-                  { value: "transfer", label: t("modules.inventory.movementType.transfer") },
-                ],
+                options: movementTypeOptions,
               },
               {
                 key: "product", label: t("modules.inventory.table.product"),
@@ -507,12 +552,12 @@ const Inventario = () => {
                     </TableCell>
                     <TableCell className="text-xs font-medium">{m.productName}</TableCell>
                     <TableCell>
-                      <Badge variant={m.movement_type === "entry" ? "default" : "destructive"} className="text-[10px]">
-                        {m.movement_type === "entry" ? t("modules.inventory.movementType.entry") : m.movement_type === "exit" ? t("modules.inventory.movementType.exit") : m.movement_type}
+                      <Badge variant={movementDelta(m) >= 0 ? "default" : "destructive"} className="text-[10px]">
+                        {movementTypeLabel(m.movement_type)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs font-heading font-bold">
-                      {m.movement_type === "entry" ? "+" : "-"}{m.quantity}
+                      {movementDelta(m) > 0 ? "+" : ""}{movementDelta(m)}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground hidden md:table-cell">{m.previous_stock}</TableCell>
                     <TableCell className="text-xs font-heading font-semibold hidden md:table-cell">{m.new_stock}</TableCell>

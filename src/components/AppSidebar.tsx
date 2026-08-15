@@ -140,6 +140,7 @@ const menuGroups: MenuGroup[] = [
     labelKey: "inventory",
     items: [
       { titleKey: "products", url: "/inventario", icon: Package },
+      { titleKey: "inventoryMovements", url: "/inventario/movimientos", icon: ArrowRightLeft },
       { titleKey: "recipes", url: "/recetas", icon: Utensils, types: ["restaurante", "restaurant", "bar"] },
       { titleKey: "intelligence", url: "/inventario/inteligencia", icon: Brain },
       { titleKey: "counts", url: "/conteos", icon: Shield },
@@ -202,6 +203,12 @@ const systemItems: MenuItem[] = [
   { titleKey: "settings", url: "/configuracion", icon: Settings },
 ];
 
+/** Todas las rutas del menú, para resolver la coincidencia más específica. */
+const ALL_MENU_URLS: string[] = [
+  ...menuGroups.flatMap((g) => g.items.flatMap((i) => [i.url, ...(i.children?.map((c) => c.url) ?? [])])),
+  ...systemItems.map((i) => i.url),
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -214,8 +221,17 @@ export function AppSidebar() {
   const { t } = useTranslation();
   const biz = (businessType || "empresa") as BizType;
 
-  const isActive = (path: string) =>
-    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
+  const isActive = (path: string) => {
+    const p = location.pathname;
+    if (path === "/") return p === "/";
+    if (p === path) return true;
+    if (!p.startsWith(`${path}/`)) return false;
+    // Si otra ruta del menú coincide de forma más específica, ésta no se marca activa.
+    return !ALL_MENU_URLS.some(
+      (u) => u.length > path.length && (p === u || p.startsWith(`${u}/`)),
+    );
+  };
+
 
   const initials = profile?.full_name
     ? profile.full_name
