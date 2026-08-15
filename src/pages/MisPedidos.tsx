@@ -178,11 +178,11 @@ const MisPedidos = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/70 backdrop-blur sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/n" className="flex items-center gap-2 text-sm font-medium">
+          <Link to="/marketplace" className="flex items-center gap-2 text-sm font-medium">
             <ArrowLeft className="h-4 w-4" /> Marketplace
           </Link>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="rounded-full" onClick={() => navigate("/n/repartidor")}>
+            <Button size="sm" variant="outline" className="rounded-full" onClick={() => navigate("/marketplace/repartidor")}>
               <Bike className="h-4 w-4 mr-1" /> Quiero ser repartidor
             </Button>
           </div>
