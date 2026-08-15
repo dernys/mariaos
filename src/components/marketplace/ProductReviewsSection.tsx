@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Star, Trash2 } from "lucide-react";
+import { Star, Trash2, ShieldCheck } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { RatingStars } from "./RatingStars";
 import type { ProductReview } from "./types";
 
@@ -43,10 +44,12 @@ export const ProductReviewsSection = ({ productId, tenantId, ratingAvg, reviewsC
 
   useEffect(() => { load(); }, [productId]);
 
+  const location = useLocation();
+  const canReview = !!user && !!(user as any).email_confirmed_at;
   const myReview = user ? reviews.find((r) => r.user_id === user.id) : null;
 
   const submit = async () => {
-    if (!user) {
+    if (!canReview) {
       toast({ title: t("marketplace.reviews.loginRequired"), variant: "destructive" });
       return;
     }
