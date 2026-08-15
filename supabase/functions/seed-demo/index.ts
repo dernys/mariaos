@@ -19,6 +19,8 @@ type DemoConfig = {
   fullName: string;
   tenantName: string;
   tenantSlug: string;
+  storeName: string;
+  warehouseName: string;
   products: Prod[];
   recipes?: Recipe[];
   tables?: TableRow[];
@@ -197,6 +199,8 @@ const DEMOS: DemoConfig[] = [
     fullName: "Demo Bar",
     tenantName: "Bar MarIA Demo",
     tenantSlug: "demo-bar",
+    storeName: "Bar El Trópico — Salón",
+    warehouseName: "Bodega de Bar",
     products: BAR_PRODUCTS,
     recipes: BAR_RECIPES,
     tables: BAR_TABLES,
@@ -217,6 +221,8 @@ const DEMOS: DemoConfig[] = [
     fullName: "Demo Restaurante",
     tenantName: "Restaurante MarIA Demo",
     tenantSlug: "demo-restaurante",
+    storeName: "Restaurante MarIA — Salón",
+    warehouseName: "Almacén de Cocina",
     products: RST_PRODUCTS,
     recipes: RST_RECIPES,
     tables: RST_TABLES,
@@ -238,6 +244,8 @@ const DEMOS: DemoConfig[] = [
     fullName: "Demo Empresa",
     tenantName: "Retail MarIA Demo",
     tenantSlug: "demo-empresa",
+    storeName: "Tienda Retail MarIA — Vedado",
+    warehouseName: "Almacén Central Retail",
     products: EMP_PRODUCTS,
     customers: [
       { name: "María Fernández", phone: "+5355511122", email: "maria@example.com" },
@@ -312,7 +320,7 @@ Deno.serve(async (req) => {
       const { count: prodCount } = await admin
         .from("products").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
       if ((prodCount ?? 0) === 0) {
-        await admin.from("products").insert(
+        const { error } = await admin.from("products").insert(
           cfg.products.map((p) => ({
             tenant_id: tenantId,
             name: p.name,
@@ -322,12 +330,24 @@ Deno.serve(async (req) => {
             stock: p.stock,
             min_stock: 5,
             category: p.category,
-            product_type: p.product_type ?? null,
+            product_type: p.product_type ?? "simple",
             is_active: true,
             is_online: cfg.type === "empresa",
             online_stock: p.stock,
           }))
         );
+        if (error) throw new Error(`products insert (${cfg.tenantSlug}): ${error.message}`);
+      }
+
+      // 4a) Categorías reales del giro (derivadas del catálogo, sin duplicar)
+      const { count: catCount } = await admin
+        .from("product_categories").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
+      if ((catCount ?? 0) === 0) {
+        const names = [...new Set(cfg.products.map((p) => p.category))];
+        const { error } = await admin.from("product_categories").insert(
+          names.map((name) => ({ tenant_id: tenantId, name, is_active: true }))
+        );
+        if (error) throw new Error(`categories insert (${cfg.tenantSlug}): ${error.message}`);
       }
 
       // 4b) Seed recipes (only if none yet for this tenant)
@@ -351,7 +371,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 4c) Seed restaurant tables
+      // 4c) Mesas: sólo para giros que las usan (bar / restaurante)
       if (cfg.tables && cfg.tables.length > 0) {
         const { count: tCount } = await admin
           .from("restaurant_tables").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
@@ -367,28 +387,199 @@ Deno.serve(async (req) => {
             }))
           );
         }
+      } else {
+        // Un tenant sin servicio de mesas no debe mostrar salón
+        await admin.from("restaurant_tables").delete().eq("tenant_id", tenantId);
       }
 
       // 5) Customers
       const { count: custCount } = await admin
         .from("customers").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
       if ((custCount ?? 0) === 0) {
-        await admin.from("customers").insert(
+        const { error } = await admin.from("customers").insert(
           cfg.customers.map((c) => ({ tenant_id: tenantId, ...c }))
         );
+        if (error) throw new Error(`customers insert (${cfg.tenantSlug}): ${error.message}`);
       }
 
       // 6) Employees
       const { count: empCount } = await admin
         .from("employees").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
       if ((empCount ?? 0) === 0) {
-        await admin.from("employees").insert(
+        const { error } = await admin.from("employees").insert(
           cfg.employees.map((e) => ({ tenant_id: tenantId, ...e, is_active: true }))
         );
+        if (error) throw new Error(`employees insert (${cfg.tenantSlug}): ${error.message}`);
+      }
+
+      // 7) Tienda + almacén + vínculo (base física de inventario y ventas)
+      let storeId: string;
+      const { data: store0 } = await admin
+        .from("stores").select("id").eq("tenant_id", tenantId).limit(1).maybeSingle();
+      if (store0) storeId = store0.id;
+      else {
+        const { data: st, error } = await admin.from("stores").insert({
+          tenant_id: tenantId, name: cfg.storeName, address: "La Habana, Cuba", is_active: true,
+        }).select("id").single();
+        if (error) throw new Error(`stores insert (${cfg.tenantSlug}): ${error.message}`);
+        storeId = st!.id;
+      }
+
+      let warehouseId: string;
+      const { data: wh0 } = await admin
+        .from("warehouses").select("id").eq("tenant_id", tenantId).limit(1).maybeSingle();
+      if (wh0) warehouseId = wh0.id;
+      else {
+        const { data: wh, error } = await admin.from("warehouses").insert({
+          tenant_id: tenantId, name: cfg.warehouseName, location: "La Habana, Cuba", is_active: true,
+        }).select("id").single();
+        if (error) throw new Error(`warehouses insert (${cfg.tenantSlug}): ${error.message}`);
+        warehouseId = wh!.id;
+      }
+      await admin.from("warehouse_stores").upsert(
+        { tenant_id: tenantId, warehouse_id: warehouseId, store_id: storeId, is_primary: true },
+        { onConflict: "warehouse_id,store_id" }
+      );
+
+      // 8) Métodos de pago
+      const { count: pmCount } = await admin
+        .from("payment_methods").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
+      if ((pmCount ?? 0) === 0) {
+        await admin.from("payment_methods").insert([
+          { tenant_id: tenantId, name: "Efectivo", type: "cash", is_active: true },
+          { tenant_id: tenantId, name: "Tarjeta", type: "card", requires_card_info: true, is_active: true },
+          { tenant_id: tenantId, name: "Transferencia", type: "transfer", is_active: true },
+        ]);
+      }
+
+      // 9) Stock por ubicación (tienda) coherente con el catálogo del tenant
+      const { data: allProds } = await admin
+        .from("products").select("id, sku, name, price, cost, stock, product_type").eq("tenant_id", tenantId);
+      const products = allProds || [];
+      const { count: psCount } = await admin
+        .from("product_stock").select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId).eq("location_id", storeId);
+      if ((psCount ?? 0) === 0 && products.length) {
+        await admin.from("product_stock").upsert(
+          products.map((p) => ({
+            tenant_id: tenantId, product_id: p.id, location_type: "store", location_id: storeId,
+            stock: Number(p.stock) || 0, min_stock: 5,
+          })),
+          { onConflict: "product_id,location_type,location_id" }
+        );
+      }
+
+      // 10) Operación real: turno → ventas → líneas → pagos → devolución
+      const { count: salesCount } = await admin
+        .from("sales").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
+      if ((salesCount ?? 0) === 0 && products.length) {
+        const { data: custs } = await admin.from("customers").select("id").eq("tenant_id", tenantId);
+        const { data: emps } = await admin.from("employees").select("id").eq("tenant_id", tenantId);
+        const customers = custs || [];
+        const employees = emps || [];
+        const sellable = products.filter((p) => Number(p.price) > 0);
+
+        const openedAt = new Date(Date.now() - 8 * 3600_000).toISOString();
+        const { data: shift } = await admin.from("sales_shifts").insert({
+          tenant_id: tenantId, user_id: userId, employee_id: employees[0]?.id ?? null,
+          store_id: storeId, store_name: cfg.storeName, opened_at: openedAt,
+          opening_cash: 5000, status: "open",
+        }).select("id").single();
+        const shiftId = shift?.id ?? null;
+
+        let shiftTotal = 0;
+        let ticket = 1;
+        const createdSales: { id: string; items: { id: string; qty: number; price: number; product_id: string }[] }[] = [];
+
+        for (let s = 0; s < 8; s++) {
+          const lines = sellable
+            .slice((s * 3) % Math.max(sellable.length - 3, 1), ((s * 3) % Math.max(sellable.length - 3, 1)) + 2 + (s % 2))
+            .map((p, idx) => ({ product: p, qty: 1 + ((s + idx) % 3) }));
+          if (!lines.length) continue;
+          const subtotal = lines.reduce((a, l) => a + Number(l.product.price) * l.qty, 0);
+          const total = subtotal;
+          const createdAt = new Date(Date.now() - (8 - s) * 3600_000 + 60_000).toISOString();
+
+          const { data: sale, error: saleErr } = await admin.from("sales").insert({
+            tenant_id: tenantId,
+            customer_id: customers.length ? customers[s % customers.length].id : null,
+            employee_id: employees.length ? employees[s % employees.length].id : null,
+            shift_id: shiftId,
+            store_id: storeId,
+            subtotal, tax: 0, total, amount_paid: total,
+            status: "pending",
+            ticket_number: `${cfg.tenantSlug.toUpperCase()}-${String(ticket++).padStart(4, "0")}`,
+            currency: "CUP", exchange_rate: 1, total_in_base: total,
+            created_at: createdAt,
+          }).select("id").single();
+          if (saleErr) throw new Error(`sales insert (${cfg.tenantSlug}): ${saleErr.message}`);
+
+          const { data: insertedItems, error: itErr } = await admin.from("sale_items").insert(
+            lines.map((l) => ({
+              sale_id: sale!.id,
+              product_id: l.product.id,
+              product_name: l.product.name,
+              sku: l.product.sku,
+              price: Number(l.product.price),
+              qty: l.qty,
+              total: Number(l.product.price) * l.qty,
+            }))
+          ).select("id, qty, price, product_id");
+          if (itErr) throw new Error(`sale_items insert (${cfg.tenantSlug}): ${itErr.message}`);
+
+          await admin.from("sale_payments").insert({
+            sale_id: sale!.id,
+            method: s % 3 === 0 ? "card" : "cash",
+            currency: "CUP", amount: total, amount_in_base: total, exchange_rate: 1,
+          });
+
+          // Cierre de la venta igual que el POS: líneas y pagos primero, luego estado final
+          await admin.rpc("process_sale_stock", {
+            p_sale_id: sale!.id, p_location_type: "store", p_location_id: storeId,
+          });
+          const { error: closeErr } = await admin.from("sales")
+            .update({ status: "completed" }).eq("id", sale!.id);
+          if (closeErr) throw new Error(`sale close (${cfg.tenantSlug}): ${closeErr.message}`);
+
+          shiftTotal += total;
+          createdSales.push({ id: sale!.id, items: (insertedItems || []) as any });
+        }
+
+        if (shiftId) {
+          await admin.from("sales_shifts").update({
+            total_sales: shiftTotal, total_transactions: createdSales.length,
+          }).eq("id", shiftId);
+        }
+
+        // Devolución real ligada a la primera venta (1 unidad de su primera línea)
+        const first = createdSales[0];
+        if (first && first.items.length) {
+          const line = first.items[0];
+          const qty = 1;
+          const refund = qty * Number(line.price);
+          const { data: ret } = await admin.from("sale_returns").insert({
+            tenant_id: tenantId, sale_id: first.id,
+            return_number: `DEV-${cfg.tenantSlug.toUpperCase()}-0001`,
+            reason: "Producto no conforme (dato demo trazable)",
+            total: refund, refund_method: "cash", restock: true,
+            status: "completed", performed_by: userId,
+          }).select("id").single();
+          if (ret) {
+            const prod = products.find((p) => p.id === line.product_id);
+            await admin.from("sale_return_items").insert({
+              return_id: ret.id, sale_item_id: line.id, product_id: line.product_id,
+              product_name: prod?.name ?? "", qty, price: Number(line.price), total: refund,
+            });
+            await admin.rpc("process_sale_return", {
+              p_return_id: ret.id, p_location_type: "store", p_location_id: storeId,
+            });
+          }
+        }
       }
 
       result[cfg.type] = { email: cfg.email, password: DEMO_PASSWORD, tenant: cfg.tenantName };
     }
+
 
     return new Response(JSON.stringify({ success: true, demos: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

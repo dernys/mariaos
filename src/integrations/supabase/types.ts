@@ -6783,6 +6783,13 @@ export type Database = {
             referencedRelation: "sale_returns"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sale_return_items_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "sale_returns_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sale_returns: {
@@ -8735,6 +8742,62 @@ export type Database = {
         }
         Relationships: []
       }
+      sale_returns_view: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          customer_id: string | null
+          customer_name: string | null
+          id: string | null
+          lines_returned: number | null
+          performed_by: string | null
+          performed_by_name: string | null
+          reason: string | null
+          refund_method: string | null
+          restock: boolean | null
+          return_number: string | null
+          sale_date: string | null
+          sale_id: string | null
+          sale_total: number | null
+          shift_id: string | null
+          status: string | null
+          store_id: string | null
+          tenant_id: string | null
+          ticket_number: string | null
+          total: number | null
+          units_returned: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_ar_aging"
+            referencedColumns: ["sale_id"]
+          },
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "sales_shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores_public: {
         Row: {
           accepts_delivery: boolean | null
@@ -9318,6 +9381,18 @@ export type Database = {
             }
             Returns: string
           }
+      create_sale_return: {
+        Args: {
+          p_items: Json
+          p_location_id?: string
+          p_location_type?: string
+          p_reason?: string
+          p_refund_method?: string
+          p_restock?: boolean
+          p_sale_id: string
+        }
+        Returns: string
+      }
       cu_calculate_cost_sheet: { Args: { p_sheet_id: string }; Returns: number }
       cu_generate_tax_declaration: {
         Args: {
@@ -9940,6 +10015,18 @@ export type Database = {
         Returns: string
       }
       revert_sale_stock: { Args: { p_sale_id: string }; Returns: undefined }
+      sale_returnable_items: {
+        Args: { p_sale_id: string }
+        Returns: {
+          price: number
+          product_id: string
+          product_name: string
+          qty_available: number
+          qty_returned: number
+          qty_sold: number
+          sale_item_id: string
+        }[]
+      }
       seed_default_tax_brackets: {
         Args: { _tenant: string; _year?: number }
         Returns: undefined
