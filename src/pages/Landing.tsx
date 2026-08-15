@@ -581,9 +581,40 @@ const Landing = () => {
               </div>
             ))}
           </div>
+
+          {/* Métricas verificadas de la plataforma */}
+          <div className="mt-14 rounded-3xl border border-border bg-card/60 p-8 sm:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">Ingeniería verificada</p>
+                <h3 className="font-heading font-bold text-2xl sm:text-3xl tracking-tight">La plataforma por dentro</h3>
+              </div>
+              <p className="text-xs text-muted-foreground max-w-sm">
+                Cifras medidas sobre la base de datos y el código del sistema, no estimaciones de marketing.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { v: "137", l: "Tablas de negocio con aislamiento por empresa" },
+                { v: "396", l: "Políticas de seguridad a nivel de fila (RLS)" },
+                { v: "231", l: "Funciones de negocio ejecutadas en el servidor" },
+                { v: "228", l: "Disparadores de integridad y auditoría" },
+                { v: "56k+", l: "Líneas de código de aplicación" },
+                { v: "100%", l: "Paridad débito = crédito en el libro diario" },
+                { v: "17", l: "Funciones serverless (IA, fiscal, integraciones)" },
+                { v: "3", l: "Idiomas: español, inglés y portugués (BR)" },
+              ].map((s) => (
+                <div key={s.l}>
+                  <p className="font-heading font-bold text-2xl sm:text-3xl text-primary">{s.v}</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{s.l}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
       </section>
+
 
       {/* CTA */}
       <section id="contacto" className="py-24">
