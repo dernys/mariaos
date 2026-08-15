@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
-import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowLeft, PlayCircle, Store, UtensilsCrossed, Building2, Sparkles } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Zap, Mail, Lock, Eye, EyeOff, ArrowLeft, ShieldCheck, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -12,7 +11,7 @@ import { InstallPWAPrompt } from "@/components/InstallPWAPrompt";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
-type AuthView = "login" | "register" | "forgot";
+type AuthView = "login" | "forgot";
 
 const translateAuthError = (msg: string, t: (k: string) => string): string => {
   const m = msg.toLowerCase();
@@ -26,17 +25,6 @@ const translateAuthError = (msg: string, t: (k: string) => string): string => {
   return msg;
 };
 
-const passwordStrength = (pwd: string): { score: number; color: string } => {
-  let score = 0;
-  if (pwd.length >= 8) score++;
-  if (pwd.length >= 12) score++;
-  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
-  if (/\d/.test(pwd)) score++;
-  if (/[^A-Za-z0-9]/.test(pwd)) score++;
-  const colors = ["bg-destructive", "bg-destructive", "bg-warning", "bg-warning", "bg-success", "bg-success"];
-  return { score, color: colors[score] };
-};
-
 const Auth = () => {
   const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -45,46 +33,13 @@ const Auth = () => {
   const [view, setView] = useState<AuthView>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [demoTenants, setDemoTenants] = useState<Array<{ tenant_id: string; name: string; business_type: string; roles: { role: string; email: string }[] }>>([]);
-  const [demoLoading, setDemoLoading] = useState<string | null>(null);
 
   const getSafeNext = () => {
     const next = searchParams.get("next");
     if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
     return next;
-  };
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await supabase.functions.invoke("ensure-demo-user", { body: { action: "list" } });
-        if (data?.tenants) setDemoTenants(data.tenants);
-      } catch { /* ignore */ }
-    })();
-  }, []);
-
-  const bizIcon = (t: string) => t === "bar" ? Store : t === "restaurant" ? UtensilsCrossed : Building2;
-  const bizLabel = (t: string) => t === "bar" ? "Bar / Cafetería" : t === "restaurant" ? "Restaurante" : "Empresa / Retail";
-  const roleLabel = (r: string) => r === "admin" ? "Administrador" : r === "gerente" ? "Gerente" : "Cajero";
-
-  const loginAsDemo = async (tenantId: string, role: string, tenantName: string) => {
-    setDemoLoading(`${tenantId}:${role}`);
-    try {
-      const { data, error } = await supabase.functions.invoke("ensure-demo-user", {
-        body: { action: "ensure", tenant_id: tenantId, role },
-      });
-      if (error || !data?.email) throw new Error(error?.message || data?.error || "No se pudo preparar el usuario demo");
-      const { error: loginErr } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
-      if (loginErr) throw loginErr;
-      toast.success(`Sesión demo: ${roleLabel(role)} · ${tenantName}`);
-    } catch (e: any) {
-      toast.error(e.message || "Error al iniciar demo");
-    } finally {
-      setDemoLoading(null);
-    }
   };
 
   useEffect(() => {
@@ -119,41 +74,6 @@ const Auth = () => {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordStrength(password).score < 2) {
-      return toast.error(t("auth.weakPwd"));
-    }
-    setLoading(true);
-    const cleanEmail = email.trim().toLowerCase();
-
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke("register-superadmin", {
-        body: { email: cleanEmail, password, full_name: fullName },
-      });
-      if (!fnError && data?.success) {
-        toast.success(t("auth.welcome"));
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
-        if (loginError) {
-          toast.error(translateAuthError(loginError.message, t));
-          setLoading(false);
-        }
-        return;
-      }
-    } catch {
-      // Not superadmin, continue
-    }
-
-    const { error } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}${getSafeNext() ?? ""}` },
-    });
-    if (error) toast.error(translateAuthError(error.message, t));
-    else toast.success(t("auth.accountCreated"));
-    setLoading(false);
-  };
-
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -165,8 +85,6 @@ const Auth = () => {
     setLoading(false);
   };
 
-  const pwdStrength = useMemo(() => passwordStrength(password), [password]);
-
   if (authLoading || session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -177,11 +95,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <div className="h-12 w-12 rounded-xl gradient-brand flex items-center justify-center mb-3">
             <Zap className="h-6 w-6 text-primary-foreground" />
@@ -228,69 +142,6 @@ const Auth = () => {
               <Button type="submit" className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-10" disabled={loading}>
                 {loading ? t("auth.submitLoading") : t("auth.submitLogin")}
               </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                {t("auth.noAccount")}{" "}
-                <button type="button" onClick={() => setView("register")} className="text-primary font-medium hover:underline">
-                  {t("auth.doRegister")}
-                </button>
-              </p>
-            </form>
-          )}
-
-          {view === "register" && (
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="text-center mb-4">
-                <h2 className="font-heading font-semibold text-lg">{t("auth.register")}</h2>
-                <p className="text-xs text-muted-foreground mt-1">{t("auth.registerSubtitle")}</p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="text" placeholder={t("auth.fullName")} value={fullName} onChange={(e) => setFullName(e.target.value)} className="pl-9" required />
-                </div>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="email" placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9" required />
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder={t("auth.passwordMin")}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-9 pr-9"
-                    required
-                    minLength={6}
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {password.length > 0 && (
-                  <div className="space-y-1">
-                    <div className="flex gap-1">
-                      {[0, 1, 2, 3, 4].map(i => (
-                        <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i < pwdStrength.score ? pwdStrength.color : "bg-muted"}`} />
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">{t("auth.security")}: <span className="font-medium">{t(`auth.strength.${pwdStrength.score}`)}</span></p>
-                  </div>
-                )}
-              </div>
-
-              <Button type="submit" className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-10" disabled={loading}>
-                {loading ? t("auth.submitRegisterLoading") : t("auth.submitRegister")}
-              </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                {t("auth.hasAccount")}{" "}
-                <button type="button" onClick={() => setView("login")} className="text-primary font-medium hover:underline">
-                  {t("auth.doLogin")}
-                </button>
-              </p>
             </form>
           )}
 
@@ -317,46 +168,23 @@ const Auth = () => {
           )}
         </div>
 
-        {/* Demo access panel */}
-        {view === "login" && demoTenants.length > 0 && (
-          <div className="mt-4 rounded-2xl border bg-card/70 backdrop-blur p-3 space-y-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <p className="text-xs font-heading font-semibold">Prueba con cuentas demo</p>
-              <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-auto">Sin registro</Badge>
-            </div>
-            <p className="text-[10px] text-muted-foreground -mt-1">Un clic para entrar como uno de los 3 roles configurados en cada tipo de negocio.</p>
-            <div className="space-y-2">
-              {demoTenants.map((t) => {
-                const Icon = bizIcon(t.business_type);
-                return (
-                  <div key={t.tenant_id} className="rounded-lg border bg-background/50 p-2">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Icon className="h-3.5 w-3.5 text-primary" />
-                      <span className="text-xs font-medium truncate">{t.name}</span>
-                      <span className="text-[10px] text-muted-foreground ml-auto">{bizLabel(t.business_type)}</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {t.roles.map((r) => {
-                        const busy = demoLoading === `${t.tenant_id}:${r.role}`;
-                        return (
-                          <Button key={r.role} size="sm" variant="outline"
-                            disabled={!!demoLoading}
-                            onClick={() => loginAsDemo(t.tenant_id, r.role, t.name)}
-                            className="h-8 text-[11px] gap-1 px-2">
-                            {busy ? <span className="h-3 w-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                                  : <PlayCircle className="h-3 w-3" />}
-                            {roleLabel(r.role)}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {/* Governance notice: business accounts are provisioned, not self-registered */}
+        <div className="mt-4 rounded-2xl border bg-card/70 backdrop-blur p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <p className="text-xs font-heading font-semibold">Acceso corporativo controlado</p>
           </div>
-        )}
+          <p className="text-[11px] text-muted-foreground">
+            Los usuarios de empresa (administradores, gerentes, cajeros, contadores y empleados) los crea el
+            superadministrador o el administrador de cada negocio. Aquí no hay registro público.
+          </p>
+          <Link
+            to="/marketplace/acceso?view=register"
+            className="inline-flex items-center gap-1.5 text-[11px] text-primary font-medium hover:underline"
+          >
+            <ShoppingBag className="h-3.5 w-3.5" /> ¿Eres comprador? Crea tu cuenta del marketplace
+          </Link>
+        </div>
 
         <div className="mt-4 flex flex-col gap-2">
           <div className="rounded-xl border bg-card/50 p-1">
