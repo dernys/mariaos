@@ -996,6 +996,19 @@ export default function RRHH() {
         </Dialog>
 
         <PayrollEditDialog payroll={editPayroll} onOpenChange={(o) => { if (!o) setEditPayroll(null); }} onSaved={load} />
+        <PayrollDetailDialog
+          payroll={detailPayroll}
+          tenantName={tenantName}
+          refreshKey={detailKey}
+          onOpenChange={(o) => { if (!o) setDetailPayroll(null); }}
+          onSign={(p) => setSignPayroll(p)}
+        />
+        <PayrollSignatureDialog
+          payroll={signPayroll}
+          onOpenChange={(o) => { if (!o) setSignPayroll(null); }}
+          onSaved={() => { setDetailKey((k) => k + 1); load(); }}
+        />
+
       </div>
 
     </AppLayout>
