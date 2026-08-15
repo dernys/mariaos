@@ -265,8 +265,21 @@ const Inventario = () => {
   // Etiqueta legible para cualquier tipo de movimiento (incl. los generados por POS/recetas/compras)
   const movementTypeLabel = (type: string) =>
     t(`modules.inventory.movementType.${type}`, {
-      defaultValue: type.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()),
+      defaultValue: String(type).replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()),
     });
+
+  /** Variación real de stock: usa new-previous cuando existe, si no el signo del tipo. */
+  const movementDelta = (m: any) => {
+    const prev = Number(m.previous_stock);
+    const next = Number(m.new_stock);
+    if (Number.isFinite(prev) && Number.isFinite(next) && next !== prev) return Number((next - prev).toFixed(2));
+    const qty = Math.abs(Number(m.quantity) || 0);
+    const isOut = ["exit", "sale", "recipe_consumption", "loss", "breakage", "expired", "theft", "transfer_out"].includes(
+      m.movement_type,
+    );
+    return Number((isOut ? -qty : qty).toFixed(2));
+  };
+
 
   // Opciones reales presentes en los datos, para que el filtro nunca quede vacío ni desalineado
   const movementTypeOptions = useMemo(() => {
