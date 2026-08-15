@@ -507,7 +507,7 @@ Deno.serve(async (req) => {
             shift_id: shiftId,
             store_id: storeId,
             subtotal, tax: 0, total, amount_paid: total,
-            status: "completed",
+            status: "pending",
             ticket_number: `${cfg.tenantSlug.toUpperCase()}-${String(ticket++).padStart(4, "0")}`,
             currency: "CUP", exchange_rate: 1, total_in_base: total,
             created_at: createdAt,
@@ -532,6 +532,14 @@ Deno.serve(async (req) => {
             method: s % 3 === 0 ? "card" : "cash",
             currency: "CUP", amount: total, amount_in_base: total, exchange_rate: 1,
           });
+
+          // Cierre de la venta igual que el POS: líneas y pagos primero, luego estado final
+          await admin.rpc("process_sale_stock", {
+            p_sale_id: sale!.id, p_location_type: "store", p_location_id: storeId,
+          });
+          const { error: closeErr } = await admin.from("sales")
+            .update({ status: "completed" }).eq("id", sale!.id);
+          if (closeErr) throw new Error(`sale close (${cfg.tenantSlug}): ${closeErr.message}`);
 
           shiftTotal += total;
           createdSales.push({ id: sale!.id, items: (insertedItems || []) as any });
