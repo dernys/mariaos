@@ -717,13 +717,11 @@ export default function RRHH() {
                     <SelectTrigger><SelectValue placeholder={t("modules.hr.positions.dialog.selectLevel")} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">{t("modules.hr.positions.levels.none")}</SelectItem>
-                      <SelectItem value="junior">{t("modules.hr.positions.levels.junior")}</SelectItem>
-                      <SelectItem value="semi-senior">{t("modules.hr.positions.levels.semi")}</SelectItem>
-                      <SelectItem value="senior">{t("modules.hr.positions.levels.senior")}</SelectItem>
-                      <SelectItem value="lead">{t("modules.hr.positions.levels.lead")}</SelectItem>
-                      <SelectItem value="manager">{t("modules.hr.positions.levels.manager")}</SelectItem>
-                      <SelectItem value="director">{t("modules.hr.positions.levels.director")}</SelectItem>
+                      {(hrSettings.levels?.length ? hrSettings.levels : HR_DEFAULTS.levels).map((lv) => (
+                        <SelectItem key={lv} value={lv}>{lv}</SelectItem>
+                      ))}
                     </SelectContent>
+
                   </Select>
                 </div>
               </div>
