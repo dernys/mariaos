@@ -575,9 +575,14 @@ export default function Compras() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nueva Compra</DialogTitle>
-            <DialogDescription>Registra una orden y al recibirla se sumará al stock del destino</DialogDescription>
+            <DialogTitle>{editingId ? "Editar Compra (borrador)" : "Nueva Compra"}</DialogTitle>
+            <DialogDescription>
+              {editingId
+                ? "Ajusta proveedor, destino, impuesto y líneas. Los totales se recalculan."
+                : "Registra una orden y al recibirla se sumará al stock del destino"}
+            </DialogDescription>
           </DialogHeader>
+
           <div className="grid gap-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
