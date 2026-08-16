@@ -9978,6 +9978,24 @@ export type Database = {
         }
         Returns: string
       }
+      create_quick_operation: {
+        Args: {
+          p_correlation_id?: string
+          p_due_date?: string
+          p_idempotency_key?: string
+          p_issue_invoice?: boolean
+          p_items: Json
+          p_kind: string
+          p_notes?: string
+          p_party_id: string
+          p_party_type: string
+          p_payments?: Json
+          p_tax_rate?: number
+          p_tax_rate_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       create_quick_sale:
         | {
             Args: {
