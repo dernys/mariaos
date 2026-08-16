@@ -1,8 +1,10 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Tag, Percent, Coins, CreditCard, ShoppingCart, Settings2, Scale, Users, Bike } from "lucide-react";
+import { Building2, Tag, Percent, Coins, CreditCard, ShoppingCart, Settings2, Scale, Users, Bike, Ruler } from "lucide-react";
 import { ConfigGeneral } from "@/components/config/ConfigGeneral";
+import { ConfigUnits } from "@/components/config/ConfigUnits";
+
 import { ConfigCategories } from "@/components/config/ConfigCategories";
 import { ConfigTaxRates } from "@/components/config/ConfigTaxRates";
 import { ConfigCurrencies } from "@/components/config/ConfigCurrencies";
