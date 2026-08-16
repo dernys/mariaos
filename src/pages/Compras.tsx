@@ -271,6 +271,10 @@ export default function Compras() {
         product_name: prod?.name || "", sku: prod?.sku || null,
         unit: it.unit || null,
         qty, cost, total: qty * cost,
+      };
+    });
+
+
 
     const { error: e2 } = await (supabase.from as any)("purchase_items").insert(rows);
     if (e2) { toast({ title: "Error items", description: e2.message, variant: "destructive" }); return; }
