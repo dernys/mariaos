@@ -57,6 +57,7 @@ export default function Compras() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { taxes, defaultTax } = useTaxRates();
+  const { units, defaultUnit } = useUnits();
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
