@@ -83,10 +83,14 @@ export default function Compras() {
   const [taxRateId, setTaxRateId] = useState<string>("none");
   const [taxOverride, setTaxOverride] = useState<string>("");
   const [notes, setNotes] = useState("");
-  const [items, setItems] = useState<{ product_id: string; qty: string; cost: string }[]>([
-    { product_id: "", qty: "1", cost: "0" },
+  const [items, setItems] = useState<{ product_id: string; qty: string; cost: string; unit: string }[]>([
+    { product_id: "", qty: "1", cost: "0", unit: "" },
   ]);
   const [payLines, setPayLines] = useState<PayLine[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Purchase | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const fetchAll = async () => {
     const [supR, prR, whR, stR, pchR, pmR, curR] = await Promise.all([
