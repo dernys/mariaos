@@ -10241,6 +10241,14 @@ export type Database = {
         Args: { p_sale_id: string; p_series_code?: string }
         Returns: string
       }
+      issue_invoice_with_tax: {
+        Args: {
+          p_sale_id: string
+          p_series_code?: string
+          p_tax_rate_id?: string
+        }
+        Returns: string
+      }
       log_online_order_event: {
         Args: {
           p_assignment_id?: string
