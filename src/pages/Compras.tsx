@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, CheckCircle2, XCircle, Truck, ShoppingCart, FileText, DollarSign, Wallet } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, XCircle, Truck, ShoppingCart, FileText, DollarSign, Wallet, Pencil, Copy } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -26,9 +26,10 @@ import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 import { useTaxRates } from "@/hooks/useTaxRates";
+import { useUnits } from "@/hooks/useUnits";
 
 interface Supplier { id: string; name: string; balance: number; phone?: string | null; email?: string | null; }
-interface Product { id: string; name: string; sku: string; cost: number; }
+interface Product { id: string; name: string; sku: string; cost: number; unit_code?: string | null; }
 interface Loc { id: string; name: string; type: "warehouse" | "store"; }
 interface Purchase {
   id: string; purchase_number: string; status: string; supplier_id: string | null;
@@ -56,6 +57,7 @@ export default function Compras() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { taxes, defaultTax } = useTaxRates();
+  const { units, defaultUnit } = useUnits();
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -83,15 +85,19 @@ export default function Compras() {
   const [taxRateId, setTaxRateId] = useState<string>("none");
   const [taxOverride, setTaxOverride] = useState<string>("");
   const [notes, setNotes] = useState("");
-  const [items, setItems] = useState<{ product_id: string; qty: string; cost: string }[]>([
-    { product_id: "", qty: "1", cost: "0" },
+  const [items, setItems] = useState<{ product_id: string; qty: string; cost: string; unit: string }[]>([
+    { product_id: "", qty: "1", cost: "0", unit: "" },
   ]);
   const [payLines, setPayLines] = useState<PayLine[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Purchase | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const fetchAll = async () => {
     const [supR, prR, whR, stR, pchR, pmR, curR] = await Promise.all([
       (supabase.from as any)("suppliers").select("*").order("name"),
-      supabase.from("products").select("id, name, sku, cost").order("name"),
+      supabase.from("products").select("id, name, sku, cost, unit_code").order("name"),
       supabase.from("warehouses").select("id, name").order("name"),
       supabase.from("stores").select("id, name").order("name"),
       (supabase.from as any)("purchases").select("*").order("created_at", { ascending: false }).limit(100),
@@ -120,9 +126,51 @@ export default function Compras() {
     setSupplierId(""); setDestType("warehouse"); setDestId("");
     setTaxRateId(defaultTax?.id || "none"); setTaxOverride("");
     setNotes("");
-    setItems([{ product_id: "", qty: "1", cost: "0" }]);
+    setItems([{ product_id: "", qty: "1", cost: "0", unit: defaultUnit?.code || "" }]);
     setPayLines([]);
+    setEditingId(null);
   };
+
+  const openNewPurchase = () => { resetForm(); setEditingId(null); setOpen(true); };
+
+  const openEditPurchase = async (p: Purchase) => {
+    const { data } = await (supabase.from as any)("purchase_items").select("*").eq("purchase_id", p.id);
+    setEditingId(p.id);
+    setSupplierId(p.supplier_id || "");
+    setDestType((p.destination_type as any) || "warehouse");
+    setDestId(p.destination_id || "");
+    setTaxRateId(p.tax_rate_id || "none");
+    setTaxOverride(String(Number(p.tax || 0)));
+    setNotes(p.notes || "");
+    setPayLines([]);
+    setItems(((data as any[]) || []).map((r) => ({
+      product_id: r.product_id,
+      qty: String(Number(r.qty)),
+      cost: String(Number(r.cost)),
+      unit: r.unit || products.find((x) => x.id === r.product_id)?.unit_code || defaultUnit?.code || "",
+    })));
+    setOpen(true);
+  };
+
+  const duplicatePurchase = async (p: Purchase) => {
+    const { data } = await (supabase.from as any)("purchase_items").select("*").eq("purchase_id", p.id);
+    setEditingId(null);
+    setSupplierId(p.supplier_id || "");
+    setDestType((p.destination_type as any) || "warehouse");
+    setDestId(p.destination_id || "");
+    setTaxRateId(p.tax_rate_id || "none");
+    setTaxOverride("");
+    setNotes(p.notes ? `Copia de ${p.purchase_number}` : `Copia de ${p.purchase_number}`);
+    setPayLines([]);
+    setItems(((data as any[]) || []).map((r) => ({
+      product_id: r.product_id,
+      qty: String(Number(r.qty)),
+      cost: String(Number(r.cost)),
+      unit: r.unit || defaultUnit?.code || "",
+    })));
+    setOpen(true);
+  };
+
 
   // Set default tax when taxes load
   useEffect(() => {
@@ -166,6 +214,28 @@ export default function Compras() {
     if (!destId) { toast({ title: "Selecciona un destino", variant: "destructive" }); return; }
     const valid = items.filter((it) => it.product_id && Number(it.qty) > 0);
     if (!valid.length) { toast({ title: "Agrega al menos un producto", variant: "destructive" }); return; }
+    if (valid.some((it) => !it.unit)) { toast({ title: "Unidad requerida", description: "Indica la unidad de medida de cada producto.", variant: "destructive" }); return; }
+
+    // Edición de borrador: se delega al RPC transaccional
+    if (editingId) {
+      setBusy(true);
+      const { error } = await (supabase.rpc as any)("update_purchase_draft", {
+        p_purchase_id: editingId,
+        p_supplier_id: supplierId || null,
+        p_destination_type: destType,
+        p_destination_id: destId,
+        p_tax_rate_id: taxRateId !== "none" ? taxRateId : null,
+        p_tax: computedTax,
+        p_notes: notes || null,
+        p_items: valid.map((it) => ({ product_id: it.product_id, qty: Number(it.qty), cost: Number(it.cost), unit: it.unit })),
+      });
+      setBusy(false);
+      if (error) { toast({ title: "Error al editar", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Compra actualizada" });
+      setOpen(false); resetForm(); fetchAll();
+      return;
+    }
+
     const paid = totalPaidLines;
     if (paid > total + 0.01) {
       toast({ title: "Pago excede el total", variant: "destructive" }); return;
@@ -199,9 +269,13 @@ export default function Compras() {
       return {
         purchase_id: pch.id, product_id: it.product_id,
         product_name: prod?.name || "", sku: prod?.sku || null,
+        unit: it.unit || null,
         qty, cost, total: qty * cost,
       };
     });
+
+
+
     const { error: e2 } = await (supabase.from as any)("purchase_items").insert(rows);
     if (e2) { toast({ title: "Error items", description: e2.message, variant: "destructive" }); return; }
 
@@ -278,12 +352,25 @@ export default function Compras() {
     fetchAll();
   };
 
-  const cancel = async (id: string) => {
-    const { error } = await (supabase.from as any)("purchases").update({ status: "cancelled" }).eq("id", id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Compra cancelada" });
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
+    setBusy(true);
+    const { error } = await (supabase.rpc as any)("cancel_purchase", {
+      p_purchase_id: cancelTarget.id,
+      p_reason: cancelReason || null,
+    });
+    setBusy(false);
+    if (error) { toast({ title: "No se pudo cancelar", description: error.message, variant: "destructive" }); return; }
+    toast({
+      title: "Compra cancelada",
+      description: cancelTarget.status === "received"
+        ? "Se revirtió el stock y se reversaron los asientos contables."
+        : undefined,
+    });
+    setCancelTarget(null); setCancelReason("");
     fetchAll();
   };
+
 
   const openPay = (p: Purchase) => {
     setPayTarget(p);
@@ -380,7 +467,7 @@ export default function Compras() {
                     { key: "created_at", label: "Fecha" },
                   ]}
                 />
-                <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpen(true)}>
+                <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={openNewPurchase}>
                   <Plus className="h-3.5 w-3.5" /> {t("modules.purchases.newPurchase")}
                 </Button>
               </>
@@ -425,17 +512,26 @@ export default function Compras() {
                               <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => receive(p.id, (p as any).is_consignment)}>
                                 <CheckCircle2 className="h-3 w-3 mr-1" /> Recibir
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-7 text-[10px] text-destructive" onClick={() => cancel(p.id)}>
-                                <XCircle className="h-3 w-3 mr-1" /> Cancelar
+                              <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => openEditPurchase(p)}>
+                                <Pencil className="h-3 w-3 mr-1" /> Editar
                               </Button>
                             </>
                           )}
-                          {pending > 0.01 && p.supplier_id && (
+                          <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => duplicatePurchase(p)}>
+                            <Copy className="h-3 w-3 mr-1" /> Duplicar
+                          </Button>
+                          {p.status !== "cancelled" && (
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px] text-destructive" onClick={() => { setCancelTarget(p); setCancelReason(""); }}>
+                              <XCircle className="h-3 w-3 mr-1" /> Cancelar
+                            </Button>
+                          )}
+                          {pending > 0.01 && p.supplier_id && p.status !== "cancelled" && (
                             <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => openPay(p)}>
                               <Wallet className="h-3 w-3 mr-1" /> Pagar
                             </Button>
                           )}
                         </div>
+
                       </TableCell>
                     </TableRow>
                   );
@@ -479,9 +575,14 @@ export default function Compras() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nueva Compra</DialogTitle>
-            <DialogDescription>Registra una orden y al recibirla se sumará al stock del destino</DialogDescription>
+            <DialogTitle>{editingId ? "Editar Compra (borrador)" : "Nueva Compra"}</DialogTitle>
+            <DialogDescription>
+              {editingId
+                ? "Ajusta proveedor, destino, impuesto y líneas. Los totales se recalculan."
+                : "Registra una orden y al recibirla se sumará al stock del destino"}
+            </DialogDescription>
           </DialogHeader>
+
           <div className="grid gap-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -518,7 +619,7 @@ export default function Compras() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <Label className="text-xs font-semibold">Productos</Label>
-                <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setItems([...items, { product_id: "", qty: "1", cost: "0" }])}>
+                <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setItems([...items, { product_id: "", qty: "1", cost: "0", unit: defaultUnit?.code || "" }])}>
                   <Plus className="h-3 w-3 mr-1" /> Agregar
                 </Button>
               </div>
@@ -529,6 +630,8 @@ export default function Compras() {
                       const arr = [...items]; arr[i].product_id = v;
                       const p = products.find((x) => x.id === v);
                       if (p && Number(arr[i].cost) === 0) arr[i].cost = String(p.cost || 0);
+                      if (p?.unit_code) arr[i].unit = p.unit_code;
+                      else if (!arr[i].unit) arr[i].unit = defaultUnit?.code || "";
                       setItems(arr);
                     }}>
                       <SelectTrigger className="flex-1 h-9 text-xs"><SelectValue placeholder="Producto" /></SelectTrigger>
@@ -538,6 +641,12 @@ export default function Compras() {
                     </Select>
                     <Input type="number" min="1" className="w-20 h-9 text-xs" placeholder="Cant"
                       value={it.qty} onChange={(e) => { const a = [...items]; a[i].qty = e.target.value; setItems(a); }} />
+                    <Select value={it.unit || undefined} onValueChange={(v) => { const a = [...items]; a[i].unit = v; setItems(a); }}>
+                      <SelectTrigger className="w-24 h-9 text-xs"><SelectValue placeholder="Unidad" /></SelectTrigger>
+                      <SelectContent>
+                        {units.map((u) => <SelectItem key={u.id} value={u.code}>{u.code} — {u.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                     <Input type="number" min="0" className="w-24 h-9 text-xs" placeholder="Costo"
                       value={it.cost} onChange={(e) => { const a = [...items]; a[i].cost = e.target.value; setItems(a); }} />
                     <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setItems(items.filter((_, j) => j !== i))}>
@@ -547,6 +656,8 @@ export default function Compras() {
                 ))}
               </div>
             </div>
+
+
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -571,7 +682,7 @@ export default function Compras() {
               <div><Label className="text-xs">Total</Label><Input value={total.toFixed(2)} disabled className="font-bold" /></div>
             </div>
 
-            <div className="border rounded-lg p-3 space-y-2">
+            <div className={`border rounded-lg p-3 space-y-2 ${editingId ? "hidden" : ""}`}>
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-semibold">Pagos al proveedor</Label>
                 <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={addPayLine} disabled={!supplierId}>
@@ -633,11 +744,38 @@ export default function Compras() {
 
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button className="gradient-brand text-primary-foreground" onClick={handleCreate}>{t("modules.purchases.createPurchase")}</Button>
+            <Button variant="outline" onClick={() => { setOpen(false); setEditingId(null); }}>Cancelar</Button>
+            <Button className="gradient-brand text-primary-foreground" onClick={handleCreate} disabled={busy}>
+              {busy ? "Guardando..." : editingId ? "Guardar cambios" : t("modules.purchases.createPurchase")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel purchase dialog (reversa contable + stock si estaba recibida) */}
+      <Dialog open={!!cancelTarget} onOpenChange={(v) => { if (!v) { setCancelTarget(null); setCancelReason(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancelar compra {cancelTarget?.purchase_number}</DialogTitle>
+            <DialogDescription>
+              {cancelTarget?.status === "received"
+                ? "Esta compra ya fue recibida: se devolverá el stock, se registrarán movimientos inversos y se reversarán los asientos contables."
+                : "La compra en borrador quedará marcada como cancelada."}
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label className="text-xs">Motivo (auditoría)</Label>
+            <Input value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Ej: mercancía no recibida" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)}>Volver</Button>
+            <Button variant="destructive" onClick={confirmCancel} disabled={busy}>
+              {busy ? "Cancelando..." : "Confirmar cancelación"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Pay purchase dialog (multi-currency, multi-method) */}
       {payTarget && payTarget.supplier_id && (

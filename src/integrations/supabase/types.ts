@@ -5698,6 +5698,7 @@ export type Database = {
           id: string
           notes: string | null
           product_id: string
+          unit: string | null
           variant_id: string | null
         }
         Insert: {
@@ -5709,6 +5710,7 @@ export type Database = {
           id?: string
           notes?: string | null
           product_id: string
+          unit?: string | null
           variant_id?: string | null
         }
         Update: {
@@ -5720,6 +5722,7 @@ export type Database = {
           id?: string
           notes?: string | null
           product_id?: string
+          unit?: string | null
           variant_id?: string | null
         }
         Relationships: [
@@ -6481,6 +6484,8 @@ export type Database = {
           tenant_id: string | null
           track_lots: boolean
           track_serials: boolean
+          unit_code: string | null
+          unit_id: string | null
           updated_at: string
           warehouse_id: string | null
         }
@@ -6517,6 +6522,8 @@ export type Database = {
           tenant_id?: string | null
           track_lots?: boolean
           track_serials?: boolean
+          unit_code?: string | null
+          unit_id?: string | null
           updated_at?: string
           warehouse_id?: string | null
         }
@@ -6553,6 +6560,8 @@ export type Database = {
           tenant_id?: string | null
           track_lots?: boolean
           track_serials?: boolean
+          unit_code?: string | null
+          unit_id?: string | null
           updated_at?: string
           warehouse_id?: string | null
         }
@@ -6590,6 +6599,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
             referencedColumns: ["id"]
           },
           {
@@ -6712,6 +6728,7 @@ export type Database = {
           qty_received: number
           sku: string | null
           total: number
+          unit: string | null
         }
         Insert: {
           cost?: number
@@ -6724,6 +6741,7 @@ export type Database = {
           qty_received?: number
           sku?: string | null
           total?: number
+          unit?: string | null
         }
         Update: {
           cost?: number
@@ -6736,6 +6754,7 @@ export type Database = {
           qty_received?: number
           sku?: string | null
           total?: number
+          unit?: string | null
         }
         Relationships: [
           {
@@ -7815,6 +7834,7 @@ export type Database = {
           quantity_shipped: number
           sku: string | null
           transfer_id: string
+          unit: string | null
         }
         Insert: {
           created_at?: string
@@ -7827,6 +7847,7 @@ export type Database = {
           quantity_shipped?: number
           sku?: string | null
           transfer_id: string
+          unit?: string | null
         }
         Update: {
           created_at?: string
@@ -7839,6 +7860,7 @@ export type Database = {
           quantity_shipped?: number
           sku?: string | null
           transfer_id?: string
+          unit?: string | null
         }
         Relationships: [
           {
@@ -8642,6 +8664,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      units_of_measure: {
+        Row: {
+          code: string
+          created_at: string
+          decimals: number
+          factor: number
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          decimals?: number
+          factor?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          decimals?: number
+          factor?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_pos_favorites: {
         Row: {
@@ -9768,6 +9829,10 @@ export type Database = {
         Args: { p_payroll_id: string; p_reason?: string }
         Returns: string
       }
+      cancel_purchase: {
+        Args: { p_purchase_id: string; p_reason?: string }
+        Returns: undefined
+      }
       cancel_sale: {
         Args: { p_reason: string; p_sale_id: string }
         Returns: undefined
@@ -10816,6 +10881,19 @@ export type Database = {
           p_payroll_id: string
         }
         Returns: string
+      }
+      update_purchase_draft: {
+        Args: {
+          p_destination_id: string
+          p_destination_type: string
+          p_items: Json
+          p_notes: string
+          p_purchase_id: string
+          p_supplier_id: string
+          p_tax: number
+          p_tax_rate_id: string
+        }
+        Returns: undefined
       }
       update_rider_location: {
         Args: {

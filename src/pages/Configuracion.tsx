@@ -1,8 +1,10 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Tag, Percent, Coins, CreditCard, ShoppingCart, Settings2, Scale, Users, Bike } from "lucide-react";
+import { Building2, Tag, Percent, Coins, CreditCard, ShoppingCart, Settings2, Scale, Users, Bike, Ruler } from "lucide-react";
 import { ConfigGeneral } from "@/components/config/ConfigGeneral";
+import { ConfigUnits } from "@/components/config/ConfigUnits";
+
 import { ConfigCategories } from "@/components/config/ConfigCategories";
 import { ConfigTaxRates } from "@/components/config/ConfigTaxRates";
 import { ConfigCurrencies } from "@/components/config/ConfigCurrencies";
@@ -27,7 +29,9 @@ const Configuracion = () => {
           <TabsTrigger value="hr" className="gap-1.5 text-xs"><Users className="h-3.5 w-3.5" />RRHH</TabsTrigger>
           <TabsTrigger value="delivery" className="gap-1.5 text-xs"><Bike className="h-3.5 w-3.5" />Delivery</TabsTrigger>
           <TabsTrigger value="categories" className="gap-1.5 text-xs"><Tag className="h-3.5 w-3.5" />Categorías</TabsTrigger>
+          <TabsTrigger value="units" className="gap-1.5 text-xs"><Ruler className="h-3.5 w-3.5" />Unidades</TabsTrigger>
           <TabsTrigger value="taxes" className="gap-1.5 text-xs"><Percent className="h-3.5 w-3.5" />Impuestos</TabsTrigger>
+
           <TabsTrigger value="fiscal" className="gap-1.5 text-xs"><Scale className="h-3.5 w-3.5" />Motor Fiscal</TabsTrigger>
           <TabsTrigger value="currencies" className="gap-1.5 text-xs"><Coins className="h-3.5 w-3.5" />Monedas</TabsTrigger>
           <TabsTrigger value="payments" className="gap-1.5 text-xs"><CreditCard className="h-3.5 w-3.5" />Métodos de Pago</TabsTrigger>
@@ -38,7 +42,9 @@ const Configuracion = () => {
         <TabsContent value="modules"><ConfigModules /></TabsContent>
         <TabsContent value="hr"><ConfigHR /></TabsContent>
         <TabsContent value="delivery"><ConfigDelivery /></TabsContent>
+        <TabsContent value="units"><ConfigUnits /></TabsContent>
         <TabsContent value="categories"><ConfigCategories /></TabsContent>
+
 
         <TabsContent value="taxes"><ConfigTaxRates /></TabsContent>
         <TabsContent value="fiscal"><ConfigFiscalRules /></TabsContent>

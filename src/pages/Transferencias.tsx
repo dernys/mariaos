@@ -18,15 +18,17 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { TableToolbar } from "@/components/data/TableToolbar";
 import { TablePagination } from "@/components/data/TablePagination";
 import { useTableState } from "@/hooks/useTableState";
+import { useUnits } from "@/hooks/useUnits";
 import { format } from "date-fns";
 
 type LocType = "warehouse" | "store";
 
 interface Loc { id: string; name: string; type: LocType; }
-interface Product { id: string; name: string; sku: string; }
+interface Product { id: string; name: string; sku: string; unit_code?: string | null; }
 interface TransferItem {
   product_id: string;
   product_name?: string;
+  unit?: string | null;
   quantity_requested: number;
   quantity_shipped?: number | null;
   quantity_received?: number | null;
@@ -84,6 +86,7 @@ export default function Transferencias() {
   const tenantId = useTenant();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { units, defaultUnit } = useUnits();
 
   const [warehouses, setWarehouses] = useState<Loc[]>([]);
   const [stores, setStores] = useState<Loc[]>([]);
@@ -110,8 +113,8 @@ export default function Transferencias() {
     carrier_name: "", carrier_driver: "", carrier_phone: "",
     carrier_vehicle: "", carrier_plate: "", tracking_code: "", estimated_arrival: "",
   });
-  const [draftItems, setDraftItems] = useState<{ product_id: string; quantity: string }[]>([
-    { product_id: "", quantity: "1" },
+  const [draftItems, setDraftItems] = useState<{ product_id: string; quantity: string; unit: string }[]>([
+    { product_id: "", quantity: "1", unit: "" },
   ]);
 
   const stockKey = (productId: string, type: string, id: string) => `${productId}|${type}|${id}`;
@@ -122,7 +125,7 @@ export default function Transferencias() {
     const [whR, stR, prR, trR, pfR, psR] = await Promise.all([
       supabase.from("warehouses").select("id, name").order("name"),
       supabase.from("stores").select("id, name").order("name"),
-      supabase.from("products").select("id, name, sku").order("name"),
+      supabase.from("products").select("id, name, sku, unit_code").order("name"),
       supabase.from("stock_transfers").select("*").order("created_at", { ascending: false }).limit(300),
       supabase.from("profiles").select("user_id, full_name"),
       supabase.from("product_stock").select("product_id, location_type, location_id, stock"),
@@ -141,7 +144,7 @@ export default function Transferencias() {
     if (ts.length) {
       const { data: its } = await supabase
         .from("stock_transfer_items")
-        .select("transfer_id, product_id, product_name, quantity_requested, quantity_shipped, quantity_received")
+        .select("transfer_id, product_id, product_name, unit, quantity_requested, quantity_shipped, quantity_received")
         .in("transfer_id", ts.map((t) => t.id));
       const prodNames = new Map((prR.data || []).map((p: any) => [p.id, p.name]));
       const grouped: Record<string, TransferItem[]> = {};
@@ -149,6 +152,7 @@ export default function Transferencias() {
         (grouped[it.transfer_id] = grouped[it.transfer_id] || []).push({
           product_id: it.product_id,
           product_name: it.product_name || prodNames.get(it.product_id),
+          unit: it.unit || null,
           quantity_requested: Number(it.quantity_requested),
           quantity_shipped: it.quantity_shipped !== null ? Number(it.quantity_shipped) : null,
           quantity_received: it.quantity_received !== null ? Number(it.quantity_received) : null,
@@ -179,7 +183,7 @@ export default function Transferencias() {
     setDestType("store"); setDestId("");
     setNotes("");
     setCarrier({ carrier_name: "", carrier_driver: "", carrier_phone: "", carrier_vehicle: "", carrier_plate: "", tracking_code: "", estimated_arrival: "" });
-    setDraftItems([{ product_id: "", quantity: "1" }]);
+    setDraftItems([{ product_id: "", quantity: "1", unit: defaultUnit?.code || "" }]);
   };
 
   const handleCreate = async () => {
@@ -210,6 +214,7 @@ export default function Transferencias() {
         product_id: d.product_id,
         product_name: prod?.name || "",
         sku: prod?.sku || null,
+        unit: d.unit || null,
         quantity_requested: Number(d.quantity),
       };
     });
@@ -569,7 +574,7 @@ export default function Transferencias() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <Label className="text-xs font-semibold">Productos</Label>
-                <Button size="sm" variant="outline" onClick={() => setDraftItems([...draftItems, { product_id: "", quantity: "1" }])} className="h-7 text-[10px]">
+                <Button size="sm" variant="outline" onClick={() => setDraftItems([...draftItems, { product_id: "", quantity: "1", unit: defaultUnit?.code || "" }])} className="h-7 text-[10px]">
                   <Plus className="h-3 w-3 mr-1" /> Agregar
                 </Button>
               </div>
@@ -584,19 +589,33 @@ export default function Transferencias() {
                           className="flex-1"
                           options={productOptions}
                           value={d.product_id}
-                          onChange={(v) => { const arr = [...draftItems]; arr[i].product_id = v; setDraftItems(arr); }}
+                          onChange={(v) => {
+                            const arr = [...draftItems];
+                            arr[i].product_id = v;
+                            const prod = products.find((p) => p.id === v);
+                            arr[i].unit = prod?.unit_code || arr[i].unit || defaultUnit?.code || "";
+                            setDraftItems(arr);
+                          }}
                           placeholder="Producto"
                           searchPlaceholder="Buscar producto..."
                         />
-                        <Input type="number" min="1" className="w-24 h-9 text-xs" value={d.quantity}
+                        <Input type="number" min="1" className="w-20 h-9 text-xs" value={d.quantity}
                           onChange={(e) => { const arr = [...draftItems]; arr[i].quantity = e.target.value; setDraftItems(arr); }} />
+                        <SearchableSelect
+                          className="w-28"
+                          options={units.map((u) => ({ value: u.code, label: `${u.code} — ${u.name}` }))}
+                          value={d.unit}
+                          onChange={(v) => { const arr = [...draftItems]; arr[i].unit = v; setDraftItems(arr); }}
+                          placeholder="Unidad"
+                          searchPlaceholder="Buscar unidad..."
+                        />
                         <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setDraftItems(draftItems.filter((_, j) => j !== i))}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                       {avail !== null && (
                         <p className={`text-[10px] ${over ? "text-destructive" : "text-muted-foreground"}`}>
-                          Disponible en origen: {avail} u.{over ? " · excede el stock disponible" : ""}
+                          Disponible en origen: {avail} {d.unit || "u."}{over ? " · excede el stock disponible" : ""}
                         </p>
                       )}
                     </div>
@@ -666,7 +685,7 @@ export default function Transferencias() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{it.product_name || it.product_id}</p>
                         <p className="text-[10px] text-muted-foreground">
-                          Solicitado {it.quantity_requested}
+                          Solicitado {it.quantity_requested} {it.unit || "u."}
                           {it.quantity_shipped !== null ? ` · Enviado ${it.quantity_shipped}` : ""}
                           {flow.mode === "ship" ? ` · Disponible origen ${avail}` : ""}
                         </p>
@@ -737,7 +756,7 @@ export default function Transferencias() {
                     <div key={it.product_id} className="flex justify-between text-xs border-b py-1">
                       <span>{it.product_name || it.product_id}</span>
                       <span className="text-muted-foreground">
-                        {it.quantity_requested} sol. · {it.quantity_shipped ?? 0} sal. · {it.quantity_received ?? 0} ent.
+                        {it.quantity_requested} sol. · {it.quantity_shipped ?? 0} sal. · {it.quantity_received ?? 0} ent. ({it.unit || "u."})
                       </span>
                     </div>
                   ))}

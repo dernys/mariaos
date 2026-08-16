@@ -26,6 +26,7 @@ function draftToRow(draft: ProductDraft, tenantId: string | null) {
     image_url: draft.image_url ?? null,
     images: draft.images ?? [],
     is_deliverable: draft.is_deliverable ?? true,
+    unit_code: draft.unit_code || null,
   };
 }
 

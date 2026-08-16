@@ -34,6 +34,7 @@ import {
   stockStatus, type Product, type Warehouse, type Store, type LocationStock, type Movement,
 } from "@/modules/inventory";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useUnits } from "@/hooks/useUnits";
 
 const statusConfig = (stock: number, min: number) => {
   const status = stockStatus(stock, min);
@@ -68,6 +69,7 @@ const Inventario = () => {
   const { tenantId } = useInventoryDeps();
   const { toast } = useToast();
   const { products, warehouses, stores, locationStocks, movements, loading, refetch } = useInventory();
+  const { units, defaultUnit } = useUnits();
   const saveProductMutation = useSaveProduct();
   const deleteProductMutation = useDeleteProduct();
   const registerMovementMutation = useRegisterMovement();
@@ -81,7 +83,7 @@ const Inventario = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({
     name: "", sku: "", description: "", category: "", price: "0", cost: "0",
-    stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true,
+    stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true, unit_code: "",
     images: [] as string[],
   });
   const [movForm, setMovForm] = useState({ type: "entry", quantity: "0", reason: "" });
@@ -89,7 +91,7 @@ const Inventario = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true, images: [] });
+    setForm({ name: "", sku: "", description: "", category: "", price: "0", cost: "0", stock: "0", min_stock: "0", warehouse_id: "", is_online: false, online_stock: "0", image_url: "", is_deliverable: true, unit_code: defaultUnit?.code || "", images: [] });
     setDialogOpen(true);
   };
 
@@ -100,6 +102,7 @@ const Inventario = () => {
       price: String(p.price), cost: String(p.cost), stock: String(p.stock), min_stock: String(p.min_stock),
       warehouse_id: p.warehouse_id || "", is_online: p.is_online || false, online_stock: String(p.online_stock || 0), image_url: p.image_url || "",
       is_deliverable: (p as any).is_deliverable ?? true,
+      unit_code: (p as any).unit_code || defaultUnit?.code || "",
       images: Array.isArray((p as any).images)
         ? ((p as any).images as any[]).map((i) => (typeof i === "string" ? i : i?.url)).filter((u: any): u is string => typeof u === "string" && !!u)
         : [],
@@ -123,6 +126,7 @@ const Inventario = () => {
       image_url: form.image_url,
       images: form.images,
       is_deliverable: form.is_deliverable,
+      unit_code: form.unit_code || defaultUnit?.code || null,
     };
     try {
       await saveProductMutation.mutateAsync({ id: editing?.id ?? null, draft });
@@ -745,6 +749,18 @@ const Inventario = () => {
               <div><Label>{t("modules.inventory.table.cost")}</Label><Input type="number" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} /></div>
               <div><Label>{t("modules.inventory.table.stock")}</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} /></div>
               <div><Label>{t("modules.inventory.table.min")}</Label><Input type="number" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Unidad de medida</Label>
+                <SearchableSelect
+                  options={units.map((u) => ({ value: u.code, label: `${u.code} — ${u.name}` }))}
+                  value={form.unit_code}
+                  onChange={(v) => setForm({ ...form, unit_code: v })}
+                  placeholder="Unidad"
+                  searchPlaceholder="Buscar unidad..."
+                />
+              </div>
             </div>
             {/* Imagen del producto (siempre disponible para POS) */}
             <div className="border rounded-lg p-3 space-y-2 bg-muted/30">

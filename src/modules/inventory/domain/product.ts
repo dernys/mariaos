@@ -123,6 +123,7 @@ export interface ProductDraft {
   image_url?: string | null;
   images?: string[];
   is_deliverable?: boolean;
+  unit_code?: string | null;
 }
 
 export type ProductError = "nameSkuRequired" | "negativeAmounts";
@@ -147,5 +148,6 @@ export function normalizeProductDraft(draft: ProductDraft): ProductDraft {
     is_online: !!draft.is_online,
     online_stock: draft.is_online ? draft.online_stock || 0 : 0,
     is_deliverable: draft.is_deliverable ?? true,
+    unit_code: draft.unit_code || null,
   };
 }
