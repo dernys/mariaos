@@ -352,12 +352,25 @@ export default function Compras() {
     fetchAll();
   };
 
-  const cancel = async (id: string) => {
-    const { error } = await (supabase.from as any)("purchases").update({ status: "cancelled" }).eq("id", id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Compra cancelada" });
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
+    setBusy(true);
+    const { error } = await (supabase.rpc as any)("cancel_purchase", {
+      p_purchase_id: cancelTarget.id,
+      p_reason: cancelReason || null,
+    });
+    setBusy(false);
+    if (error) { toast({ title: "No se pudo cancelar", description: error.message, variant: "destructive" }); return; }
+    toast({
+      title: "Compra cancelada",
+      description: cancelTarget.status === "received"
+        ? "Se revirtió el stock y se reversaron los asientos contables."
+        : undefined,
+    });
+    setCancelTarget(null); setCancelReason("");
     fetchAll();
   };
+
 
   const openPay = (p: Purchase) => {
     setPayTarget(p);
