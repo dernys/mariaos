@@ -214,6 +214,28 @@ export default function Compras() {
     if (!destId) { toast({ title: "Selecciona un destino", variant: "destructive" }); return; }
     const valid = items.filter((it) => it.product_id && Number(it.qty) > 0);
     if (!valid.length) { toast({ title: "Agrega al menos un producto", variant: "destructive" }); return; }
+    if (valid.some((it) => !it.unit)) { toast({ title: "Unidad requerida", description: "Indica la unidad de medida de cada producto.", variant: "destructive" }); return; }
+
+    // Edición de borrador: se delega al RPC transaccional
+    if (editingId) {
+      setBusy(true);
+      const { error } = await (supabase.rpc as any)("update_purchase_draft", {
+        p_purchase_id: editingId,
+        p_supplier_id: supplierId || null,
+        p_destination_type: destType,
+        p_destination_id: destId,
+        p_tax_rate_id: taxRateId !== "none" ? taxRateId : null,
+        p_tax: computedTax,
+        p_notes: notes || null,
+        p_items: valid.map((it) => ({ product_id: it.product_id, qty: Number(it.qty), cost: Number(it.cost), unit: it.unit })),
+      });
+      setBusy(false);
+      if (error) { toast({ title: "Error al editar", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Compra actualizada" });
+      setOpen(false); resetForm(); fetchAll();
+      return;
+    }
+
     const paid = totalPaidLines;
     if (paid > total + 0.01) {
       toast({ title: "Pago excede el total", variant: "destructive" }); return;
@@ -247,9 +269,9 @@ export default function Compras() {
       return {
         purchase_id: pch.id, product_id: it.product_id,
         product_name: prod?.name || "", sku: prod?.sku || null,
+        unit: it.unit || null,
         qty, cost, total: qty * cost,
-      };
-    });
+
     const { error: e2 } = await (supabase.from as any)("purchase_items").insert(rows);
     if (e2) { toast({ title: "Error items", description: e2.message, variant: "destructive" }); return; }
 
