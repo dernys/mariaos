@@ -124,9 +124,51 @@ export default function Compras() {
     setSupplierId(""); setDestType("warehouse"); setDestId("");
     setTaxRateId(defaultTax?.id || "none"); setTaxOverride("");
     setNotes("");
-    setItems([{ product_id: "", qty: "1", cost: "0" }]);
+    setItems([{ product_id: "", qty: "1", cost: "0", unit: defaultUnit?.code || "" }]);
     setPayLines([]);
+    setEditingId(null);
   };
+
+  const openNewPurchase = () => { resetForm(); setEditingId(null); setOpen(true); };
+
+  const openEditPurchase = async (p: Purchase) => {
+    const { data } = await (supabase.from as any)("purchase_items").select("*").eq("purchase_id", p.id);
+    setEditingId(p.id);
+    setSupplierId(p.supplier_id || "");
+    setDestType((p.destination_type as any) || "warehouse");
+    setDestId(p.destination_id || "");
+    setTaxRateId(p.tax_rate_id || "none");
+    setTaxOverride(String(Number(p.tax || 0)));
+    setNotes(p.notes || "");
+    setPayLines([]);
+    setItems(((data as any[]) || []).map((r) => ({
+      product_id: r.product_id,
+      qty: String(Number(r.qty)),
+      cost: String(Number(r.cost)),
+      unit: r.unit || products.find((x) => x.id === r.product_id)?.unit_code || defaultUnit?.code || "",
+    })));
+    setOpen(true);
+  };
+
+  const duplicatePurchase = async (p: Purchase) => {
+    const { data } = await (supabase.from as any)("purchase_items").select("*").eq("purchase_id", p.id);
+    setEditingId(null);
+    setSupplierId(p.supplier_id || "");
+    setDestType((p.destination_type as any) || "warehouse");
+    setDestId(p.destination_id || "");
+    setTaxRateId(p.tax_rate_id || "none");
+    setTaxOverride("");
+    setNotes(p.notes ? `Copia de ${p.purchase_number}` : `Copia de ${p.purchase_number}`);
+    setPayLines([]);
+    setItems(((data as any[]) || []).map((r) => ({
+      product_id: r.product_id,
+      qty: String(Number(r.qty)),
+      cost: String(Number(r.cost)),
+      unit: r.unit || defaultUnit?.code || "",
+    })));
+    setOpen(true);
+  };
+
 
   // Set default tax when taxes load
   useEffect(() => {
