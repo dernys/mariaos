@@ -95,7 +95,7 @@ export default function Compras() {
   const fetchAll = async () => {
     const [supR, prR, whR, stR, pchR, pmR, curR] = await Promise.all([
       (supabase.from as any)("suppliers").select("*").order("name"),
-      supabase.from("products").select("id, name, sku, cost").order("name"),
+      supabase.from("products").select("id, name, sku, cost, unit_code").order("name"),
       supabase.from("warehouses").select("id, name").order("name"),
       supabase.from("stores").select("id, name").order("name"),
       (supabase.from as any)("purchases").select("*").order("created_at", { ascending: false }).limit(100),
