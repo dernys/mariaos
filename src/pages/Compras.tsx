@@ -619,7 +619,7 @@ export default function Compras() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <Label className="text-xs font-semibold">Productos</Label>
-                <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setItems([...items, { product_id: "", qty: "1", cost: "0" }])}>
+                <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setItems([...items, { product_id: "", qty: "1", cost: "0", unit: defaultUnit?.code || "" }])}>
                   <Plus className="h-3 w-3 mr-1" /> Agregar
                 </Button>
               </div>
@@ -630,6 +630,8 @@ export default function Compras() {
                       const arr = [...items]; arr[i].product_id = v;
                       const p = products.find((x) => x.id === v);
                       if (p && Number(arr[i].cost) === 0) arr[i].cost = String(p.cost || 0);
+                      if (p?.unit_code) arr[i].unit = p.unit_code;
+                      else if (!arr[i].unit) arr[i].unit = defaultUnit?.code || "";
                       setItems(arr);
                     }}>
                       <SelectTrigger className="flex-1 h-9 text-xs"><SelectValue placeholder="Producto" /></SelectTrigger>
@@ -639,6 +641,12 @@ export default function Compras() {
                     </Select>
                     <Input type="number" min="1" className="w-20 h-9 text-xs" placeholder="Cant"
                       value={it.qty} onChange={(e) => { const a = [...items]; a[i].qty = e.target.value; setItems(a); }} />
+                    <Select value={it.unit || undefined} onValueChange={(v) => { const a = [...items]; a[i].unit = v; setItems(a); }}>
+                      <SelectTrigger className="w-24 h-9 text-xs"><SelectValue placeholder="Unidad" /></SelectTrigger>
+                      <SelectContent>
+                        {units.map((u) => <SelectItem key={u.id} value={u.code}>{u.code} — {u.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                     <Input type="number" min="0" className="w-24 h-9 text-xs" placeholder="Costo"
                       value={it.cost} onChange={(e) => { const a = [...items]; a[i].cost = e.target.value; setItems(a); }} />
                     <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setItems(items.filter((_, j) => j !== i))}>
@@ -648,6 +656,8 @@ export default function Compras() {
                 ))}
               </div>
             </div>
+
+
 
             <div className="grid grid-cols-2 gap-3">
               <div>
