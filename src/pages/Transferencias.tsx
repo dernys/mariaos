@@ -111,8 +111,8 @@ export default function Transferencias() {
     carrier_name: "", carrier_driver: "", carrier_phone: "",
     carrier_vehicle: "", carrier_plate: "", tracking_code: "", estimated_arrival: "",
   });
-  const [draftItems, setDraftItems] = useState<{ product_id: string; quantity: string }[]>([
-    { product_id: "", quantity: "1" },
+  const [draftItems, setDraftItems] = useState<{ product_id: string; quantity: string; unit: string }[]>([
+    { product_id: "", quantity: "1", unit: "" },
   ]);
 
   const stockKey = (productId: string, type: string, id: string) => `${productId}|${type}|${id}`;
