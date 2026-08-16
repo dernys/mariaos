@@ -28,7 +28,7 @@ import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 import { useTaxRates } from "@/hooks/useTaxRates";
 
 interface Supplier { id: string; name: string; balance: number; phone?: string | null; email?: string | null; }
-interface Product { id: string; name: string; sku: string; cost: number; }
+interface Product { id: string; name: string; sku: string; cost: number; unit_code?: string | null; }
 interface Loc { id: string; name: string; type: "warehouse" | "store"; }
 interface Purchase {
   id: string; purchase_number: string; status: string; supplier_id: string | null;
