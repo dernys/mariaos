@@ -42,7 +42,9 @@ const Configuracion = () => {
         <TabsContent value="modules"><ConfigModules /></TabsContent>
         <TabsContent value="hr"><ConfigHR /></TabsContent>
         <TabsContent value="delivery"><ConfigDelivery /></TabsContent>
+        <TabsContent value="units"><ConfigUnits /></TabsContent>
         <TabsContent value="categories"><ConfigCategories /></TabsContent>
+
 
         <TabsContent value="taxes"><ConfigTaxRates /></TabsContent>
         <TabsContent value="fiscal"><ConfigFiscalRules /></TabsContent>
