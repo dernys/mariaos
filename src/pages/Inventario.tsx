@@ -68,6 +68,7 @@ const Inventario = () => {
   const { tenantId } = useInventoryDeps();
   const { toast } = useToast();
   const { products, warehouses, stores, locationStocks, movements, loading, refetch } = useInventory();
+  const { units, defaultUnit } = useUnits();
   const saveProductMutation = useSaveProduct();
   const deleteProductMutation = useDeleteProduct();
   const registerMovementMutation = useRegisterMovement();
