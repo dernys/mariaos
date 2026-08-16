@@ -744,11 +744,38 @@ export default function Compras() {
 
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button className="gradient-brand text-primary-foreground" onClick={handleCreate}>{t("modules.purchases.createPurchase")}</Button>
+            <Button variant="outline" onClick={() => { setOpen(false); setEditingId(null); }}>Cancelar</Button>
+            <Button className="gradient-brand text-primary-foreground" onClick={handleCreate} disabled={busy}>
+              {busy ? "Guardando..." : editingId ? "Guardar cambios" : t("modules.purchases.createPurchase")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel purchase dialog (reversa contable + stock si estaba recibida) */}
+      <Dialog open={!!cancelTarget} onOpenChange={(v) => { if (!v) { setCancelTarget(null); setCancelReason(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancelar compra {cancelTarget?.purchase_number}</DialogTitle>
+            <DialogDescription>
+              {cancelTarget?.status === "received"
+                ? "Esta compra ya fue recibida: se devolverá el stock, se registrarán movimientos inversos y se reversarán los asientos contables."
+                : "La compra en borrador quedará marcada como cancelada."}
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label className="text-xs">Motivo (auditoría)</Label>
+            <Input value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Ej: mercancía no recibida" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)}>Volver</Button>
+            <Button variant="destructive" onClick={confirmCancel} disabled={busy}>
+              {busy ? "Cancelando..." : "Confirmar cancelación"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Pay purchase dialog (multi-currency, multi-method) */}
       {payTarget && payTarget.supplier_id && (
