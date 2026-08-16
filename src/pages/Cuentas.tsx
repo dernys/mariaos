@@ -55,6 +55,7 @@ export default function Cuentas() {
   const [employees, setEmployees] = useState<Party[]>([]);
   const [suppliers, setSuppliers] = useState<Party[]>([]);
   const [movements, setMovements] = useState<Movement[]>([]);
+  const [payables, setPayables] = useState<any[]>([]);
 
   const [payOpen, setPayOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -62,16 +63,22 @@ export default function Cuentas() {
 
 
   const fetchAll = async () => {
-    const [c, e, s, m] = await Promise.all([
+    const [c, e, s, m, ap] = await Promise.all([
       supabase.from("customers").select("id, name, balance, phone, email").order("name"),
       supabase.from("employees").select("id, name, balance, phone, email").eq("is_active", true).order("name"),
       (supabase.from as any)("suppliers").select("id, name, balance, phone, email").eq("is_active", true).order("name"),
       (supabase.from as any)("account_payments").select("*").order("created_at", { ascending: false }).limit(200),
+      (supabase.from as any)("accounts_payable")
+        .select("id, party_type, party_id, description, amount, amount_paid, due_date, status, source_type, source_id")
+        .neq("status", "paid")
+        .order("due_date")
+        .limit(200),
     ]);
     setCustomers((c.data as Party[]) || []);
     setEmployees((e.data as Party[]) || []);
     setSuppliers((s.data as Party[]) || []);
     setMovements((m.data as Movement[]) || []);
+    setPayables((ap.data as any[]) || []);
   };
 
   useEffect(() => { fetchAll(); }, []);
@@ -145,6 +152,45 @@ export default function Cuentas() {
             />
           }
         />
+
+        {isPayable && payables.length > 0 && (
+          <div className="bg-card rounded-xl shadow-card border overflow-hidden">
+            <div className="px-4 py-3 border-b flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              <h3 className="text-sm font-semibold">Vencimientos de cuentas por pagar</h3>
+              <Badge variant="outline" className="text-[10px]">{payables.length}</Badge>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Proveedor</TableHead>
+                  <TableHead className="text-xs">Documento</TableHead>
+                  <TableHead className="text-xs">Vence</TableHead>
+                  <TableHead className="text-xs text-right">Pendiente</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {payables.map((ap) => {
+                  const remaining = Number(ap.amount || 0) - Number(ap.amount_paid || 0);
+                  const overdue = ap.due_date && new Date(ap.due_date) < new Date();
+                  const supplier = suppliers.find((x) => x.id === ap.party_id);
+                  return (
+                    <TableRow key={ap.id}>
+                      <TableCell className="text-xs font-medium">{supplier?.name || "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{ap.description || ap.source_type}</TableCell>
+                      <TableCell className="text-xs">
+                        <Badge variant="outline" className={`text-[10px] ${overdue ? "bg-destructive/10 text-destructive" : "bg-muted"}`}>
+                          {ap.due_date ? format(new Date(ap.due_date), "dd/MM/yyyy") : "—"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-right font-bold">${remaining.toFixed(2)}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
 
         <TabsContent value={tab}>
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
