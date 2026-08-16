@@ -23,6 +23,7 @@ import { ExportButton } from "@/components/data/ExportButton";
 import { TablePagination } from "@/components/data/TablePagination";
 import { useServerTable, useTableStats } from "@/hooks/useServerTable";
 import { TableDataState } from "@/components/data/DataState";
+import { useTaxRates } from "@/hooks/useTaxRates";
 
 interface Invoice {
   id: string;
@@ -45,9 +46,13 @@ interface Invoice {
 const Facturas = () => {
   const { t } = useTranslation();
   const { tenantId } = useTenantContext();
+  const { taxes, defaultTax } = useTaxRates();
   const [issueOpen, setIssueOpen] = useState(false);
   const [pendingSales, setPendingSales] = useState<any[]>([]);
   const [selectedSale, setSelectedSale] = useState<string>("");
+  const [issueSeries, setIssueSeries] = useState<string>("");
+  const [issueTaxId, setIssueTaxId] = useState<string>("");
+  const [seriesList, setSeriesList] = useState<any[]>([]);
   const [quickOpen, setQuickOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [transmittingId, setTransmittingId] = useState<string | null>(null);
@@ -96,13 +101,26 @@ const Facturas = () => {
       .select("sale_id").eq("tenant_id", tenantId).eq("status", "issued");
     const used = new Set((existing ?? []).map((i: any) => i.sale_id));
     setPendingSales((sales ?? []).filter((s: any) => !used.has(s.id)));
+    const { data: series } = await supabase
+      .from("invoice_series")
+      .select("id, code, name, is_default")
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true)
+      .order("code");
+    setSeriesList(series ?? []);
+    setIssueSeries((series ?? []).find((s: any) => s.is_default)?.code || (series ?? [])[0]?.code || "");
+    setIssueTaxId(defaultTax?.id || "");
     setSelectedSale("");
     setIssueOpen(true);
   };
 
   const issueInvoice = async () => {
     if (!selectedSale) return;
-    const { data, error } = await supabase.rpc("issue_invoice", { p_sale_id: selectedSale, p_series_code: null });
+    const { error } = await (supabase.rpc as any)("issue_invoice_with_tax", {
+      p_sale_id: selectedSale,
+      p_series_code: issueSeries || null,
+      p_tax_rate_id: issueTaxId || null,
+    });
     if (error) { toast.error(error.message); return; }
     toast.success("Factura emitida");
     setIssueOpen(false);
@@ -352,6 +370,36 @@ const Facturas = () => {
             {pendingSales.length === 0 && (
               <p className="text-sm text-muted-foreground">No hay ventas pendientes de facturar.</p>
             )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Serie</Label>
+                <Select value={issueSeries || "auto"} onValueChange={(v) => setIssueSeries(v === "auto" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Serie por defecto" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Serie por defecto</SelectItem>
+                    {seriesList.map((s: any) => (
+                      <SelectItem key={s.id} value={s.code}>{s.code} — {s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Impuesto a aplicar</Label>
+                <Select value={issueTaxId || "none"} onValueChange={(v) => setIssueTaxId(v === "none" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Sin impuesto" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin impuesto (0%)</SelectItem>
+                    {taxes.map((tr) => (
+                      <SelectItem key={tr.id} value={tr.id}>{tr.name} — {Number(tr.rate)}%</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Los tipos de impuesto se administran en Configuración → Impuestos. Solo se recalcula el importe si la venta
+              no tenía impuesto ni cobros registrados; en el resto de casos la factura conserva los importes de la venta.
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIssueOpen(false)}>Cancelar</Button>
