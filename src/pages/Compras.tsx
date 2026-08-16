@@ -26,6 +26,7 @@ import { TablePagination } from "@/components/data/TablePagination";
 import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 import { MultiPaymentDialog } from "@/components/payments/MultiPaymentDialog";
 import { useTaxRates } from "@/hooks/useTaxRates";
+import { useUnits } from "@/hooks/useUnits";
 
 interface Supplier { id: string; name: string; balance: number; phone?: string | null; email?: string | null; }
 interface Product { id: string; name: string; sku: string; cost: number; unit_code?: string | null; }
