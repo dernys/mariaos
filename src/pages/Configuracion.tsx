@@ -29,7 +29,9 @@ const Configuracion = () => {
           <TabsTrigger value="hr" className="gap-1.5 text-xs"><Users className="h-3.5 w-3.5" />RRHH</TabsTrigger>
           <TabsTrigger value="delivery" className="gap-1.5 text-xs"><Bike className="h-3.5 w-3.5" />Delivery</TabsTrigger>
           <TabsTrigger value="categories" className="gap-1.5 text-xs"><Tag className="h-3.5 w-3.5" />Categorías</TabsTrigger>
+          <TabsTrigger value="units" className="gap-1.5 text-xs"><Ruler className="h-3.5 w-3.5" />Unidades</TabsTrigger>
           <TabsTrigger value="taxes" className="gap-1.5 text-xs"><Percent className="h-3.5 w-3.5" />Impuestos</TabsTrigger>
+
           <TabsTrigger value="fiscal" className="gap-1.5 text-xs"><Scale className="h-3.5 w-3.5" />Motor Fiscal</TabsTrigger>
           <TabsTrigger value="currencies" className="gap-1.5 text-xs"><Coins className="h-3.5 w-3.5" />Monedas</TabsTrigger>
           <TabsTrigger value="payments" className="gap-1.5 text-xs"><CreditCard className="h-3.5 w-3.5" />Métodos de Pago</TabsTrigger>
