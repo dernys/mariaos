@@ -23,10 +23,11 @@ import { format } from "date-fns";
 type LocType = "warehouse" | "store";
 
 interface Loc { id: string; name: string; type: LocType; }
-interface Product { id: string; name: string; sku: string; }
+interface Product { id: string; name: string; sku: string; unit_code?: string | null; }
 interface TransferItem {
   product_id: string;
   product_name?: string;
+  unit?: string | null;
   quantity_requested: number;
   quantity_shipped?: number | null;
   quantity_received?: number | null;
