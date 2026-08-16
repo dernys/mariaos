@@ -467,7 +467,7 @@ export default function Compras() {
                     { key: "created_at", label: "Fecha" },
                   ]}
                 />
-                <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={() => setOpen(true)}>
+                <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={openNewPurchase}>
                   <Plus className="h-3.5 w-3.5" /> {t("modules.purchases.newPurchase")}
                 </Button>
               </>
