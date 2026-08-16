@@ -512,17 +512,26 @@ export default function Compras() {
                               <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => receive(p.id, (p as any).is_consignment)}>
                                 <CheckCircle2 className="h-3 w-3 mr-1" /> Recibir
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-7 text-[10px] text-destructive" onClick={() => cancel(p.id)}>
-                                <XCircle className="h-3 w-3 mr-1" /> Cancelar
+                              <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => openEditPurchase(p)}>
+                                <Pencil className="h-3 w-3 mr-1" /> Editar
                               </Button>
                             </>
                           )}
-                          {pending > 0.01 && p.supplier_id && (
+                          <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => duplicatePurchase(p)}>
+                            <Copy className="h-3 w-3 mr-1" /> Duplicar
+                          </Button>
+                          {p.status !== "cancelled" && (
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px] text-destructive" onClick={() => { setCancelTarget(p); setCancelReason(""); }}>
+                              <XCircle className="h-3 w-3 mr-1" /> Cancelar
+                            </Button>
+                          )}
+                          {pending > 0.01 && p.supplier_id && p.status !== "cancelled" && (
                             <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => openPay(p)}>
                               <Wallet className="h-3 w-3 mr-1" /> Pagar
                             </Button>
                           )}
                         </div>
+
                       </TableCell>
                     </TableRow>
                   );
