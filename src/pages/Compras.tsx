@@ -682,7 +682,7 @@ export default function Compras() {
               <div><Label className="text-xs">Total</Label><Input value={total.toFixed(2)} disabled className="font-bold" /></div>
             </div>
 
-            <div className="border rounded-lg p-3 space-y-2">
+            <div className={`border rounded-lg p-3 space-y-2 ${editingId ? "hidden" : ""}`}>
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-semibold">Pagos al proveedor</Label>
                 <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={addPayLine} disabled={!supplierId}>
