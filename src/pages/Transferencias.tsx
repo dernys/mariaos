@@ -86,6 +86,7 @@ export default function Transferencias() {
   const tenantId = useTenant();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { units, defaultUnit } = useUnits();
 
   const [warehouses, setWarehouses] = useState<Loc[]>([]);
   const [stores, setStores] = useState<Loc[]>([]);
