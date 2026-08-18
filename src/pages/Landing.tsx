@@ -15,6 +15,17 @@ import heroBg from "@/assets/landing-hero-bg.jpg";
 
 import { Clock4 } from "lucide-react";
 import { Seo } from "@/components/Seo";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, Heart } from "lucide-react";
+
+const NAV_LINKS = [
+  { href: "#modulos", label: "Módulos" },
+  { href: "#tour", label: "Tour" },
+  { href: "#demo", label: "Demo" },
+  { href: "#nombre", label: "El nombre" },
+  { href: "#plataforma", label: "Plataforma" },
+  { href: "#contacto", label: "Contacto" },
+];
 
 const moduleSlides = [
   { img: "/landing/modules/dashboard.jpg", icon: BarChart3, title: "Dashboard Ejecutivo", desc: "Indicadores del negocio en vivo: ventas, ticket promedio, margen bruto, valor de inventario y rendimiento por tienda, con comparativa entre periodos.", features: ["KPIs con deltas", "Rangos y comparativas", "Desglose por tienda"] },
@@ -114,6 +125,7 @@ const fmtMoney = (n: number) =>
   new Intl.NumberFormat("es-CU", { maximumFractionDigits: 0 }).format(n || 0);
 
 const Landing = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [api, setApi] = useState<CarouselApi | null>(null);
@@ -193,21 +205,52 @@ const Landing = () => {
       />
       {/* Nav */}
       <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-background/70 border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={mariaLogo} alt="MarIA" width={36} height={36} className="h-9 w-9" decoding="async" />
-            <span className="font-heading font-bold text-lg tracking-tight">MarIA OS</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+          <Link to="/" className="flex items-center gap-2 min-w-0">
+            <img src={mariaLogo} alt="MarIA" width={36} height={36} className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" decoding="async" />
+            <span className="font-heading font-bold text-base sm:text-lg tracking-tight truncate">MarIA OS</span>
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm">
-            <a href="#modulos" className="text-muted-foreground hover:text-foreground transition-colors">Módulos</a>
-            <a href="#tour" className="text-muted-foreground hover:text-foreground transition-colors">Tour</a>
-            <a href="#demo" className="text-muted-foreground hover:text-foreground transition-colors">Demo</a>
-            <a href="#plataforma" className="text-muted-foreground hover:text-foreground transition-colors">Plataforma</a>
-            <a href="#contacto" className="text-muted-foreground hover:text-foreground transition-colors">Contacto</a>
+            {NAV_LINKS.map((l) => (
+              <a key={l.href} href={l.href} className="text-muted-foreground hover:text-foreground transition-colors">{l.label}</a>
+            ))}
           </nav>
           <div className="flex items-center gap-2">
-            <Link to="/auth"><Button variant="ghost" size="sm">Ingresar</Button></Link>
+            <Link to="/auth" className="hidden sm:block"><Button variant="ghost" size="sm">Ingresar</Button></Link>
             <Link to="/auth"><Button size="sm" className="bg-primary hover:bg-primary/90">Empezar</Button></Link>
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden h-9 w-9" aria-label="Abrir menú">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[86vw] max-w-xs p-0 flex flex-col">
+                <div className="flex items-center gap-2 px-5 h-16 border-b">
+                  <img src={mariaLogo} alt="" width={28} height={28} className="h-7 w-7" />
+                  <span className="font-heading font-bold">MarIA OS</span>
+                </div>
+                <nav className="flex flex-col p-3">
+                  {NAV_LINKS.map((l) => (
+                    <a
+                      key={l.href}
+                      href={l.href}
+                      onClick={() => setMenuOpen(false)}
+                      className="rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                      {l.label}
+                    </a>
+                  ))}
+                </nav>
+                <div className="p-3 mt-auto space-y-2 border-t">
+                  <Link to="/auth" onClick={() => setMenuOpen(false)} className="block">
+                    <Button variant="outline" className="w-full">Ingresar</Button>
+                  </Link>
+                  <Link to="/marketplace" onClick={() => setMenuOpen(false)} className="block">
+                    <Button variant="ghost" className="w-full">Ir al Marketplace</Button>
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
@@ -526,6 +569,58 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* El nombre: MarIA OS */}
+      <section id="nombre" className="py-20 sm:py-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">El nombre</p>
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-3">¿Qué significa MarIA OS?</h2>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+              Un nombre con dos capas: una técnica, que describe exactamente lo que hace el producto, y otra humana,
+              que explica por qué existe.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border bg-card p-6">
+              <p className="font-heading text-3xl font-bold text-primary mb-2">MarIA</p>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">M</span>otor de <span className="text-foreground font-medium">A</span>dministración de{" "}
+                <span className="text-foreground font-medium">R</span>ecursos con <span className="text-foreground font-medium">I</span>nteligencia{" "}
+                <span className="text-foreground font-medium">A</span>plicada: la capa que administra ventas, inventario,
+                finanzas y personas de forma unificada.
+              </p>
+            </div>
+            <div className="rounded-2xl border bg-card p-6">
+              <p className="font-heading text-3xl font-bold text-primary mb-2">OS</p>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">Operating System</span> — sistema operativo empresarial.
+                No es un módulo aislado: es la base sobre la que opera todo el negocio, del POS a la contabilidad.
+              </p>
+            </div>
+            <div className="rounded-2xl border bg-card p-6">
+              <p className="font-heading text-3xl font-bold text-primary mb-2">IA</p>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">Inteligencia Artificial</span> integrada en la operación:
+                agentes que analizan riesgos, demanda, caja y decisiones, no un chat añadido al final.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 p-6 flex items-start gap-4">
+            <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Heart className="h-5 w-5 text-primary" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              El nombre también honra a <span className="text-foreground font-medium">María</span>, origen de la
+              inspiración de este proyecto. Esa raíz explica el criterio con el que se construye: herramientas fiables
+              para negocios reales, hechas con cuidado por las personas que los sostienen.
+            </p>
+          </div>
+        </div>
+      </section>
+
 
       {/* Why MarIA — beneficios (reemplaza la sección de capturas duplicadas) */}
       <section id="beneficios" className="py-24 bg-card/40 border-y border-border relative overflow-hidden">
