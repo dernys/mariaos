@@ -88,8 +88,8 @@ const PageLoader = () => (
   </div>
 );
 
-const P = ({ children, m }: { children: React.ReactNode; m?: string }) => (
-  <ProtectedRoute module={m}>
+const P = ({ children, m, sa }: { children: React.ReactNode; m?: string; sa?: boolean }) => (
+  <ProtectedRoute module={m} superadminOnly={sa}>
     <Suspense fallback={<PageLoader />}>{children}</Suspense>
   </ProtectedRoute>
 );
@@ -153,9 +153,9 @@ const App = () => (
               <Route path="/rrhh/operativo" element={<Navigate to="/rrhh" replace />} />
               <Route path="/portal-empleado" element={<P m="portal-empleado"><PortalEmpleado /></P>} />
               <Route path="/delivery" element={<P m="delivery"><Delivery /></P>} />
-              <Route path="/superadmin" element={<P><SuperAdmin /></P>} />
-              <Route path="/auditoria" element={<P><Auditoria /></P>} />
-              <Route path="/eventos" element={<P><EventStore /></P>} />
+              <Route path="/superadmin" element={<P sa><SuperAdmin /></P>} />
+              <Route path="/auditoria" element={<P sa><Auditoria /></P>} />
+              <Route path="/eventos" element={<P sa><EventStore /></P>} />
               <Route path="/command-center" element={<P m="mariaos"><CommandCenter /></P>} />
               <Route path="/agents" element={<P m="agents"><Agents /></P>} />
               <Route path="/agents/:id" element={<P m="agents"><AgentDetalle /></P>} />

@@ -34,6 +34,7 @@ import {
   stockStatus, type Product, type Warehouse, type Store, type LocationStock, type Movement,
 } from "@/modules/inventory";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useUnits } from "@/hooks/useUnits";
 
 const statusConfig = (stock: number, min: number) => {
@@ -315,6 +316,10 @@ const Inventario = () => {
   const [editMovForm, setEditMovForm] = useState({ reason: "", notes: "" });
   const [historyMovId, setHistoryMovId] = useState<string | null>(null);
   const movementTrace = useMovementTrace(historyMovId);
+  const { canCreate, canEdit, canDelete } = usePermissions();
+  const mayCreate = canCreate("inventario");
+  const mayEdit = canEdit("inventario");
+  const mayDelete = canDelete("inventario");
   const trace = (movementTrace.data as any)?.movement ?? null;
   const traceRelated = (movementTrace.data as any)?.related ?? null;
   const traceChanges: any[] = (movementTrace.data as any)?.changes ?? [];
@@ -418,9 +423,11 @@ const Inventario = () => {
                     { key: "cost", label: "Costo" },
                   ]}
                 />
-                <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground h-9">
-                  <Plus className="h-3.5 w-3.5" /> {t("modules.inventory.newProductBtn")}
-                </Button>
+                {mayCreate && (
+                  <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground h-9">
+                    <Plus className="h-3.5 w-3.5" /> {t("modules.inventory.newProductBtn")}
+                  </Button>
+                )}
               </>
             }
           />
@@ -469,15 +476,24 @@ const Inventario = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <button onClick={() => openMovement(item)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Movimiento">
-                            <ArrowRightLeft className="h-3.5 w-3.5" />
-                          </button>
-                          <button onClick={() => openEdit(item)} className="p-1.5 rounded hover:bg-muted transition-colors">
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </button>
-                          <button onClick={() => handleDelete(item)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          {mayCreate && (
+                            <button onClick={() => openMovement(item)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Movimiento">
+                              <ArrowRightLeft className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          {mayEdit && (
+                            <button onClick={() => openEdit(item)} className="p-1.5 rounded hover:bg-muted transition-colors">
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          {mayDelete && (
+                            <button onClick={() => handleDelete(item)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          {!mayCreate && !mayEdit && !mayDelete && (
+                            <span className="text-[10px] text-muted-foreground">Solo lectura</span>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -577,9 +593,11 @@ const Inventario = () => {
                     <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">{m.reason || "—"}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <button onClick={() => openEditMovement(m)} className="p-1.5 rounded hover:bg-muted transition-colors" title="Editar">
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </button>
+                        {mayEdit && (
+                          <button onClick={() => openEditMovement(m)} className="p-1.5 rounded hover:bg-muted transition-colors" title="Editar">
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                         <button onClick={() => setHistoryMovId(m.id)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Historial">
                           <History className="h-3.5 w-3.5" />
                         </button>

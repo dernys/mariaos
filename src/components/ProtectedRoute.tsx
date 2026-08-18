@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useSuperadmin } from "@/hooks/useSuperadmin";
 import { Navigate } from "react-router-dom";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,19 +34,30 @@ function Forbidden() {
 export function ProtectedRoute({
   children,
   module,
+  action = "view",
+  superadminOnly = false,
 }: {
   children: React.ReactNode;
   /** app_modules.slug governing access to this route */
   module?: string;
+  /** Minimum action required on the module (default: view) */
+  action?: "view" | "create" | "edit" | "delete";
+  /** Route reserved for platform superadmins */
+  superadminOnly?: boolean;
 }) {
   const { session, loading } = useAuth();
   const { can, loading: permsLoading } = usePermissions();
+  const { isSuperadmin, loading: saLoading } = useSuperadmin();
 
   if (loading) return <Spinner />;
   if (!session) return <Navigate to="/auth" replace />;
+  if (superadminOnly) {
+    if (saLoading) return <Spinner />;
+    if (!isSuperadmin) return <Forbidden />;
+  }
   if (module) {
     if (permsLoading) return <Spinner />;
-    if (!can(module, "view")) return <Forbidden />;
+    if (!can(module, action)) return <Forbidden />;
   }
 
   return <>{children}</>;
