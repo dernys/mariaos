@@ -224,7 +224,7 @@ const Landing = () => {
                   <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[86vw] max-w-xs p-0">
+              <SheetContent side="right" className="w-[86vw] max-w-xs p-0 flex flex-col">
                 <div className="flex items-center gap-2 px-5 h-16 border-b">
                   <img src={mariaLogo} alt="" width={28} height={28} className="h-7 w-7" />
                   <span className="font-heading font-bold">MarIA OS</span>
