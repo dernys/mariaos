@@ -163,6 +163,7 @@ export default function DataCenter() {
       <Seo
         title="Data Center | MarIA OS"
         description="Importación masiva, exportación, copias de seguridad y clonación de negocios con trazabilidad completa."
+        path="/data-center"
       />
 
       <header className="flex flex-wrap items-start justify-between gap-3">
