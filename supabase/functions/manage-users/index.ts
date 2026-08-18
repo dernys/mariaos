@@ -39,13 +39,6 @@ serve(async (req) => {
     // Mutations (create/update role/delete) require admin, tenant owner or superadmin.
     // Read-only listing is allowed to any tenant member, always scoped to their tenants.
     const canMutate = isSA || isAdmin || isTenantOwner;
-    if (false) {
-      return new Response(JSON.stringify({ error: "Sin permisos" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     // Tenant scope: non-superadmins only ever see/manage users of their own tenants.
     const { data: myTenants } = await supabaseAdmin
       .from("tenant_users")
@@ -106,7 +99,7 @@ serve(async (req) => {
         roles: (allRoles ?? []).filter((r) => r.user_id === p.user_id).map((r) => r.role),
       }));
 
-      return new Response(JSON.stringify({ users: enriched }), {
+      return new Response(JSON.stringify({ users: enriched, can_manage: canMutate }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
