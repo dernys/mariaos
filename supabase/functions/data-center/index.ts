@@ -150,6 +150,46 @@ Deno.serve(async (req) => {
       return json({ entity, rows, count: rows.length, operation: op });
     }
 
+    // ============ IMPORT CONTEXT (for client-side staging suggestions) ============
+    if (action === "import_context") {
+      requireAdmin();
+      const entity = String(body.entity ?? "") as EntityKey;
+      const def = ENTITIES[entity];
+      if (!def) return json({ error: "Entidad no importable" }, 400);
+      const existingRows = await fetchAll(admin, def.table, tenantId);
+      const keep = new Set(["id", ...def.columns]);
+      const existing = existingRows.map((r) => {
+        const o: Record<string, unknown> = {};
+        for (const k of Object.keys(r)) if (keep.has(k)) o[k] = r[k];
+        return o;
+      });
+      const [cats, units] = await Promise.all([
+        admin.from("product_categories").select("name").eq("tenant_id", tenantId),
+        admin.from("units_of_measure").select("code").eq("tenant_id", tenantId),
+      ]);
+      return json({
+        entity,
+        existing,
+        categories: (cats.data ?? []).map((c: any) => c.name).filter(Boolean),
+        units: (units.data ?? []).map((u: any) => u.code).filter(Boolean),
+      });
+    }
+
+    // ============ IMPORT LIFECYCLE AUDIT (review / modify / cancel) ============
+    if (action === "import_event") {
+      requireAdmin();
+      const allowed = ["IMPORT_REVIEWED", "IMPORT_MODIFIED", "IMPORT_CANCELLED"];
+      const evt = String(body.event ?? "");
+      if (!allowed.includes(evt)) return json({ error: "Evento no soportado" }, 400);
+      await logAudit(admin, {
+        tenantId, userId: caller.id, action: evt,
+        entityId: String(body.entity ?? "data_center"),
+        description: String(body.description ?? evt).slice(0, 400),
+        metadata: typeof body.metadata === "object" && body.metadata ? body.metadata : {},
+      });
+      return json({ logged: true });
+    }
+
     // ============================== IMPORT (staging → validate → commit) ==============================
     if (action === "import") {
       requireAdmin();
@@ -163,6 +203,7 @@ Deno.serve(async (req) => {
       const strategy: string = ["create", "update", "skip", "upsert", "fail"].includes(body.strategy) ? body.strategy : "upsert";
 
       const existing = await fetchAll(admin, def.table, tenantId);
+
       const errors: { row: number; field?: string; value?: string; problem: string; fix: string }[] = [];
       const toInsert: Record<string, unknown>[] = [];
       const toUpdate: { id: string; row: Record<string, unknown> }[] = [];
@@ -199,23 +240,39 @@ Deno.serve(async (req) => {
       };
       if (dryRun) return json({ dry_run: true, ...preview });
 
-      // ---- optional restore point before a mass write
+      // ---- restore point before a mass write (aborts the import when it fails)
       let restorePointId: string | null = null;
       if (body.create_restore_point === true) {
-        const snapshot = { entity, rows: existing };
-        const payload = JSON.stringify(snapshot);
-        const checksum = await sha256(payload);
-        const { data: bk } = await admin.from("data_backups").insert({
-          tenant_id: tenantId, label: `Punto de restauración previo a importar ${def.label}`,
-          kind: "pre_operation", scope: "partial", entities: [entity], size_bytes: payload.length,
-          record_count: existing.length, checksum, schema_version: SCHEMA_VERSION, status: "completed", created_by: caller.id,
-        }).select("id").single();
-        if (bk) {
-          const path = `${tenantId}/${bk.id}.json`;
-          await admin.storage.from("tenant-backups").upload(path, new Blob([payload], { type: "application/json" }), { upsert: true });
+        try {
+          const snapshot = {
+            manifest: {
+              format: "maria-package", package_version: "1.0", schema_version: SCHEMA_VERSION,
+              tenant_id: tenantId, created_at: new Date().toISOString(), created_by: caller.id,
+              export_type: "partial", entities: [entity], record_count: existing.length,
+            },
+            data: { [entity]: existing },
+          };
+          const payload = JSON.stringify(snapshot);
+          const checksum = await sha256(payload);
+          const { data: bk, error: bkErr } = await admin.from("data_backups").insert({
+            tenant_id: tenantId, label: `Punto de restauración previo a importar ${def.label}`,
+            kind: "pre_operation", scope: "partial", entities: [entity], size_bytes: payload.length,
+            record_count: existing.length, checksum, schema_version: SCHEMA_VERSION, status: "completed", created_by: caller.id,
+            metadata: { manifest: snapshot.manifest },
+          }).select("id").single();
+          if (bkErr || !bk) throw new Error(bkErr?.message ?? "No se pudo registrar el punto de restauración");
+          const path = `${tenantId}/${bk.id}.maria.json`;
+          const { error: upErr } = await admin.storage.from("tenant-backups")
+            .upload(path, new Blob([payload], { type: "application/json" }), { upsert: true });
+          if (upErr) throw new Error(upErr.message);
           await admin.from("data_backups").update({ storage_path: path }).eq("id", bk.id);
           restorePointId = bk.id;
           await logAudit(admin, { tenantId, userId: caller.id, action: "BACKUP_CREATED", entityId: bk.id, description: "Punto de restauración previo a importación", metadata: { entity } });
+        } catch (e) {
+          if (body.allow_without_restore_point !== true) {
+            await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_FAILED", entityId: entity, description: `Importación abortada: el punto de restauración falló (${(e as Error).message})`, metadata: { entity } });
+            return json({ error: `No se pudo crear el punto de restauración: ${(e as Error).message}. Importación cancelada.` }, 500);
+          }
         }
       }
 
@@ -228,8 +285,22 @@ Deno.serve(async (req) => {
       }).select("*").single();
       await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_STARTED", entityId: op?.id ?? entity, description: `Importación de ${def.label}`, metadata: { entity, rows: incoming.length, strategy } });
 
-      let created = 0, updated = 0;
+      let created = 0, updated = 0, categoriesCreated = 0;
       try {
+        // Explicitly authorised new categories (never created silently).
+        const newCats: string[] = Array.isArray(body.create_categories)
+          ? body.create_categories.map((c: unknown) => String(c).trim()).filter(Boolean).slice(0, 200)
+          : [];
+        if (newCats.length) {
+          const { data: haveCats } = await admin.from("product_categories").select("name").eq("tenant_id", tenantId);
+          const have = new Set((haveCats ?? []).map((c: any) => String(c.name).trim().toLowerCase()));
+          const insert = newCats.filter((c) => !have.has(c.toLowerCase())).map((name) => ({ name, tenant_id: tenantId, is_active: true }));
+          if (insert.length) {
+            const { error } = await admin.from("product_categories").insert(insert);
+            if (error) throw new Error(`product_categories: ${error.message}`);
+            categoriesCreated = insert.length;
+          }
+        }
         for (let i = 0; i < toInsert.length; i += 200) {
           const batch = toInsert.slice(i, i + 200);
           const { error } = await admin.from(def.table).insert(batch);
@@ -247,15 +318,18 @@ Deno.serve(async (req) => {
           error_count: errors.length + 1, errors, finished_at: new Date().toISOString(),
         }).eq("id", op?.id);
         await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_FAILED", entityId: op?.id ?? entity, description: `Importación fallida: ${(e as Error).message}`, metadata: { entity } });
-        return json({ error: (e as Error).message, operation_id: op?.id, created, updated }, 500);
+        return json({ error: (e as Error).message, operation_id: op?.id, created, updated, restore_point_id: restorePointId }, 500);
       }
 
       const { data: done } = await admin.from("data_operations").update({
         status: "completed", created_count: created, updated_count: updated,
         skipped_count: skipped, error_count: errors.length, errors: errors.slice(0, 500),
-        summary: preview, finished_at: new Date().toISOString(),
+        summary: { ...preview, categories_created: categoriesCreated }, finished_at: new Date().toISOString(),
       }).eq("id", op?.id).select("*").single();
+      await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_COMMITTED", entityId: op?.id ?? entity, description: `Importación confirmada: ${created} nuevos, ${updated} actualizados, ${categoriesCreated} categorías nuevas`, metadata: { entity, created, updated, skipped, errors: errors.length, categories_created: categoriesCreated, restore_point_id: restorePointId } });
       await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_COMPLETED", entityId: op?.id ?? entity, description: `Importación completada: ${created} nuevos, ${updated} actualizados`, metadata: { entity, created, updated, skipped, errors: errors.length } });
+      return json({ ...preview, created, updated, categories_created: categoriesCreated, operation: done, restore_point_id: restorePointId });
+
       return json({ ...preview, created, updated, operation: done, restore_point_id: restorePointId });
     }
 
@@ -315,7 +389,7 @@ Deno.serve(async (req) => {
       return json({ backups: data ?? [] });
     }
 
-    if (["backup_verify", "backup_download", "backup_delete", "backup_restore"].includes(action)) {
+    if (["backup_verify", "backup_download", "backup_delete", "backup_restore", "backup_inspect"].includes(action)) {
       requireAdmin();
       const id = String(body.backup_id ?? "");
       // Tenant scope is enforced in the query itself: a backup of another tenant is simply not found.
@@ -348,6 +422,47 @@ Deno.serve(async (req) => {
         await logAudit(admin, { tenantId, userId: caller.id, action: "BACKUP_VERIFIED", entityId: id, description: `Verificación de integridad: ${valid ? "correcta" : "FALLIDA"}`, metadata: { checksum, expected: bk.checksum } });
         return json({ valid, checksum, expected: bk.checksum, record_count: bk.record_count });
       }
+
+      // ---------------- INSPECT (read-only preview of the package) ----------------
+      if (action === "backup_inspect") {
+        let pkgIn: any = null;
+        try { pkgIn = JSON.parse(text); } catch { return json({ error: "Paquete ilegible" }, 422); }
+        const pkgTenantIn = pkgIn?.manifest?.tenant_id ?? null;
+        const dataIn: Record<string, unknown[]> = pkgIn?.data ?? {};
+        const entityKeys = Object.keys(dataIn).filter((k) => BACKUP_ENTITIES.includes(k as EntityKey));
+        const contents = entityKeys.map((k) => ({
+          entity: k, label: ENTITIES[k as EntityKey].label, count: (dataIn[k] ?? []).length,
+        }));
+        const focus = typeof body.entity === "string" && entityKeys.includes(body.entity) ? body.entity : entityKeys[0];
+        const search = String(body.search ?? "").trim().toLowerCase();
+        const page = Math.max(0, Number(body.page ?? 0));
+        const size = Math.min(50, Math.max(5, Number(body.page_size ?? 20)));
+        let sample: Record<string, unknown>[] = focus ? ((dataIn[focus] ?? []) as Record<string, unknown>[]) : [];
+        if (search) {
+          sample = sample.filter((r) => Object.values(r).some((val) => String(val ?? "").toLowerCase().includes(search)));
+        }
+        const matched = sample.length;
+        const cols = focus ? ["id", ...ENTITIES[focus as EntityKey].columns] : [];
+        const rows = sample.slice(page * size, page * size + size).map((r) => {
+          const o: Record<string, unknown> = {};
+          for (const c of cols) o[c] = (r as any)[c] ?? null;
+          return o;
+        });
+        return json({
+          manifest: pkgIn?.manifest ?? null,
+          tenant_matches: !pkgTenantIn || pkgTenantIn === tenantId,
+          checksum_valid: valid,
+          checksum, expected: bk.checksum,
+          schema_compatible: !pkgIn?.manifest?.schema_version || pkgIn.manifest.schema_version === SCHEMA_VERSION,
+          schema_version: pkgIn?.manifest?.schema_version ?? null,
+          current_schema_version: SCHEMA_VERSION,
+          record_count: bk.record_count, size_bytes: bk.size_bytes, label: bk.label,
+          kind: bk.kind, scope: bk.scope, created_at: bk.created_at,
+          contents, focus, columns: cols, rows, matched, page, page_size: size,
+        });
+      }
+
+
 
       // ---------------- RESTORE ----------------
       if (!valid) return json({ error: "La copia está corrupta (checksum no coincide). Restauración abortada." }, 422);
