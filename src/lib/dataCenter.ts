@@ -414,7 +414,7 @@ export async function callDataCenter<T = any>(payload: Record<string, unknown>):
 export function rowsToWorkbook(rows: Record<string, unknown>[], sheet = "Datos") {
   const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{}]);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheet.slice(0, 28));
+  XLSX.utils.book_append_sheet(wb, ws, safeSheetName(sheet));
   return wb;
 }
 
