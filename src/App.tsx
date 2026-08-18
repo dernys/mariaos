@@ -68,6 +68,7 @@ const Operaciones = lazy(() => import("./pages/Operaciones"));
 const Tesoreria = lazy(() => import("./pages/Tesoreria"));
 
 const Developers = lazy(() => import("./pages/Developers"));
+const DataCenter = lazy(() => import("./pages/DataCenter"));
 const PortalEmpleado = lazy(() => import("./pages/PortalEmpleado"));
 const Recetas = lazy(() => import("./pages/Recetas"));
 
@@ -168,6 +169,7 @@ const App = () => (
               <Route path="/operaciones" element={<P m="operaciones"><Operaciones /></P>} />
               <Route path="/tesoreria" element={<P m="tesoreria"><Tesoreria /></P>} />
               <Route path="/developers" element={<P m="configuracion"><Developers /></P>} />
+              <Route path="/data-center" element={<P m="data-center"><DataCenter /></P>} />
 
               <Route path="/sincronizacion" element={<P m="pos"><Sincronizacion /></P>} />
 

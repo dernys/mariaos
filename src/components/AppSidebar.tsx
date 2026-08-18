@@ -39,6 +39,7 @@ import {
   ListTree,
   ClipboardList,
   Utensils,
+  Database,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -202,6 +203,7 @@ const menuGroups: MenuGroup[] = [
 
 const systemItems: MenuItem[] = [
   { titleKey: "roles", url: "/roles", icon: Shield },
+  { titleKey: "dataCenter", url: "/data-center", icon: Database },
   { titleKey: "developers", url: "/developers", icon: Shield },
   { titleKey: "settings", url: "/configuracion", icon: Settings },
 ];
