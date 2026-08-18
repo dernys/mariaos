@@ -570,6 +570,58 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* El nombre: MarIA OS */}
+      <section id="nombre" className="py-20 sm:py-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">El nombre</p>
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-3">¿Qué significa MarIA OS?</h2>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+              Un nombre con dos capas: una técnica, que describe exactamente lo que hace el producto, y otra humana,
+              que explica por qué existe.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border bg-card p-6">
+              <p className="font-heading text-3xl font-bold text-primary mb-2">MarIA</p>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">M</span>otor de <span className="text-foreground font-medium">A</span>dministración de{" "}
+                <span className="text-foreground font-medium">R</span>ecursos con <span className="text-foreground font-medium">I</span>nteligencia{" "}
+                <span className="text-foreground font-medium">A</span>plicada: la capa que administra ventas, inventario,
+                finanzas y personas de forma unificada.
+              </p>
+            </div>
+            <div className="rounded-2xl border bg-card p-6">
+              <p className="font-heading text-3xl font-bold text-primary mb-2">OS</p>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">Operating System</span> — sistema operativo empresarial.
+                No es un módulo aislado: es la base sobre la que opera todo el negocio, del POS a la contabilidad.
+              </p>
+            </div>
+            <div className="rounded-2xl border bg-card p-6">
+              <p className="font-heading text-3xl font-bold text-primary mb-2">IA</p>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">Inteligencia Artificial</span> integrada en la operación:
+                agentes que analizan riesgos, demanda, caja y decisiones, no un chat añadido al final.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 p-6 flex items-start gap-4">
+            <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Heart className="h-5 w-5 text-primary" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              El nombre también honra a <span className="text-foreground font-medium">María</span>, origen de la
+              inspiración de este proyecto. Esa raíz explica el criterio con el que se construye: herramientas fiables
+              para negocios reales, hechas con cuidado por las personas que los sostienen.
+            </p>
+          </div>
+        </div>
+      </section>
+
+
       {/* Why MarIA — beneficios (reemplaza la sección de capturas duplicadas) */}
       <section id="beneficios" className="py-24 bg-card/40 border-y border-border relative overflow-hidden">
         <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
