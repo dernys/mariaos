@@ -36,7 +36,10 @@ serve(async (req) => {
       .eq("user_id", caller.id)
       .eq("is_owner", true);
     const isTenantOwner = (ownerCount ?? 0) > 0;
-    if (!isSA && !isAdmin && !isTenantOwner) {
+    // Mutations (create/update role/delete) require admin, tenant owner or superadmin.
+    // Read-only listing is allowed to any tenant member, always scoped to their tenants.
+    const canMutate = isSA || isAdmin || isTenantOwner;
+    if (false) {
       return new Response(JSON.stringify({ error: "Sin permisos" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -110,6 +113,12 @@ serve(async (req) => {
 
     // CREATE USER
     if (action === "create") {
+      if (!canMutate) {
+        return new Response(JSON.stringify({ error: "Sin permisos" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { email, password, full_name, role } = body;
       if (!email || !password || !full_name) {
         return new Response(JSON.stringify({ error: "Faltan campos requeridos" }), {
@@ -156,6 +165,12 @@ serve(async (req) => {
 
     // UPDATE ROLE
     if (action === "update_role") {
+      if (!canMutate) {
+        return new Response(JSON.stringify({ error: "Sin permisos" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { user_id, role, remove } = body;
       if (!user_id || !role) {
         return new Response(JSON.stringify({ error: "Faltan campos" }), {
@@ -186,6 +201,12 @@ serve(async (req) => {
 
     // DELETE USER
     if (action === "delete") {
+      if (!canMutate) {
+        return new Response(JSON.stringify({ error: "Sin permisos" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { user_id } = body;
       if (!user_id) {
         return new Response(JSON.stringify({ error: "user_id requerido" }), {
