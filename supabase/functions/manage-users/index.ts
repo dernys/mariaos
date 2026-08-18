@@ -36,25 +36,59 @@ serve(async (req) => {
       .eq("user_id", caller.id)
       .eq("is_owner", true);
     const isTenantOwner = (ownerCount ?? 0) > 0;
-    if (!isSA && !isAdmin && !isTenantOwner) {
-      return new Response(JSON.stringify({ error: "Sin permisos" }), {
+    // Mutations (create/update role/delete) require admin, tenant owner or superadmin.
+    // Read-only listing is allowed to any tenant member, always scoped to their tenants.
+    const canMutate = isSA || isAdmin || isTenantOwner;
+    // Tenant scope: non-superadmins only ever see/manage users of their own tenants.
+    const { data: myTenants } = await supabaseAdmin
+      .from("tenant_users")
+      .select("tenant_id")
+      .eq("user_id", caller.id);
+    const tenantIds = (myTenants ?? []).map((t: any) => t.tenant_id);
+
+    const scopedUserIds = async (): Promise<string[]> => {
+      if (tenantIds.length === 0) return [caller.id];
+      const { data } = await supabaseAdmin
+        .from("tenant_users")
+        .select("user_id")
+        .in("tenant_id", tenantIds);
+      const ids = new Set<string>((data ?? []).map((r: any) => r.user_id));
+      ids.add(caller.id);
+      return [...ids];
+    };
+
+    const assertInScope = async (targetId: string) => {
+      if (isSA) return true;
+      const ids = await scopedUserIds();
+      return ids.includes(targetId);
+    };
+
+    const forbidden = () =>
+      new Response(JSON.stringify({ error: "Usuario fuera de tu negocio" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    }
 
     const { action, ...body } = await req.json();
 
     // LIST USERS - get profiles with roles
     if (action === "list") {
-      const { data: profiles } = await supabaseAdmin
+      let profilesQuery = supabaseAdmin
         .from("profiles")
         .select("id, user_id, full_name, avatar_url, created_at")
         .order("created_at", { ascending: false });
 
-      const { data: allRoles } = await supabaseAdmin
-        .from("user_roles")
-        .select("user_id, role");
+      let allowedIds: string[] | null = null;
+      if (!isSA) {
+        allowedIds = await scopedUserIds();
+        profilesQuery = profilesQuery.in("user_id", allowedIds);
+      }
+
+      const { data: profiles } = await profilesQuery;
+
+      let rolesQuery = supabaseAdmin.from("user_roles").select("user_id, role");
+      if (allowedIds) rolesQuery = rolesQuery.in("user_id", allowedIds);
+      const { data: allRoles } = await rolesQuery;
 
       // Get emails from auth
       const { data: { users: authUsers } } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
@@ -65,13 +99,19 @@ serve(async (req) => {
         roles: (allRoles ?? []).filter((r) => r.user_id === p.user_id).map((r) => r.role),
       }));
 
-      return new Response(JSON.stringify({ users: enriched }), {
+      return new Response(JSON.stringify({ users: enriched, can_manage: canMutate }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // CREATE USER
     if (action === "create") {
+      if (!canMutate) {
+        return new Response(JSON.stringify({ error: "Sin permisos" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { email, password, full_name, role } = body;
       if (!email || !password || !full_name) {
         return new Response(JSON.stringify({ error: "Faltan campos requeridos" }), {
@@ -102,6 +142,15 @@ serve(async (req) => {
         });
       }
 
+      // Bind the new user to the caller's business so tenant isolation holds.
+      const targetTenant: string | undefined = body?.tenant_id ?? tenantIds[0];
+      if (newUser.user && targetTenant && (isSA || tenantIds.includes(targetTenant))) {
+        await supabaseAdmin.from("tenant_users").upsert(
+          { tenant_id: targetTenant, user_id: newUser.user.id, is_owner: false },
+          { onConflict: "tenant_id,user_id" }
+        );
+      }
+
       return new Response(JSON.stringify({ success: true, user_id: newUser.user?.id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -109,6 +158,12 @@ serve(async (req) => {
 
     // UPDATE ROLE
     if (action === "update_role") {
+      if (!canMutate) {
+        return new Response(JSON.stringify({ error: "Sin permisos" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { user_id, role, remove } = body;
       if (!user_id || !role) {
         return new Response(JSON.stringify({ error: "Faltan campos" }), {
@@ -116,6 +171,8 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      if (!(await assertInScope(user_id))) return forbidden();
 
       if (remove) {
         await supabaseAdmin
@@ -137,6 +194,12 @@ serve(async (req) => {
 
     // DELETE USER
     if (action === "delete") {
+      if (!canMutate) {
+        return new Response(JSON.stringify({ error: "Sin permisos" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { user_id } = body;
       if (!user_id) {
         return new Response(JSON.stringify({ error: "user_id requerido" }), {
@@ -153,6 +216,9 @@ serve(async (req) => {
         });
       }
 
+      if (!(await assertInScope(user_id))) return forbidden();
+
+      await supabaseAdmin.from("tenant_users").delete().eq("user_id", user_id);
       await supabaseAdmin.from("user_roles").delete().eq("user_id", user_id);
       await supabaseAdmin.from("profiles").delete().eq("user_id", user_id);
       await supabaseAdmin.auth.admin.deleteUser(user_id);
