@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Lightbulb, Search, Undo2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -205,8 +205,8 @@ export function ImportReviewTable({
                 const lvl = rowLevel(r);
                 const open = expanded.has(r.id);
                 return (
-                  <>
-                    <TableRow key={r.id} className={!r.included ? "opacity-50" : lvl === "error" ? "bg-destructive/5" : ""}>
+                  <Fragment key={r.id}>
+                    <TableRow className={!r.included ? "opacity-50" : lvl === "error" ? "bg-destructive/5" : ""}>
                       <TableCell><Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggleSel(r.id)} /></TableCell>
                       <TableCell>
                         {(r.issues.length > 0 || r.suggestions.length > 0) && (
@@ -295,7 +295,7 @@ export function ImportReviewTable({
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 );
               })}
             </TableBody>
