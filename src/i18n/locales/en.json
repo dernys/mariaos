@@ -148,6 +148,7 @@
       "delivery": "Delivery",
       "marketplace": "Marketplace",
       "roles": "Roles & Permissions",
+      "dataCenter": "Data Center",
       "developers": "API & Webhooks",
       "settings": "Settings",
       "tenantManagement": "Tenant Management",
