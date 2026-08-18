@@ -150,6 +150,46 @@ Deno.serve(async (req) => {
       return json({ entity, rows, count: rows.length, operation: op });
     }
 
+    // ============ IMPORT CONTEXT (for client-side staging suggestions) ============
+    if (action === "import_context") {
+      requireAdmin();
+      const entity = String(body.entity ?? "") as EntityKey;
+      const def = ENTITIES[entity];
+      if (!def) return json({ error: "Entidad no importable" }, 400);
+      const existingRows = await fetchAll(admin, def.table, tenantId);
+      const keep = new Set(["id", ...def.columns]);
+      const existing = existingRows.map((r) => {
+        const o: Record<string, unknown> = {};
+        for (const k of Object.keys(r)) if (keep.has(k)) o[k] = r[k];
+        return o;
+      });
+      const [cats, units] = await Promise.all([
+        admin.from("product_categories").select("name").eq("tenant_id", tenantId),
+        admin.from("units_of_measure").select("code").eq("tenant_id", tenantId),
+      ]);
+      return json({
+        entity,
+        existing,
+        categories: (cats.data ?? []).map((c: any) => c.name).filter(Boolean),
+        units: (units.data ?? []).map((u: any) => u.code).filter(Boolean),
+      });
+    }
+
+    // ============ IMPORT LIFECYCLE AUDIT (review / modify / cancel) ============
+    if (action === "import_event") {
+      requireAdmin();
+      const allowed = ["IMPORT_REVIEWED", "IMPORT_MODIFIED", "IMPORT_CANCELLED"];
+      const evt = String(body.event ?? "");
+      if (!allowed.includes(evt)) return json({ error: "Evento no soportado" }, 400);
+      await logAudit(admin, {
+        tenantId, userId: caller.id, action: evt,
+        entityId: String(body.entity ?? "data_center"),
+        description: String(body.description ?? evt).slice(0, 400),
+        metadata: typeof body.metadata === "object" && body.metadata ? body.metadata : {},
+      });
+      return json({ logged: true });
+    }
+
     // ============================== IMPORT (staging → validate → commit) ==============================
     if (action === "import") {
       requireAdmin();
@@ -163,6 +203,7 @@ Deno.serve(async (req) => {
       const strategy: string = ["create", "update", "skip", "upsert", "fail"].includes(body.strategy) ? body.strategy : "upsert";
 
       const existing = await fetchAll(admin, def.table, tenantId);
+
       const errors: { row: number; field?: string; value?: string; problem: string; fix: string }[] = [];
       const toInsert: Record<string, unknown>[] = [];
       const toUpdate: { id: string; row: Record<string, unknown> }[] = [];
