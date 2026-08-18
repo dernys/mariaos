@@ -15,6 +15,17 @@ import heroBg from "@/assets/landing-hero-bg.jpg";
 
 import { Clock4 } from "lucide-react";
 import { Seo } from "@/components/Seo";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, Heart } from "lucide-react";
+
+const NAV_LINKS = [
+  { href: "#modulos", label: "Módulos" },
+  { href: "#tour", label: "Tour" },
+  { href: "#demo", label: "Demo" },
+  { href: "#nombre", label: "El nombre" },
+  { href: "#plataforma", label: "Plataforma" },
+  { href: "#contacto", label: "Contacto" },
+];
 
 const moduleSlides = [
   { img: "/landing/modules/dashboard.jpg", icon: BarChart3, title: "Dashboard Ejecutivo", desc: "Indicadores del negocio en vivo: ventas, ticket promedio, margen bruto, valor de inventario y rendimiento por tienda, con comparativa entre periodos.", features: ["KPIs con deltas", "Rangos y comparativas", "Desglose por tienda"] },
@@ -114,6 +125,7 @@ const fmtMoney = (n: number) =>
   new Intl.NumberFormat("es-CU", { maximumFractionDigits: 0 }).format(n || 0);
 
 const Landing = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [api, setApi] = useState<CarouselApi | null>(null);
