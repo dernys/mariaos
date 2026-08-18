@@ -193,21 +193,52 @@ const Landing = () => {
       />
       {/* Nav */}
       <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-background/70 border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={mariaLogo} alt="MarIA" width={36} height={36} className="h-9 w-9" decoding="async" />
-            <span className="font-heading font-bold text-lg tracking-tight">MarIA OS</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+          <Link to="/" className="flex items-center gap-2 min-w-0">
+            <img src={mariaLogo} alt="MarIA" width={36} height={36} className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" decoding="async" />
+            <span className="font-heading font-bold text-base sm:text-lg tracking-tight truncate">MarIA OS</span>
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm">
-            <a href="#modulos" className="text-muted-foreground hover:text-foreground transition-colors">Módulos</a>
-            <a href="#tour" className="text-muted-foreground hover:text-foreground transition-colors">Tour</a>
-            <a href="#demo" className="text-muted-foreground hover:text-foreground transition-colors">Demo</a>
-            <a href="#plataforma" className="text-muted-foreground hover:text-foreground transition-colors">Plataforma</a>
-            <a href="#contacto" className="text-muted-foreground hover:text-foreground transition-colors">Contacto</a>
+            {NAV_LINKS.map((l) => (
+              <a key={l.href} href={l.href} className="text-muted-foreground hover:text-foreground transition-colors">{l.label}</a>
+            ))}
           </nav>
           <div className="flex items-center gap-2">
-            <Link to="/auth"><Button variant="ghost" size="sm">Ingresar</Button></Link>
+            <Link to="/auth" className="hidden sm:block"><Button variant="ghost" size="sm">Ingresar</Button></Link>
             <Link to="/auth"><Button size="sm" className="bg-primary hover:bg-primary/90">Empezar</Button></Link>
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden h-9 w-9" aria-label="Abrir menú">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[86vw] max-w-xs p-0">
+                <div className="flex items-center gap-2 px-5 h-16 border-b">
+                  <img src={mariaLogo} alt="" width={28} height={28} className="h-7 w-7" />
+                  <span className="font-heading font-bold">MarIA OS</span>
+                </div>
+                <nav className="flex flex-col p-3">
+                  {NAV_LINKS.map((l) => (
+                    <a
+                      key={l.href}
+                      href={l.href}
+                      onClick={() => setMenuOpen(false)}
+                      className="rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                      {l.label}
+                    </a>
+                  ))}
+                </nav>
+                <div className="p-3 mt-auto space-y-2 border-t">
+                  <Link to="/auth" onClick={() => setMenuOpen(false)} className="block">
+                    <Button variant="outline" className="w-full">Ingresar</Button>
+                  </Link>
+                  <Link to="/marketplace" onClick={() => setMenuOpen(false)} className="block">
+                    <Button variant="ghost" className="w-full">Ir al Marketplace</Button>
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>

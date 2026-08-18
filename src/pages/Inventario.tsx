@@ -1,4 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
+import { ProductImportWizard } from "@/components/inventory/ProductImportWizard";
+import { FileSpreadsheet } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -61,6 +63,7 @@ const domainMessage = (e: any, t: (k: string) => string) => {
 
 const Inventario = () => {
   const { t } = useTranslation();
+  const [importOpen, setImportOpen] = useState(false);
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -423,6 +426,11 @@ const Inventario = () => {
                     { key: "cost", label: "Costo" },
                   ]}
                 />
+                {mayCreate && (
+                  <Button size="sm" variant="outline" onClick={() => setImportOpen(true)} className="gap-1 text-xs h-9">
+                    <FileSpreadsheet className="h-3.5 w-3.5" /> Importar Excel
+                  </Button>
+                )}
                 {mayCreate && (
                   <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground h-9">
                     <Plus className="h-3.5 w-3.5" /> {t("modules.inventory.newProductBtn")}
@@ -1067,6 +1075,12 @@ const Inventario = () => {
           )}
         </DialogContent>
       </Dialog>
+      <ProductImportWizard
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        tenantId={tenantId}
+        onImported={() => window.location.reload()}
+      />
     </AppLayout>
 
   );

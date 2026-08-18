@@ -57,14 +57,26 @@ serve(async (req) => {
       return [...ids];
     };
 
+    // A platform superadmin is a global identity: no tenant admin may ever
+    // read-manage, mutate, delete or re-role them.
+    const isTargetSuperadmin = async (targetId: string) => {
+      const { data } = await supabaseAdmin
+        .from("superadmins")
+        .select("user_id")
+        .eq("user_id", targetId)
+        .maybeSingle();
+      return !!data;
+    };
+
     const assertInScope = async (targetId: string) => {
       if (isSA) return true;
+      if (await isTargetSuperadmin(targetId)) return false;
       const ids = await scopedUserIds();
       return ids.includes(targetId);
     };
 
-    const forbidden = () =>
-      new Response(JSON.stringify({ error: "Usuario fuera de tu negocio" }), {
+    const forbidden = (msg = "Usuario fuera de tu negocio") =>
+      new Response(JSON.stringify({ error: msg }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -80,7 +92,10 @@ serve(async (req) => {
 
       let allowedIds: string[] | null = null;
       if (!isSA) {
-        allowedIds = await scopedUserIds();
+        const { data: sas } = await supabaseAdmin.from("superadmins").select("user_id");
+        const saIds = new Set<string>((sas ?? []).map((s: any) => s.user_id));
+        // Platform superadmins are invisible to tenant admins.
+        allowedIds = (await scopedUserIds()).filter((id) => !saIds.has(id) || id === caller.id);
         profilesQuery = profilesQuery.in("user_id", allowedIds);
       }
 

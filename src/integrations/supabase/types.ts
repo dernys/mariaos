@@ -10233,6 +10233,7 @@ export type Database = {
         Args: { _movement_id: string }
         Returns: Json
       }
+      is_protected_superadmin: { Args: { _user_id: string }; Returns: boolean }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
       is_tenant_member:
         | { Args: { _tenant: string }; Returns: boolean }
