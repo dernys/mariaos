@@ -389,7 +389,7 @@ Deno.serve(async (req) => {
       return json({ backups: data ?? [] });
     }
 
-    if (["backup_verify", "backup_download", "backup_delete", "backup_restore"].includes(action)) {
+    if (["backup_verify", "backup_download", "backup_delete", "backup_restore", "backup_inspect"].includes(action)) {
       requireAdmin();
       const id = String(body.backup_id ?? "");
       // Tenant scope is enforced in the query itself: a backup of another tenant is simply not found.
