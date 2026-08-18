@@ -67,6 +67,15 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    // SEC-014 (SSRF): sólo destinos HTTPS públicos.
+    if (!isPublicHttpsUrl(wh.url)) {
+      await admin.from("webhook_deliveries").update({
+        status: "failed", response: "destino no permitido (solo HTTPS público)",
+      }).eq("id", d.id);
+      await admin.from("webhooks").update({ is_active: false }).eq("id", d.webhook_id);
+      continue;
+    }
+
     const body = JSON.stringify({
       event: d.event,
       tenant_id: d.tenant_id,
