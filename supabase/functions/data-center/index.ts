@@ -460,6 +460,8 @@ Deno.serve(async (req) => {
           kind: bk.kind, scope: bk.scope, created_at: bk.created_at,
           contents, focus, columns: cols, rows, matched, page, page_size: size,
         });
+      }
+
 
 
       // ---------------- RESTORE ----------------
