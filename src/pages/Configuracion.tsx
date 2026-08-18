@@ -33,7 +33,7 @@ const Configuracion = () => {
           </p>
         </div>
       )}
-      <Tabs defaultValue="general" className={readOnly ? "space-y-4 pointer-events-none opacity-70 select-none" : "space-y-4"}>
+      <Tabs defaultValue="general" className="space-y-4">
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Building2 className="h-3.5 w-3.5" />General</TabsTrigger>
           <TabsTrigger value="pos" className="gap-1.5 text-xs"><ShoppingCart className="h-3.5 w-3.5" />POS</TabsTrigger>
@@ -49,6 +49,7 @@ const Configuracion = () => {
           <TabsTrigger value="payments" className="gap-1.5 text-xs"><CreditCard className="h-3.5 w-3.5" />Métodos de Pago</TabsTrigger>
         </TabsList>
 
+        <div className={readOnly ? "pointer-events-none opacity-70 select-none" : ""}>
         <TabsContent value="general"><ConfigGeneral /></TabsContent>
         <TabsContent value="pos"><ConfigPOS /></TabsContent>
         <TabsContent value="modules"><ConfigModules /></TabsContent>
@@ -63,6 +64,7 @@ const Configuracion = () => {
 
         <TabsContent value="currencies"><ConfigCurrencies /></TabsContent>
         <TabsContent value="payments"><ConfigPaymentMethods /></TabsContent>
+        </div>
       </Tabs>
     </AppLayout>
   );
