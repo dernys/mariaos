@@ -276,23 +276,69 @@ export function autoMapHeaders(form: EntityForm, headers: string[]): Record<stri
   return map;
 }
 
-export function buildTemplate(form: EntityForm): XLSX.WorkBook {
-  const headers = form.fields.map((fd) => fd.header);
-  const example = form.fields.map((fd) => fd.example ?? "");
+/** Excel forbids : \ / ? * [ ] in sheet names and caps them at 31 chars. */
+export const safeSheetName = (label: string) =>
+  String(label).replace(/[:\\/?*[\]]/g, "-").replace(/\s+/g, " ").trim().slice(0, 31) || "Datos";
+
+export const EXAMPLE_MARKER = "EJEMPLO - BORRA ESTA FILA";
+
+const fieldFormat = (fd: FieldDef) => {
+  if (typeof fd.example === "number") return "Número (punto decimal)";
+  if (/^(si|sí|no)$/i.test(String(fd.example ?? "")) || /\bsi\s*\/\s*no\b/i.test(fd.hint ?? "")) return "si / no";
+  if (/date|valid_from|valid_until/.test(fd.key)) return "Fecha AAAA-MM-DD";
+  if (fd.key.endsWith("_id")) return "UUID existente";
+  return "Texto";
+};
+
+function entitySheet(form: EntityForm) {
+  const headers = [...form.fields.map((fd) => fd.header), "AYUDA"];
+  const example = [...form.fields.map((fd) => fd.example ?? ""), EXAMPLE_MARKER];
   const ws = XLSX.utils.aoa_to_sheet([headers, example]);
   ws["!cols"] = headers.map((h) => ({ wch: Math.max(14, h.length + 4) }));
-  const guide = XLSX.utils.aoa_to_sheet([
-    ["Columna", "Obligatoria", "Descripción"],
-    ...form.fields.map((fd) => [fd.header, fd.required ? "Sí" : "No", fd.hint ?? ""]),
+  return ws;
+}
+
+function instructionsSheet(forms: EntityForm[]) {
+  const aoa: (string | number)[][] = [
+    ["MarIA OS — PLANTILLA DE IMPORTACIÓN", "", "", "", "", ""],
     [],
-    ["No cambies los nombres de las columnas de la primera hoja.", "", ""],
-    ["Los números deben usar punto decimal.", "", ""],
-    ["Las fechas usan formato AAAA-MM-DD.", "", ""],
-  ]);
-  guide["!cols"] = [{ wch: 28 }, { wch: 12 }, { wch: 60 }];
+    ["CÓMO USAR ESTA PLANTILLA", "", "", "", "", ""],
+    ["1. Cada hoja corresponde a una entidad del sistema. Rellena solo las hojas que necesites.", "", "", "", "", ""],
+    ["2. NO cambies los nombres de las columnas de la primera fila.", "", "", "", "", ""],
+    [`3. La segunda fila es un ejemplo y contiene "${EXAMPLE_MARKER}" en la columna AYUDA: se ignora al importar.`, "", "", "", "", ""],
+    ["4. Los números usan punto decimal (12.50) y no llevan símbolos de moneda.", "", "", "", "", ""],
+    ["5. Las fechas se escriben AAAA-MM-DD (2026-01-31).", "", "", "", "", ""],
+    ["6. Los campos si/no aceptan: si, sí, no, true, false, 1, 0.", "", "", "", "", ""],
+    ["7. Los campos obligatorios están marcados como Sí en la tabla inferior.", "", "", "", "", ""],
+    [],
+    ["REFERENCIAS ENTRE HOJAS", "", "", "", "", ""],
+    ["· Productos: el SKU es la clave única. Si el SKU ya existe, el producto se actualiza; si no, se crea.", "", "", "", "", ""],
+    ["· Código de barras: escríbelo como texto para no perder los ceros iniciales.", "", "", "", "", ""],
+    ["· Categorías: escribe el nombre en la hoja de Productos. Si no existe, el asistente te ofrecerá crearla.", "", "", "", "", ""],
+    ["· Inventario: usa el ID del producto y el ID de la tienda o almacén (puedes obtenerlos exportando esas entidades).", "", "", "", "", ""],
+    ["· Precios: 'Precio de venta' es el precio al público; 'Precio de compra' es el costo.", "", "", "", "", ""],
+    ["· Recetas y combos: requieren que los productos existan primero.", "", "", "", "", ""],
+    [],
+    ["CÓMO CORREGIR ERRORES", "", "", "", "", ""],
+    ["Al subir el archivo verás una tabla de revisión: puedes editar cada celda, aceptar sugerencias,", "", "", "", "", ""],
+    ["excluir filas y volver a validar antes de confirmar. Nada se guarda hasta que confirmas.", "", "", "", "", ""],
+    [],
+    ["Hoja", "Columna", "Obligatoria", "Descripción", "Formato", "Ejemplo"],
+  ];
+  forms.forEach((form) => {
+    form.fields.forEach((fd) => {
+      aoa.push([safeSheetName(form.label), fd.header, fd.required ? "Sí" : "No", fd.hint ?? form.description, fieldFormat(fd), String(fd.example ?? "")]);
+    });
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = [{ wch: 26 }, { wch: 28 }, { wch: 12 }, { wch: 58 }, { wch: 22 }, { wch: 18 }];
+  return ws;
+}
+
+export function buildTemplate(form: EntityForm): XLSX.WorkBook {
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Datos");
-  XLSX.utils.book_append_sheet(wb, guide, "Instrucciones");
+  XLSX.utils.book_append_sheet(wb, instructionsSheet([form]), "INSTRUCCIONES");
+  XLSX.utils.book_append_sheet(wb, entitySheet(form), safeSheetName(form.label));
   return wb;
 }
 
@@ -300,14 +346,33 @@ export function downloadEntityTemplate(form: EntityForm) {
   XLSX.writeFile(buildTemplate(form), `plantilla-${form.key}.xlsx`);
 }
 
-export function downloadFullTemplate(forms: EntityForm[]) {
+export function buildFullTemplate(forms: EntityForm[]): XLSX.WorkBook {
   const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, instructionsSheet(forms), "INSTRUCCIONES");
+  const used = new Set<string>(["INSTRUCCIONES"]);
   forms.forEach((form) => {
-    const ws = XLSX.utils.aoa_to_sheet([form.fields.map((fd) => fd.header), form.fields.map((fd) => fd.example ?? "")]);
-    XLSX.utils.book_append_sheet(wb, ws, form.label.slice(0, 28));
+    let name = safeSheetName(form.label);
+    let i = 2;
+    while (used.has(name)) name = `${safeSheetName(form.label).slice(0, 28)}-${i++}`;
+    used.add(name);
+    XLSX.utils.book_append_sheet(wb, entitySheet(form), name);
   });
-  XLSX.writeFile(wb, "plantilla-negocio-completo.xlsx");
+  return wb;
 }
+
+export function downloadFullTemplate(forms: EntityForm[]) {
+  XLSX.writeFile(buildFullTemplate(forms), `plantilla-negocio-completo-${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
+/** Best-effort mapping from a workbook sheet name back to an entity key. */
+export function entityForSheet(forms: EntityForm[], sheet: string): EntityForm | null {
+  const n = normHeader(sheet);
+  if (!n || n === normHeader("INSTRUCCIONES")) return null;
+  return forms.find((f) => normHeader(safeSheetName(f.label)) === n)
+    ?? forms.find((f) => normHeader(f.label) === n || normHeader(f.key) === n)
+    ?? null;
+}
+
 
 /** Parses a workbook buffer verifying it is a genuine Excel/CSV container. */
 export function parseSheet(buffer: ArrayBuffer, sheetName?: string) {
