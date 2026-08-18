@@ -47,7 +47,7 @@ export default function DataCenter() {
   const { toast } = useToast();
   const { tenantId, tenant, businessType, allTenants } = useTenantContext();
   const { can } = usePermissions();
-  const canEdit = can("data_center", "edit");
+  const canEdit = can("data-center", "edit");
 
   const forms = useMemo(() => formsForBusiness(businessType), [businessType]);
   const [dashboard, setDashboard] = useState<any>(null);
