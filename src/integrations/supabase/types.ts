@@ -2338,6 +2338,190 @@ export type Database = {
           },
         ]
       }
+      data_backups: {
+        Row: {
+          app_version: string | null
+          checksum: string | null
+          created_at: string
+          created_by: string | null
+          entities: string[]
+          error: string | null
+          id: string
+          kind: string
+          label: string
+          metadata: Json
+          record_count: number
+          schema_version: string
+          scope: string
+          size_bytes: number
+          status: string
+          storage_path: string | null
+          tenant_id: string
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          checksum?: string | null
+          created_at?: string
+          created_by?: string | null
+          entities?: string[]
+          error?: string | null
+          id?: string
+          kind?: string
+          label: string
+          metadata?: Json
+          record_count?: number
+          schema_version?: string
+          scope?: string
+          size_bytes?: number
+          status?: string
+          storage_path?: string | null
+          tenant_id: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          checksum?: string | null
+          created_at?: string
+          created_by?: string | null
+          entities?: string[]
+          error?: string | null
+          id?: string
+          kind?: string
+          label?: string
+          metadata?: Json
+          record_count?: number
+          schema_version?: string
+          scope?: string
+          size_bytes?: number
+          status?: string
+          storage_path?: string | null
+          tenant_id?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_backups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_backups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_operations: {
+        Row: {
+          code: string | null
+          created_at: string
+          created_by: string | null
+          created_count: number
+          entity: string | null
+          error: string | null
+          error_count: number
+          errors: Json
+          file_checksum: string | null
+          file_name: string | null
+          finished_at: string | null
+          id: string
+          kind: string
+          restore_point_id: string | null
+          reversible: boolean
+          skipped_count: number
+          started_at: string
+          status: string
+          strategy: string | null
+          summary: Json
+          tenant_id: string
+          total_rows: number
+          updated_at: string
+          updated_count: number
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_count?: number
+          entity?: string | null
+          error?: string | null
+          error_count?: number
+          errors?: Json
+          file_checksum?: string | null
+          file_name?: string | null
+          finished_at?: string | null
+          id?: string
+          kind: string
+          restore_point_id?: string | null
+          reversible?: boolean
+          skipped_count?: number
+          started_at?: string
+          status?: string
+          strategy?: string | null
+          summary?: Json
+          tenant_id: string
+          total_rows?: number
+          updated_at?: string
+          updated_count?: number
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_count?: number
+          entity?: string | null
+          error?: string | null
+          error_count?: number
+          errors?: Json
+          file_checksum?: string | null
+          file_name?: string | null
+          finished_at?: string | null
+          id?: string
+          kind?: string
+          restore_point_id?: string | null
+          reversible?: boolean
+          skipped_count?: number
+          started_at?: string
+          status?: string
+          strategy?: string | null
+          summary?: Json
+          tenant_id?: string
+          total_rows?: number
+          updated_at?: string
+          updated_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_operations_restore_point_id_fkey"
+            columns: ["restore_point_id"]
+            isOneToOne: false
+            referencedRelation: "data_backups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_operations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_operations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_assignments: {
         Row: {
           accepted_at: string | null
