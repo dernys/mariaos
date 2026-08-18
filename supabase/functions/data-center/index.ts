@@ -423,6 +423,45 @@ Deno.serve(async (req) => {
         return json({ valid, checksum, expected: bk.checksum, record_count: bk.record_count });
       }
 
+      // ---------------- INSPECT (read-only preview of the package) ----------------
+      if (action === "backup_inspect") {
+        let pkgIn: any = null;
+        try { pkgIn = JSON.parse(text); } catch { return json({ error: "Paquete ilegible" }, 422); }
+        const pkgTenantIn = pkgIn?.manifest?.tenant_id ?? null;
+        const dataIn: Record<string, unknown[]> = pkgIn?.data ?? {};
+        const entityKeys = Object.keys(dataIn).filter((k) => BACKUP_ENTITIES.includes(k as EntityKey));
+        const contents = entityKeys.map((k) => ({
+          entity: k, label: ENTITIES[k as EntityKey].label, count: (dataIn[k] ?? []).length,
+        }));
+        const focus = typeof body.entity === "string" && entityKeys.includes(body.entity) ? body.entity : entityKeys[0];
+        const search = String(body.search ?? "").trim().toLowerCase();
+        const page = Math.max(0, Number(body.page ?? 0));
+        const size = Math.min(50, Math.max(5, Number(body.page_size ?? 20)));
+        let sample: Record<string, unknown>[] = focus ? ((dataIn[focus] ?? []) as Record<string, unknown>[]) : [];
+        if (search) {
+          sample = sample.filter((r) => Object.values(r).some((val) => String(val ?? "").toLowerCase().includes(search)));
+        }
+        const matched = sample.length;
+        const cols = focus ? ["id", ...ENTITIES[focus as EntityKey].columns] : [];
+        const rows = sample.slice(page * size, page * size + size).map((r) => {
+          const o: Record<string, unknown> = {};
+          for (const c of cols) o[c] = (r as any)[c] ?? null;
+          return o;
+        });
+        return json({
+          manifest: pkgIn?.manifest ?? null,
+          tenant_matches: !pkgTenantIn || pkgTenantIn === tenantId,
+          checksum_valid: valid,
+          checksum, expected: bk.checksum,
+          schema_compatible: !pkgIn?.manifest?.schema_version || pkgIn.manifest.schema_version === SCHEMA_VERSION,
+          schema_version: pkgIn?.manifest?.schema_version ?? null,
+          current_schema_version: SCHEMA_VERSION,
+          record_count: bk.record_count, size_bytes: bk.size_bytes, label: bk.label,
+          kind: bk.kind, scope: bk.scope, created_at: bk.created_at,
+          contents, focus, columns: cols, rows, matched, page, page_size: size,
+        });
+
+
       // ---------------- RESTORE ----------------
       if (!valid) return json({ error: "La copia está corrupta (checksum no coincide). Restauración abortada." }, 422);
       let pkg: any;
