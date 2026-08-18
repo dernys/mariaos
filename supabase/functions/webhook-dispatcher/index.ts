@@ -22,6 +22,27 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
+  // SEC-013: el despachador hace peticiones salientes a URLs de tenants (riesgo SSRF/abuso).
+  // Sólo se ejecuta con el secreto de cron o por un superadmin autenticado.
+  const runnerSecret = Deno.env.get("WEBHOOK_DISPATCH_SECRET") ?? "";
+  const provided = req.headers.get("x-dispatch-secret") ?? "";
+  let authorized = !!runnerSecret && provided === runnerSecret;
+  if (!authorized) {
+    const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+    if (token) {
+      const { data: { user } } = await admin.auth.getUser(token);
+      if (user) {
+        const { data: isSA } = await admin.rpc("is_superadmin", { _user_id: user.id });
+        authorized = !!isSA;
+      }
+    }
+  }
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   // Pull up to 25 pending deliveries due now
   const { data: pending } = await admin
     .from("webhook_deliveries")
