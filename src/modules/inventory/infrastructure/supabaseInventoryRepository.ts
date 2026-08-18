@@ -104,6 +104,15 @@ export const inventoryMovementAudit = {
     const { error } = await supabase.from("inventory_movements").update(patch).eq("id", id);
     if (error) throw new Error(error.message);
   },
+  async loadTrace(movementId: string) {
+    const { data, error } = await supabase.rpc("inventory_movement_trace", { _movement_id: movementId });
+    if (error) throw new Error(error.message);
+    return data as {
+      movement: Record<string, any>;
+      changes: Array<Record<string, any>>;
+      related: Record<string, any>;
+    };
+  },
   async loadHistory(movementId: string) {
     const { data, error } = await supabase
       .from("inventory_movement_history")
