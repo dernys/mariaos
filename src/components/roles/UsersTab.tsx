@@ -64,6 +64,7 @@ export function UsersTab() {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState<AppRole>("cajero");
   const [creating, setCreating] = useState(false);
+  const [canManage, setCanManage] = useState(false);
 
   const fetchUsers = async () => {
     const { data, error } = await supabase.functions.invoke("manage-users", {
@@ -73,6 +74,7 @@ export function UsersTab() {
       toast.error("Error cargando usuarios");
     } else {
       setUsers(data.users ?? []);
+      setCanManage(!!data.can_manage);
     }
     setLoading(false);
   };
@@ -146,6 +148,7 @@ export function UsersTab() {
         <p className="text-sm text-muted-foreground">
           {users.length} usuario{users.length !== 1 ? "s" : ""} registrado{users.length !== 1 ? "s" : ""}
         </p>
+        {canManage && (
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2 gradient-brand text-primary-foreground font-heading font-semibold">
@@ -189,6 +192,7 @@ export function UsersTab() {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl shadow-card border overflow-hidden">
@@ -221,14 +225,14 @@ export function UsersTab() {
                           key={r}
                           variant="outline"
                           className={`text-[10px] cursor-pointer ${ROLE_COLORS[r]}`}
-                          onClick={() => handleToggleRole(u.user_id, r, true)}
-                          title="Click para remover"
+                          onClick={() => canManage && handleToggleRole(u.user_id, r, true)}
+                          title={canManage ? "Click para remover" : ROLE_LABELS[r]}
                         >
-                          {ROLE_LABELS[r]} <ShieldMinus className="h-2.5 w-2.5 ml-1" />
+                          {ROLE_LABELS[r]}{canManage && <ShieldMinus className="h-2.5 w-2.5 ml-1" />}
                         </Badge>
                       ))}
                       {/* Add role dropdown */}
-                      {Constants.public.Enums.app_role.filter((r) => !u.roles.includes(r)).length > 0 && (
+                      {canManage && Constants.public.Enums.app_role.filter((r) => !u.roles.includes(r)).length > 0 && (
                         <Select onValueChange={(v) => handleToggleRole(u.user_id, v as AppRole, false)}>
                           <SelectTrigger className="h-6 w-6 p-0 border-dashed border-muted-foreground/30">
                             <ShieldPlus className="h-3 w-3 text-muted-foreground" />
@@ -245,6 +249,7 @@ export function UsersTab() {
                     </div>
                   </td>
                   <td className="p-3 text-center">
+                    {canManage && (
                     <Button
                       variant="ghost"
                       size="icon"
@@ -253,6 +258,7 @@ export function UsersTab() {
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
+                    )}
                   </td>
                 </tr>
               ))}
