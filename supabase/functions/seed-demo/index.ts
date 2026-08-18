@@ -268,6 +268,27 @@ Deno.serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
+    // SEC-010: el sembrador crea usuarios auth, tenants y datos con service_role.
+    // Sólo un superadmin autenticado puede ejecutarlo.
+    const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+    if (!token) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: { user: caller } } = await admin.auth.getUser(token);
+    if (!caller) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: isSA } = await admin.rpc("is_superadmin", { _user_id: caller.id });
+    if (!isSA) {
+      return new Response(JSON.stringify({ error: "forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const result: Record<string, { email: string; password: string; tenant: string }> = {};
 
     for (const cfg of DEMOS) {

@@ -30,6 +30,17 @@ Deno.serve(async (req) => {
 
     const { data: inv, error } = await supabase.from("invoices").select("*").eq("id", invoice_id).single();
     if (error || !inv) return new Response(JSON.stringify({ error: "Factura no encontrada" }), { status: 404, headers: corsHeaders });
+
+    // SEC-011 (IDOR): el llamante debe pertenecer al tenant dueño de la factura.
+    const [{ data: member }, { data: sa }] = await Promise.all([
+      supabase.from("tenant_users").select("id").eq("user_id", user.id).eq("tenant_id", inv.tenant_id).maybeSingle(),
+      supabase.rpc("is_superadmin", { _user_id: user.id }),
+    ]);
+    if (!member && !sa) {
+      return new Response(JSON.stringify({ error: "Sin acceso a esta factura" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (!inv.customer_email) return new Response(JSON.stringify({ error: "Cliente sin email" }), { status: 400, headers: corsHeaders });
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");

@@ -33,6 +33,14 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
+    // SEC-012 (IDOR multi-tenant): el tenant_id del cuerpo debe pertenecer al llamante.
+    const [{ data: member }, { data: sa }] = await Promise.all([
+      admin.from("tenant_users").select("id").eq("user_id", userData.user.id).eq("tenant_id", body.tenant_id).maybeSingle(),
+      admin.rpc("is_superadmin", { _user_id: userData.user.id }),
+    ]);
+    if (!member && !sa) return json({ error: "forbidden" }, 403);
+
+
     // Aggregate sales last 60 days by product
     const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
     const { data: sales } = await admin

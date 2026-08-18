@@ -17,10 +17,47 @@ async function hmacSha256Hex(secret: string, body: string) {
   return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+// SEC-014: bloquea destinos internos (SSRF) y esquemas no cifrados.
+function isPublicHttpsUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:") return false;
+    const h = u.hostname.toLowerCase();
+    if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".internal") || h === "metadata.google.internal") return false;
+    if (/^(127\.|10\.|169\.254\.|192\.168\.|0\.)/.test(h)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
+    if (h === "::1" || h.startsWith("[")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  // SEC-013: el despachador hace peticiones salientes a URLs de tenants (riesgo SSRF/abuso).
+  // Sólo se ejecuta con el secreto de cron o por un superadmin autenticado.
+  const runnerSecret = Deno.env.get("WEBHOOK_DISPATCH_SECRET") ?? "";
+  const provided = req.headers.get("x-dispatch-secret") ?? "";
+  let authorized = !!runnerSecret && provided === runnerSecret;
+  if (!authorized) {
+    const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+    if (token) {
+      const { data: { user } } = await admin.auth.getUser(token);
+      if (user) {
+        const { data: isSA } = await admin.rpc("is_superadmin", { _user_id: user.id });
+        authorized = !!isSA;
+      }
+    }
+  }
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   // Pull up to 25 pending deliveries due now
   const { data: pending } = await admin
@@ -43,6 +80,15 @@ Deno.serve(async (req) => {
       .eq("id", d.webhook_id).maybeSingle();
     if (!wh || !wh.is_active) {
       await admin.from("webhook_deliveries").update({ status: "cancelled" }).eq("id", d.id);
+      continue;
+    }
+
+    // SEC-014 (SSRF): sólo destinos HTTPS públicos.
+    if (!isPublicHttpsUrl(wh.url)) {
+      await admin.from("webhook_deliveries").update({
+        status: "failed", response: "destino no permitido (solo HTTPS público)",
+      }).eq("id", d.id);
+      await admin.from("webhooks").update({ is_active: false }).eq("id", d.webhook_id);
       continue;
     }
 
