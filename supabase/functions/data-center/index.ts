@@ -240,23 +240,39 @@ Deno.serve(async (req) => {
       };
       if (dryRun) return json({ dry_run: true, ...preview });
 
-      // ---- optional restore point before a mass write
+      // ---- restore point before a mass write (aborts the import when it fails)
       let restorePointId: string | null = null;
       if (body.create_restore_point === true) {
-        const snapshot = { entity, rows: existing };
-        const payload = JSON.stringify(snapshot);
-        const checksum = await sha256(payload);
-        const { data: bk } = await admin.from("data_backups").insert({
-          tenant_id: tenantId, label: `Punto de restauración previo a importar ${def.label}`,
-          kind: "pre_operation", scope: "partial", entities: [entity], size_bytes: payload.length,
-          record_count: existing.length, checksum, schema_version: SCHEMA_VERSION, status: "completed", created_by: caller.id,
-        }).select("id").single();
-        if (bk) {
-          const path = `${tenantId}/${bk.id}.json`;
-          await admin.storage.from("tenant-backups").upload(path, new Blob([payload], { type: "application/json" }), { upsert: true });
+        try {
+          const snapshot = {
+            manifest: {
+              format: "maria-package", package_version: "1.0", schema_version: SCHEMA_VERSION,
+              tenant_id: tenantId, created_at: new Date().toISOString(), created_by: caller.id,
+              export_type: "partial", entities: [entity], record_count: existing.length,
+            },
+            data: { [entity]: existing },
+          };
+          const payload = JSON.stringify(snapshot);
+          const checksum = await sha256(payload);
+          const { data: bk, error: bkErr } = await admin.from("data_backups").insert({
+            tenant_id: tenantId, label: `Punto de restauración previo a importar ${def.label}`,
+            kind: "pre_operation", scope: "partial", entities: [entity], size_bytes: payload.length,
+            record_count: existing.length, checksum, schema_version: SCHEMA_VERSION, status: "completed", created_by: caller.id,
+            metadata: { manifest: snapshot.manifest },
+          }).select("id").single();
+          if (bkErr || !bk) throw new Error(bkErr?.message ?? "No se pudo registrar el punto de restauración");
+          const path = `${tenantId}/${bk.id}.maria.json`;
+          const { error: upErr } = await admin.storage.from("tenant-backups")
+            .upload(path, new Blob([payload], { type: "application/json" }), { upsert: true });
+          if (upErr) throw new Error(upErr.message);
           await admin.from("data_backups").update({ storage_path: path }).eq("id", bk.id);
           restorePointId = bk.id;
           await logAudit(admin, { tenantId, userId: caller.id, action: "BACKUP_CREATED", entityId: bk.id, description: "Punto de restauración previo a importación", metadata: { entity } });
+        } catch (e) {
+          if (body.allow_without_restore_point !== true) {
+            await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_FAILED", entityId: entity, description: `Importación abortada: el punto de restauración falló (${(e as Error).message})`, metadata: { entity } });
+            return json({ error: `No se pudo crear el punto de restauración: ${(e as Error).message}. Importación cancelada.` }, 500);
+          }
         }
       }
 
@@ -269,8 +285,22 @@ Deno.serve(async (req) => {
       }).select("*").single();
       await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_STARTED", entityId: op?.id ?? entity, description: `Importación de ${def.label}`, metadata: { entity, rows: incoming.length, strategy } });
 
-      let created = 0, updated = 0;
+      let created = 0, updated = 0, categoriesCreated = 0;
       try {
+        // Explicitly authorised new categories (never created silently).
+        const newCats: string[] = Array.isArray(body.create_categories)
+          ? body.create_categories.map((c: unknown) => String(c).trim()).filter(Boolean).slice(0, 200)
+          : [];
+        if (newCats.length) {
+          const { data: haveCats } = await admin.from("product_categories").select("name").eq("tenant_id", tenantId);
+          const have = new Set((haveCats ?? []).map((c: any) => String(c.name).trim().toLowerCase()));
+          const insert = newCats.filter((c) => !have.has(c.toLowerCase())).map((name) => ({ name, tenant_id: tenantId, is_active: true }));
+          if (insert.length) {
+            const { error } = await admin.from("product_categories").insert(insert);
+            if (error) throw new Error(`product_categories: ${error.message}`);
+            categoriesCreated = insert.length;
+          }
+        }
         for (let i = 0; i < toInsert.length; i += 200) {
           const batch = toInsert.slice(i, i + 200);
           const { error } = await admin.from(def.table).insert(batch);
@@ -288,15 +318,18 @@ Deno.serve(async (req) => {
           error_count: errors.length + 1, errors, finished_at: new Date().toISOString(),
         }).eq("id", op?.id);
         await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_FAILED", entityId: op?.id ?? entity, description: `Importación fallida: ${(e as Error).message}`, metadata: { entity } });
-        return json({ error: (e as Error).message, operation_id: op?.id, created, updated }, 500);
+        return json({ error: (e as Error).message, operation_id: op?.id, created, updated, restore_point_id: restorePointId }, 500);
       }
 
       const { data: done } = await admin.from("data_operations").update({
         status: "completed", created_count: created, updated_count: updated,
         skipped_count: skipped, error_count: errors.length, errors: errors.slice(0, 500),
-        summary: preview, finished_at: new Date().toISOString(),
+        summary: { ...preview, categories_created: categoriesCreated }, finished_at: new Date().toISOString(),
       }).eq("id", op?.id).select("*").single();
+      await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_COMMITTED", entityId: op?.id ?? entity, description: `Importación confirmada: ${created} nuevos, ${updated} actualizados, ${categoriesCreated} categorías nuevas`, metadata: { entity, created, updated, skipped, errors: errors.length, categories_created: categoriesCreated, restore_point_id: restorePointId } });
       await logAudit(admin, { tenantId, userId: caller.id, action: "IMPORT_COMPLETED", entityId: op?.id ?? entity, description: `Importación completada: ${created} nuevos, ${updated} actualizados`, metadata: { entity, created, updated, skipped, errors: errors.length } });
+      return json({ ...preview, created, updated, categories_created: categoriesCreated, operation: done, restore_point_id: restorePointId });
+
       return json({ ...preview, created, updated, operation: done, restore_point_id: restorePointId });
     }
 
