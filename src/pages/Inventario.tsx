@@ -30,7 +30,7 @@ import { MiniStatCard, StatRow } from "@/components/data/MiniStatCard";
 // consume el módulo de Inventario (dominio + casos de uso + repositorio).
 import {
   useInventory, useSaveProduct, useDeleteProduct, useRegisterMovement, useUploadProductImage, useInventoryDeps,
-  useUpdateMovement, useMovementHistory,
+  useUpdateMovement, useMovementTrace,
   stockStatus, type Product, type Warehouse, type Store, type LocationStock, type Movement,
 } from "@/modules/inventory";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -314,7 +314,10 @@ const Inventario = () => {
   const [editMov, setEditMov] = useState<any | null>(null);
   const [editMovForm, setEditMovForm] = useState({ reason: "", notes: "" });
   const [historyMovId, setHistoryMovId] = useState<string | null>(null);
-  const movementHistory = useMovementHistory(historyMovId);
+  const movementTrace = useMovementTrace(historyMovId);
+  const trace = (movementTrace.data as any)?.movement ?? null;
+  const traceRelated = (movementTrace.data as any)?.related ?? null;
+  const traceChanges: any[] = (movementTrace.data as any)?.changes ?? [];
 
   const openEditMovement = (m: any) => {
     setEditMov(m);
@@ -932,30 +935,118 @@ const Inventario = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Historial del movimiento */}
+      {/* Trazabilidad del movimiento */}
       <Dialog open={!!historyMovId} onOpenChange={(o) => !o && setHistoryMovId(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Historial del movimiento</DialogTitle>
-            <DialogDescription>Cambios registrados sobre este movimiento</DialogDescription>
+            <DialogDescription>Trazabilidad completa: origen, documento asociado y cambios auditados</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 max-h-72 overflow-y-auto">
-            {movementHistory.isLoading && <p className="text-xs text-muted-foreground">{t("common.loading")}</p>}
-            {(movementHistory.data ?? []).map((h: any) => (
-              <div key={h.id} className="border rounded-lg p-2.5 text-xs bg-muted/30">
-                <div className="flex justify-between">
-                  <span className="font-semibold">{h.field}</span>
-                  <span className="text-[10px] text-muted-foreground">{format(new Date(h.created_at), "dd/MM/yy HH:mm")}</span>
+          {movementTrace.isLoading && <p className="text-xs text-muted-foreground py-4">{t("common.loading")}</p>}
+          {movementTrace.isError && (
+            <p className="text-xs text-destructive py-4">No se pudo cargar la trazabilidad del movimiento.</p>
+          )}
+          {trace && (
+            <div className="space-y-3 max-h-[70vh] overflow-y-auto">
+              {/* Ficha del movimiento */}
+              <div className="rounded-xl border p-3 space-y-2 bg-muted/20">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-heading font-semibold">{trace.product_name ?? "—"}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {trace.product_sku ? `SKU ${trace.product_sku}` : "Sin SKU"}
+                      {trace.unit ? ` · ${trace.unit}` : ""}
+                    </p>
+                  </div>
+                  <Badge variant={Number(trace.quantity) >= 0 ? "default" : "destructive"} className="text-[10px]">
+                    {movementTypeLabel(trace.movement_type)}
+                  </Badge>
                 </div>
-                <p className="text-muted-foreground mt-1">
-                  <span className="line-through">{h.old_value || "—"}</span> → <span className="text-foreground">{h.new_value || "—"}</span>
-                </p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-lg bg-background border p-2">
+                    <p className="text-[10px] text-muted-foreground">Stock anterior</p>
+                    <p className="text-sm font-heading font-bold">{trace.previous_stock ?? "—"}</p>
+                  </div>
+                  <div className="rounded-lg bg-background border p-2">
+                    <p className="text-[10px] text-muted-foreground">Cantidad</p>
+                    <p className="text-sm font-heading font-bold">{trace.quantity ?? "—"}</p>
+                  </div>
+                  <div className="rounded-lg bg-background border p-2">
+                    <p className="text-[10px] text-muted-foreground">Stock final</p>
+                    <p className="text-sm font-heading font-bold">{trace.new_stock ?? "—"}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                  <p className="text-muted-foreground">Ubicación</p>
+                  <p className="text-right font-medium">{trace.location_name ?? "—"}</p>
+                  <p className="text-muted-foreground">Registrado</p>
+                  <p className="text-right font-medium">
+                    {trace.created_at ? format(new Date(trace.created_at), "dd/MM/yy HH:mm") : "—"}
+                  </p>
+                  <p className="text-muted-foreground">Responsable</p>
+                  <p className="text-right font-medium">{trace.performed_by_name ?? "Sistema"}</p>
+                  <p className="text-muted-foreground">Motivo</p>
+                  <p className="text-right font-medium">{trace.reason || "—"}</p>
+                  {trace.notes && (
+                    <>
+                      <p className="text-muted-foreground">Notas</p>
+                      <p className="text-right font-medium">{trace.notes}</p>
+                    </>
+                  )}
+                  {trace.edited_at && (
+                    <>
+                      <p className="text-muted-foreground">Última edición</p>
+                      <p className="text-right font-medium">
+                        {format(new Date(trace.edited_at), "dd/MM/yy HH:mm")}
+                        {trace.edited_by_name ? ` · ${trace.edited_by_name}` : ""}
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
-            ))}
-            {!movementHistory.isLoading && (movementHistory.data ?? []).length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-6">Sin cambios registrados</p>
-            )}
-          </div>
+
+              {/* Documento origen */}
+              <div className="rounded-xl border p-3 space-y-1">
+                <p className="text-[11px] font-heading font-semibold uppercase tracking-wide text-muted-foreground">
+                  Documento origen
+                </p>
+                {trace.reference_type ? (
+                  <p className="text-xs">
+                    <span className="font-medium">{trace.reference_type}</span>
+                    {traceRelated?.label ? ` · ${traceRelated.label}` : ""}
+                    {traceRelated?.date ? ` · ${format(new Date(traceRelated.date), "dd/MM/yy HH:mm")}` : ""}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Movimiento manual sin documento asociado</p>
+                )}
+              </div>
+
+              {/* Cambios auditados */}
+              <div className="space-y-2">
+                <p className="text-[11px] font-heading font-semibold uppercase tracking-wide text-muted-foreground">
+                  Cambios auditados ({traceChanges.length})
+                </p>
+                {traceChanges.map((h: any) => (
+                  <div key={h.id} className="border rounded-lg p-2.5 text-xs bg-muted/30">
+                    <div className="flex justify-between">
+                      <span className="font-semibold">{h.field}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {format(new Date(h.created_at), "dd/MM/yy HH:mm")} · {h.actor}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground mt-1">
+                      <span className="line-through">{h.old_value || "—"}</span> → <span className="text-foreground">{h.new_value || "—"}</span>
+                    </p>
+                  </div>
+                ))}
+                {traceChanges.length === 0 && (
+                  <p className="text-xs text-muted-foreground py-3 text-center border rounded-lg border-dashed">
+                    El movimiento no ha sido modificado desde su registro
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>

@@ -100,7 +100,16 @@ export function useUpdateMovement() {
     onSuccess: (_d, vars) => {
       invalidate();
       qc.invalidateQueries({ queryKey: ["inventory", "movement-history", vars.id] });
+      qc.invalidateQueries({ queryKey: ["inventory", "movement-trace", vars.id] });
     },
+  });
+}
+
+export function useMovementTrace(movementId: string | null) {
+  return useQuery({
+    queryKey: ["inventory", "movement-trace", movementId],
+    enabled: !!movementId,
+    queryFn: () => inventoryMovementAudit.loadTrace(movementId!),
   });
 }
 

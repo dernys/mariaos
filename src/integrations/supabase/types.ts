@@ -10229,6 +10229,10 @@ export type Database = {
         Args: { p_template: string; p_tenant_id: string }
         Returns: number
       }
+      inventory_movement_trace: {
+        Args: { _movement_id: string }
+        Returns: Json
+      }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
       is_tenant_member:
         | { Args: { _tenant: string }; Returns: boolean }
