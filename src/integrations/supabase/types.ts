@@ -10852,6 +10852,7 @@ export type Database = {
         }
         Returns: string
       }
+      shares_tenant_with: { Args: { _other_user_id: string }; Returns: boolean }
       smoke_test_financial_core: {
         Args: { p_tenant: string }
         Returns: {
