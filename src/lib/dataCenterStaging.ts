@@ -283,7 +283,7 @@ export const rowLevel = (r: StagingRow): "error" | "warning" | "ok" => {
 };
 
 export interface StagingSummary {
-  total: number; included: number; excluded: number;
+  total: number; included: number; excluded: number; valid: number;
   create: number; update: number; unchanged: number;
   errors: number; warnings: number; suggestions: number;
   newCategories: string[];
