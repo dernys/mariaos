@@ -3,6 +3,7 @@ import {
   Archive, CheckCircle2, Clock, Copy, Database, Download, HardDrive, History, Loader2, RefreshCw,
   ShieldCheck, Trash2, Upload, XCircle,
 } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -159,6 +160,7 @@ export default function DataCenter() {
   ];
 
   return (
+    <AppLayout title="Data Center">
     <div className="space-y-6">
       <Seo
         title="Data Center | MarIA OS"
@@ -482,5 +484,6 @@ export default function DataCenter() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </AppLayout>
   );
 }
