@@ -283,7 +283,7 @@ export const rowLevel = (r: StagingRow): "error" | "warning" | "ok" => {
 };
 
 export interface StagingSummary {
-  total: number; included: number; excluded: number;
+  total: number; included: number; excluded: number; valid: number;
   create: number; update: number; unchanged: number;
   errors: number; warnings: number; suggestions: number;
   newCategories: string[];
@@ -301,6 +301,7 @@ export function summarize(rows: StagingRow[], knownCategories: string[]): Stagin
     total: rows.length,
     included: inc.length,
     excluded: rows.length - inc.length,
+    valid: inc.filter((r) => rowLevel(r) === "ok").length,
     create: inc.filter((r) => r.op === "create" && rowLevel(r) !== "error").length,
     update: inc.filter((r) => r.op === "update" && rowLevel(r) !== "error").length,
     unchanged: inc.filter((r) => r.op === "unchanged").length,
