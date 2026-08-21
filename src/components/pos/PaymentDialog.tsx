@@ -298,53 +298,45 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         return;
       }
 
-      // --- ONLINE PATH ---
-      const { data: sale, error: saleErr } = await supabase.from("sales").insert({
-        tenant_id: tu?.tenant_id,
-        client_uuid: clientUuid,
-        customer_id: selectedCustomer || null,
-        employee_id: selectedEmployee || null,
-        shift_id: openShift.id,
-        store_id: openShift.store_id || null,
-        subtotal, tax, total,
-        amount_paid: totalPaidInBase,
-        status,
-      } as any).select("id, ticket_number").single();
+      // --- ONLINE PATH: una sola operación atómica y validada en servidor ---
+      const { data: checkout, error: checkoutErr } = await (supabase.rpc as any)("pos_checkout", {
+        p_tenant_id: tenantId,
+        p_items: cart.map((item) => ({
+          product_id: item.productId || null,
+          product_name: item.name,
+          sku: item.sku || null,
+          price: item.price,
+          qty: item.qty,
+        })),
+        p_payments: paymentRows.map((p) => ({
+          method: p.method,
+          currency: p.currency,
+          amount: p.amount,
+          card_last_four: p.card_last_four,
+          card_holder: p.card_holder,
+          card_description: p.card_description,
+        })),
+        p_party_type: selectedCustomer ? "customer" : selectedEmployee ? "employee" : null,
+        p_party_id: selectedCustomer || selectedEmployee || null,
+        p_allow_credit: isPartial,
+        p_shift_id: openShift.id,
+        p_notes: null,
+        p_kitchen_order_id: null,
+        p_client_uuid: clientUuid,
+        p_idempotency_key: clientUuid,
+      });
 
-      if (saleErr || !sale) throw saleErr || new Error("Error creando venta");
+      if (checkoutErr) throw checkoutErr;
+      const saleId = (checkout as any)?.sale_id as string | undefined;
+      if (!saleId) throw new Error("Error creando venta");
 
-      const items = cart.map((item) => ({
-        sale_id: sale.id,
-        product_id: item.productId || null,
-        product_name: item.name,
-        sku: item.sku || null,
-        price: item.price,
-        qty: item.qty,
-        total: item.price * item.qty,
-      }));
-      const { error: itemsErr } = await supabase.from("sale_items").insert(items);
-      if (itemsErr) throw itemsErr;
+      const { data: sale } = await supabase
+        .from("sales")
+        .select("id, ticket_number")
+        .eq("id", saleId)
+        .maybeSingle();
+      const saleRef = { id: saleId, ticket_number: (sale as any)?.ticket_number ?? null };
 
-      if (paymentRows.length > 0) {
-        const { error: payErr } = await supabase.from("sale_payments").insert(
-          paymentRows.map((p) => ({ ...p, sale_id: sale.id }))
-        );
-        if (payErr) throw payErr;
-      }
-
-      if (cart.some((c) => c.productId)) {
-        // Si no hay tienda asignada al turno, usar el tenant como ubicación virtual.
-        const useStore = !!openShift.store_id;
-        const { error: stockErr } = await supabase.rpc("process_sale_stock", {
-          p_sale_id: sale.id,
-          p_location_type: useStore ? "store" : "tenant",
-          p_location_id: useStore ? openShift.store_id : (tu?.tenant_id as string),
-        });
-        if (stockErr) {
-          console.error("Stock RPC error:", stockErr);
-          toast({ title: t("pos.payment.errors.stockWarn"), description: t("pos.payment.errors.stockWarnDesc", { msg: stockErr.message }) });
-        }
-      }
 
       // Cierra la orden de cocina asociada y libera la mesa.
       if (kitchenOrderId) {
