@@ -142,6 +142,50 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
         </div>
       </div>
 
+      {/* Cobros de deudas del turno (NO son ventas nuevas) */}
+      <div className="bg-card rounded-xl border overflow-hidden">
+        <div className="px-4 py-3 border-b flex items-center justify-between">
+          <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
+            <HandCoins className="h-4 w-4 text-primary" /> Cobros de deudas y pagos ({collections.length})
+          </h3>
+          <span className="text-[11px] text-muted-foreground">Reducen la deuda, no se cuentan como venta</span>
+        </div>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead className="text-xs">Hora</TableHead>
+              <TableHead className="text-xs">Tipo</TableHead>
+              <TableHead className="text-xs">Contraparte</TableHead>
+              <TableHead className="text-xs">Método</TableHead>
+              <TableHead className="text-xs text-right">Monto</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {collections.map((c) => {
+                const isIn = c.direction === "in";
+                return (
+                  <TableRow key={c.id}>
+                    <TableCell className="text-xs">{format(new Date(c.created_at), "dd/MM HH:mm")}</TableCell>
+                    <TableCell>
+                      <Badge variant={isIn ? "default" : "destructive"} className="text-[10px]">
+                        {isIn ? "Cobro" : "Pago"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs">{c.party_name || "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{c.method}</TableCell>
+                    <TableCell className={`text-xs text-right font-bold ${isIn ? "text-success" : "text-destructive"}`}>
+                      {isIn ? "+" : "−"}{money(c.amount_in_base ?? c.amount)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {collections.length === 0 && (
+                <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin cobros de deudas en este turno</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
       {/* Movimientos con trazabilidad contable */}
       <div className="bg-card rounded-xl border overflow-hidden">
         <div className="px-4 py-3 border-b flex items-center justify-between">
