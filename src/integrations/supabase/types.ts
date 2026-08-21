@@ -4877,6 +4877,45 @@ export type Database = {
           },
         ]
       }
+      marketplace_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_replenishment_suggestions"
+            referencedColumns: ["product_id"]
+          },
+        ]
+      }
       module_settings: {
         Row: {
           created_at: string
@@ -10563,6 +10602,15 @@ export type Database = {
       marketplace_effective_price: {
         Args: { _product_id: string }
         Returns: number
+      }
+      marketplace_quote: {
+        Args: {
+          p_coupon_codes?: Json
+          p_delivery_type?: string
+          p_items: Json
+          p_zone_ids?: Json
+        }
+        Returns: Json
       }
       match_bank_transaction: {
         Args: { p_payment_id: string; p_tx_id: string }
