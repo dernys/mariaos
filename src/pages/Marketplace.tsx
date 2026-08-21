@@ -14,6 +14,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useMarketplaceData, buildPromoIndex } from "@/hooks/useMarketplaceData";
+import { useMarketplaceCart } from "@/hooks/useMarketplaceCart";
+import { useMarketplaceFavorites } from "@/hooks/useMarketplaceFavorites";
 import { MarketplaceSearchBar } from "@/components/marketplace/MarketplaceSearchBar";
 import { MarketplaceFilters } from "@/components/marketplace/MarketplaceFilters";
 import { MarketplaceSortSelect } from "@/components/marketplace/MarketplaceSortSelect";
