@@ -126,6 +126,21 @@ const MisPedidos = () => {
     return orders.filter((o) => o.status === filter);
   }, [orders, filter]);
 
+  const cancelOrder = async (orderId: string) => {
+    setCancelling(orderId);
+    const { error } = await supabase.rpc("cancel_my_online_order" as any, {
+      p_order_id: orderId,
+      p_reason: "Cancelado por el comprador",
+    });
+    setCancelling(null);
+    if (error) {
+      toast({ title: "No se pudo cancelar", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Pedido cancelado" });
+    load();
+  };
+
   const submitRating = async () => {
     if (!rating) return;
     const { error } = await supabase.rpc("rate_delivery" as any, {
