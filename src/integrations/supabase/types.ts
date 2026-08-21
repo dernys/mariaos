@@ -10599,6 +10599,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      marketplace_delivery_zones: {
+        Args: { p_tenant_ids: string[] }
+        Returns: {
+          estimated_minutes: number
+          fee: number
+          id: string
+          name: string
+          tenant_id: string
+        }[]
+      }
       marketplace_effective_price: {
         Args: { _product_id: string }
         Returns: number
