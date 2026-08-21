@@ -1,5 +1,6 @@
 // Risk scanner — analiza datos reales del tenant, deduplica alertas abiertas
 // e incorpora análisis de IA (Lovable AI Gateway) con acciones recomendadas.
+import { resolveTenantScope } from "../_shared/tenantScope.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -43,14 +44,11 @@ Deno.serve(async (req) => {
     const useAi: boolean = body?.ai !== false;
     if (!tenant_id) return json({ error: "tenant_id required" }, 400);
 
-    // El usuario debe pertenecer al tenant (o ser superadmin)
-    const [{ data: membership }, { data: superadmin }] = await Promise.all([
-      userClient.from("tenant_users").select("tenant_id").eq("tenant_id", tenant_id).maybeSingle(),
-      userClient.from("superadmins").select("user_id").maybeSingle(),
-    ]);
-    if (!membership && !superadmin) return json({ error: "forbidden" }, 403);
-
     const admin = createClient(supabaseUrl, serviceKey);
+    // El tenant debe pertenecer al usuario o ser el negocio activo del superadmin
+    const scope = await resolveTenantScope(admin, userRes.user.id, tenant_id);
+    if (scope.error) return json({ error: scope.error.message }, scope.error.status);
+
     const alerts: Alert[] = [];
     const now = Date.now();
     const since = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
