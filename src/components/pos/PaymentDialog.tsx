@@ -342,7 +342,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       if (kitchenOrderId) {
         const { error: billErr } = await (supabase.rpc as any)("bill_kitchen_order", {
           p_order_id: kitchenOrderId,
-          p_sale_id: sale.id,
+          p_sale_id: saleRef.id,
         });
         if (billErr) {
           console.error("bill_kitchen_order error:", billErr);
@@ -355,10 +355,10 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       // Imprimir ticket térmico (si está habilitado en ajustes POS)
       if (posSettings.auto_print_receipt) {
         try {
-          const { data: tenantInfo } = await supabase.from("tenants").select("name").eq("id", tu?.tenant_id).maybeSingle();
+          const { data: tenantInfo } = await supabase.from("tenants").select("name").eq("id", tenantId as string).maybeSingle();
           const customerName = customers.find((c) => c.id === selectedCustomer)?.name;
           printThermalReceipt({
-            ticketNumber: (sale as any).ticket_number || sale.id.slice(0, 8),
+            ticketNumber: saleRef.ticket_number || saleRef.id.slice(0, 8),
             tenantName: tenantInfo?.name,
             storeName: openShift.store_name || undefined,
             customer: customerName,
@@ -381,12 +381,12 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       // --- Emit business event for reactive workflows / agents ---
       try {
         await supabase.from("business_events").insert({
-          tenant_id: tu?.tenant_id as string,
+          tenant_id: tenantId as string,
           source: "pos",
           event_type: "sale.completed",
           payload: {
-            sale_id: sale.id,
-            ticket_number: (sale as any).ticket_number ?? null,
+            sale_id: saleRef.id,
+            ticket_number: saleRef.ticket_number,
             total, subtotal, tax,
             amount_paid: totalPaidInBase,
             status,
@@ -402,7 +402,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
 
       toast({
-        title: `Ticket ${(sale as any).ticket_number || ""}`.trim(),
+        title: `Ticket ${saleRef.ticket_number || ""}`.trim(),
         description: status === "partial" ? t("pos.payment.toasts.pendingAmount", { amount: remaining.toFixed(2) }) : t("pos.payment.toasts.fullPaid"),
       });
 
