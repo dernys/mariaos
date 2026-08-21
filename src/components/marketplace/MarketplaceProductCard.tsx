@@ -51,7 +51,7 @@ export const MarketplaceProductCard = ({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.02, 0.3) }}
-      className="bg-card rounded-2xl border border-border overflow-hidden group hover:shadow-lg hover:border-primary/30 transition-all flex flex-col"
+      className="relative bg-card rounded-2xl border border-border overflow-hidden group hover:shadow-lg hover:border-primary/30 transition-all flex flex-col"
     >
       <button
         onClick={goDetail}
@@ -90,7 +90,7 @@ export const MarketplaceProductCard = ({
         </div>
 
         {/* Top-right stock */}
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-11">
           {stockState === "low" && (
             <span className="px-2 py-0.5 rounded-full bg-amber-500/95 text-white text-[10px] font-semibold shadow">
               {t("marketplace.stock.last", { n: product.online_stock })}
