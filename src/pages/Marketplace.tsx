@@ -46,7 +46,9 @@ const Marketplace = () => {
   const data = useMarketplaceData();
   const [filters, setFilters] = useState<MarketplaceFilterState>(defaultFilterState);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { cart, setCart, clear: clearCart } = useMarketplaceCart();
+  const { favorites, toggle: toggleFavorite, isAuthenticated: favAuth } = useMarketplaceFavorites();
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
