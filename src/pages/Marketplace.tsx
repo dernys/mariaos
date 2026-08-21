@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
-  ShoppingCart, Store as StoreIcon, MapPin, SlidersHorizontal, Check, ChevronLeft, ChevronRight,
+  ShoppingCart, Store as StoreIcon, MapPin, SlidersHorizontal, Check, ChevronLeft, ChevronRight, Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useMarketplaceData, buildPromoIndex } from "@/hooks/useMarketplaceData";
+import { useMarketplaceCart } from "@/hooks/useMarketplaceCart";
+import { useMarketplaceFavorites } from "@/hooks/useMarketplaceFavorites";
 import { MarketplaceSearchBar } from "@/components/marketplace/MarketplaceSearchBar";
 import { MarketplaceFilters } from "@/components/marketplace/MarketplaceFilters";
 import { MarketplaceSortSelect } from "@/components/marketplace/MarketplaceSortSelect";
@@ -46,7 +48,9 @@ const Marketplace = () => {
   const data = useMarketplaceData();
   const [filters, setFilters] = useState<MarketplaceFilterState>(defaultFilterState);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { cart, setCart, clear: clearCart } = useMarketplaceCart();
+  const { favorites, toggle: toggleFavorite, isAuthenticated: favAuth } = useMarketplaceFavorites();
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -117,6 +121,7 @@ const Marketplace = () => {
   const filtered = useMemo(() => {
     const q = filters.search.trim().toLowerCase();
     const list = data.products.filter((p) => {
+      if (onlyFavorites && !favorites.has(p.id)) return false;
       if (q && !p.name.toLowerCase().includes(q) && !(p.description || "").toLowerCase().includes(q) && !(p.category || "").toLowerCase().includes(q)) return false;
       if (filters.categories.length && !filters.categories.includes(p.category ?? "")) return false;
       if (filters.tenantIds.length && !filters.tenantIds.includes(p.tenant_id)) return false;
@@ -177,7 +182,7 @@ const Marketplace = () => {
         }
       }
     });
-  }, [data.products, filters, userPos, tenantDistances, promoIndex, storesByTenant]);
+  }, [data.products, filters, userPos, tenantDistances, promoIndex, storesByTenant, onlyFavorites, favorites]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -323,6 +328,18 @@ const Marketplace = () => {
                   {t("marketplace.createAccount")}
                 </Button>
               </>
+            )}
+            {favAuth && (
+              <Button
+                variant={onlyFavorites ? "default" : "outline"}
+                size="icon"
+                className="rounded-full"
+                onClick={() => setOnlyFavorites((v) => !v)}
+                aria-label={t("marketplace.favorites", { defaultValue: "Favoritos" })}
+                title={t("marketplace.favorites", { defaultValue: "Favoritos" })}
+              >
+                <Heart className={`h-4 w-4 ${onlyFavorites ? "fill-current" : ""}`} />
+              </Button>
             )}
             <Button
               variant="outline" size="icon"
@@ -485,6 +502,14 @@ const Marketplace = () => {
                       qtyInCart={inCart?.qty ?? 0}
                       isNew={!!isNew}
                       index={i}
+                      isFavorite={favorites.has(p.id)}
+                      onToggleFavorite={() => {
+                        if (!favAuth) {
+                          navigate("/marketplace/acceso");
+                          return;
+                        }
+                        toggleFavorite(p.id, p.tenant_id);
+                      }}
                       onAdd={() => addToCart(p)}
                       onRemove={() => updateQty(p.id, -1)}
                     />

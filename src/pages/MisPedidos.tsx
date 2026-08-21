@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ArrowLeft, Package, Truck, Building2, Star, MapPin, Plus, Trash2, Bike, Store as StoreIcon,
+  XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatPrice } from "@/components/marketplace/types";
@@ -52,6 +53,7 @@ const MisPedidos = () => {
   const [assignments, setAssignments] = useState<Record<string, any>>({});
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [filter, setFilter] = useState("all");
+  const [cancelling, setCancelling] = useState<string | null>(null);
   const [rating, setRating] = useState<{ order: Order; role: "rider" | "business" } | null>(null);
   const [stars, setStars] = useState(5);
   const [comment, setComment] = useState("");
@@ -123,6 +125,21 @@ const MisPedidos = () => {
     if (filter === "delivery") return orders.filter((o) => o.delivery_type === "delivery");
     return orders.filter((o) => o.status === filter);
   }, [orders, filter]);
+
+  const cancelOrder = async (orderId: string) => {
+    setCancelling(orderId);
+    const { error } = await supabase.rpc("cancel_my_online_order" as any, {
+      p_order_id: orderId,
+      p_reason: "Cancelado por el comprador",
+    });
+    setCancelling(null);
+    if (error) {
+      toast({ title: "No se pudo cancelar", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Pedido cancelado" });
+    load();
+  };
 
   const submitRating = async () => {
     if (!rating) return;
@@ -286,6 +303,18 @@ const MisPedidos = () => {
                       </div>
                       <p className="font-bold text-primary">{formatPrice(Number(o.total))}</p>
                     </div>
+                    {["pending", "confirmed"].includes(o.status) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full text-xs text-destructive"
+                        disabled={cancelling === o.id}
+                        onClick={() => cancelOrder(o.id)}
+                      >
+                        <XCircle className="h-3 w-3 mr-1" />
+                        {cancelling === o.id ? "Cancelando..." : "Cancelar pedido"}
+                      </Button>
+                    )}
                     {o.status === "delivered" && (
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => setRating({ order: o, role: "business" })}>

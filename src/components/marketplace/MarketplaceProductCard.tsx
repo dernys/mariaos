@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, Minus, MapPin, Truck, Tag, Clock } from "lucide-react";
+import { Plus, Minus, MapPin, Truck, Tag, Clock, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -15,6 +15,8 @@ interface Props {
   qtyInCart: number;
   isNew?: boolean;
   index?: number;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
   onAdd: () => void;
   onRemove: () => void;
 }
@@ -27,6 +29,8 @@ export const MarketplaceProductCard = ({
   qtyInCart,
   isNew,
   index = 0,
+  isFavorite = false,
+  onToggleFavorite,
   onAdd,
   onRemove,
 }: Props) => {
@@ -47,7 +51,7 @@ export const MarketplaceProductCard = ({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.02, 0.3) }}
-      className="bg-card rounded-2xl border border-border overflow-hidden group hover:shadow-lg hover:border-primary/30 transition-all flex flex-col"
+      className="relative bg-card rounded-2xl border border-border overflow-hidden group hover:shadow-lg hover:border-primary/30 transition-all flex flex-col"
     >
       <button
         onClick={goDetail}
@@ -86,7 +90,7 @@ export const MarketplaceProductCard = ({
         </div>
 
         {/* Top-right stock */}
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-11">
           {stockState === "low" && (
             <span className="px-2 py-0.5 rounded-full bg-amber-500/95 text-white text-[10px] font-semibold shadow">
               {t("marketplace.stock.last", { n: product.online_stock })}
@@ -99,6 +103,16 @@ export const MarketplaceProductCard = ({
           )}
         </div>
       </button>
+
+      {onToggleFavorite && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          aria-label={isFavorite ? t("marketplace.removeFavorite", { defaultValue: "Quitar de favoritos" }) : t("marketplace.addFavorite", { defaultValue: "Guardar en favoritos" })}
+          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-card/90 backdrop-blur border border-border flex items-center justify-center hover:bg-card transition-colors"
+        >
+          <Heart className={`h-4 w-4 ${isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+        </button>
+      )}
 
       <div className="p-3 space-y-1.5 flex-1 flex flex-col">
         {tenant && (
