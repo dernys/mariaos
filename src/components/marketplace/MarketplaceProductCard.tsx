@@ -29,6 +29,8 @@ export const MarketplaceProductCard = ({
   qtyInCart,
   isNew,
   index = 0,
+  isFavorite = false,
+  onToggleFavorite,
   onAdd,
   onRemove,
 }: Props) => {
