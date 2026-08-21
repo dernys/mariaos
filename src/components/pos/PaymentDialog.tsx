@@ -200,7 +200,8 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t("pos.payment.errors.notAuthenticated"));
 
-      const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single();
+      const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).maybeSingle();
+      const tenantId = ctxTenantId || (tu?.tenant_id as string | undefined);
 
       // Turno abierto seleccionado en el POS (puede ser de otra tienda del negocio)
       const openShift = activeShift;
@@ -240,7 +241,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       }
 
       const status = isPartial && remaining > 0.01 ? "partial" : "paid";
-      const clientUuid = crypto.randomUUID();
+      const clientUuid = intentRef.current;
       const paymentRows = payments
         .filter((p) => parseFloat(p.amount) > 0)
         .map((p) => ({
