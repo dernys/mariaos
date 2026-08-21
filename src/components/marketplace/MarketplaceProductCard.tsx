@@ -104,6 +104,16 @@ export const MarketplaceProductCard = ({
         </div>
       </button>
 
+      {onToggleFavorite && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          aria-label={isFavorite ? t("marketplace.removeFavorite", { defaultValue: "Quitar de favoritos" }) : t("marketplace.addFavorite", { defaultValue: "Guardar en favoritos" })}
+          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-card/90 backdrop-blur border border-border flex items-center justify-center hover:bg-card transition-colors"
+        >
+          <Heart className={`h-4 w-4 ${isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+        </button>
+      )}
+
       <div className="p-3 space-y-1.5 flex-1 flex flex-col">
         {tenant && (
           <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide truncate flex items-center gap-1">
