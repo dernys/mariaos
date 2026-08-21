@@ -329,6 +329,18 @@ const Marketplace = () => {
                 </Button>
               </>
             )}
+            {favAuth && (
+              <Button
+                variant={onlyFavorites ? "default" : "outline"}
+                size="icon"
+                className="rounded-full"
+                onClick={() => setOnlyFavorites((v) => !v)}
+                aria-label={t("marketplace.favorites", { defaultValue: "Favoritos" })}
+                title={t("marketplace.favorites", { defaultValue: "Favoritos" })}
+              >
+                <Heart className={`h-4 w-4 ${onlyFavorites ? "fill-current" : ""}`} />
+              </Button>
+            )}
             <Button
               variant="outline" size="icon"
               className="relative rounded-full"
