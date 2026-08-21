@@ -1,6 +1,7 @@
 // MarIA OS - Agent runner
 // Receives an agent_id, gathers tenant context relevant to the agent type,
 // asks Lovable AI Gateway for structured analysis, persists decisions + actions.
+import { resolveTenantScope } from "../_shared/tenantScope.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 
@@ -144,13 +145,10 @@ Deno.serve(async (req) => {
     const { data: agent, error: agentErr } = await admin.from("ai_agents").select("*").eq("id", agent_id).single();
     if (agentErr || !agent) throw new Error("agent not found");
 
-    // --- Authorization: ensure user belongs to the agent's tenant (or is superadmin) ---
-    const [{ data: membership }, { data: superadmin }] = await Promise.all([
-      admin.from("tenant_users").select("tenant_id").eq("tenant_id", agent.tenant_id).eq("user_id", userRes.user.id).maybeSingle(),
-      admin.from("superadmins").select("user_id").eq("user_id", userRes.user.id).maybeSingle(),
-    ]);
-    if (!membership && !superadmin) {
-      return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // --- Authorization: el tenant del agente debe estar en el alcance del llamante ---
+    const scope = await resolveTenantScope(admin, userRes.user.id, agent.tenant_id);
+    if (scope.error) {
+      return new Response(JSON.stringify({ error: scope.error.message }), { status: scope.error.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
 

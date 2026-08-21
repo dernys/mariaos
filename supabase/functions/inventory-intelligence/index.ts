@@ -1,3 +1,4 @@
+import { resolveTenantScope } from "../_shared/tenantScope.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 
 const corsHeaders = {
@@ -33,12 +34,10 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // SEC-012 (IDOR multi-tenant): el tenant_id del cuerpo debe pertenecer al llamante.
-    const [{ data: member }, { data: sa }] = await Promise.all([
-      admin.from("tenant_users").select("id").eq("user_id", userData.user.id).eq("tenant_id", body.tenant_id).maybeSingle(),
-      admin.rpc("is_superadmin", { _user_id: userData.user.id }),
-    ]);
-    if (!member && !sa) return json({ error: "forbidden" }, 403);
+    // Aislamiento multi-tenant: el tenant del cuerpo debe pertenecer al llamante
+    // o ser el negocio activo del superadmin (contexto server-side).
+    const scope = await resolveTenantScope(admin, userData.user.id, body.tenant_id);
+    if (scope.error) return json({ error: scope.error.message }, scope.error.status);
 
 
     // Aggregate sales last 60 days by product

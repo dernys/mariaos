@@ -51,7 +51,14 @@ Deno.serve(async (req) => {
         const userId = userRes.user.id;
         const { data: sa } = await admin.from("superadmins").select("user_id").eq("user_id", userId).maybeSingle();
         if (sa) {
-          mode = "global";
+          // El superadmin opera SOLO sobre su negocio activo (o global si lo activó)
+          const { data: ctx } = await admin.from("superadmin_context").select("tenant_id, mode").eq("user_id", userId).maybeSingle();
+          if (ctx?.mode === "global") {
+            mode = "global";
+          } else if (ctx?.tenant_id) {
+            allowedTenantIds = [ctx.tenant_id];
+            mode = "user";
+          }
         } else {
           const { data: memberships } = await admin
             .from("tenant_users")
