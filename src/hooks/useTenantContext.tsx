@@ -136,10 +136,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       // Hard reset of every cached query/store of the previous tenant
       queryClient.cancelQueries();
       queryClient.clear();
+      // Purge non tenant-scoped local state that could leak across businesses
+      ["pos_bar_cart_last", "maria_marketplace_cart"].forEach((k) => localStorage.removeItem(k));
       setTenantId(t.id);
       setTenant(t);
       setModeState("tenant");
       setContextVersion((v) => v + 1);
+      // Full remount guarantees no in-memory state survives the switch
+      window.location.reload();
     },
     [allTenants, queryClient],
   );
