@@ -182,7 +182,7 @@ const Marketplace = () => {
         }
       }
     });
-  }, [data.products, filters, userPos, tenantDistances, promoIndex, storesByTenant]);
+  }, [data.products, filters, userPos, tenantDistances, promoIndex, storesByTenant, onlyFavorites, favorites]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -490,6 +490,14 @@ const Marketplace = () => {
                       qtyInCart={inCart?.qty ?? 0}
                       isNew={!!isNew}
                       index={i}
+                      isFavorite={favorites.has(p.id)}
+                      onToggleFavorite={() => {
+                        if (!favAuth) {
+                          navigate("/marketplace/acceso");
+                          return;
+                        }
+                        toggleFavorite(p.id, p.tenant_id);
+                      }}
                       onAdd={() => addToCart(p)}
                       onRemove={() => updateQty(p.id, -1)}
                     />
