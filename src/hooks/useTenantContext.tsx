@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { setObservabilityContext } from "@/lib/observability";
 import { useAuth } from "./useAuth";
-
 
 interface TenantInfo {
   id: string;
@@ -15,22 +15,35 @@ interface TenantInfo {
   default_locale: string | null;
 }
 
+export type TenantMode = "tenant" | "global";
+
 interface TenantContextType {
   tenantId: string | null;
   tenant: TenantInfo | null;
   allTenants: TenantInfo[];
-  setActiveTenantId: (id: string) => void;
+  setActiveTenantId: (id: string) => Promise<void>;
+  mode: TenantMode;
+  setMode: (mode: TenantMode) => Promise<void>;
+  isSuperadmin: boolean;
+  /** Increments on every tenant switch: use to reset local state/stores */
+  contextVersion: number;
   loading: boolean;
   businessType: string;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
+const TENANT_COLS = "id, name, slug, business_type, email, phone, address";
+
 export function TenantProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenant, setTenant] = useState<TenantInfo | null>(null);
   const [allTenants, setAllTenants] = useState<TenantInfo[]>([]);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [mode, setModeState] = useState<TenantMode>("tenant");
+  const [contextVersion, setContextVersion] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,35 +51,63 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       setTenantId(null);
       setTenant(null);
       setAllTenants([]);
+      setIsSuperadmin(false);
       setLoading(false);
       return;
     }
 
     const load = async () => {
-      // Check if superadmin
-      const { data: sa } = await supabase.from("superadmins").select("id").eq("user_id", user.id).maybeSingle();
+      const { data: sa } = await supabase
+        .from("superadmins")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
       if (sa) {
-        // Superadmin: load all tenants
-        const { data: tenants } = await supabase.from("tenants").select("id, name, slug, business_type, email, phone, address").eq("is_active", true).order("name");
+        setIsSuperadmin(true);
+        const { data: tenants } = await supabase
+          .from("tenants")
+          .select(TENANT_COLS)
+          .eq("is_active", true)
+          .order("name");
         const list = (tenants ?? []) as TenantInfo[];
         setAllTenants(list);
 
-        // Restore last selected or pick first
+        // Server-side context is the source of truth (never localStorage alone)
+        const { data: ctx } = await supabase.rpc("get_superadmin_context");
+        const serverCtx = Array.isArray(ctx) ? ctx[0] : ctx;
+        const serverMode = (serverCtx?.mode as TenantMode) ?? "tenant";
+        setModeState(serverMode);
+
         const stored = localStorage.getItem("sa_active_tenant");
-        const match = list.find((t) => t.id === stored);
-        if (match) {
-          setTenantId(match.id);
-          setTenant(match);
-        } else if (list.length > 0) {
-          setTenantId(list[0].id);
-          setTenant(list[0]);
+        const target =
+          list.find((t) => t.id === serverCtx?.tenant_id) ??
+          list.find((t) => t.id === stored) ??
+          list[0];
+
+        if (target) {
+          // Sync the secure server-side context before any data query runs
+          const { error } = await supabase.rpc("set_active_tenant", { _tenant_id: target.id });
+          if (!error) {
+            setTenantId(target.id);
+            setTenant(target);
+            localStorage.setItem("sa_active_tenant", target.id);
+          }
         }
       } else {
-        // Regular user: get their tenant
-        const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single();
+        setIsSuperadmin(false);
+        const { data: tu } = await supabase
+          .from("tenant_users")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle();
         if (tu) {
-          const { data: t } = await supabase.from("tenants").select("id, name, slug, business_type, email, phone, address").eq("id", tu.tenant_id).single();
+          const { data: t } = await supabase
+            .from("tenants")
+            .select(TENANT_COLS)
+            .eq("id", tu.tenant_id)
+            .maybeSingle();
           if (t) {
             const info = t as TenantInfo;
             setTenantId(info.id);
@@ -81,23 +122,55 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     load();
   }, [user]);
 
-  // QW2/QW3 — todo log y error posterior lleva tenant y usuario.
   useEffect(() => {
     setObservabilityContext({ tenant_id: tenantId, user_id: user?.id ?? null });
   }, [tenantId, user?.id]);
 
-  const setActiveTenantId = (id: string) => {
-    const t = allTenants.find((t) => t.id === id);
-    if (t) {
+  const setActiveTenantId = useCallback(
+    async (id: string) => {
+      const t = allTenants.find((x) => x.id === id);
+      if (!t) return;
+      const { error } = await supabase.rpc("set_active_tenant", { _tenant_id: id });
+      if (error) return;
+      localStorage.setItem("sa_active_tenant", id);
+      // Hard reset of every cached query/store of the previous tenant
+      queryClient.cancelQueries();
+      queryClient.clear();
       setTenantId(t.id);
       setTenant(t);
-      localStorage.setItem("sa_active_tenant", id);
-    }
-  };
+      setModeState("tenant");
+      setContextVersion((v) => v + 1);
+    },
+    [allTenants, queryClient],
+  );
 
+  const setMode = useCallback(
+    async (next: TenantMode) => {
+      const { error } = await supabase.rpc("set_superadmin_mode", { _mode: next });
+      if (error) return;
+      queryClient.cancelQueries();
+      queryClient.clear();
+      setModeState(next);
+      setContextVersion((v) => v + 1);
+    },
+    [queryClient],
+  );
 
   return (
-    <TenantContext.Provider value={{ tenantId, tenant, allTenants, setActiveTenantId, loading, businessType: tenant?.business_type ?? "empresa" }}>
+    <TenantContext.Provider
+      value={{
+        tenantId,
+        tenant,
+        allTenants,
+        setActiveTenantId,
+        mode,
+        setMode,
+        isSuperadmin,
+        contextVersion,
+        loading,
+        businessType: tenant?.business_type ?? "empresa",
+      }}
+    >
       {children}
     </TenantContext.Provider>
   );
