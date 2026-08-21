@@ -286,6 +286,18 @@ const MisPedidos = () => {
                       </div>
                       <p className="font-bold text-primary">{formatPrice(Number(o.total))}</p>
                     </div>
+                    {["pending", "confirmed"].includes(o.status) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full text-xs text-destructive"
+                        disabled={cancelling === o.id}
+                        onClick={() => cancelOrder(o.id)}
+                      >
+                        <XCircle className="h-3 w-3 mr-1" />
+                        {cancelling === o.id ? "Cancelando..." : "Cancelar pedido"}
+                      </Button>
+                    )}
                     {o.status === "delivered" && (
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => setRating({ order: o, role: "business" })}>
