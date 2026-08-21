@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
-  ShoppingCart, Store as StoreIcon, MapPin, SlidersHorizontal, Check, ChevronLeft, ChevronRight,
+  ShoppingCart, Store as StoreIcon, MapPin, SlidersHorizontal, Check, ChevronLeft, ChevronRight, Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
