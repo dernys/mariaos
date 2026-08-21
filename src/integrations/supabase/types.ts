@@ -5074,6 +5074,7 @@ export type Database = {
           cancel_reason: string | null
           cancelled_at: string | null
           confirmed_at: string | null
+          coupon_code: string | null
           created_at: string
           customer_email: string | null
           customer_id: string | null
@@ -5086,8 +5087,11 @@ export type Database = {
           delivery_lat: number | null
           delivery_lng: number | null
           delivery_type: string
+          discount: number
           id: string
+          idempotency_key: string | null
           notes: string | null
+          order_group_id: string | null
           payment_method: string
           ready_at: string | null
           sale_id: string | null
@@ -5105,6 +5109,7 @@ export type Database = {
           cancel_reason?: string | null
           cancelled_at?: string | null
           confirmed_at?: string | null
+          coupon_code?: string | null
           created_at?: string
           customer_email?: string | null
           customer_id?: string | null
@@ -5117,8 +5122,11 @@ export type Database = {
           delivery_lat?: number | null
           delivery_lng?: number | null
           delivery_type?: string
+          discount?: number
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
+          order_group_id?: string | null
           payment_method?: string
           ready_at?: string | null
           sale_id?: string | null
@@ -5136,6 +5144,7 @@ export type Database = {
           cancel_reason?: string | null
           cancelled_at?: string | null
           confirmed_at?: string | null
+          coupon_code?: string | null
           created_at?: string
           customer_email?: string | null
           customer_id?: string | null
@@ -5148,8 +5157,11 @@ export type Database = {
           delivery_lat?: number | null
           delivery_lng?: number | null
           delivery_type?: string
+          discount?: number
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
+          order_group_id?: string | null
           payment_method?: string
           ready_at?: string | null
           sale_id?: string | null
@@ -10073,6 +10085,10 @@ export type Database = {
         Args: { p_order_id: string; p_reason?: string }
         Returns: undefined
       }
+      cancel_my_online_order: {
+        Args: { p_order_id: string; p_reason?: string }
+        Returns: undefined
+      }
       cancel_payroll_run: {
         Args: { p_payroll_id: string; p_reason?: string }
         Returns: string
@@ -10544,6 +10560,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      marketplace_effective_price: {
+        Args: { _product_id: string }
+        Returns: number
+      }
       match_bank_transaction: {
         Args: { p_payment_id: string; p_tx_id: string }
         Returns: undefined
@@ -10705,6 +10725,24 @@ export type Database = {
           p_zone_id?: string
         }
         Returns: string
+      }
+      place_order_group: {
+        Args: {
+          p_coupon_codes?: Json
+          p_customer_email?: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_delivery_address?: string
+          p_delivery_instructions?: string
+          p_delivery_lat?: number
+          p_delivery_lng?: number
+          p_delivery_type?: string
+          p_idempotency_key: string
+          p_items: Json
+          p_notes?: string
+          p_zone_ids?: Json
+        }
+        Returns: Json
       }
       post_financial_event: { Args: { p_event_id: string }; Returns: string }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
