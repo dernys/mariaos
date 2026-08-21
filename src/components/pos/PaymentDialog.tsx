@@ -258,7 +258,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       // --- OFFLINE PATH: si no hay red, encola y termina ---
       const offlinePayload = {
         client_uuid: clientUuid,
-        tenant_id: tu?.tenant_id,
+        tenant_id: tenantId,
         customer_id: selectedCustomer || null,
         employee_id: selectedEmployee || null,
         shift_id: openShift.id,
@@ -286,8 +286,8 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         })),
       };
 
-      if (!navigator.onLine && tu?.tenant_id) {
-        await enqueueSale({ client_uuid: clientUuid, tenant_id: tu.tenant_id, payload: offlinePayload });
+      if (!navigator.onLine && tenantId) {
+        await enqueueSale({ client_uuid: clientUuid, tenant_id: tenantId, payload: offlinePayload });
         toast({
           title: t("pos.payment.toasts.savedOffline"),
           description: t("pos.payment.toasts.savedOfflineDesc"),
