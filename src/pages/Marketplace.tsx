@@ -121,6 +121,7 @@ const Marketplace = () => {
   const filtered = useMemo(() => {
     const q = filters.search.trim().toLowerCase();
     const list = data.products.filter((p) => {
+      if (onlyFavorites && !favorites.has(p.id)) return false;
       if (q && !p.name.toLowerCase().includes(q) && !(p.description || "").toLowerCase().includes(q) && !(p.category || "").toLowerCase().includes(q)) return false;
       if (filters.categories.length && !filters.categories.includes(p.category ?? "")) return false;
       if (filters.tenantIds.length && !filters.tenantIds.includes(p.tenant_id)) return false;
