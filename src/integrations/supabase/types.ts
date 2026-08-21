@@ -7473,12 +7473,23 @@ export type Database = {
           card_description: string | null
           card_holder: string | null
           card_last_four: string | null
+          channel: string | null
+          confirmed_at: string | null
           created_at: string
           currency: string
           exchange_rate: number
+          failed_at: string | null
           id: string
           method: string
+          notes: string | null
+          provider: string | null
+          provider_transaction_id: string | null
+          reference: string | null
           sale_id: string
+          status: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           amount: number
@@ -7486,12 +7497,23 @@ export type Database = {
           card_description?: string | null
           card_holder?: string | null
           card_last_four?: string | null
+          channel?: string | null
+          confirmed_at?: string | null
           created_at?: string
           currency?: string
           exchange_rate?: number
+          failed_at?: string | null
           id?: string
           method?: string
+          notes?: string | null
+          provider?: string | null
+          provider_transaction_id?: string | null
+          reference?: string | null
           sale_id: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           amount?: number
@@ -7499,12 +7521,23 @@ export type Database = {
           card_description?: string | null
           card_holder?: string | null
           card_last_four?: string | null
+          channel?: string | null
+          confirmed_at?: string | null
           created_at?: string
           currency?: string
           exchange_rate?: number
+          failed_at?: string | null
           id?: string
           method?: string
+          notes?: string | null
+          provider?: string | null
+          provider_transaction_id?: string | null
+          reference?: string | null
           sale_id?: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -10292,6 +10325,18 @@ export type Database = {
         Args: { p_order_id: string; p_payments?: Json }
         Returns: string
       }
+      confirm_sale_payment: {
+        Args: {
+          p_correlation_id?: string
+          p_idempotency_key?: string
+          p_notes?: string
+          p_payment_id: string
+          p_provider_transaction_id?: string
+          p_reference?: string
+          p_status: string
+        }
+        Returns: Json
+      }
       create_fiscal_year: {
         Args: { p_start_month?: number; p_tenant_id: string; p_year: number }
         Returns: string
@@ -10793,6 +10838,16 @@ export type Database = {
         Args: { _method?: string; _notes?: string; _payroll_id: string }
         Returns: string
       }
+      payment_account_role: {
+        Args: { p_context?: string; p_method: string }
+        Returns: string
+      }
+      payment_method_class: { Args: { p_method: string }; Returns: string }
+      payment_method_norm: { Args: { p_method: string }; Returns: string }
+      payment_requires_confirmation: {
+        Args: { p_method: string }
+        Returns: boolean
+      }
       place_online_order: {
         Args: {
           p_customer_email?: string
@@ -11101,6 +11156,17 @@ export type Database = {
           entry_number: string
           line_description: string
           name: string
+        }[]
+      }
+      report_payments_by_method: {
+        Args: { p_from?: string; p_tenant: string; p_to?: string }
+        Returns: {
+          class: string
+          method: string
+          payments: number
+          source: string
+          status: string
+          total_base: number
         }[]
       }
       report_trial_balance: {
