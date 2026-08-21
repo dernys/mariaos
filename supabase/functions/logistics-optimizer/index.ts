@@ -1,3 +1,4 @@
+import { resolveTenantScope } from "../_shared/tenantScope.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -40,14 +41,11 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // --- Tenant membership check (or superadmin) ---
-    const [{ data: membership }, { data: superadmin }] = await Promise.all([
-      supabase.from("tenant_users").select("tenant_id").eq("tenant_id", tenant_id).eq("user_id", userId).maybeSingle(),
-      supabase.from("superadmins").select("user_id").eq("user_id", userId).maybeSingle(),
-    ]);
-    if (!membership && !superadmin) {
-      return new Response(JSON.stringify({ error: "forbidden" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // --- Tenant scope: membresía o negocio activo del superadmin ---
+    const scope = await resolveTenantScope(supabase, userId, tenant_id);
+    if (scope.error) {
+      return new Response(JSON.stringify({ error: scope.error.message }), {
+        status: scope.error.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 

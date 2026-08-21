@@ -8312,6 +8312,45 @@ export type Database = {
           },
         ]
       }
+      superadmin_context: {
+        Row: {
+          created_at: string
+          mode: string
+          tenant_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          mode?: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          mode?: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "superadmin_context_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "superadmin_context_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       superadmins: {
         Row: {
           created_at: string
@@ -9939,9 +9978,32 @@ export type Database = {
           status: string
         }[]
       }
+      active_tenant_id: { Args: { _user_id?: string }; Returns: string }
       add_online_order_note: {
         Args: { p_note: string; p_order_id: string }
         Returns: string
+      }
+      admin_list_tenant_users: {
+        Args: { _tenant_id?: string }
+        Returns: {
+          full_name: string
+          roles: string[]
+          tenant_id: string
+          tenant_name: string
+          user_id: string
+        }[]
+      }
+      admin_list_tenants: {
+        Args: never
+        Returns: {
+          business_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          users_count: number
+        }[]
       }
       allocate_consignment_for_sale: {
         Args: { p_sale_id: string }
@@ -9976,6 +10038,8 @@ export type Database = {
         Returns: undefined
       }
       approve_payroll_run: { Args: { p_payroll_id: string }; Returns: string }
+      assert_public_tenant: { Args: { _tenant: string }; Returns: boolean }
+      assert_tenant_access: { Args: { _tenant: string }; Returns: boolean }
       auto_assign_best_rider: { Args: { p_order_id: string }; Returns: Json }
       auto_match_bank_transaction: {
         Args: { p_tx_id: string }
@@ -10400,6 +10464,13 @@ export type Database = {
       get_financial_kpis: {
         Args: { p_period_id?: string; p_tenant: string }
         Returns: Json
+      }
+      get_superadmin_context: {
+        Args: never
+        Returns: {
+          mode: string
+          tenant_id: string
+        }[]
       }
       has_role: {
         Args: {
@@ -10992,6 +11063,8 @@ export type Database = {
         Args: { p_accept: boolean; p_assignment_id: string; p_reason?: string }
         Returns: undefined
       }
+      sa_active_tenant: { Args: never; Returns: string }
+      sa_global_mode: { Args: never; Returns: boolean }
       sale_returnable_items: {
         Args: { p_sale_id: string }
         Returns: {
@@ -11021,6 +11094,7 @@ export type Database = {
         Args: { _tenant: string; _year?: number }
         Returns: undefined
       }
+      set_active_tenant: { Args: { _tenant_id: string }; Returns: string }
       set_employee_pin: {
         Args: { _employee_id: string; _pin: string }
         Returns: undefined
@@ -11033,6 +11107,7 @@ export type Database = {
         Args: { p_availability: string }
         Returns: undefined
       }
+      set_superadmin_mode: { Args: { _mode: string }; Returns: string }
       settle_consignment_lots: {
         Args: {
           p_method?: string

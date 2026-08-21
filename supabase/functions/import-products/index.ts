@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveTenantScope } from "../_shared/tenantScope.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,23 +49,17 @@ Deno.serve(async (req) => {
     const strategy: "skip" | "update" | "fail" = ["skip", "update", "fail"].includes(body?.strategy) ? body.strategy : "skip";
     const dryRun = body?.dry_run === true;
 
-    // ---- Authorization: tenant scope comes from membership, never from the client
-    const { data: isSA } = await admin.rpc("is_superadmin", { _user_id: caller.id });
+    // ---- Authorization: tenant scope resolved server-side, never from the client
+    const requested = typeof body?.tenant_id === "string" ? body.tenant_id : null;
+    const scope = await resolveTenantScope(admin, caller.id, requested);
+    if (scope.error) return json({ error: scope.error.message }, scope.error.status);
+    const isSA = scope.isSuperadmin;
+    const tenantId = scope.tenantId;
+    if (!tenantId) return json({ error: "Sin negocio asociado" }, 403);
     const { data: memberships } = await admin
       .from("tenant_users")
       .select("tenant_id, is_owner")
       .eq("user_id", caller.id);
-    const myTenants = (memberships ?? []).map((m: any) => m.tenant_id);
-
-    let tenantId: string | null = null;
-    const requested = typeof body?.tenant_id === "string" ? body.tenant_id : null;
-    if (isSA) {
-      tenantId = requested ?? myTenants[0] ?? null;
-    } else {
-      if (requested && !myTenants.includes(requested)) return json({ error: "Negocio fuera de tu alcance" }, 403);
-      tenantId = requested ?? myTenants[0] ?? null;
-    }
-    if (!tenantId) return json({ error: "Sin negocio asociado" }, 403);
 
     if (!isSA) {
       const isOwner = (memberships ?? []).some((m: any) => m.tenant_id === tenantId && m.is_owner);

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveTenantScope } from "../_shared/tenantScope.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,7 +47,18 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (tenant_id) q = q.eq("tenant_id", tenant_id);
+    // Aislamiento: en modo tenant el superadmin sólo ve la auditoría del negocio activo.
+    const scope = await resolveTenantScope(admin, user.id, tenant_id ?? null);
+    if (scope.error) {
+      return new Response(JSON.stringify({ error: scope.error.message }), {
+        status: scope.error.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!scope.globalMode) {
+      q = q.eq("tenant_id", scope.tenantId);
+    } else if (tenant_id) {
+      q = q.eq("tenant_id", tenant_id);
+    }
     if (user_id) q = q.eq("performed_by", user_id);
     if (entity_type) q = q.eq("entity_type", entity_type);
     if (entity_id) q = q.eq("entity_id", entity_id);

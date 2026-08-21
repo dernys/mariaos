@@ -44,7 +44,28 @@ serve(async (req) => {
       .from("tenant_users")
       .select("tenant_id")
       .eq("user_id", caller.id);
-    const tenantIds = (myTenants ?? []).map((t: any) => t.tenant_id);
+    let tenantIds = (myTenants ?? []).map((t: any) => t.tenant_id);
+
+    // GLOBAL vs TENANT MODE: un superadmin sólo ve todos los usuarios cuando su
+    // contexto server-side está en modo global (Gestión de Empresas). En modo
+    // tenant queda restringido a los usuarios del negocio activo (fail-closed).
+    let globalMode = false;
+    if (isSA) {
+      const { data: ctx } = await supabaseAdmin
+        .from("superadmin_context")
+        .select("tenant_id, mode")
+        .eq("user_id", caller.id)
+        .maybeSingle();
+      globalMode = ctx?.mode === "global";
+      if (!globalMode) {
+        if (!ctx?.tenant_id) {
+          return new Response(JSON.stringify({ error: "Selecciona un negocio activo" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        tenantIds = [ctx.tenant_id];
+      }
+    }
 
     const scopedUserIds = async (): Promise<string[]> => {
       if (tenantIds.length === 0) return [caller.id];
@@ -69,7 +90,7 @@ serve(async (req) => {
     };
 
     const assertInScope = async (targetId: string) => {
-      if (isSA) return true;
+      if (globalMode) return true;
       if (await isTargetSuperadmin(targetId)) return false;
       const ids = await scopedUserIds();
       return ids.includes(targetId);
@@ -91,7 +112,7 @@ serve(async (req) => {
         .order("created_at", { ascending: false });
 
       let allowedIds: string[] | null = null;
-      if (!isSA) {
+      if (!globalMode) {
         const { data: sas } = await supabaseAdmin.from("superadmins").select("user_id");
         const saIds = new Set<string>((sas ?? []).map((s: any) => s.user_id));
         // Platform superadmins are invisible to tenant admins.
@@ -159,7 +180,7 @@ serve(async (req) => {
 
       // Bind the new user to the caller's business so tenant isolation holds.
       const targetTenant: string | undefined = body?.tenant_id ?? tenantIds[0];
-      if (newUser.user && targetTenant && (isSA || tenantIds.includes(targetTenant))) {
+      if (newUser.user && targetTenant && (globalMode || tenantIds.includes(targetTenant))) {
         await supabaseAdmin.from("tenant_users").upsert(
           { tenant_id: targetTenant, user_id: newUser.user.id, is_owner: false },
           { onConflict: "tenant_id,user_id" }

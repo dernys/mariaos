@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ENTITIES, EXPORT_ONLY, BACKUP_ENTITIES, CLONEABLE_ENTITIES, coerce, validate, type EntityDef, type EntityKey } from "./entities.ts";
+import { resolveTenantScope } from "../_shared/tenantScope.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,25 +83,17 @@ Deno.serve(async (req) => {
     if (raw) { try { body = JSON.parse(raw); } catch { return json({ error: "Cuerpo inválido" }, 400); } }
     const action = String(body.action ?? "");
 
-    // ---------- Authorization: tenant resolved from membership ----------
-    const { data: isSA } = await admin.rpc("is_superadmin", { _user_id: caller.id });
-    const { data: memberships } = await admin.from("tenant_users").select("tenant_id").eq("user_id", caller.id);
-    const myTenants = (memberships ?? []).map((m: any) => m.tenant_id as string);
+    // ---------- Authorization: tenant resolved server-side (membership o contexto activo del superadmin) ----------
     const requested = typeof body.tenant_id === "string" ? body.tenant_id : null;
-
-    let tenantId: string | null = null;
-    if (isSA) {
-      tenantId = requested ?? myTenants[0] ?? null;
-      if (tenantId) {
-        const { data: t } = await admin.from("tenants").select("id").eq("id", tenantId).maybeSingle();
-        if (!t) return json({ error: "Negocio no encontrado" }, 404);
-      }
-    } else {
-      // A tenant user can ONLY ever operate on their own tenant, whatever they send.
-      if (requested && !myTenants.includes(requested)) return json({ error: "Acceso denegado a este negocio" }, 403);
-      tenantId = requested ?? myTenants[0] ?? null;
-    }
+    const scope = await resolveTenantScope(admin, caller.id, requested);
+    if (scope.error) return json({ error: scope.error.message }, scope.error.status);
+    const isSA = scope.isSuperadmin;
+    const tenantId = scope.tenantId;
     if (!tenantId) return json({ error: "Sin negocio asignado" }, 403);
+    {
+      const { data: t } = await admin.from("tenants").select("id").eq("id", tenantId).maybeSingle();
+      if (!t) return json({ error: "Negocio no encontrado" }, 404);
+    }
 
     const { data: roleRows } = await admin.from("user_roles").select("role").eq("user_id", caller.id);
     const roles = (roleRows ?? []).map((r: any) => r.role as string);
@@ -538,9 +531,10 @@ Deno.serve(async (req) => {
         const { count } = await admin.from(ENTITIES[key].table).select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
         counts[key] = count ?? 0;
       }
-      const { data: targets } = isSA
+      // Cross-tenant targets only exist in GLOBAL MODE (Gestión de Empresas)
+      const { data: targets } = scope.globalMode
         ? await admin.from("tenants").select("id, name, business_type").eq("is_active", true).order("name")
-        : await admin.from("tenants").select("id, name, business_type").in("id", myTenants).eq("is_active", true).order("name");
+        : await admin.from("tenants").select("id, name, business_type").in("id", scope.allowedTenantIds.length ? scope.allowedTenantIds : ["00000000-0000-0000-0000-000000000000"]).eq("is_active", true).order("name");
       return json({ counts, cloneable: CLONEABLE_ENTITIES, targets: targets ?? [], excluded: ["ventas", "movimientos financieros", "turnos de caja", "credenciales", "tokens", "auditoría histórica"] });
     }
 
@@ -548,8 +542,10 @@ Deno.serve(async (req) => {
       requireAdmin();
       const target = String(body.target_tenant_id ?? "");
       if (!target || target === tenantId) return json({ error: "Negocio destino inválido" }, 400);
-      // The caller must be authorised on BOTH sides.
-      if (!isSA && !myTenants.includes(target)) return json({ error: "Acceso denegado al negocio destino" }, 403);
+      // The caller must be authorised on BOTH sides: global mode or own membership.
+      if (!scope.globalMode && !scope.allowedTenantIds.includes(target)) {
+        return json({ error: "Acceso denegado al negocio destino (requiere modo global)" }, 403);
+      }
       const entities: EntityKey[] = (Array.isArray(body.entities) ? body.entities : CLONEABLE_ENTITIES)
         .filter((e: string) => CLONEABLE_ENTITIES.includes(e as EntityKey));
 
