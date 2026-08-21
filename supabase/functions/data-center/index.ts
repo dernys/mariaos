@@ -531,9 +531,10 @@ Deno.serve(async (req) => {
         const { count } = await admin.from(ENTITIES[key].table).select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
         counts[key] = count ?? 0;
       }
-      const { data: targets } = isSA
+      // Cross-tenant targets only exist in GLOBAL MODE (Gestión de Empresas)
+      const { data: targets } = scope.globalMode
         ? await admin.from("tenants").select("id, name, business_type").eq("is_active", true).order("name")
-        : await admin.from("tenants").select("id, name, business_type").in("id", myTenants).eq("is_active", true).order("name");
+        : await admin.from("tenants").select("id, name, business_type").in("id", scope.allowedTenantIds.length ? scope.allowedTenantIds : ["00000000-0000-0000-0000-000000000000"]).eq("is_active", true).order("name");
       return json({ counts, cloneable: CLONEABLE_ENTITIES, targets: targets ?? [], excluded: ["ventas", "movimientos financieros", "turnos de caja", "credenciales", "tokens", "auditoría histórica"] });
     }
 
@@ -541,8 +542,10 @@ Deno.serve(async (req) => {
       requireAdmin();
       const target = String(body.target_tenant_id ?? "");
       if (!target || target === tenantId) return json({ error: "Negocio destino inválido" }, 400);
-      // The caller must be authorised on BOTH sides.
-      if (!isSA && !myTenants.includes(target)) return json({ error: "Acceso denegado al negocio destino" }, 403);
+      // The caller must be authorised on BOTH sides: global mode or own membership.
+      if (!scope.globalMode && !scope.allowedTenantIds.includes(target)) {
+        return json({ error: "Acceso denegado al negocio destino (requiere modo global)" }, 403);
+      }
       const entities: EntityKey[] = (Array.isArray(body.entities) ? body.entities : CLONEABLE_ENTITIES)
         .filter((e: string) => CLONEABLE_ENTITIES.includes(e as EntityKey));
 
