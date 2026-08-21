@@ -10038,6 +10038,7 @@ export type Database = {
         Returns: undefined
       }
       approve_payroll_run: { Args: { p_payroll_id: string }; Returns: string }
+      assert_tenant_access: { Args: { _tenant: string }; Returns: boolean }
       auto_assign_best_rider: { Args: { p_order_id: string }; Returns: Json }
       auto_match_bank_transaction: {
         Args: { p_tx_id: string }
