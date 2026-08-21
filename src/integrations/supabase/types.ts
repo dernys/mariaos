@@ -31,6 +31,8 @@ export type Database = {
           performed_by: string | null
           reference_id: string | null
           reference_type: string | null
+          shift_id: string | null
+          store_id: string | null
           tenant_id: string
         }
         Insert: {
@@ -49,6 +51,8 @@ export type Database = {
           performed_by?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          shift_id?: string | null
+          store_id?: string | null
           tenant_id: string
         }
         Update: {
@@ -67,9 +71,33 @@ export type Database = {
           performed_by?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          shift_id?: string | null
+          store_id?: string | null
           tenant_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "account_payments_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "sales_shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_payments_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_payments_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       accounting_accounts: {
         Row: {
@@ -10802,6 +10830,24 @@ export type Database = {
         }
         Returns: Json
       }
+      pos_checkout: {
+        Args: {
+          p_allow_credit?: boolean
+          p_client_uuid?: string
+          p_correlation_id?: string
+          p_idempotency_key?: string
+          p_items: Json
+          p_kitchen_order_id?: string
+          p_notes?: string
+          p_party_id?: string
+          p_party_type?: string
+          p_payments?: Json
+          p_shift_id?: string
+          p_tax_rate_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       post_financial_event: { Args: { p_event_id: string }; Returns: string }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
       post_payment_journal_entry: {
@@ -10842,8 +10888,8 @@ export type Database = {
       }
       process_sale_stock: {
         Args: {
-          p_location_id: string
-          p_location_type: string
+          p_location_id?: string
+          p_location_type?: string
           p_sale_id: string
         }
         Returns: undefined
@@ -11129,6 +11175,13 @@ export type Database = {
       resolve_mapped_account: {
         Args: { p_codes?: string[]; p_key: string; p_tenant: string }
         Returns: string
+      }
+      resolve_open_shift: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          shift_id: string
+          store_id: string
+        }[]
       }
       resolve_period: {
         Args: { p_date: string; p_tenant_id: string }

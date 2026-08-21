@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { enqueueSale } from "@/lib/offline/db";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { useTranslation } from "react-i18next";
 import { useActiveShift } from "@/hooks/useActiveShift";
+import { useTenantContext } from "@/hooks/useTenantContext";
 
 interface CartItem {
   id: number;
@@ -74,6 +75,9 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const { toast } = useToast();
   const { settings: posSettings } = usePOSSettings();
   const { shift: activeShift } = useActiveShift();
+  const { tenantId: ctxTenantId } = useTenantContext();
+  // Una intención de cobro = una clave de idempotencia (doble clic o reintento no duplica la venta)
+  const intentRef = useRef<string>(crypto.randomUUID());
   const [payments, setPayments] = useState<PaymentLine[]>([
     { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" },
   ]);
@@ -110,6 +114,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       setPartySearch("");
       setIsPartial(false);
       setQrCopied(null);
+      intentRef.current = crypto.randomUUID();
       fetchData();
     }
   }, [open]);
@@ -195,7 +200,8 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t("pos.payment.errors.notAuthenticated"));
 
-      const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).single();
+      const { data: tu } = await supabase.from("tenant_users").select("tenant_id").eq("user_id", user.id).limit(1).maybeSingle();
+      const tenantId = ctxTenantId || (tu?.tenant_id as string | undefined);
 
       // Turno abierto seleccionado en el POS (puede ser de otra tienda del negocio)
       const openShift = activeShift;
@@ -235,7 +241,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       }
 
       const status = isPartial && remaining > 0.01 ? "partial" : "paid";
-      const clientUuid = crypto.randomUUID();
+      const clientUuid = intentRef.current;
       const paymentRows = payments
         .filter((p) => parseFloat(p.amount) > 0)
         .map((p) => ({
@@ -252,7 +258,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       // --- OFFLINE PATH: si no hay red, encola y termina ---
       const offlinePayload = {
         client_uuid: clientUuid,
-        tenant_id: tu?.tenant_id,
+        tenant_id: tenantId,
         customer_id: selectedCustomer || null,
         employee_id: selectedEmployee || null,
         shift_id: openShift.id,
@@ -280,8 +286,8 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         })),
       };
 
-      if (!navigator.onLine && tu?.tenant_id) {
-        await enqueueSale({ client_uuid: clientUuid, tenant_id: tu.tenant_id, payload: offlinePayload });
+      if (!navigator.onLine && tenantId) {
+        await enqueueSale({ client_uuid: clientUuid, tenant_id: tenantId, payload: offlinePayload });
         toast({
           title: t("pos.payment.toasts.savedOffline"),
           description: t("pos.payment.toasts.savedOfflineDesc"),
@@ -292,59 +298,51 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         return;
       }
 
-      // --- ONLINE PATH ---
-      const { data: sale, error: saleErr } = await supabase.from("sales").insert({
-        tenant_id: tu?.tenant_id,
-        client_uuid: clientUuid,
-        customer_id: selectedCustomer || null,
-        employee_id: selectedEmployee || null,
-        shift_id: openShift.id,
-        store_id: openShift.store_id || null,
-        subtotal, tax, total,
-        amount_paid: totalPaidInBase,
-        status,
-      } as any).select("id, ticket_number").single();
+      // --- ONLINE PATH: una sola operación atómica y validada en servidor ---
+      const { data: checkout, error: checkoutErr } = await (supabase.rpc as any)("pos_checkout", {
+        p_tenant_id: tenantId,
+        p_items: cart.map((item) => ({
+          product_id: item.productId || null,
+          product_name: item.name,
+          sku: item.sku || null,
+          price: item.price,
+          qty: item.qty,
+        })),
+        p_payments: paymentRows.map((p) => ({
+          method: p.method,
+          currency: p.currency,
+          amount: p.amount,
+          card_last_four: p.card_last_four,
+          card_holder: p.card_holder,
+          card_description: p.card_description,
+        })),
+        p_party_type: selectedCustomer ? "customer" : selectedEmployee ? "employee" : null,
+        p_party_id: selectedCustomer || selectedEmployee || null,
+        p_allow_credit: isPartial,
+        p_shift_id: openShift.id,
+        p_notes: null,
+        p_kitchen_order_id: null,
+        p_client_uuid: clientUuid,
+        p_idempotency_key: clientUuid,
+      });
 
-      if (saleErr || !sale) throw saleErr || new Error("Error creando venta");
+      if (checkoutErr) throw checkoutErr;
+      const saleId = (checkout as any)?.sale_id as string | undefined;
+      if (!saleId) throw new Error("Error creando venta");
 
-      const items = cart.map((item) => ({
-        sale_id: sale.id,
-        product_id: item.productId || null,
-        product_name: item.name,
-        sku: item.sku || null,
-        price: item.price,
-        qty: item.qty,
-        total: item.price * item.qty,
-      }));
-      const { error: itemsErr } = await supabase.from("sale_items").insert(items);
-      if (itemsErr) throw itemsErr;
+      const { data: sale } = await supabase
+        .from("sales")
+        .select("id, ticket_number")
+        .eq("id", saleId)
+        .maybeSingle();
+      const saleRef = { id: saleId, ticket_number: (sale as any)?.ticket_number ?? null };
 
-      if (paymentRows.length > 0) {
-        const { error: payErr } = await supabase.from("sale_payments").insert(
-          paymentRows.map((p) => ({ ...p, sale_id: sale.id }))
-        );
-        if (payErr) throw payErr;
-      }
-
-      if (cart.some((c) => c.productId)) {
-        // Si no hay tienda asignada al turno, usar el tenant como ubicación virtual.
-        const useStore = !!openShift.store_id;
-        const { error: stockErr } = await supabase.rpc("process_sale_stock", {
-          p_sale_id: sale.id,
-          p_location_type: useStore ? "store" : "tenant",
-          p_location_id: useStore ? openShift.store_id : (tu?.tenant_id as string),
-        });
-        if (stockErr) {
-          console.error("Stock RPC error:", stockErr);
-          toast({ title: t("pos.payment.errors.stockWarn"), description: t("pos.payment.errors.stockWarnDesc", { msg: stockErr.message }) });
-        }
-      }
 
       // Cierra la orden de cocina asociada y libera la mesa.
       if (kitchenOrderId) {
         const { error: billErr } = await (supabase.rpc as any)("bill_kitchen_order", {
           p_order_id: kitchenOrderId,
-          p_sale_id: sale.id,
+          p_sale_id: saleRef.id,
         });
         if (billErr) {
           console.error("bill_kitchen_order error:", billErr);
@@ -357,10 +355,10 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       // Imprimir ticket térmico (si está habilitado en ajustes POS)
       if (posSettings.auto_print_receipt) {
         try {
-          const { data: tenantInfo } = await supabase.from("tenants").select("name").eq("id", tu?.tenant_id).maybeSingle();
+          const { data: tenantInfo } = await supabase.from("tenants").select("name").eq("id", tenantId as string).maybeSingle();
           const customerName = customers.find((c) => c.id === selectedCustomer)?.name;
           printThermalReceipt({
-            ticketNumber: (sale as any).ticket_number || sale.id.slice(0, 8),
+            ticketNumber: saleRef.ticket_number || saleRef.id.slice(0, 8),
             tenantName: tenantInfo?.name,
             storeName: openShift.store_name || undefined,
             customer: customerName,
@@ -383,12 +381,12 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       // --- Emit business event for reactive workflows / agents ---
       try {
         await supabase.from("business_events").insert({
-          tenant_id: tu?.tenant_id as string,
+          tenant_id: tenantId as string,
           source: "pos",
           event_type: "sale.completed",
           payload: {
-            sale_id: sale.id,
-            ticket_number: (sale as any).ticket_number ?? null,
+            sale_id: saleRef.id,
+            ticket_number: saleRef.ticket_number,
             total, subtotal, tax,
             amount_paid: totalPaidInBase,
             status,
@@ -404,7 +402,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
 
       toast({
-        title: `Ticket ${(sale as any).ticket_number || ""}`.trim(),
+        title: `Ticket ${saleRef.ticket_number || ""}`.trim(),
         description: status === "partial" ? t("pos.payment.toasts.pendingAmount", { amount: remaining.toFixed(2) }) : t("pos.payment.toasts.fullPaid"),
       });
 
