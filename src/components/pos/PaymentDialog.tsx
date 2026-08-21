@@ -75,6 +75,9 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const { toast } = useToast();
   const { settings: posSettings } = usePOSSettings();
   const { shift: activeShift } = useActiveShift();
+  const { tenantId: ctxTenantId } = useTenantContext();
+  // Una intención de cobro = una clave de idempotencia (doble clic o reintento no duplica la venta)
+  const intentRef = useRef<string>(crypto.randomUUID());
   const [payments, setPayments] = useState<PaymentLine[]>([
     { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" },
   ]);
@@ -111,6 +114,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       setPartySearch("");
       setIsPartial(false);
       setQrCopied(null);
+      intentRef.current = crypto.randomUUID();
       fetchData();
     }
   }, [open]);
