@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ArrowLeft, Package, Truck, Building2, Star, MapPin, Plus, Trash2, Bike, Store as StoreIcon,
+  XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatPrice } from "@/components/marketplace/types";
@@ -52,6 +53,7 @@ const MisPedidos = () => {
   const [assignments, setAssignments] = useState<Record<string, any>>({});
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [filter, setFilter] = useState("all");
+  const [cancelling, setCancelling] = useState<string | null>(null);
   const [rating, setRating] = useState<{ order: Order; role: "rider" | "business" } | null>(null);
   const [stars, setStars] = useState(5);
   const [comment, setComment] = useState("");
