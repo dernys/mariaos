@@ -211,7 +211,7 @@ export function AccountingConfigReportPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reclass.slice(0, 20).map((r, i) => (
+                {reclass.slice((reclassPage - 1) * reclassPageSize, reclassPage * reclassPageSize).map((r, i) => (
                   <TableRow key={`${r.account_code}-${r.mapping_key}-${i}`}>
                     <TableCell className="text-xs">
                       {r.account_code} · {r.account_name}
@@ -228,7 +228,15 @@ export function AccountingConfigReportPanel() {
                 ))}
               </TableBody>
             </Table>
+            <TablePagination
+              page={reclassPage}
+              pageSize={reclassPageSize}
+              total={reclass.length}
+              onPageChange={setReclassPage}
+              onPageSizeChange={setReclassPageSize}
+            />
           </div>
+
         )}
       </div>
     </Card>
