@@ -86,8 +86,12 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   // Una intención de cobro = una clave de idempotencia (doble clic o reintento no duplica la venta)
   const intentRef = useRef<string>(crypto.randomUUID());
   const [payments, setPayments] = useState<PaymentLine[]>([
-    { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" },
+    {
+      method: "CASH", currency: "CUP", amount: "", exchange_rate: "1",
+      card_last_four: "", card_holder: "", card_description: "", reference: "",
+    },
   ]);
+
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [currencies, setCurrencies] = useState<CurrencyConfig[]>([]);
@@ -115,7 +119,11 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
   useEffect(() => {
     if (open) {
-      setPayments([{ method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" }]);
+      setPayments([{
+        method: "CASH", currency: "CUP", amount: "", exchange_rate: "1",
+        card_last_four: "", card_holder: "", card_description: "", reference: "",
+      }]);
+
       setPartyType("none");
       setSelectedParty("");
       setPartySearch("");
@@ -146,17 +154,35 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     }
   };
 
-  const totalPaidInBase = payments.reduce((sum, p) => {
-    const amt = parseFloat(p.amount) || 0;
-    const rate = parseFloat(p.exchange_rate) || 1;
-    return sum + amt * rate;
-  }, 0);
+  const lineBase = (p: PaymentLine) => (parseFloat(p.amount) || 0) * (parseFloat(p.exchange_rate) || 1);
 
-  const remaining = total - totalPaidInBase;
+  /** Cobrado en firme: efectivo y tarjeta/POS. */
+  const confirmedInBase = payments
+    .filter((p) => !requiresConfirmation(p.method))
+    .reduce((s, p) => s + lineBase(p), 0);
+  /** Declarado pero pendiente de confirmar: transferencia, Transfermóvil, EnZona. */
+  const pendingInBase = payments
+    .filter((p) => requiresConfirmation(p.method))
+    .reduce((s, p) => s + lineBase(p), 0);
+
+  const totalPaidInBase = confirmedInBase + pendingInBase;
+  const cashInBase = payments.filter((p) => isCashMethod(p.method)).reduce((s, p) => s + lineBase(p), 0);
+
+  /** Lo que quedaría a crédito (fiado) = total − confirmado − pendiente. */
+  const remaining = Math.round((total - totalPaidInBase) * 100) / 100;
+  /** El vuelto sólo puede darse en efectivo y no es ingreso. */
+  const overpay = Math.max(0, Math.round((totalPaidInBase - total) * 100) / 100);
+  const change = Math.min(overpay, cashInBase);
+
+  const blankLine = (): PaymentLine => ({
+    method: "CASH", currency: "CUP", amount: "", exchange_rate: "1",
+    card_last_four: "", card_holder: "", card_description: "", reference: "",
+  });
 
   const addPaymentLine = () => {
-    setPayments([...payments, { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" }]);
+    setPayments([...payments, blankLine()]);
   };
+
 
   const removePaymentLine = (idx: number) => {
     setPayments(payments.filter((_, i) => i !== idx));
