@@ -63,6 +63,14 @@ interface ReturnRow {
   currency: string | null;
 }
 
+interface ReturnDetailItem {
+  id: string;
+  product_name: string | null;
+  qty: number;
+  price: number;
+  total: number;
+}
+
 const REFUND_METHODS = [
   { value: "cash", label: "Efectivo" },
   { value: "card", label: "Tarjeta" },
