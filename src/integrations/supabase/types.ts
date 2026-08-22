@@ -10915,6 +10915,7 @@ export type Database = {
       }
       post_financial_event: { Args: { p_event_id: string }; Returns: string }
       post_journal_entry: { Args: { p_entry_id: string }; Returns: undefined }
+      post_missing_cogs: { Args: { p_tenant: string }; Returns: Json }
       post_payment_journal_entry: {
         Args: { p_payment_id: string }
         Returns: string
@@ -10958,6 +10959,10 @@ export type Database = {
           p_sale_id: string
         }
         Returns: undefined
+      }
+      product_effective_cost: {
+        Args: { p_product_id: string }
+        Returns: number
       }
       public_demo_stats: { Args: never; Returns: Json }
       rate_delivery: {
