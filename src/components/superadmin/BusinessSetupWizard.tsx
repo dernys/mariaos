@@ -631,20 +631,86 @@ export function BusinessSetupWizard({
                       />
                       {adminForm.enabled && (
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <div>
+                          <div className="sm:col-span-2">
+                            <Label className="text-xs">Email *</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="email"
+                                value={adminForm.email}
+                                placeholder="admin@negocio.cu"
+                                onChange={(e) => {
+                                  setAdminForm({ ...adminForm, email: e.target.value, mode: "new" });
+                                  setAdminCheck(null);
+                                }}
+                              />
+                              <Button variant="outline" size="sm" onClick={checkAdminEmail} disabled={checkingAdmin} className="shrink-0 text-xs">
+                                {checkingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Verificar"}
+                              </Button>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              Comprobamos si el usuario ya existe antes de crear el negocio.
+                            </p>
+                          </div>
+
+                          {adminCheck && adminCheck.email === adminForm.email.trim().toLowerCase() && (
+                            <div className="sm:col-span-2 rounded-lg border bg-card p-3 space-y-2">
+                              {!adminCheck.exists ? (
+                                <p className="text-xs flex items-center gap-1.5">
+                                  <Check className="h-3.5 w-3.5 text-primary" />
+                                  Email disponible: se creará un usuario nuevo.
+                                </p>
+                              ) : adminCheck.reusable ? (
+                                <>
+                                  <p className="text-xs flex items-center gap-1.5 font-medium">
+                                    <CircleAlert className="h-3.5 w-3.5 text-amber-500" />
+                                    Este usuario ya existe y no pertenece a ningún negocio.
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    {adminCheck.full_name || "Sin nombre"} · {adminCheck.confirmed ? "email confirmado" : "email sin confirmar"}
+                                  </p>
+                                  <div className="flex flex-wrap gap-2 pt-1">
+                                    <Button
+                                      size="sm"
+                                      variant={adminForm.mode === "existing" ? "default" : "outline"}
+                                      className="text-xs"
+                                      onClick={() => setAdminForm({ ...adminForm, mode: "existing", password: "" })}
+                                    >
+                                      Usar este usuario existente
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant={adminForm.mode === "new" ? "default" : "outline"}
+                                      className="text-xs"
+                                      onClick={() => setAdminForm({ ...adminForm, mode: "new" })}
+                                    >
+                                      Usar otro email
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : (
+                                <p className="text-xs text-destructive">
+                                  {adminCheck.is_superadmin
+                                    ? "Es un superadministrador: no puede ser administrador de un negocio."
+                                    : `Ya pertenece a otro negocio (${(adminCheck.tenant_names ?? []).join(", ")}). Cambia el email.`}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="sm:col-span-2">
                             <Label className="text-xs">Nombre completo</Label>
                             <Input value={adminForm.full_name} onChange={(e) => setAdminForm({ ...adminForm, full_name: e.target.value })} />
                           </div>
-                          <div>
-                            <Label className="text-xs">Email *</Label>
-                            <Input type="email" value={adminForm.email} onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })} />
-                          </div>
-                          <div className="sm:col-span-2">
-                            <Label className="text-xs">Contraseña temporal * (mín. 8)</Label>
-                            <Input type="password" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} />
-                          </div>
+
+                          {adminForm.mode === "new" && (
+                            <div className="sm:col-span-2">
+                              <Label className="text-xs">Contraseña temporal * (mín. 8)</Label>
+                              <Input type="password" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} />
+                            </div>
+                          )}
                         </div>
                       )}
+
                     </div>
                   )}
 
