@@ -717,13 +717,17 @@ export function BusinessSetupWizard({
                   {/* 6 · Resumen */}
                   {step === 6 && template && (
                     <div className="space-y-3 text-xs">
-                      <SummaryRow k="Plantilla" v={`${template.name} (${template.code})`} />
-                      <SummaryRow k="Negocio" v={`${info.name} · ${slugify(info.slug || info.name)}`} />
+                      <p className="text-[11px] text-muted-foreground">
+                        Revisa los datos. Puedes volver a cualquier paso con “Editar” antes de crear el negocio.
+                      </p>
+                      <SummaryRow k="Plantilla" v={`${template.name} (${template.code})`} onEdit={() => setStep(0)} />
+                      <SummaryRow k="Negocio" v={`${info.name} · ${slugify(info.slug || info.name)}`} onEdit={() => setStep(1)} />
                       <SummaryRow k="Perfil contable" v={template.accounting_profile_code ?? "—"} />
-                      <SummaryRow k="Almacenes" v={warehouses.map((w) => w.name).join(", ")} />
-                      <SummaryRow k="Medios de pago" v={Object.keys(methods).filter((k) => methods[k]).join(", ")} />
+                      <SummaryRow k="Almacenes" v={warehouses.map((w) => w.name).join(", ")} onEdit={() => setStep(3)} />
+                      <SummaryRow k="Medios de pago" v={Object.keys(methods).filter((k) => methods[k]).join(", ")} onEdit={() => setStep(4)} />
                       <SummaryRow
                         k="Operación"
+                        onEdit={() => setStep(2)}
                         v={[
                           ops.tables && `${ops.tables_count} mesas`,
                           ops.kitchen && "cocina",
@@ -732,7 +736,16 @@ export function BusinessSetupWizard({
                           ops.loyalty && "fidelización",
                         ].filter(Boolean).join(" · ") || "básica"}
                       />
-                      <SummaryRow k="Administrador" v={adminForm.enabled ? adminForm.email : "se asignará después"} />
+                      <SummaryRow
+                        k="Administrador"
+                        onEdit={() => setStep(5)}
+                        v={
+                          !adminForm.enabled
+                            ? "se asignará después"
+                            : `${adminForm.email} · ${adminForm.mode === "existing" ? "usuario existente" : "usuario nuevo"}`
+                        }
+                      />
+
                       <p className="text-[11px] text-muted-foreground pt-2 border-t">
                         Al crear, MarIA OS genera el maestro de cuentas propio, año fiscal, períodos y el mapeo contable
                         del negocio. Si algo falla, no se crea nada.
