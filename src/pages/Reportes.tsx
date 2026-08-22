@@ -147,6 +147,13 @@ export default function Reportes() {
             />
           </TabsContent>
 
+          {/* ---------------- MEDIOS DE PAGO ---------------- */}
+          <TabsContent value="pagos" className="space-y-4">
+            <PaymentMethodsPanel from={range.from} to={range.to} />
+          </TabsContent>
+
+
+
           {/* ---------------- FINANCIERO ---------------- */}
           <TabsContent value="financiero" className="space-y-4">
             <KpiGrid>
