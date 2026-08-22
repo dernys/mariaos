@@ -22,7 +22,7 @@ export async function prefetchWorkingSet(tenantId: string): Promise<PrefetchResu
       .eq("tenant_id", tenantId).order("name").limit(2000),
     supabase.from("product_categories").select("id, name").eq("tenant_id", tenantId).limit(500),
     supabase.from("tax_rates").select("id, name, rate").eq("tenant_id", tenantId).limit(200),
-    supabase.from("payment_methods").select("id, name, code").eq("tenant_id", tenantId).limit(200),
+    supabase.from("payment_methods").select("id, name, type").eq("tenant_id", tenantId).limit(200),
     supabase.from("stores").select("id, name").eq("tenant_id", tenantId).limit(200),
     supabase.from("restaurant_tables").select("id, name, status, capacity").eq("tenant_id", tenantId).limit(500),
     supabase.from("pos_settings").select("*").eq("tenant_id", tenantId).maybeSingle(),

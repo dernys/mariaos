@@ -59,7 +59,7 @@ let running = false;
 export async function probeServer(): Promise<boolean> {
   if (typeof navigator !== "undefined" && !navigator.onLine) return false;
   try {
-    const { error } = await supabase.from("app_modules").select("key").limit(1);
+    const { error } = await supabase.from("app_modules").select("slug").limit(1);
     return !error || !isNetworkError(error.message);
   } catch (e: any) {
     return !isNetworkError(String(e?.message || e));
