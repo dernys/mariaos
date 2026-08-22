@@ -98,7 +98,44 @@ export function BusinessSetupWizard({
   const [warehouses, setWarehouses] = useState<{ name: string; warehouse_type: string }[]>([]);
   const [methods, setMethods] = useState<Record<string, boolean>>({});
   const [posCfg, setPosCfg] = useState({ tax_included: true, allow_negative_stock: false, default_credit_days: 15 });
-  const [adminForm, setAdminForm] = useState({ enabled: true, email: "", full_name: "", password: "" });
+  const [adminForm, setAdminForm] = useState<{
+    enabled: boolean;
+    mode: "new" | "existing";
+    email: string;
+    full_name: string;
+    password: string;
+  }>({ enabled: true, mode: "new", email: "", full_name: "", password: "" });
+  const [adminCheck, setAdminCheck] = useState<AdminCandidate | null>(null);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
+
+  const checkAdminEmail = async () => {
+    const email = adminForm.email.trim().toLowerCase();
+    if (!/.+@.+\..+/.test(email)) {
+      toast.error("Introduce un email válido");
+      return;
+    }
+    setCheckingAdmin(true);
+    const { data, error } = await supabase.functions.invoke("provision-business", {
+      body: { action: "check_admin", email },
+    });
+    setCheckingAdmin(false);
+    if (error || data?.error) {
+      toast.error(data?.error ?? error?.message ?? "No se pudo verificar el email");
+      return;
+    }
+    const c = data.candidate as AdminCandidate;
+    setAdminCheck(c);
+    if (c.exists && c.reusable) {
+      setAdminForm((f) => ({ ...f, mode: "existing", full_name: f.full_name || c.full_name || "" }));
+      toast.info("El usuario ya existe: puedes reutilizarlo como administrador");
+    } else if (c.exists) {
+      setAdminForm((f) => ({ ...f, mode: "new" }));
+      toast.error("El usuario existe pero no puede reutilizarse");
+    } else {
+      setAdminForm((f) => ({ ...f, mode: "new" }));
+    }
+  };
+
 
   const template = useMemo(() => templates.find((t) => t.code === templateCode) ?? null, [templates, templateCode]);
 
