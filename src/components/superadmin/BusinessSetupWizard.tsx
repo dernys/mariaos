@@ -41,6 +41,19 @@ interface ReadinessCheck {
   detail: string;
 }
 
+interface AdminCandidate {
+  exists: boolean;
+  email: string | null;
+  user_id?: string;
+  full_name?: string;
+  confirmed?: boolean;
+  tenant_count?: number;
+  tenant_names?: string[];
+  is_superadmin?: boolean;
+  reusable?: boolean;
+}
+
+
 const ICONS: Record<string, typeof Store> = { Store, Wine, ChefHat };
 
 const STEPS = [
