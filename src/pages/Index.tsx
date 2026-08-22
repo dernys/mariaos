@@ -21,6 +21,7 @@ import { AnalyticsFilterBar } from "@/components/analytics/AnalyticsFilterBar";
 import { ChartCard } from "@/components/analytics/ChartCard";
 import { KpiGrid, KpiTile } from "@/components/analytics/KpiTile";
 import { AnalyticsTable } from "@/components/analytics/AnalyticsTable";
+import { DailyFinancialSummary } from "@/components/accounting/DailyFinancialSummary";
 import {
   AXIS_TICK, GRID_STROKE, TOOLTIP_STYLE, colorAt, compactMoney, formatMoney,
 } from "@/lib/analytics/chartTheme";
