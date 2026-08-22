@@ -7422,6 +7422,7 @@ export type Database = {
           sale_id: string
           sku: string | null
           total: number
+          unit_cost: number | null
         }
         Insert: {
           client_uuid?: string | null
@@ -7435,6 +7436,7 @@ export type Database = {
           sale_id: string
           sku?: string | null
           total?: number
+          unit_cost?: number | null
         }
         Update: {
           client_uuid?: string | null
@@ -7448,6 +7450,7 @@ export type Database = {
           sale_id?: string
           sku?: string | null
           total?: number
+          unit_cost?: number | null
         }
         Relationships: [
           {
@@ -10709,6 +10712,7 @@ export type Database = {
         Args: { p_payment_id: string; p_tx_id: string }
         Returns: undefined
       }
+      missing_cogs_report: { Args: { p_tenant: string }; Returns: Json }
       my_attendance: {
         Args: { _from?: string; _to?: string }
         Returns: {
@@ -11271,6 +11275,14 @@ export type Database = {
       resolve_period_id: {
         Args: { p_date: string; p_tenant: string }
         Returns: string
+      }
+      resolve_sale_item_cost: {
+        Args: {
+          p_product_id?: string
+          p_sale_item_id: string
+          p_unit_cost?: number
+        }
+        Returns: Json
       }
       reverse_journal_entry: {
         Args: { p_entry_id: string; p_reason: string }
