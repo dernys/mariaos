@@ -151,7 +151,7 @@ export function DailyFinancialSummary() {
           <Label className="text-[10px]">Local</Label>
           <SearchableSelect
             value={storeId}
-            onValueChange={(v) => { setStoreId(v); setShiftId("all"); }}
+            onChange={(v) => { setStoreId(v); setShiftId("all"); }}
             options={[{ value: "all", label: "Todos los locales" }, ...stores.map((s) => ({ value: s.id, label: s.name }))]}
             placeholder="Local"
           />
@@ -160,7 +160,7 @@ export function DailyFinancialSummary() {
           <Label className="text-[10px]">Turno</Label>
           <SearchableSelect
             value={shiftId}
-            onValueChange={setShiftId}
+            onChange={setShiftId}
             options={[{ value: "all", label: "Todos los turnos" }, ...shifts.map((s) => ({ value: s.id, label: s.label }))]}
             placeholder="Turno"
           />
