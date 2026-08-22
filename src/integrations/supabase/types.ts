@@ -10155,6 +10155,7 @@ export type Database = {
       approve_payroll_run: { Args: { p_payroll_id: string }; Returns: string }
       assert_public_tenant: { Args: { _tenant: string }; Returns: boolean }
       assert_tenant_access: { Args: { _tenant: string }; Returns: boolean }
+      audit_actor_role: { Args: never; Returns: string }
       auto_assign_best_rider: { Args: { p_order_id: string }; Returns: Json }
       auto_match_bank_transaction: {
         Args: { p_tx_id: string }
@@ -10184,6 +10185,7 @@ export type Database = {
         Returns: number
       }
       calculate_shift_summary: { Args: { p_shift_id: string }; Returns: Json }
+      can_manage_accounting: { Args: { _tenant: string }; Returns: boolean }
       cancel_delivery_assignment: {
         Args: { p_order_id: string; p_reason?: string }
         Returns: undefined
@@ -10521,6 +10523,19 @@ export type Database = {
           remediation: string
           severity: string
           status: string
+        }[]
+      }
+      financial_exceptions_report: {
+        Args: { p_tenant?: string }
+        Returns: {
+          amount: number
+          code: string
+          detail: string
+          entity_id: string
+          entity_type: string
+          occurred_at: string
+          reference: string
+          severity: string
         }[]
       }
       financial_health_check: {
@@ -11129,8 +11144,8 @@ export type Database = {
         Returns: undefined
       }
       reopen_accounting_period: {
-        Args: { p_period_id: string }
-        Returns: undefined
+        Args: { p_period_id: string; p_reason?: string }
+        Returns: Json
       }
       report_balance_sheet: {
         Args: { p_tenant: string; p_to: string }
