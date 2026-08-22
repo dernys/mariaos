@@ -51,6 +51,18 @@ export default function EventStore() {
     isRefetching,
   } = useShadowEvents({ eventType: eventType === "all" ? null : eventType, search: term || null });
 
+  const [evPage, setEvPage] = useState(1);
+  const [evPageSize, setEvPageSize] = useState(25);
+  const [dvPage, setDvPage] = useState(1);
+  const [dvPageSize, setDvPageSize] = useState(25);
+
+  useEffect(() => { setEvPage(1); }, [eventType, term, events.length]);
+  useEffect(() => { setDvPage(1); }, [divergences.length]);
+
+  const pagedEvents = events.slice((evPage - 1) * evPageSize, evPage * evPageSize);
+  const pagedDivergences = divergences.slice((dvPage - 1) * dvPageSize, dvPage * dvPageSize);
+
+
   const byType = useMemo(() => summary?.by_type ?? {}, [summary]);
 
   return (
