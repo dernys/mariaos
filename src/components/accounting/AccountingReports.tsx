@@ -69,6 +69,15 @@ export function AccountingReports({ accounts, tenantName }: Props) {
   const [periods, setPeriods] = useState<Array<{ id: string; name: string; status: string; start_date: string; end_date: string }>>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
+  const pagedRows = useMemo(
+    () => (preview?.rows ?? []).slice((page - 1) * pageSize, page * pageSize),
+    [preview, page, pageSize],
+  );
+
+
 
   const money = useMemo(
     () => (n: number) => `${symbol || "$"}${(n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
