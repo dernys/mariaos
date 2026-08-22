@@ -162,11 +162,13 @@ export function BusinessSetupWizard({
     setTemplateCode("");
     setInfo({ name: "", slug: "", email: "", phone: "", address: "", rfc: "" });
     setResult(null);
+    setFailure(null);
   };
 
   const submit = async () => {
     if (!template) return;
     setCreating(true);
+    setFailure(null);
     const cfgMethods = (template.config?.payment_methods ?? []).filter((m: any) => methods[m.type]);
     const payload = {
       name: info.name.trim(),
@@ -196,17 +198,54 @@ export function BusinessSetupWizard({
           : null,
       },
     });
+
+    // El cuerpo real del error viaja en la respuesta HTTP (status != 2xx)
+    let serverError: string | null = data?.error ?? null;
+    if (!serverError && error) {
+      try {
+        const ctx = (error as any).context;
+        const body = ctx && typeof ctx.json === "function" ? await ctx.json() : null;
+        serverError = body?.error ?? error.message;
+      } catch {
+        serverError = error.message;
+      }
+    }
     setCreating(false);
 
-    if (error || data?.error) {
-      toast.error(data?.error ?? error?.message ?? "No se pudo crear el negocio");
+    if (serverError) {
+      setFailure(serverError);
+      toast.error(serverError);
       return;
     }
+
     const validation = data?.validation ?? {};
-    setResult({ tenant_id: data.tenant_id, ready: !!validation.ready, checks: validation.checks ?? [] });
-    toast.success("Negocio creado y configurado");
+    const ready = !!validation.ready;
+    setResult({
+      tenant_id: data.tenant_id,
+      ready,
+      checks: validation.checks ?? [],
+      admin_email: data.admin_email ?? null,
+    });
+    if (ready) toast.success("Negocio creado correctamente");
+    else toast.warning("Negocio creado con avisos");
     onCreated();
   };
+
+  const enterAsAdmin = async () => {
+    if (!result?.admin_email || !adminForm.password) return;
+    setEntering(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: result.admin_email,
+      password: adminForm.password,
+    });
+    setEntering(false);
+    if (error) {
+      toast.error(`No se pudo iniciar sesión: ${error.message}`);
+      return;
+    }
+    window.location.href = "/";
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
