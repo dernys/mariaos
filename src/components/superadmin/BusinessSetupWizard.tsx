@@ -95,6 +95,9 @@ export function BusinessSetupWizard({
   } | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [entering, setEntering] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const { setActiveTenantId, refreshTenants } = useTenantContext();
+
   const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   const [templateCode, setTemplateCode] = useState<string>("");
