@@ -69,3 +69,11 @@ Los gastos operativos y otros ingresos son de **ámbito negocio (tenant)**, no d
 - `resolve_sale_item_cost(sale_item_id, product_id, unit_cost)` permite a administración/contabilidad asignar producto o costo unitario a una línea pendiente (queda en auditoría).
 - `post_missing_cogs(tenant)` crea asientos `sale_cogs_adjustment` (Costo de ventas / Inventario) sin modificar los asientos originales.
 - UI: Contabilidad → Análisis → "Costos históricos (COGS)".
+
+## Audit trail y control interno (Fase P1)
+
+- **Ledger de auditoría append-only**: `activity_log` (sin políticas de UPDATE/DELETE para usuarios). `audit_trigger` registra tenant, actor, **rol del actor**, hora de servidor, entidad/acción, before/after (`diff`), importe, moneda, estado, referencia y motivo. `audit_trigger_child` cubre líneas (pagos de venta, líneas de venta/compra/transferencia/devolución) resolviendo el negocio desde el documento padre. Cobertura actual: 51 triggers de auditoría.
+- **Inmutabilidad**: `inventory_movements` y `shift_cash_movements` son append-only (`guard_append_only_row`); `sale_payments` confirmados no admiten cambio de importe/medio/moneda/venta ni borrado (`guard_confirmed_sale_payment`); asientos y líneas posteados siguen protegidos por `zz_guard_posted_*`. Corrección solo por reversa / devolución / movimiento contrario.
+- **Períodos**: `close_accounting_period` y `reopen_accounting_period(p_period_id, p_reason)` exigen rol admin/contador (`can_manage_accounting`) y dejan asiento de auditoría; la reapertura sin motivo se rechaza.
+- **Numeración única**: índice único `(tenant_id, series, entry_number)` en asientos y `(tenant_id, series_code, invoice_number)` en facturas; los asientos de venta se numeran con hash del documento (antes había colisiones).
+- **Excepciones**: `financial_exceptions_report(p_tenant)` → asientos sin origen, ventas/compras sin asiento, pagos PENDING antiguos, CxC/CxP inconsistentes, ventas sin costo, diferencias de caja sin motivo, documentos duplicados, reversas, períodos reabiertos y movimientos bancarios sin conciliar. UI: Contabilidad → Análisis → "Control interno · Excepciones" (solo negocio activo).
