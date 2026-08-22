@@ -296,9 +296,21 @@ export function BusinessSetupWizard({
     onCreated();
   };
 
+  const openBusiness = async () => {
+    if (!result?.tenant_id) return;
+    setOpening(true);
+    await refreshTenants();
+    // Switches the active business context: the new admin is then visible in Roles > Usuarios
+    await setActiveTenantId(result.tenant_id);
+  };
+
   const enterAsAdmin = async () => {
     if (!result?.admin_email || !adminForm.password) return;
     setEntering(true);
+    // Leave the superadmin session and its cached context behind
+    localStorage.removeItem("sa_active_tenant");
+    sessionStorage.clear();
+    await supabase.auth.signOut();
     const { error } = await supabase.auth.signInWithPassword({
       email: result.admin_email,
       password: adminForm.password,
@@ -308,8 +320,10 @@ export function BusinessSetupWizard({
       toast.error(`No se pudo iniciar sesión: ${error.message}`);
       return;
     }
-    window.location.href = "/";
+    // /app is the authenticated dashboard ("/" is the public landing page)
+    window.location.href = "/app";
   };
+
 
 
   return (
