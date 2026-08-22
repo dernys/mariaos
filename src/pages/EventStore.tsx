@@ -185,7 +185,7 @@ export default function EventStore() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      events.map((e) => {
+                      pagedEvents.map((e) => {
                         const amount = eventAmount(e);
                         return (
                           <TableRow key={e.id}>
@@ -209,9 +209,17 @@ export default function EventStore() {
                     )}
                   </TableBody>
                 </Table>
+                <TablePagination
+                  page={evPage}
+                  pageSize={evPageSize}
+                  total={events.length}
+                  onPageChange={setEvPage}
+                  onPageSizeChange={setEvPageSize}
+                />
               </CardContent>
             </Card>
           </TabsContent>
+
 
           <TabsContent value="divergences">
             <Card>
