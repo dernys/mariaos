@@ -299,6 +299,9 @@ export function BusinessSetupWizard({
     if (ready) toast.success("Negocio creado correctamente");
     else toast.warning("Negocio creado con avisos");
     onCreated();
+    // Make the new business selectable immediately (no page reload needed)
+    refreshTenants();
+
   };
 
   const openBusiness = async () => {
