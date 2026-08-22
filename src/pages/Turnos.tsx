@@ -446,7 +446,13 @@ const Turnos = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <Label className="text-xs">Tienda *</Label>
-                    <Select value={openStoreId} onValueChange={setOpenStoreId}>
+                    <Select value={openStoreId} onValueChange={async (v) => {
+                      setOpenStoreId(v);
+                      const { data } = await (supabase.rpc as any)("store_expected_opening_cash", { p_store_id: v });
+                      const prev = Number(data ?? 0);
+                      setExpectedOpening(prev);
+                      setOpenCash(String(prev));
+                    }}>
                       <SelectTrigger><SelectValue placeholder="Seleccionar tienda" /></SelectTrigger>
                       <SelectContent>
                         {stores.filter((s) => !openShifts.find((os) => os.store_id === s.id)).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
@@ -464,12 +470,19 @@ const Turnos = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Efectivo Inicial *</Label>
+                    <Label className="text-xs">Fondo inicial de caja *</Label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input type="number" placeholder="0.00" value={openCash} onChange={(e) => setOpenCash(e.target.value)} className="pl-9" />
                     </div>
+                    {expectedOpening !== null && (
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Cierre anterior: ${expectedOpening.toFixed(2)}
+                        {Math.abs(Number(openCash || 0) - expectedOpening) > 0.005 && " · la diferencia quedará registrada en auditoría"}
+                      </p>
+                    )}
                   </div>
+
                 </div>
 
                 {needsOpenPin && (
