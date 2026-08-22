@@ -4407,6 +4407,7 @@ export type Database = {
       journal_entry_lines: {
         Row: {
           account_id: string
+          correlation_id: string | null
           cost_center_id: string | null
           created_at: string
           credit: number
@@ -4418,11 +4419,15 @@ export type Database = {
           entry_id: string
           exchange_rate: number
           id: string
+          mapping_key: string | null
+          source_module: string | null
+          source_operation: string | null
           store_id: string | null
           warehouse_id: string | null
         }
         Insert: {
           account_id: string
+          correlation_id?: string | null
           cost_center_id?: string | null
           created_at?: string
           credit?: number
@@ -4434,11 +4439,15 @@ export type Database = {
           entry_id: string
           exchange_rate?: number
           id?: string
+          mapping_key?: string | null
+          source_module?: string | null
+          source_operation?: string | null
           store_id?: string | null
           warehouse_id?: string | null
         }
         Update: {
           account_id?: string
+          correlation_id?: string | null
           cost_center_id?: string | null
           created_at?: string
           credit?: number
@@ -4450,6 +4459,9 @@ export type Database = {
           entry_id?: string
           exchange_rate?: number
           id?: string
+          mapping_key?: string | null
+          source_module?: string | null
+          source_operation?: string | null
           store_id?: string | null
           warehouse_id?: string | null
         }
@@ -10041,6 +10053,22 @@ export type Database = {
           unbalanced_entries: number
         }[]
       }
+      accounting_config_report: {
+        Args: { p_tenant: string }
+        Returns: {
+          account_code: string
+          account_name: string
+          actual_type: string
+          detail: string
+          expected_type: string
+          lines_count: number
+          mapping_key: string
+          module: string
+          operation: string
+          remediation: string
+          status: string
+        }[]
+      }
       accounting_mapping_catalog: {
         Args: never
         Returns: {
@@ -10091,6 +10119,20 @@ export type Database = {
           sample: Json
           severity: string
           status: string
+        }[]
+      }
+      accounting_reclass_candidates: {
+        Args: { p_tenant: string }
+        Returns: {
+          account_code: string
+          account_id: string
+          account_name: string
+          actual_type: string
+          amount: number
+          expected_type: string
+          lines_count: number
+          mapping_key: string
+          proposal: string
         }[]
       }
       active_tenant_id: { Args: { _user_id?: string }; Returns: string }
@@ -10205,6 +10247,10 @@ export type Database = {
       cancel_sale: {
         Args: { p_reason: string; p_sale_id: string }
         Returns: undefined
+      }
+      cash_category_mapping_key: {
+        Args: { p_category: string }
+        Returns: string
       }
       certify_financial_integrity: {
         Args: { p_tenant: string }
@@ -10664,6 +10710,32 @@ export type Database = {
           p_tax_rate_id?: string
         }
         Returns: string
+      }
+      jel_add: {
+        Args: {
+          p_account: string
+          p_cc?: string
+          p_credit: number
+          p_debit: number
+          p_desc: string
+          p_entry: string
+          p_key: string
+          p_module: string
+          p_operation: string
+        }
+        Returns: undefined
+      }
+      log_accounting_control: {
+        Args: {
+          p_account: string
+          p_action: string
+          p_detail: string
+          p_key: string
+          p_module: string
+          p_operation: string
+          p_tenant: string
+        }
+        Returns: undefined
       }
       log_online_order_event: {
         Args: {
@@ -11248,6 +11320,15 @@ export type Database = {
       }
       resolve_account_id: {
         Args: { p_code: string; p_tenant_id: string }
+        Returns: string
+      }
+      resolve_account_strict: {
+        Args: {
+          p_key: string
+          p_module?: string
+          p_operation?: string
+          p_tenant: string
+        }
         Returns: string
       }
       resolve_cash_counterpart: {
