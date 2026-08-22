@@ -11463,6 +11463,14 @@ export type Database = {
         Args: { p_accept: boolean; p_assignment_id: string; p_reason?: string }
         Returns: undefined
       }
+      rollback_business_provisioning: {
+        Args: {
+          p_idempotency_key?: string
+          p_reason?: string
+          p_tenant: string
+        }
+        Returns: Json
+      }
       sa_active_tenant: { Args: never; Returns: string }
       sa_global_mode: { Args: never; Returns: boolean }
       sale_returnable_items: {
@@ -11610,6 +11618,10 @@ export type Database = {
           _shift_id: string
         }
         Returns: undefined
+      }
+      validate_business_admin: {
+        Args: { p_tenant: string; p_user: string }
+        Returns: Json
       }
       validate_business_readiness: { Args: { p_tenant: string }; Returns: Json }
       validate_coupon: {
