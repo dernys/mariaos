@@ -351,7 +351,8 @@ const Empleados = () => {
               <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
               El PIN se guarda cifrado. Solo el empleado debe conocerlo.
             </p>
-          </div>
+          </form>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setPinDialogOpen(false)} disabled={pinSaving}>Cancelar</Button>
             <Button onClick={savePin} disabled={pinSaving} className="gradient-brand text-primary-foreground">
