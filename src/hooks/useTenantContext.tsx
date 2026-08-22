@@ -188,6 +188,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         tenant,
         allTenants,
         setActiveTenantId,
+        refreshTenants,
+
         mode,
         setMode,
         isSuperadmin,
