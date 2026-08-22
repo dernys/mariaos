@@ -287,11 +287,25 @@ export function BusinessSetupWizard({
                   </div>
                   <div>
                     <p className="font-heading font-semibold text-sm">
-                      {result.ready ? "Negocio listo para operar" : "Negocio creado con avisos"}
+                      {result.ready ? "Negocio creado correctamente" : "Negocio creado con avisos"}
                     </p>
                     <p className="text-xs text-muted-foreground">{info.name}</p>
                   </div>
                 </div>
+                {result.admin_email && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <p className="text-xs font-medium">Administrador creado: {result.admin_email}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Rol admin y propietario del negocio, sin acceso a otros negocios.
+                    </p>
+                    {adminForm.password && (
+                      <Button size="sm" onClick={enterAsAdmin} disabled={entering}>
+                        {entering && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                        Entrar como administrador
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <div className="space-y-2">
                   {result.checks.map((c) => (
                     <div key={c.key} className="flex items-start gap-2 rounded-lg border bg-card p-3">
