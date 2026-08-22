@@ -223,102 +223,12 @@ const SuperAdmin = () => {
           </div>
         </div>
 
-        {/* Create Form */}
-        <AnimatePresence>
-          {showCreate && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="bg-card rounded-xl p-5 shadow-card border space-y-4">
-                <h3 className="font-heading font-semibold text-sm">Crear Nueva Empresa</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">Nombre *</label>
-                    <Input
-                      placeholder="Mi Empresa S.A."
-                      value={form.name}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          name: e.target.value,
-                          slug: form.slug || e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">Slug (URL) *</label>
-                    <Input
-                      placeholder="mi-empresa"
-                      value={form.slug}
-                      onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">Email</label>
-                    <Input
-                      type="email"
-                      placeholder="contacto@empresa.com"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">Teléfono</label>
-                    <Input
-                      placeholder="+52 55 1234 5678"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">RFC</label>
-                    <Input
-                      placeholder="XAXX010101000"
-                      value={form.rfc}
-                      onChange={(e) => setForm({ ...form, rfc: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">Dirección</label>
-                    <Input
-                      placeholder="Av. Reforma 250, CDMX"
-                      value={form.address}
-                      onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">Tipo de Negocio *</label>
-                    <select
-                      value={form.business_type}
-                      onChange={(e) => setForm({ ...form, business_type: e.target.value })}
-                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                    >
-                      <option value="empresa">Empresa / Tienda</option>
-                      <option value="bar">Bar</option>
-                      <option value="restaurant">Restaurante</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => setShowCreate(false)}>
-                    Cancelar
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={createTenant}
-                    className="gradient-brand text-primary-foreground font-heading font-semibold"
-                  >
-                    Crear Empresa
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <BusinessSetupWizard
+          open={showCreate}
+          onOpenChange={setShowCreate}
+          onCreated={fetchTenants}
+        />
+
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Tenants List */}
