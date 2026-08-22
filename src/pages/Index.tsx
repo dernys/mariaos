@@ -21,6 +21,7 @@ import { AnalyticsFilterBar } from "@/components/analytics/AnalyticsFilterBar";
 import { ChartCard } from "@/components/analytics/ChartCard";
 import { KpiGrid, KpiTile } from "@/components/analytics/KpiTile";
 import { AnalyticsTable } from "@/components/analytics/AnalyticsTable";
+import { DailyFinancialSummary } from "@/components/accounting/DailyFinancialSummary";
 import {
   AXIS_TICK, GRID_STROKE, TOOLTIP_STYLE, colorAt, compactMoney, formatMoney,
 } from "@/lib/analytics/chartTheme";
@@ -68,6 +69,9 @@ const Dashboard = () => {
     <AppLayout title={t("nav.items.dashboard")}>
       <div className="space-y-4">
         <AnalyticsFilterBar range={range} onRefresh={a.refetch} refreshing={a.fetching} />
+
+        <DailyFinancialSummary />
+
 
         <KpiGrid>
           <KpiTile label="Ventas" value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
