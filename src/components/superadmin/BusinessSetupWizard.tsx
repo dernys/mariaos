@@ -277,7 +277,18 @@ export function BusinessSetupWizard({
           </div>
         )}
 
+        {!result && failure && (
+          <div className="mx-5 mt-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+            <p className="text-xs font-medium text-destructive">No se creó el negocio</p>
+            <p className="text-[11px] text-destructive/90 break-words">{failure}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Se revirtió todo lo creado. Corrige el dato y vuelve a intentar: no se duplicará nada.
+            </p>
+          </div>
+        )}
+
         <ScrollArea className="max-h-[62vh]">
+
           <div className="p-5">
             {result ? (
               <div className="space-y-4">
