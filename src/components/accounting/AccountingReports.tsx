@@ -213,6 +213,7 @@ export function AccountingReports({ accounts, tenantName }: Props) {
     try {
       const p = await build(key);
       setPreview(p);
+      setPage(1);
       if (p.rows.length === 0) toast({ title: "Sin movimientos contabilizados en el rango seleccionado" });
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
