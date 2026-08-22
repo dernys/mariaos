@@ -633,21 +633,22 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
             {payments.map((p, idx) => (
               <div key={idx} className="bg-muted/40 rounded-lg p-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1">
-                    {(["cash", "card", "qr"] as const).map((m) => (
+                <div className="flex items-start gap-2">
+                  <div className="flex flex-wrap gap-1">
+                    {PAYMENT_METHODS.map((m) => (
                       <button
-                        key={m}
+                        key={m.code}
                         type="button"
-                        onClick={() => updatePayment(idx, "method", m)}
+                        onClick={() => updatePayment(idx, "method", m.code)}
                         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                          p.method === m ? "gradient-brand text-primary-foreground" : "bg-background border hover:bg-muted"
+                          p.method === m.code ? "gradient-brand text-primary-foreground" : "bg-background border hover:bg-muted"
                         }`}
                       >
-                        {m === "cash" && <Banknote className="h-3 w-3" />}
-                        {m === "card" && <CreditCard className="h-3 w-3" />}
-                        {m === "qr" && <QrCode className="h-3 w-3" />}
-                        {m === "cash" ? t("pos.payment.cash") : m === "card" ? t("pos.payment.card") : t("pos.payment.qr")}
+                        {m.cls === "cash" && <Banknote className="h-3 w-3" />}
+                        {m.code === "CARD_POS" && <CreditCard className="h-3 w-3" />}
+                        {m.cls === "digital" && <QrCode className="h-3 w-3" />}
+                        {m.code === "BANK_TRANSFER" && <Landmark className="h-3 w-3" />}
+                        {m.label}
                       </button>
                     ))}
                   </div>
@@ -657,6 +658,27 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                     </button>
                   )}
                 </div>
+
+                {requiresConfirmation(p.method) && (
+                  <div className="rounded-md border border-warning/30 bg-warning/10 p-2 space-y-2">
+                    <p className="flex items-center gap-1 text-[10px] font-semibold text-warning">
+                      <Clock className="h-3 w-3" />
+                      Queda PENDIENTE de confirmación: se cobra sólo al verificar el comprobante real.
+                    </p>
+                    <div>
+                      <Label className="text-[10px]">
+                        Referencia {methodDef(p.method)?.requiresReference ? "*" : "(opcional)"}
+                      </Label>
+                      <Input
+                        className="h-8 text-xs"
+                        value={p.reference}
+                        onChange={(e) => updatePayment(idx, "reference", e.target.value)}
+                        placeholder="Nro. de operación / transferencia"
+                      />
+                    </div>
+                  </div>
+                )}
+
 
                 <div className="grid grid-cols-3 gap-2">
                   <div>
