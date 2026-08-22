@@ -331,22 +331,28 @@ const Empleados = () => {
               {pinTarget?.name} usará este PIN para autorizar apertura de turnos, cambios de operador y ventas sensibles.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-3">
+          <form className="grid gap-3" autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+            {/* Campo señuelo: evita que el navegador rellene el buscador de la tabla con el email guardado */}
+            <input type="text" name="employee-pin-decoy" autoComplete="username" className="hidden" tabIndex={-1} aria-hidden />
             <div>
               <Label className="text-xs">Nuevo PIN (4 a 8 dígitos)</Label>
               <Input type="password" inputMode="numeric" maxLength={8} value={pinValue}
+                name="employee-pin-new" autoComplete="new-password"
                 onChange={(e) => setPinValue(e.target.value.replace(/\D/g, ""))} placeholder="••••" />
             </div>
             <div>
               <Label className="text-xs">Confirmar PIN</Label>
               <Input type="password" inputMode="numeric" maxLength={8} value={pinConfirm}
+                name="employee-pin-confirm" autoComplete="new-password"
                 onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ""))} placeholder="••••" />
             </div>
+
             <p className="text-[11px] text-muted-foreground flex items-start gap-1">
               <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
               El PIN se guarda cifrado. Solo el empleado debe conocerlo.
             </p>
-          </div>
+          </form>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setPinDialogOpen(false)} disabled={pinSaving}>Cancelar</Button>
             <Button onClick={savePin} disabled={pinSaving} className="gradient-brand text-primary-foreground">

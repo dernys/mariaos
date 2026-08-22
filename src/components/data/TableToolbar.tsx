@@ -34,7 +34,13 @@ export function TableToolbar({ search, onSearchChange, searchPlaceholder = "Busc
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-9 h-9 text-xs"
+          type="search"
+          name="table-search"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
         />
+
       </div>
       {filters.map((f) => (
         <SearchableSelect

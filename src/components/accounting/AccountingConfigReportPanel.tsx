@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/data/TablePagination";
+
 import { AlertTriangle, CheckCircle2, Download, RefreshCw, ShieldCheck } from "lucide-react";
 import { exportCsv } from "@/lib/exportData";
 import { toast } from "sonner";
@@ -54,6 +56,11 @@ export function AccountingConfigReportPanel() {
   const [rows, setRows] = useState<ConfigRow[]>([]);
   const [reclass, setReclass] = useState<ReclassRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [reclassPage, setReclassPage] = useState(1);
+  const [reclassPageSize, setReclassPageSize] = useState(10);
+
 
   const load = useCallback(async () => {
     if (!tenantId) return;
@@ -78,6 +85,10 @@ export function AccountingConfigReportPanel() {
 
   const blocking = (counts.MISSING ?? 0) + (counts.INVALID ?? 0) + (counts.CONFLICTING ?? 0);
   const problems = rows.filter((r) => !["USED", "UNUSED"].includes(r.status));
+  const visibleRows = problems.length > 0 ? problems : rows;
+  useEffect(() => { setPage(1); }, [rows.length]);
+  useEffect(() => { setReclassPage(1); }, [reclass.length]);
+
 
   if (loading) return <Card className="p-5"><Skeleton className="h-48 w-full" /></Card>;
 
@@ -149,7 +160,7 @@ export function AccountingConfigReportPanel() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(problems.length > 0 ? problems : rows).slice(0, 30).map((r) => (
+            {visibleRows.slice((page - 1) * pageSize, page * pageSize).map((r) => (
               <TableRow key={r.mapping_key + r.status}>
                 <TableCell className="text-xs">
                   <div className="font-semibold">{r.mapping_key}</div>
@@ -170,7 +181,15 @@ export function AccountingConfigReportPanel() {
             ))}
           </TableBody>
         </Table>
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={visibleRows.length}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
+
 
       <div className="space-y-2">
         <h4 className="text-sm font-semibold">Propuesta de reclasificación histórica</h4>
@@ -192,7 +211,7 @@ export function AccountingConfigReportPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reclass.slice(0, 20).map((r, i) => (
+                {reclass.slice((reclassPage - 1) * reclassPageSize, reclassPage * reclassPageSize).map((r, i) => (
                   <TableRow key={`${r.account_code}-${r.mapping_key}-${i}`}>
                     <TableCell className="text-xs">
                       {r.account_code} · {r.account_name}
@@ -209,7 +228,15 @@ export function AccountingConfigReportPanel() {
                 ))}
               </TableBody>
             </Table>
+            <TablePagination
+              page={reclassPage}
+              pageSize={reclassPageSize}
+              total={reclass.length}
+              onPageChange={setReclassPage}
+              onPageSizeChange={setReclassPageSize}
+            />
           </div>
+
         )}
       </div>
     </Card>

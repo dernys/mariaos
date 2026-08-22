@@ -13,7 +13,9 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/data/TablePagination";
 import { useBaseCurrency } from "@/hooks/useFiscalRules";
+
 
 interface Account {
   id: string;
@@ -67,6 +69,15 @@ export function AccountingReports({ accounts, tenantName }: Props) {
   const [periods, setPeriods] = useState<Array<{ id: string; name: string; status: string; start_date: string; end_date: string }>>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
+  const pagedRows = useMemo(
+    () => (preview?.rows ?? []).slice((page - 1) * pageSize, page * pageSize),
+    [preview, page, pageSize],
+  );
+
+
 
   const money = useMemo(
     () => (n: number) => `${symbol || "$"}${(n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
@@ -202,6 +213,7 @@ export function AccountingReports({ accounts, tenantName }: Props) {
     try {
       const p = await build(key);
       setPreview(p);
+      setPage(1);
       if (p.rows.length === 0) toast({ title: "Sin movimientos contabilizados en el rango seleccionado" });
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -321,41 +333,51 @@ export function AccountingReports({ accounts, tenantName }: Props) {
                 No hay asientos contabilizados en este rango de fechas.
               </p>
             ) : (
-              <div className="max-h-[520px] overflow-auto rounded-md border">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-muted/60 backdrop-blur">
-                    <TableRow>
-                      {preview.head.map((h, i) => (
-                        <TableHead key={h} className={`text-xs ${preview.rightAligned.includes(i) ? "text-right" : ""}`}>{h}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {preview.rows.map((row, ri) => (
-                      <TableRow key={ri} className="text-xs">
-                        {row.map((cell, ci) => {
-                          const text = typeof cell === "string" ? cell : cell.text;
-                          const isBold = typeof cell !== "string" && cell.bold;
-                          const span = typeof cell === "string" ? 1 : cell.span ?? 1;
-                          return (
-                            <TableCell
-                              key={ci}
-                              colSpan={span}
-                              className={[
-                                isBold ? "font-semibold" : "",
-                                preview.rightAligned.includes(ci) ? "text-right tabular-nums" : "",
-                              ].join(" ")}
-                            >
-                              {text}
-                            </TableCell>
-                          );
-                        })}
+              <div className="rounded-md border overflow-hidden">
+                <div className="max-h-[520px] overflow-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-muted/60 backdrop-blur">
+                      <TableRow>
+                        {preview.head.map((h, i) => (
+                          <TableHead key={h} className={`text-xs ${preview.rightAligned.includes(i) ? "text-right" : ""}`}>{h}</TableHead>
+                        ))}
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {pagedRows.map((row, ri) => (
+                        <TableRow key={ri} className="text-xs">
+                          {row.map((cell, ci) => {
+                            const text = typeof cell === "string" ? cell : cell.text;
+                            const isBold = typeof cell !== "string" && cell.bold;
+                            const span = typeof cell === "string" ? 1 : cell.span ?? 1;
+                            return (
+                              <TableCell
+                                key={ci}
+                                colSpan={span}
+                                className={[
+                                  isBold ? "font-semibold" : "",
+                                  preview.rightAligned.includes(ci) ? "text-right tabular-nums" : "",
+                                ].join(" ")}
+                              >
+                                {text}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <TablePagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={preview.rows.length}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                />
               </div>
             )}
+
           </CardContent>
         </Card>
       )}

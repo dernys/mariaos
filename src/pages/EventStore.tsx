@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/data/TablePagination";
+
 import { Activity, AlertTriangle, CheckCircle2, Database, RefreshCw, Search, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -50,6 +52,18 @@ export default function EventStore() {
     refetch,
     isRefetching,
   } = useShadowEvents({ eventType: eventType === "all" ? null : eventType, search: term || null });
+
+  const [evPage, setEvPage] = useState(1);
+  const [evPageSize, setEvPageSize] = useState(25);
+  const [dvPage, setDvPage] = useState(1);
+  const [dvPageSize, setDvPageSize] = useState(25);
+
+  useEffect(() => { setEvPage(1); }, [eventType, term, events.length]);
+  useEffect(() => { setDvPage(1); }, [divergences.length]);
+
+  const pagedEvents = events.slice((evPage - 1) * evPageSize, evPage * evPageSize);
+  const pagedDivergences = divergences.slice((dvPage - 1) * dvPageSize, dvPage * dvPageSize);
+
 
   const byType = useMemo(() => summary?.by_type ?? {}, [summary]);
 
@@ -185,7 +199,7 @@ export default function EventStore() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      events.map((e) => {
+                      pagedEvents.map((e) => {
                         const amount = eventAmount(e);
                         return (
                           <TableRow key={e.id}>
@@ -209,9 +223,17 @@ export default function EventStore() {
                     )}
                   </TableBody>
                 </Table>
+                <TablePagination
+                  page={evPage}
+                  pageSize={evPageSize}
+                  total={events.length}
+                  onPageChange={setEvPage}
+                  onPageSizeChange={setEvPageSize}
+                />
               </CardContent>
             </Card>
           </TabsContent>
+
 
           <TabsContent value="divergences">
             <Card>
@@ -241,7 +263,7 @@ export default function EventStore() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      divergences.map((d, i) => (
+                      pagedDivergences.map((d, i) => (
                         <TableRow key={`${d.aggregate_id}-${d.divergence_type}-${i}`}>
                           <TableCell>
                             <Badge
@@ -263,7 +285,17 @@ export default function EventStore() {
                     )}
                   </TableBody>
                 </Table>
+                {divergences.length > 0 && (
+                  <TablePagination
+                    page={dvPage}
+                    pageSize={dvPageSize}
+                    total={divergences.length}
+                    onPageChange={setDvPage}
+                    onPageSizeChange={setDvPageSize}
+                  />
+                )}
               </CardContent>
+
             </Card>
           </TabsContent>
 
