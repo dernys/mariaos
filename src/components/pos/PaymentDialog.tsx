@@ -219,6 +219,15 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       toast({ title: t("common.error"), description: t("pos.payment.errors.notCovered"), variant: "destructive" });
       return;
     }
+    if (overpay > change + 0.01) {
+      toast({
+        title: t("common.error"),
+        description: "El sobrepago sólo se admite en efectivo (vuelto). Ajuste los montos no efectivos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
 
     // Validaciones por medio de pago
     for (const p of payments) {
