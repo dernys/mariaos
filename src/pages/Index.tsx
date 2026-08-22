@@ -69,6 +69,9 @@ const Dashboard = () => {
       <div className="space-y-4">
         <AnalyticsFilterBar range={range} onRefresh={a.refetch} refreshing={a.fetching} />
 
+        <DailyFinancialSummary />
+
+
         <KpiGrid>
           <KpiTile label="Ventas" value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
             current={a.kpis.revenue} previous={range.compare ? a.kpis.prevRevenue : undefined}
