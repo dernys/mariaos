@@ -253,8 +253,14 @@ export function BusinessSetupWizard({
         payload,
         idempotency_key: idempotencyKey,
         admin: adminForm.enabled
-          ? { email: adminForm.email.trim(), full_name: adminForm.full_name || adminForm.email, password: adminForm.password }
+          ? {
+              mode: adminForm.mode,
+              email: adminForm.email.trim(),
+              full_name: adminForm.full_name || adminForm.email,
+              password: adminForm.mode === "existing" ? null : adminForm.password,
+            }
           : null,
+
       },
     });
 
