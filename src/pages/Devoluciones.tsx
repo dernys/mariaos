@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -374,8 +374,8 @@ export default function Devoluciones() {
               </TableHeader>
               <TableBody>
                 {history.rows.map((r) => (
-                  <>
-                    <TableRow key={r.id} className="cursor-pointer" onClick={() => toggleDetail(r.id)}>
+                  <Fragment key={r.id}>
+                    <TableRow className="cursor-pointer" onClick={() => toggleDetail(r.id)}>
                       <TableCell className="text-muted-foreground">
                         {expanded === r.id ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                       </TableCell>
@@ -438,7 +438,7 @@ export default function Devoluciones() {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 ))}
                 {history.loading && (
                   <TableRow><TableCell colSpan={11} className="p-0"><DataState loading /></TableCell></TableRow>
