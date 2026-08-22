@@ -10421,6 +10421,16 @@ export type Database = {
         Returns: string
       }
       current_actor_label: { Args: never; Returns: string }
+      daily_financial_summary: {
+        Args: {
+          p_from: string
+          p_shift?: string
+          p_store?: string
+          p_tenant: string
+          p_to: string
+        }
+        Returns: Json
+      }
       distance_km: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
@@ -10828,7 +10838,7 @@ export type Database = {
         Args: {
           _employee_id: string
           _notes?: string
-          _opening_cash: number
+          _opening_cash?: number
           _pin?: string
           _store_id: string
         }
@@ -11339,6 +11349,10 @@ export type Database = {
           detail: string
           status: string
         }[]
+      }
+      store_expected_opening_cash: {
+        Args: { p_store_id: string }
+        Returns: number
       }
       submit_cu_tax_declaration: {
         Args: { p_declaration_id: string }
