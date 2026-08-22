@@ -33,6 +33,7 @@ import CuCostSheetsTab from "@/components/accounting/CuCostSheetsTab";
 import { FinancialKpiPanel } from "@/components/accounting/FinancialKpiPanel";
 import { AccountingAuditPanel } from "@/components/accounting/AccountingAuditPanel";
 import { HistoricalCostsPanel } from "@/components/accounting/HistoricalCostsPanel";
+import { FinancialExceptionsPanel } from "@/components/accounting/FinancialExceptionsPanel";
 import { FinancialEngineConsole } from "@/components/accounting/FinancialEngineConsole";
 import { AccountMappingTab } from "@/components/accounting/AccountMappingTab";
 import { OperationReconciliationPanel } from "@/components/accounting/OperationReconciliationPanel";
@@ -778,6 +779,7 @@ const Contabilidad = () => {
             </TabsList>
             <TabsContent value="reports" className="space-y-4">
               <FinancialKpiPanel />
+              <FinancialExceptionsPanel />
               <AccountingAuditPanel />
               <HistoricalCostsPanel />
               <OperationReconciliationPanel />
