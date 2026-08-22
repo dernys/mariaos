@@ -220,13 +220,23 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       return;
     }
 
-    // Validate card payments have required fields
+    // Validaciones por medio de pago
     for (const p of payments) {
-      if (p.method === "card" && (!p.card_last_four || !p.card_holder)) {
+      if (!(parseFloat(p.amount) > 0)) continue;
+      if (p.method === "CARD_POS" && (!p.card_last_four || !p.card_holder)) {
         toast({ title: t("common.error"), description: t("pos.payment.errors.cardFields"), variant: "destructive" });
         return;
       }
+      if (methodDef(p.method)?.requiresReference && !p.reference.trim()) {
+        toast({
+          title: t("common.error"),
+          description: `${methodLabel(p.method)}: se requiere número de referencia.`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
+
 
     setSaving(true);
     try {
