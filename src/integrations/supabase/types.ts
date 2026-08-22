@@ -10821,6 +10821,10 @@ export type Database = {
         }
         Returns: string
       }
+      lookup_business_admin_candidate: {
+        Args: { _email: string }
+        Returns: Json
+      }
       mark_invoice_transmitted: {
         Args: {
           p_cufe?: string
