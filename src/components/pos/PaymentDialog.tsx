@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Banknote, CreditCard, QrCode, Plus, Trash2, Search, User, Copy, Check } from "lucide-react";
+import { Banknote, CreditCard, QrCode, Plus, Trash2, Search, User, Copy, Check, Landmark, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
@@ -15,6 +15,11 @@ import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { useTranslation } from "react-i18next";
 import { useActiveShift } from "@/hooks/useActiveShift";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import {
+  PAYMENT_METHODS, methodDef, methodLabel, requiresConfirmation, isCashMethod,
+  type PaymentMethodCode,
+} from "@/lib/finance/paymentMethods";
+
 
 interface CartItem {
   id: number;
@@ -41,14 +46,16 @@ interface Employee {
 }
 
 interface PaymentLine {
-  method: "cash" | "card" | "qr";
+  method: Exclude<PaymentMethodCode, "CREDIT">;
   currency: string;
   amount: string;
   exchange_rate: string;
   card_last_four: string;
   card_holder: string;
   card_description: string;
+  reference: string;
 }
+
 
 interface CurrencyConfig {
   code: string;
@@ -79,8 +86,12 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   // Una intención de cobro = una clave de idempotencia (doble clic o reintento no duplica la venta)
   const intentRef = useRef<string>(crypto.randomUUID());
   const [payments, setPayments] = useState<PaymentLine[]>([
-    { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" },
+    {
+      method: "CASH", currency: "CUP", amount: "", exchange_rate: "1",
+      card_last_four: "", card_holder: "", card_description: "", reference: "",
+    },
   ]);
+
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [currencies, setCurrencies] = useState<CurrencyConfig[]>([]);
@@ -108,7 +119,11 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
   useEffect(() => {
     if (open) {
-      setPayments([{ method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" }]);
+      setPayments([{
+        method: "CASH", currency: "CUP", amount: "", exchange_rate: "1",
+        card_last_four: "", card_holder: "", card_description: "", reference: "",
+      }]);
+
       setPartyType("none");
       setSelectedParty("");
       setPartySearch("");
@@ -139,17 +154,35 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     }
   };
 
-  const totalPaidInBase = payments.reduce((sum, p) => {
-    const amt = parseFloat(p.amount) || 0;
-    const rate = parseFloat(p.exchange_rate) || 1;
-    return sum + amt * rate;
-  }, 0);
+  const lineBase = (p: PaymentLine) => (parseFloat(p.amount) || 0) * (parseFloat(p.exchange_rate) || 1);
 
-  const remaining = total - totalPaidInBase;
+  /** Cobrado en firme: efectivo y tarjeta/POS. */
+  const confirmedInBase = payments
+    .filter((p) => !requiresConfirmation(p.method))
+    .reduce((s, p) => s + lineBase(p), 0);
+  /** Declarado pero pendiente de confirmar: transferencia, Transfermóvil, EnZona. */
+  const pendingInBase = payments
+    .filter((p) => requiresConfirmation(p.method))
+    .reduce((s, p) => s + lineBase(p), 0);
+
+  const totalPaidInBase = confirmedInBase + pendingInBase;
+  const cashInBase = payments.filter((p) => isCashMethod(p.method)).reduce((s, p) => s + lineBase(p), 0);
+
+  /** Lo que quedaría a crédito (fiado) = total − confirmado − pendiente. */
+  const remaining = Math.round((total - totalPaidInBase) * 100) / 100;
+  /** El vuelto sólo puede darse en efectivo y no es ingreso. */
+  const overpay = Math.max(0, Math.round((totalPaidInBase - total) * 100) / 100);
+  const change = Math.min(overpay, cashInBase);
+
+  const blankLine = (): PaymentLine => ({
+    method: "CASH", currency: "CUP", amount: "", exchange_rate: "1",
+    card_last_four: "", card_holder: "", card_description: "", reference: "",
+  });
 
   const addPaymentLine = () => {
-    setPayments([...payments, { method: "cash", currency: "CUP", amount: "", exchange_rate: "1", card_last_four: "", card_holder: "", card_description: "" }]);
+    setPayments([...payments, blankLine()]);
   };
+
 
   const removePaymentLine = (idx: number) => {
     setPayments(payments.filter((_, i) => i !== idx));
@@ -186,14 +219,33 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       toast({ title: t("common.error"), description: t("pos.payment.errors.notCovered"), variant: "destructive" });
       return;
     }
+    if (overpay > change + 0.01) {
+      toast({
+        title: t("common.error"),
+        description: "El sobrepago sólo se admite en efectivo (vuelto). Ajuste los montos no efectivos.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Validate card payments have required fields
+
+    // Validaciones por medio de pago
     for (const p of payments) {
-      if (p.method === "card" && (!p.card_last_four || !p.card_holder)) {
+      if (!(parseFloat(p.amount) > 0)) continue;
+      if (p.method === "CARD_POS" && (!p.card_last_four || !p.card_holder)) {
         toast({ title: t("common.error"), description: t("pos.payment.errors.cardFields"), variant: "destructive" });
         return;
       }
+      if (methodDef(p.method)?.requiresReference && !p.reference.trim()) {
+        toast({
+          title: t("common.error"),
+          description: `${methodLabel(p.method)}: se requiere número de referencia.`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
+
 
     setSaving(true);
     try {
@@ -250,10 +302,14 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           amount: parseFloat(p.amount),
           amount_in_base: parseFloat(p.amount) * (parseFloat(p.exchange_rate) || 1),
           exchange_rate: parseFloat(p.exchange_rate) || 1,
-          card_last_four: p.method === "card" ? p.card_last_four : null,
-          card_holder: p.method === "card" ? p.card_holder : null,
-          card_description: p.method === "card" ? p.card_description : null,
+          card_last_four: p.method === "CARD_POS" ? p.card_last_four : null,
+          card_holder: p.method === "CARD_POS" ? p.card_holder : null,
+          card_description: p.method === "CARD_POS" ? p.card_description : null,
+          reference: p.reference.trim() || null,
+          provider: methodDef(p.method)?.cls === "digital" ? p.method : null,
+          channel: requiresConfirmation(p.method) ? "pos_manual" : "pos",
         }));
+
 
       // --- OFFLINE PATH: si no hay red, encola y termina ---
       const offlinePayload = {
@@ -310,7 +366,11 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         })),
         p_payments: paymentRows.map((p) => ({
           method: p.method,
+          reference: p.reference,
+          provider: p.provider,
+          channel: p.channel,
           currency: p.currency,
+
           amount: p.amount,
           card_last_four: p.card_last_four,
           card_holder: p.card_holder,
@@ -365,12 +425,13 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
             date: new Date(),
             items: cart.map((c) => ({ name: c.name, qty: c.qty, price: c.price, total: c.price * c.qty })),
             subtotal, tax, total,
-            paid: totalPaidInBase,
-            change: totalPaidInBase > total ? totalPaidInBase - total : 0,
+            paid: confirmedInBase,
+            change,
             payments: paymentRows.map((p) => ({
-              method: p.method === "cash" ? "Efectivo" : p.method === "card" ? "Tarjeta" : "QR",
+              method: methodLabel(p.method) + (requiresConfirmation(p.method) ? " (por confirmar)" : ""),
               currency: p.currency, amount: p.amount,
             })),
+
             footer: posSettings.receipt_footer,
             widthMm: posSettings.receipt_width,
             silent: posSettings.silent_print,
@@ -581,21 +642,22 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
 
             {payments.map((p, idx) => (
               <div key={idx} className="bg-muted/40 rounded-lg p-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1">
-                    {(["cash", "card", "qr"] as const).map((m) => (
+                <div className="flex items-start gap-2">
+                  <div className="flex flex-wrap gap-1">
+                    {PAYMENT_METHODS.map((m) => (
                       <button
-                        key={m}
+                        key={m.code}
                         type="button"
-                        onClick={() => updatePayment(idx, "method", m)}
+                        onClick={() => updatePayment(idx, "method", m.code)}
                         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                          p.method === m ? "gradient-brand text-primary-foreground" : "bg-background border hover:bg-muted"
+                          p.method === m.code ? "gradient-brand text-primary-foreground" : "bg-background border hover:bg-muted"
                         }`}
                       >
-                        {m === "cash" && <Banknote className="h-3 w-3" />}
-                        {m === "card" && <CreditCard className="h-3 w-3" />}
-                        {m === "qr" && <QrCode className="h-3 w-3" />}
-                        {m === "cash" ? t("pos.payment.cash") : m === "card" ? t("pos.payment.card") : t("pos.payment.qr")}
+                        {m.cls === "cash" && <Banknote className="h-3 w-3" />}
+                        {m.code === "CARD_POS" && <CreditCard className="h-3 w-3" />}
+                        {m.cls === "digital" && <QrCode className="h-3 w-3" />}
+                        {m.code === "BANK_TRANSFER" && <Landmark className="h-3 w-3" />}
+                        {m.label}
                       </button>
                     ))}
                   </div>
@@ -605,6 +667,27 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                     </button>
                   )}
                 </div>
+
+                {requiresConfirmation(p.method) && (
+                  <div className="rounded-md border border-warning/30 bg-warning/10 p-2 space-y-2">
+                    <p className="flex items-center gap-1 text-[10px] font-semibold text-warning">
+                      <Clock className="h-3 w-3" />
+                      Queda PENDIENTE de confirmación: se cobra sólo al verificar el comprobante real.
+                    </p>
+                    <div>
+                      <Label className="text-[10px]">
+                        Referencia {methodDef(p.method)?.requiresReference ? "*" : "(opcional)"}
+                      </Label>
+                      <Input
+                        className="h-8 text-xs"
+                        value={p.reference}
+                        onChange={(e) => updatePayment(idx, "reference", e.target.value)}
+                        placeholder="Nro. de operación / transferencia"
+                      />
+                    </div>
+                  </div>
+                )}
+
 
                 <div className="grid grid-cols-3 gap-2">
                   <div>
@@ -645,7 +728,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                   </p>
                 )}
 
-                {p.method === "card" && (
+                {p.method === "CARD_POS" && (
                   <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/50">
                     <div>
                       <Label className="text-[10px]">{t("pos.payment.lastFour")} *</Label>
@@ -678,7 +761,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                   </div>
                 )}
 
-                {p.method === "qr" && (
+                {methodDef(p.method)?.showsQr && (
                   <div className="flex flex-col items-center gap-3 pt-2 border-t border-border/50">
                     <div className="bg-white p-3 rounded-lg shadow-sm">
                       <QRCodeSVG
@@ -715,22 +798,34 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
               <span className="font-heading font-semibold">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("pos.payment.paid")}</span>
-              <span className="font-heading font-semibold text-primary">${totalPaidInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+              <span className="text-muted-foreground">Cobrado en firme (efectivo/tarjeta)</span>
+              <span className="font-heading font-semibold text-primary">${confirmedInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
             </div>
+            {pendingInBase > 0 && (
+              <div className="flex justify-between text-warning">
+                <span>Digital por confirmar</span>
+                <span className="font-heading font-semibold">${pendingInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+              </div>
+            )}
             {remaining > 0.01 && (
               <div className="flex justify-between text-destructive">
-                <span>{t("pos.payment.pending")}</span>
+                <span>{isPartial ? "A crédito (fiado)" : t("pos.payment.pending")}</span>
                 <span className="font-heading font-bold">${remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
               </div>
             )}
-            {remaining <= 0 && totalPaidInBase > total && (
+            {change > 0 && (
               <div className="flex justify-between text-primary">
-                <span>{t("pos.payment.change")}</span>
-                <span className="font-heading font-bold">${Math.abs(remaining).toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+                <span>{t("pos.payment.change")} (efectivo)</span>
+                <span className="font-heading font-bold">${change.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
               </div>
             )}
+            {overpay > change && (
+              <p className="text-[10px] text-destructive">
+                El exceso sólo puede devolverse en efectivo; ajuste los montos no efectivos.
+              </p>
+            )}
           </div>
+
 
           <Button
             onClick={handleSubmit}

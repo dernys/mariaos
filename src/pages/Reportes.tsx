@@ -17,6 +17,8 @@ import { AnalyticsFilterBar } from "@/components/analytics/AnalyticsFilterBar";
 import { ChartCard } from "@/components/analytics/ChartCard";
 import { KpiGrid, KpiTile } from "@/components/analytics/KpiTile";
 import { AnalyticsTable } from "@/components/analytics/AnalyticsTable";
+import { PaymentMethodsPanel } from "@/components/reports/PaymentMethodsPanel";
+
 import {
   AXIS_TICK, GRID_STROKE, TOOLTIP_STYLE, colorAt, compactMoney, formatMoney,
 } from "@/lib/analytics/chartTheme";
@@ -51,9 +53,11 @@ export default function Reportes() {
         <Tabs defaultValue="ventas" className="space-y-4">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="ventas">Ventas</TabsTrigger>
+            <TabsTrigger value="pagos">Medios de pago</TabsTrigger>
             <TabsTrigger value="financiero">Financiero</TabsTrigger>
             <TabsTrigger value="inventario">Inventario</TabsTrigger>
             <TabsTrigger value="clientes">Clientes</TabsTrigger>
+
           </TabsList>
 
           {/* ---------------- VENTAS ---------------- */}
@@ -142,6 +146,13 @@ export default function Reportes() {
               ]}
             />
           </TabsContent>
+
+          {/* ---------------- MEDIOS DE PAGO ---------------- */}
+          <TabsContent value="pagos" className="space-y-4">
+            <PaymentMethodsPanel from={range.from} to={range.to} />
+          </TabsContent>
+
+
 
           {/* ---------------- FINANCIERO ---------------- */}
           <TabsContent value="financiero" className="space-y-4">
