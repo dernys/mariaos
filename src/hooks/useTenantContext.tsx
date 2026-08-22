@@ -22,6 +22,8 @@ interface TenantContextType {
   tenant: TenantInfo | null;
   allTenants: TenantInfo[];
   setActiveTenantId: (id: string) => Promise<void>;
+  /** Re-reads the tenant list (use after provisioning a new business) */
+  refreshTenants: () => Promise<TenantInfo[]>;
   mode: TenantMode;
   setMode: (mode: TenantMode) => Promise<void>;
   isSuperadmin: boolean;
@@ -30,6 +32,7 @@ interface TenantContextType {
   loading: boolean;
   businessType: string;
 }
+
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
@@ -126,10 +129,27 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     setObservabilityContext({ tenant_id: tenantId, user_id: user?.id ?? null });
   }, [tenantId, user?.id]);
 
+  const refreshTenants = useCallback(async (): Promise<TenantInfo[]> => {
+    if (!isSuperadmin) return allTenants;
+    const { data } = await supabase
+      .from("tenants")
+      .select(TENANT_COLS)
+      .eq("is_active", true)
+      .order("name");
+    const list = (data ?? []) as TenantInfo[];
+    setAllTenants(list);
+    return list;
+  }, [isSuperadmin, allTenants]);
+
   const setActiveTenantId = useCallback(
     async (id: string) => {
-      const t = allTenants.find((x) => x.id === id);
-      if (!t) return;
+      let t = allTenants.find((x) => x.id === id);
+      if (!t) {
+        // A business provisioned in this session may not be in the cached list yet
+        const { data } = await supabase.from("tenants").select(TENANT_COLS).eq("id", id).maybeSingle();
+        if (!data) return;
+        t = data as TenantInfo;
+      }
       const { error } = await supabase.rpc("set_active_tenant", { _tenant_id: id });
       if (error) return;
       localStorage.setItem("sa_active_tenant", id);
@@ -147,6 +167,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     },
     [allTenants, queryClient],
   );
+
 
   const setMode = useCallback(
     async (next: TenantMode) => {
@@ -167,6 +188,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         tenant,
         allTenants,
         setActiveTenantId,
+        refreshTenants,
+
         mode,
         setMode,
         isSuperadmin,

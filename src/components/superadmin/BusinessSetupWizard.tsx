@@ -21,7 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenantContext } from "@/hooks/useTenantContext";
 import { toast } from "sonner";
+
 
 interface BusinessTemplate {
   code: string;
@@ -95,6 +97,9 @@ export function BusinessSetupWizard({
   } | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [entering, setEntering] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const { setActiveTenantId, refreshTenants } = useTenantContext();
+
   const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   const [templateCode, setTemplateCode] = useState<string>("");
@@ -294,11 +299,26 @@ export function BusinessSetupWizard({
     if (ready) toast.success("Negocio creado correctamente");
     else toast.warning("Negocio creado con avisos");
     onCreated();
+    // Make the new business selectable immediately (no page reload needed)
+    refreshTenants();
+
+  };
+
+  const openBusiness = async () => {
+    if (!result?.tenant_id) return;
+    setOpening(true);
+    await refreshTenants();
+    // Switches the active business context: the new admin is then visible in Roles > Usuarios
+    await setActiveTenantId(result.tenant_id);
   };
 
   const enterAsAdmin = async () => {
     if (!result?.admin_email || !adminForm.password) return;
     setEntering(true);
+    // Leave the superadmin session and its cached context behind
+    localStorage.removeItem("sa_active_tenant");
+    sessionStorage.clear();
+    await supabase.auth.signOut();
     const { error } = await supabase.auth.signInWithPassword({
       email: result.admin_email,
       password: adminForm.password,
@@ -308,8 +328,10 @@ export function BusinessSetupWizard({
       toast.error(`No se pudo iniciar sesión: ${error.message}`);
       return;
     }
-    window.location.href = "/";
+    // /app is the authenticated dashboard ("/" is the public landing page)
+    window.location.href = "/app";
   };
+
 
 
   return (
@@ -368,20 +390,33 @@ export function BusinessSetupWizard({
                     <p className="text-xs text-muted-foreground">{info.name}</p>
                   </div>
                 </div>
-                {result.admin_email && (
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
-                    <p className="text-xs font-medium">Administrador creado: {result.admin_email}</p>
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                  {result.admin_email ? (
+                    <>
+                      <p className="text-xs font-medium">Administrador creado: {result.admin_email}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Rol admin y propietario del negocio, con acceso a Roles y permisos (pestaña Usuarios) dentro de su negocio.
+                      </p>
+                    </>
+                  ) : (
                     <p className="text-[11px] text-muted-foreground">
-                      Rol admin y propietario del negocio, sin acceso a otros negocios.
+                      Negocio sin administrador inicial: crea sus usuarios desde Roles y permisos.
                     </p>
-                    {adminForm.password && (
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={openBusiness} disabled={opening}>
+                      {opening && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                      Abrir este negocio
+                    </Button>
+                    {result.admin_email && adminForm.password && (
                       <Button size="sm" onClick={enterAsAdmin} disabled={entering}>
                         {entering && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
                         Entrar como administrador
                       </Button>
                     )}
                   </div>
-                )}
+                </div>
+
                 <div className="space-y-2">
                   {result.checks.map((c) => (
                     <div key={c.key} className="flex items-start gap-2 rounded-lg border bg-card p-3">
