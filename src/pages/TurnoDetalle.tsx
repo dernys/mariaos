@@ -20,6 +20,8 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { CashFlowPanel, type ShiftSummary } from "@/components/turnos/CashFlowPanel";
 import { CashMovementDialog } from "@/components/turnos/CashMovementDialog";
+import { useTenant } from "@/hooks/useTenant";
+
 
 
 interface SaleRow {
