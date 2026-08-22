@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Banknote, CreditCard, QrCode, Plus, Trash2, Search, User, Copy, Check } from "lucide-react";
+import { Banknote, CreditCard, QrCode, Plus, Trash2, Search, User, Copy, Check, Landmark, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
@@ -719,7 +719,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                   </p>
                 )}
 
-                {p.method === "card" && (
+                {p.method === "CARD_POS" && (
                   <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/50">
                     <div>
                       <Label className="text-[10px]">{t("pos.payment.lastFour")} *</Label>
@@ -752,7 +752,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                   </div>
                 )}
 
-                {p.method === "qr" && (
+                {methodDef(p.method)?.showsQr && (
                   <div className="flex flex-col items-center gap-3 pt-2 border-t border-border/50">
                     <div className="bg-white p-3 rounded-lg shadow-sm">
                       <QRCodeSVG
