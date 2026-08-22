@@ -343,12 +343,19 @@ const Contabilidad = () => {
     fetchData();
   };
   const togglePeriod = async (p: Period) => {
-    const rpc = p.status === "open" ? "close_accounting_period" : "reopen_accounting_period";
-    const { error } = await supabase.rpc(rpc, { p_period_id: p.id });
+    let error: { message: string } | null = null;
+    if (p.status === "open") {
+      ({ error } = await supabase.rpc("close_accounting_period", { p_period: p.id }));
+    } else {
+      const reason = window.prompt("Motivo de la reapertura excepcional del período (queda auditado):");
+      if (!reason || !reason.trim()) return;
+      ({ error } = await (supabase.rpc as any)("reopen_accounting_period", { p_period_id: p.id, p_reason: reason.trim() }));
+    }
     if (error) { toast({ title: t("common.error"), description: error.message, variant: "destructive" }); return; }
     toast({ title: p.status === "open" ? t("modules.accounting.toasts.periodClosed") : t("modules.accounting.toasts.periodOpened") });
     fetchData();
   };
+
   const importTemplate = async () => {
     const { data, error } = await supabase.rpc("import_chart_template", { p_tenant_id: tenantId, p_template: templateChoice });
     if (error) { toast({ title: t("common.error"), description: error.message, variant: "destructive" }); return; }
