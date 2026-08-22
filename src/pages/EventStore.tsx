@@ -263,7 +263,7 @@ export default function EventStore() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      divergences.map((d, i) => (
+                      pagedDivergences.map((d, i) => (
                         <TableRow key={`${d.aggregate_id}-${d.divergence_type}-${i}`}>
                           <TableCell>
                             <Badge
@@ -285,7 +285,17 @@ export default function EventStore() {
                     )}
                   </TableBody>
                 </Table>
+                {divergences.length > 0 && (
+                  <TablePagination
+                    page={dvPage}
+                    pageSize={dvPageSize}
+                    total={divergences.length}
+                    onPageChange={setDvPage}
+                    onPageSizeChange={setDvPageSize}
+                  />
+                )}
               </CardContent>
+
             </Card>
           </TabsContent>
 
