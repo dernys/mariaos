@@ -293,10 +293,14 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           amount: parseFloat(p.amount),
           amount_in_base: parseFloat(p.amount) * (parseFloat(p.exchange_rate) || 1),
           exchange_rate: parseFloat(p.exchange_rate) || 1,
-          card_last_four: p.method === "card" ? p.card_last_four : null,
-          card_holder: p.method === "card" ? p.card_holder : null,
-          card_description: p.method === "card" ? p.card_description : null,
+          card_last_four: p.method === "CARD_POS" ? p.card_last_four : null,
+          card_holder: p.method === "CARD_POS" ? p.card_holder : null,
+          card_description: p.method === "CARD_POS" ? p.card_description : null,
+          reference: p.reference.trim() || null,
+          provider: methodDef(p.method)?.cls === "digital" ? p.method : null,
+          channel: requiresConfirmation(p.method) ? "pos_manual" : "pos",
         }));
+
 
       // --- OFFLINE PATH: si no hay red, encola y termina ---
       const offlinePayload = {
