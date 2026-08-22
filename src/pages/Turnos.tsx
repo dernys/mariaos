@@ -59,6 +59,7 @@ const Turnos = () => {
   const [openStoreId, setOpenStoreId] = useState("");
   const [openEmployeeId, setOpenEmployeeId] = useState("");
   const [openCash, setOpenCash] = useState("");
+  const [expectedOpening, setExpectedOpening] = useState<number | null>(null);
   const [openPin, setOpenPin] = useState("");
   const [openNotes, setOpenNotes] = useState("");
   const [closeCash, setCloseCash] = useState("");
