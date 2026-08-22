@@ -789,22 +789,34 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
               <span className="font-heading font-semibold">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("pos.payment.paid")}</span>
-              <span className="font-heading font-semibold text-primary">${totalPaidInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+              <span className="text-muted-foreground">Cobrado en firme (efectivo/tarjeta)</span>
+              <span className="font-heading font-semibold text-primary">${confirmedInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
             </div>
+            {pendingInBase > 0 && (
+              <div className="flex justify-between text-warning">
+                <span>Digital por confirmar</span>
+                <span className="font-heading font-semibold">${pendingInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+              </div>
+            )}
             {remaining > 0.01 && (
               <div className="flex justify-between text-destructive">
-                <span>{t("pos.payment.pending")}</span>
+                <span>{isPartial ? "A crédito (fiado)" : t("pos.payment.pending")}</span>
                 <span className="font-heading font-bold">${remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
               </div>
             )}
-            {remaining <= 0 && totalPaidInBase > total && (
+            {change > 0 && (
               <div className="flex justify-between text-primary">
-                <span>{t("pos.payment.change")}</span>
-                <span className="font-heading font-bold">${Math.abs(remaining).toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+                <span>{t("pos.payment.change")} (efectivo)</span>
+                <span className="font-heading font-bold">${change.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
               </div>
             )}
+            {overpay > change && (
+              <p className="text-[10px] text-destructive">
+                El exceso sólo puede devolverse en efectivo; ajuste los montos no efectivos.
+              </p>
+            )}
           </div>
+
 
           <Button
             onClick={handleSubmit}
