@@ -321,41 +321,51 @@ export function AccountingReports({ accounts, tenantName }: Props) {
                 No hay asientos contabilizados en este rango de fechas.
               </p>
             ) : (
-              <div className="max-h-[520px] overflow-auto rounded-md border">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-muted/60 backdrop-blur">
-                    <TableRow>
-                      {preview.head.map((h, i) => (
-                        <TableHead key={h} className={`text-xs ${preview.rightAligned.includes(i) ? "text-right" : ""}`}>{h}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {preview.rows.map((row, ri) => (
-                      <TableRow key={ri} className="text-xs">
-                        {row.map((cell, ci) => {
-                          const text = typeof cell === "string" ? cell : cell.text;
-                          const isBold = typeof cell !== "string" && cell.bold;
-                          const span = typeof cell === "string" ? 1 : cell.span ?? 1;
-                          return (
-                            <TableCell
-                              key={ci}
-                              colSpan={span}
-                              className={[
-                                isBold ? "font-semibold" : "",
-                                preview.rightAligned.includes(ci) ? "text-right tabular-nums" : "",
-                              ].join(" ")}
-                            >
-                              {text}
-                            </TableCell>
-                          );
-                        })}
+              <div className="rounded-md border overflow-hidden">
+                <div className="max-h-[520px] overflow-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-muted/60 backdrop-blur">
+                      <TableRow>
+                        {preview.head.map((h, i) => (
+                          <TableHead key={h} className={`text-xs ${preview.rightAligned.includes(i) ? "text-right" : ""}`}>{h}</TableHead>
+                        ))}
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {pagedRows.map((row, ri) => (
+                        <TableRow key={ri} className="text-xs">
+                          {row.map((cell, ci) => {
+                            const text = typeof cell === "string" ? cell : cell.text;
+                            const isBold = typeof cell !== "string" && cell.bold;
+                            const span = typeof cell === "string" ? 1 : cell.span ?? 1;
+                            return (
+                              <TableCell
+                                key={ci}
+                                colSpan={span}
+                                className={[
+                                  isBold ? "font-semibold" : "",
+                                  preview.rightAligned.includes(ci) ? "text-right tabular-nums" : "",
+                                ].join(" ")}
+                              >
+                                {text}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <TablePagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={preview.rows.length}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                />
               </div>
             )}
+
           </CardContent>
         </Card>
       )}
