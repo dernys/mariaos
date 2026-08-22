@@ -809,11 +809,19 @@ function ToggleRow({
   );
 }
 
-function SummaryRow({ k, v }: { k: string; v: string }) {
+function SummaryRow({ k, v, onEdit }: { k: string; v: string; onEdit?: () => void }) {
   return (
-    <div className="flex justify-between gap-3 border-b pb-1.5">
+    <div className="flex items-center justify-between gap-3 border-b pb-1.5">
       <span className="text-muted-foreground">{k}</span>
-      <span className="font-medium text-right">{v}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="font-medium text-right truncate">{v}</span>
+        {onEdit && (
+          <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={onEdit}>
+            Editar
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
+
