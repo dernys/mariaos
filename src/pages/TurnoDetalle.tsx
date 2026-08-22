@@ -20,6 +20,8 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { CashFlowPanel, type ShiftSummary } from "@/components/turnos/CashFlowPanel";
 import { CashMovementDialog } from "@/components/turnos/CashMovementDialog";
+import { useTenant } from "@/hooks/useTenant";
+
 
 
 interface SaleRow {
@@ -39,6 +41,8 @@ export default function TurnoDetalle() {
   const { id } = useParams();
   const nav = useNavigate();
   const { toast } = useToast();
+  const tenantId = useTenant();
+
   const [shift, setShift] = useState<any>(null);
   const [summary, setSummary] = useState<ShiftSummary | null>(null);
   const [sales, setSales] = useState<SaleRow[]>([]);
@@ -57,22 +61,24 @@ export default function TurnoDetalle() {
   const [cancelling, setCancelling] = useState(false);
 
   const fetchAll = useCallback(async () => {
-    if (!id) return;
+    if (!id || !tenantId) return;
     const [sR, mR, salesR, sumR] = await Promise.all([
-      supabase.from("sales_shifts").select("*").eq("id", id).maybeSingle(),
-      (supabase.from as any)("shift_cash_movements").select("*").eq("shift_id", id).order("created_at", { ascending: false }),
+      supabase.from("sales_shifts").select("*").eq("id", id).eq("tenant_id", tenantId).maybeSingle(),
+      (supabase.from as any)("shift_cash_movements").select("*").eq("shift_id", id).eq("tenant_id", tenantId).order("created_at", { ascending: false }),
       supabase
         .from("sales")
         .select("id, ticket_number, total, amount_paid, status, created_at, customer_id, employee_id, cancel_reason")
         .eq("shift_id", id)
+        .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false }),
       (supabase.rpc as any)("calculate_shift_summary", { p_shift_id: id }),
     ]);
     setShift(sR.data); setMovements(mR.data || []); setSales((salesR.data || []) as SaleRow[]);
     if (sumR.data) setSummary(sumR.data);
-  }, [id]);
+  }, [id, tenantId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
 
   const openPay = (s: SaleRow) => {
     const pending = Number(s.total) - Number(s.amount_paid);
