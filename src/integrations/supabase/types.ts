@@ -1484,6 +1484,57 @@ export type Database = {
           },
         ]
       }
+      business_templates: {
+        Row: {
+          accounting_profile_code: string
+          business_type: string
+          code: string
+          config: Json
+          created_at: string
+          default_country_code: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          required_mapping_keys: string[]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          accounting_profile_code?: string
+          business_type: string
+          code: string
+          config?: Json
+          created_at?: string
+          default_country_code?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          required_mapping_keys?: string[]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          accounting_profile_code?: string
+          business_type?: string
+          code?: string
+          config?: Json
+          created_at?: string
+          default_country_code?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          required_mapping_keys?: string[]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chart_account_templates: {
         Row: {
           code: string
@@ -10388,6 +10439,16 @@ export type Database = {
         }
         Returns: Json
       }
+      create_business_from_template: {
+        Args: {
+          p_actor_user_id?: string
+          p_admin_user_id?: string
+          p_idempotency_key?: string
+          p_payload: Json
+          p_template_code: string
+        }
+        Returns: Json
+      }
       create_fiscal_year: {
         Args: { p_start_month?: number; p_tenant_id: string; p_year: number }
         Returns: string
@@ -11306,6 +11367,7 @@ export type Database = {
         }
         Returns: string
       }
+      required_business_mapping_keys: { Args: never; Returns: string[] }
       resolve_account_by_pattern: {
         Args: { p_role: string; p_tenant: string }
         Returns: string
@@ -11549,6 +11611,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      validate_business_readiness: { Args: { p_tenant: string }; Returns: Json }
       validate_coupon: {
         Args: {
           p_amount: number
