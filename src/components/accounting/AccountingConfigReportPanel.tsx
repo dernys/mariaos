@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/data/TablePagination";
+
 import { AlertTriangle, CheckCircle2, Download, RefreshCw, ShieldCheck } from "lucide-react";
 import { exportCsv } from "@/lib/exportData";
 import { toast } from "sonner";
