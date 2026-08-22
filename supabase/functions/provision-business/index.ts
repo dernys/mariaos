@@ -74,6 +74,16 @@ serve(async (req) => {
       return json({ templates: data ?? [] });
     }
 
+    if (action === "check_admin") {
+      const email = String(body?.email ?? "").trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        return json({ error: "Email inválido" }, 400);
+      }
+      const { data, error } = await admin.rpc("lookup_business_admin_candidate", { _email: email });
+      if (error) return json({ error: error.message }, 400);
+      return json({ candidate: data });
+    }
+
     if (action === "validate") {
       const tenantId = String(body?.tenant_id ?? "");
       if (!tenantId) return json({ error: "tenant_id requerido" }, 400);
@@ -81,6 +91,7 @@ serve(async (req) => {
       if (error) return json({ error: error.message }, 400);
       return json({ validation: data });
     }
+
 
     // ---- action = create ----
     const templateCode = String(body?.template_code ?? "");
