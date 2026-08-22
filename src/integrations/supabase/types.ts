@@ -11367,6 +11367,7 @@ export type Database = {
         }
         Returns: string
       }
+      required_business_mapping_keys: { Args: never; Returns: string[] }
       resolve_account_by_pattern: {
         Args: { p_role: string; p_tenant: string }
         Returns: string
