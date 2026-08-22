@@ -41,6 +41,8 @@ export default function TurnoDetalle() {
   const { id } = useParams();
   const nav = useNavigate();
   const { toast } = useToast();
+  const tenantId = useTenant();
+
   const [shift, setShift] = useState<any>(null);
   const [summary, setSummary] = useState<ShiftSummary | null>(null);
   const [sales, setSales] = useState<SaleRow[]>([]);
