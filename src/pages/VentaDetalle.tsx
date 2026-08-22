@@ -1,6 +1,8 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { SalePaymentsPanel } from "@/components/payments/SalePaymentsPanel";
+
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DetailHeader } from "@/components/detail/DetailHeader";
@@ -26,19 +28,20 @@ export default function VentaDetalle() {
   const [returns, setReturns] = useState<any[]>([]);
   const [invoice, setInvoice] = useState<any>(null);
 
-  useEffect(() => {
+  const reload = useCallback(async () => {
     if (!id) return;
-    (async () => {
-      const [sR, iR, pR, rR, invR] = await Promise.all([
-        supabase.from("sales").select("*, customers(name), employees(name)").eq("id", id).maybeSingle(),
-        supabase.from("sale_items").select("*").eq("sale_id", id),
-        (supabase.from as any)("sale_payments").select("*").eq("sale_id", id),
-        (supabase.from as any)("sale_returns").select("*").eq("sale_id", id).order("created_at", { ascending: false }),
-        (supabase.from as any)("invoices").select("*").eq("sale_id", id).maybeSingle(),
-      ]);
-      setSale(sR.data); setItems(iR.data || []); setPayments(pR.data || []); setReturns(rR.data || []); setInvoice(invR.data);
-    })();
+    const [sR, iR, pR, rR, invR] = await Promise.all([
+      supabase.from("sales").select("*, customers(name), employees(name)").eq("id", id).maybeSingle(),
+      supabase.from("sale_items").select("*").eq("sale_id", id),
+      (supabase.from as any)("sale_payments").select("*").eq("sale_id", id).order("created_at", { ascending: true }),
+      (supabase.from as any)("sale_returns").select("*").eq("sale_id", id).order("created_at", { ascending: false }),
+      (supabase.from as any)("invoices").select("*").eq("sale_id", id).maybeSingle(),
+    ]);
+    setSale(sR.data); setItems(iR.data || []); setPayments(pR.data || []); setReturns(rR.data || []); setInvoice(invR.data);
   }, [id]);
+
+  useEffect(() => { reload(); }, [reload]);
+
 
   if (!sale) return <AppLayout title={t("common.sale")}><p className="text-sm text-muted-foreground">{t("common.loading")}</p></AppLayout>;
 
@@ -127,30 +130,9 @@ export default function VentaDetalle() {
           </TabsContent>
 
           <TabsContent value="payments">
-            <div className="bg-card rounded-xl border overflow-hidden">
-              <Table>
-                <TableHeader><TableRow>
-                  <TableHead className="text-xs">Fecha</TableHead>
-                  <TableHead className="text-xs">Método</TableHead>
-                  <TableHead className="text-xs">Moneda</TableHead>
-                  <TableHead className="text-xs text-right">Monto</TableHead>
-                  <TableHead className="text-xs text-right">En base</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {payments.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="text-xs">{format(new Date(p.created_at), "dd/MM/yy HH:mm")}</TableCell>
-                      <TableCell className="text-xs capitalize">{p.method}</TableCell>
-                      <TableCell className="text-xs">{p.currency}</TableCell>
-                      <TableCell className="text-xs text-right">${Number(p.amount).toFixed(2)}</TableCell>
-                      <TableCell className="text-xs text-right font-bold">${Number(p.amount_in_base).toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
-                  {payments.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin pagos</TableCell></TableRow>}
-                </TableBody>
-              </Table>
-            </div>
+            <SalePaymentsPanel payments={payments as any} onChanged={reload} />
           </TabsContent>
+
 
           <TabsContent value="returns">
             <div className="bg-card rounded-xl border overflow-hidden">
