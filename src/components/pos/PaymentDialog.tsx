@@ -15,6 +15,11 @@ import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { useTranslation } from "react-i18next";
 import { useActiveShift } from "@/hooks/useActiveShift";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import {
+  PAYMENT_METHODS, methodDef, methodLabel, requiresConfirmation, isCashMethod,
+  type PaymentMethodCode,
+} from "@/lib/finance/paymentMethods";
+
 
 interface CartItem {
   id: number;
@@ -41,14 +46,16 @@ interface Employee {
 }
 
 interface PaymentLine {
-  method: "cash" | "card" | "qr";
+  method: Exclude<PaymentMethodCode, "CREDIT">;
   currency: string;
   amount: string;
   exchange_rate: string;
   card_last_four: string;
   card_holder: string;
   card_description: string;
+  reference: string;
 }
+
 
 interface CurrencyConfig {
   code: string;
