@@ -43,6 +43,27 @@ export default function Delivery() {
   const [assignDialog, setAssignDialog] = useState<Order | null>(null);
   const [assignForm, setAssignForm] = useState({ rider_id: "", zone_id: "" });
 
+  // Ruta activa por repartidor (pedidos en curso) para sugerir asignaciones en la misma zona
+  const activeRoutes = useMemo(() => {
+    const map: Record<string, Array<{ id: string; status: string; address: string | null }>> = {};
+    assignments
+      .filter(a => a.rider_id && !["delivered", "failed"].includes(a.status))
+      .forEach(a => {
+        const list = map[a.rider_id as string] ?? (map[a.rider_id as string] = []);
+        list.push({ id: a.id, status: a.status, address: a.online_orders?.delivery_address ?? null });
+      });
+    return map;
+  }, [assignments]);
+
+  const sameRoute = (a: string | null, b: string | null) => {
+    if (!a || !b) return false;
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9áéíóúñ ]/gi, " ").split(/\s+/).filter(w => w.length > 3);
+    const wa = norm(a);
+    return norm(b).some(w => wa.includes(w));
+  };
+
+
+
   const load = async () => {
     if (!tenantId) return;
     const [z, r, a, o] = await Promise.all([
