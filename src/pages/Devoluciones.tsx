@@ -332,6 +332,7 @@ export default function Devoluciones() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="text-xs w-8" />
                   <TableHead className="text-xs">Nº</TableHead>
                   <TableHead className="text-xs">Venta</TableHead>
                   <TableHead className="text-xs">Cliente</TableHead>
@@ -346,47 +347,88 @@ export default function Devoluciones() {
               </TableHeader>
               <TableBody>
                 {history.rows.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="text-xs font-heading font-semibold">{r.return_number}</TableCell>
-                    <TableCell className="text-xs">
-                      <div className="font-medium">{r.ticket_number || r.sale_id.slice(0, 8)}</div>
-                      {r.sale_date && (
-                        <div className="text-[10px] text-muted-foreground">{format(new Date(r.sale_date), "dd/MM/yy HH:mm")}</div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs">{r.customer_name || "—"}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {r.lines_returned} línea(s) · {Number(r.units_returned)} u.
-                    </TableCell>
-                    <TableCell className="text-xs font-heading font-bold">${Number(r.total).toFixed(2)}</TableCell>
-                    <TableCell className="text-xs">
-                      {REFUND_METHODS.find((m) => m.value === r.refund_method)?.label || r.refund_method}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={r.status === "cancelled" ? "destructive" : "outline"} className="text-[10px]">
-                        {r.status === "cancelled" ? "Cancelada" : "Completada"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{r.performed_by_name || "—"}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{r.reason || "—"}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{format(new Date(r.created_at), "dd/MM/yy HH:mm")}</TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={r.id} className="cursor-pointer" onClick={() => toggleDetail(r.id)}>
+                      <TableCell className="text-muted-foreground">
+                        {expanded === r.id ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                      </TableCell>
+                      <TableCell className="text-xs font-heading font-semibold">{r.return_number}</TableCell>
+                      <TableCell className="text-xs">
+                        <div className="font-medium">{r.ticket_number || r.sale_id.slice(0, 8)}</div>
+                        {r.sale_date && (
+                          <div className="text-[10px] text-muted-foreground">{format(new Date(r.sale_date), "dd/MM/yy HH:mm")}</div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs">{r.customer_name || "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {r.lines_returned} línea(s) · {Number(r.units_returned)} u.
+                      </TableCell>
+                      <TableCell className="text-xs font-heading font-bold">${Number(r.total).toFixed(2)}</TableCell>
+                      <TableCell className="text-xs">
+                        {REFUND_METHODS.find((m) => m.value === r.refund_method)?.label || r.refund_method}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={r.status === "cancelled" ? "destructive" : "outline"} className="text-[10px]">
+                          {r.status === "cancelled" ? "Cancelada" : "Completada"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{r.performed_by_name || "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{r.reason || "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{format(new Date(r.created_at), "dd/MM/yy HH:mm")}</TableCell>
+                    </TableRow>
+                    {expanded === r.id && (
+                      <TableRow key={`${r.id}-detail`} className="bg-muted/30 hover:bg-muted/30">
+                        <TableCell colSpan={11} className="p-4">
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+                            Productos devueltos de la compra {r.ticket_number || r.sale_id.slice(0, 8)}
+                          </p>
+                          {detailLoading ? (
+                            <p className="text-xs text-muted-foreground">Cargando detalle…</p>
+                          ) : (detail[r.id] ?? []).length === 0 ? (
+                            <p className="text-xs text-muted-foreground">Sin líneas registradas.</p>
+                          ) : (
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="text-[11px]">Producto</TableHead>
+                                  <TableHead className="text-[11px] text-right">Cantidad</TableHead>
+                                  <TableHead className="text-[11px] text-right">Precio</TableHead>
+                                  <TableHead className="text-[11px] text-right">Importe</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {(detail[r.id] ?? []).map((d) => (
+                                  <TableRow key={d.id}>
+                                    <TableCell className="text-xs">{d.product_name || "—"}</TableCell>
+                                    <TableCell className="text-xs text-right tabular-nums">{Number(d.qty)}</TableCell>
+                                    <TableCell className="text-xs text-right tabular-nums">${Number(d.price).toFixed(2)}</TableCell>
+                                    <TableCell className="text-xs text-right tabular-nums font-semibold">${Number(d.total).toFixed(2)}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 ))}
                 {history.loading && (
-                  <TableRow><TableCell colSpan={10} className="p-0"><DataState loading /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={11} className="p-0"><DataState loading /></TableCell></TableRow>
                 )}
                 {history.error && (
-                  <TableRow><TableCell colSpan={10} className="p-0">
+                  <TableRow><TableCell colSpan={11} className="p-0">
                     <DataState error={history.error} onRetry={() => history.refetch()} />
                   </TableCell></TableRow>
                 )}
                 {!history.loading && !history.error && history.rows.length === 0 && (
-                  <TableRow><TableCell colSpan={10} className="p-0">
+                  <TableRow><TableCell colSpan={11} className="p-0">
                     <DataState empty emptyTitle="Sin devoluciones" emptyHint="Registra una devolución desde una venta real" icon={Undo2} />
                   </TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
+
             <TablePagination
               page={history.page}
               pageSize={history.pageSize}
