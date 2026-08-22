@@ -149,7 +149,7 @@ export function AccountingConfigReportPanel() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(problems.length > 0 ? problems : rows).slice(0, 30).map((r) => (
+            {visibleRows.slice((page - 1) * pageSize, page * pageSize).map((r) => (
               <TableRow key={r.mapping_key + r.status}>
                 <TableCell className="text-xs">
                   <div className="font-semibold">{r.mapping_key}</div>
@@ -170,7 +170,15 @@ export function AccountingConfigReportPanel() {
             ))}
           </TableBody>
         </Table>
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={visibleRows.length}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
+
 
       <div className="space-y-2">
         <h4 className="text-sm font-semibold">Propuesta de reclasificación histórica</h4>
