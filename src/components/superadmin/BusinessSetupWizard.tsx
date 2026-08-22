@@ -203,7 +203,14 @@ export function BusinessSetupWizard({
     if (step === 1) return info.name.trim().length >= 2 && slugify(info.slug || info.name).length >= 2;
     if (step === 3) return warehouses.length > 0 && warehouses.every((w) => w.name.trim());
     if (step === 4) return Object.values(methods).some(Boolean);
-    if (step === 5) return !adminForm.enabled || (/.+@.+\..+/.test(adminForm.email) && adminForm.password.length >= 8);
+    if (step === 5) {
+      if (!adminForm.enabled) return true;
+      if (!/.+@.+\..+/.test(adminForm.email)) return false;
+      // Verificación obligatoria del email antes de continuar
+      if (!adminCheck || adminCheck.email !== adminForm.email.trim().toLowerCase()) return false;
+      if (adminForm.mode === "existing") return !!adminCheck.exists && !!adminCheck.reusable;
+      return !adminCheck.exists && adminForm.password.length >= 8;
+    }
     return true;
   };
 
@@ -211,9 +218,11 @@ export function BusinessSetupWizard({
     setStep(0);
     setTemplateCode("");
     setInfo({ name: "", slug: "", email: "", phone: "", address: "", rfc: "" });
+    setAdminCheck(null);
     setResult(null);
     setFailure(null);
   };
+
 
   const submit = async () => {
     if (!template) return;
