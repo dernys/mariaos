@@ -13,7 +13,9 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/data/TablePagination";
 import { useBaseCurrency } from "@/hooks/useFiscalRules";
+
 
 interface Account {
   id: string;
