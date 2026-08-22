@@ -74,7 +74,14 @@ export function BusinessSetupWizard({
   const [loadingTpl, setLoadingTpl] = useState(false);
   const [step, setStep] = useState(0);
   const [creating, setCreating] = useState(false);
-  const [result, setResult] = useState<{ tenant_id: string; checks: ReadinessCheck[]; ready: boolean } | null>(null);
+  const [result, setResult] = useState<{
+    tenant_id: string;
+    checks: ReadinessCheck[];
+    ready: boolean;
+    admin_email: string | null;
+  } | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
+  const [entering, setEntering] = useState(false);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   const [templateCode, setTemplateCode] = useState<string>("");
