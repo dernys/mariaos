@@ -54,3 +54,18 @@ Complementos:
 ## Multimoneda
 
 Toda operación monetaria persiste `currency`, `exchange_rate`, `*_in_base`. `get_exchange_rate` y `exchange_rates_history` son la única fuente de FX; `src/modules/shared/domain/money.ts` centraliza el valor `Money` en frontend. La certificación verifica la reproducibilidad de la conversión (`fx_consistency`).
+
+## Ámbito de gastos y otros ingresos
+
+Los gastos operativos y otros ingresos son de **ámbito negocio (tenant)**, no de local:
+
+- Se registran con `tenant_id` y, cuando proceden de caja, con el turno y la tienda que los originó (trazabilidad de efectivo), pero **no llevan dimensión de local en el estado de resultados**.
+- Por eso `daily_financial_summary` presenta gastos y otros ingresos a nivel de negocio, mientras que caja esperada, ventas y cobros sí se desglosan por tienda/turno.
+- Conclusión operativa: **dinero disponible ≠ ventas ≠ utilidad**. La caja depende de cobros y movimientos; las ventas, del ingreso devengado; la utilidad, de ingresos − costo de ventas − gastos.
+
+## Regularización de costos históricos
+
+- `missing_cogs_report(tenant)` lista, antes de contabilizar, las ventas con asiento pero sin línea de costo: venta, producto, cantidad, costo unitario y total, separando las líneas con **costo pendiente de identificación**.
+- `resolve_sale_item_cost(sale_item_id, product_id, unit_cost)` permite a administración/contabilidad asignar producto o costo unitario a una línea pendiente (queda en auditoría).
+- `post_missing_cogs(tenant)` crea asientos `sale_cogs_adjustment` (Costo de ventas / Inventario) sin modificar los asientos originales.
+- UI: Contabilidad → Análisis → "Costos históricos (COGS)".
