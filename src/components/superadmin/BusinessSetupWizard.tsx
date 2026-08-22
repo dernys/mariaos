@@ -74,7 +74,14 @@ export function BusinessSetupWizard({
   const [loadingTpl, setLoadingTpl] = useState(false);
   const [step, setStep] = useState(0);
   const [creating, setCreating] = useState(false);
-  const [result, setResult] = useState<{ tenant_id: string; checks: ReadinessCheck[]; ready: boolean } | null>(null);
+  const [result, setResult] = useState<{
+    tenant_id: string;
+    checks: ReadinessCheck[];
+    ready: boolean;
+    admin_email: string | null;
+  } | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
+  const [entering, setEntering] = useState(false);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   const [templateCode, setTemplateCode] = useState<string>("");
@@ -155,11 +162,13 @@ export function BusinessSetupWizard({
     setTemplateCode("");
     setInfo({ name: "", slug: "", email: "", phone: "", address: "", rfc: "" });
     setResult(null);
+    setFailure(null);
   };
 
   const submit = async () => {
     if (!template) return;
     setCreating(true);
+    setFailure(null);
     const cfgMethods = (template.config?.payment_methods ?? []).filter((m: any) => methods[m.type]);
     const payload = {
       name: info.name.trim(),
@@ -189,17 +198,54 @@ export function BusinessSetupWizard({
           : null,
       },
     });
+
+    // El cuerpo real del error viaja en la respuesta HTTP (status != 2xx)
+    let serverError: string | null = data?.error ?? null;
+    if (!serverError && error) {
+      try {
+        const ctx = (error as any).context;
+        const body = ctx && typeof ctx.json === "function" ? await ctx.json() : null;
+        serverError = body?.error ?? error.message;
+      } catch {
+        serverError = error.message;
+      }
+    }
     setCreating(false);
 
-    if (error || data?.error) {
-      toast.error(data?.error ?? error?.message ?? "No se pudo crear el negocio");
+    if (serverError) {
+      setFailure(serverError);
+      toast.error(serverError);
       return;
     }
+
     const validation = data?.validation ?? {};
-    setResult({ tenant_id: data.tenant_id, ready: !!validation.ready, checks: validation.checks ?? [] });
-    toast.success("Negocio creado y configurado");
+    const ready = !!validation.ready;
+    setResult({
+      tenant_id: data.tenant_id,
+      ready,
+      checks: validation.checks ?? [],
+      admin_email: data.admin_email ?? null,
+    });
+    if (ready) toast.success("Negocio creado correctamente");
+    else toast.warning("Negocio creado con avisos");
     onCreated();
   };
+
+  const enterAsAdmin = async () => {
+    if (!result?.admin_email || !adminForm.password) return;
+    setEntering(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: result.admin_email,
+      password: adminForm.password,
+    });
+    setEntering(false);
+    if (error) {
+      toast.error(`No se pudo iniciar sesión: ${error.message}`);
+      return;
+    }
+    window.location.href = "/";
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
@@ -231,7 +277,18 @@ export function BusinessSetupWizard({
           </div>
         )}
 
+        {!result && failure && (
+          <div className="mx-5 mt-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+            <p className="text-xs font-medium text-destructive">No se creó el negocio</p>
+            <p className="text-[11px] text-destructive/90 break-words">{failure}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Se revirtió todo lo creado. Corrige el dato y vuelve a intentar: no se duplicará nada.
+            </p>
+          </div>
+        )}
+
         <ScrollArea className="max-h-[62vh]">
+
           <div className="p-5">
             {result ? (
               <div className="space-y-4">
@@ -241,11 +298,25 @@ export function BusinessSetupWizard({
                   </div>
                   <div>
                     <p className="font-heading font-semibold text-sm">
-                      {result.ready ? "Negocio listo para operar" : "Negocio creado con avisos"}
+                      {result.ready ? "Negocio creado correctamente" : "Negocio creado con avisos"}
                     </p>
                     <p className="text-xs text-muted-foreground">{info.name}</p>
                   </div>
                 </div>
+                {result.admin_email && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <p className="text-xs font-medium">Administrador creado: {result.admin_email}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Rol admin y propietario del negocio, sin acceso a otros negocios.
+                    </p>
+                    {adminForm.password && (
+                      <Button size="sm" onClick={enterAsAdmin} disabled={entering}>
+                        {entering && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                        Entrar como administrador
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <div className="space-y-2">
                   {result.checks.map((c) => (
                     <div key={c.key} className="flex items-start gap-2 rounded-lg border bg-card p-3">
