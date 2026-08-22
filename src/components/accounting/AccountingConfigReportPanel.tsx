@@ -78,6 +78,10 @@ export function AccountingConfigReportPanel() {
 
   const blocking = (counts.MISSING ?? 0) + (counts.INVALID ?? 0) + (counts.CONFLICTING ?? 0);
   const problems = rows.filter((r) => !["USED", "UNUSED"].includes(r.status));
+  const visibleRows = problems.length > 0 ? problems : rows;
+  useEffect(() => { setPage(1); }, [rows.length]);
+  useEffect(() => { setReclassPage(1); }, [reclass.length]);
+
 
   if (loading) return <Card className="p-5"><Skeleton className="h-48 w-full" /></Card>;
 
