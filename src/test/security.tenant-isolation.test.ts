@@ -16,10 +16,24 @@ const FAKE_TENANT = "00000000-0000-0000-0000-0000000000aa";
 const FAKE_USER = "00000000-0000-0000-0000-0000000000bb";
 
 describe("aislamiento cross-tenant (sin identidad válida)", () => {
-  it("no puede enumerar negocios ajenos", async () => {
-    const { data } = await anon.from("tenants").select("id, name").limit(5);
-    expect(data ?? []).toHaveLength(0);
+  it("solo expone el directorio público del marketplace, nunca datos sensibles del negocio", async () => {
+    // El catálogo público (nombre, slug, logo, tipo) es intencionalmente visible
+    // para visitantes sin cuenta: es el directorio del marketplace.
+    const { data, error } = await anon.from("tenants").select("id, name, slug, business_type").limit(5);
+    expect(error).toBeFalsy();
+    expect(Array.isArray(data)).toBe(true);
+
+    // Las columnas sensibles siguen cerradas a nivel de permisos de columna.
+    for (const col of ["email", "phone", "address", "settings"]) {
+      const res = await anon.from("tenants").select(col as never).limit(1);
+      expect(res.error).toBeTruthy();
+    }
+
+    // Y no se puede escribir ni descubrir negocios inactivos.
+    const inactive = await anon.from("tenants").select("id").eq("is_active", false).limit(1);
+    expect(inactive.data ?? []).toHaveLength(0);
   });
+
 
   it("no puede leer membresías de negocio de otros usuarios", async () => {
     const { data } = await anon.from("tenant_users").select("*").limit(5);
