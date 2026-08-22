@@ -59,11 +59,12 @@ export function PaymentMethodsPanel({ from, to }: { from?: string; to?: string }
   return (
     <div className="space-y-4">
       <KpiGrid>
-        <KpiTile label="Efectivo cobrado" value={money(cash)} icon={Banknote} tone="success" />
+        <KpiTile label="Efectivo cobrado" value={money(cash)} icon={Banknote} />
         <KpiTile label="Banco / tarjeta" value={money(bank)} icon={Landmark} />
         <KpiTile label="Digital confirmado" value={money(digital)} icon={Smartphone} />
-        <KpiTile label="Digital por confirmar" value={money(pending)} icon={Clock} tone={pending > 0 ? "warning" : "default"} />
+        <KpiTile label="Digital por confirmar" value={money(pending)} icon={Clock} />
       </KpiGrid>
+
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border bg-card p-3">
