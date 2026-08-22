@@ -84,13 +84,14 @@ const Turnos = () => {
   useEffect(() => { if (user && tenantId) fetchAll(); }, [user, tenantId]);
 
   const fetchAll = async () => {
+    if (!tenantId) { setShifts([]); setOpenShifts([]); setStores([]); setEmployees([]); setLoading(false); return; }
     const [shiftRes, storeRes, empRes] = await Promise.all([
       supabase.from("sales_shifts").select("*").eq("tenant_id", tenantId).order("opened_at", { ascending: false }).limit(50),
-      supabase.from("stores").select("id, name").eq("is_active", true).order("name"),
-      supabase.from("employees").select("id, name, position, user_id, access_pin_hash").eq("is_active", true).order("name"),
+      supabase.from("stores").select("id, name").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
+      supabase.from("employees").select("id, name, position, user_id, access_pin_hash").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
     ]);
     if (shiftRes.data) {
-      const data = shiftRes.data as SalesShift[];
+      const data = (shiftRes.data as SalesShift[]).filter((s) => (s as any).tenant_id === tenantId);
       setShifts(data);
       setOpenShifts(data.filter((s) => s.status === "open"));
     }
@@ -98,6 +99,7 @@ const Turnos = () => {
     if (empRes.data) setEmployees((empRes.data as any[]).map((e) => ({ id: e.id, name: e.name, position: e.position, user_id: e.user_id, has_pin: !!e.access_pin_hash })));
     setLoading(false);
   };
+
 
   const getStoreName = (shift: SalesShift) => {
     if (shift.store_id) return stores.find((s) => s.id === shift.store_id)?.name || shift.store_name;
