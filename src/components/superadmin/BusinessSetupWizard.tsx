@@ -41,6 +41,19 @@ interface ReadinessCheck {
   detail: string;
 }
 
+interface AdminCandidate {
+  exists: boolean;
+  email: string | null;
+  user_id?: string;
+  full_name?: string;
+  confirmed?: boolean;
+  tenant_count?: number;
+  tenant_names?: string[];
+  is_superadmin?: boolean;
+  reusable?: boolean;
+}
+
+
 const ICONS: Record<string, typeof Store> = { Store, Wine, ChefHat };
 
 const STEPS = [
@@ -98,7 +111,44 @@ export function BusinessSetupWizard({
   const [warehouses, setWarehouses] = useState<{ name: string; warehouse_type: string }[]>([]);
   const [methods, setMethods] = useState<Record<string, boolean>>({});
   const [posCfg, setPosCfg] = useState({ tax_included: true, allow_negative_stock: false, default_credit_days: 15 });
-  const [adminForm, setAdminForm] = useState({ enabled: true, email: "", full_name: "", password: "" });
+  const [adminForm, setAdminForm] = useState<{
+    enabled: boolean;
+    mode: "new" | "existing";
+    email: string;
+    full_name: string;
+    password: string;
+  }>({ enabled: true, mode: "new", email: "", full_name: "", password: "" });
+  const [adminCheck, setAdminCheck] = useState<AdminCandidate | null>(null);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
+
+  const checkAdminEmail = async () => {
+    const email = adminForm.email.trim().toLowerCase();
+    if (!/.+@.+\..+/.test(email)) {
+      toast.error("Introduce un email válido");
+      return;
+    }
+    setCheckingAdmin(true);
+    const { data, error } = await supabase.functions.invoke("provision-business", {
+      body: { action: "check_admin", email },
+    });
+    setCheckingAdmin(false);
+    if (error || data?.error) {
+      toast.error(data?.error ?? error?.message ?? "No se pudo verificar el email");
+      return;
+    }
+    const c = data.candidate as AdminCandidate;
+    setAdminCheck(c);
+    if (c.exists && c.reusable) {
+      setAdminForm((f) => ({ ...f, mode: "existing", full_name: f.full_name || c.full_name || "" }));
+      toast.info("El usuario ya existe: puedes reutilizarlo como administrador");
+    } else if (c.exists) {
+      setAdminForm((f) => ({ ...f, mode: "new" }));
+      toast.error("El usuario existe pero no puede reutilizarse");
+    } else {
+      setAdminForm((f) => ({ ...f, mode: "new" }));
+    }
+  };
+
 
   const template = useMemo(() => templates.find((t) => t.code === templateCode) ?? null, [templates, templateCode]);
 
@@ -153,7 +203,14 @@ export function BusinessSetupWizard({
     if (step === 1) return info.name.trim().length >= 2 && slugify(info.slug || info.name).length >= 2;
     if (step === 3) return warehouses.length > 0 && warehouses.every((w) => w.name.trim());
     if (step === 4) return Object.values(methods).some(Boolean);
-    if (step === 5) return !adminForm.enabled || (/.+@.+\..+/.test(adminForm.email) && adminForm.password.length >= 8);
+    if (step === 5) {
+      if (!adminForm.enabled) return true;
+      if (!/.+@.+\..+/.test(adminForm.email)) return false;
+      // Verificación obligatoria del email antes de continuar
+      if (!adminCheck || adminCheck.email !== adminForm.email.trim().toLowerCase()) return false;
+      if (adminForm.mode === "existing") return !!adminCheck.exists && !!adminCheck.reusable;
+      return !adminCheck.exists && adminForm.password.length >= 8;
+    }
     return true;
   };
 
@@ -161,9 +218,11 @@ export function BusinessSetupWizard({
     setStep(0);
     setTemplateCode("");
     setInfo({ name: "", slug: "", email: "", phone: "", address: "", rfc: "" });
+    setAdminCheck(null);
     setResult(null);
     setFailure(null);
   };
+
 
   const submit = async () => {
     if (!template) return;
@@ -194,8 +253,14 @@ export function BusinessSetupWizard({
         payload,
         idempotency_key: idempotencyKey,
         admin: adminForm.enabled
-          ? { email: adminForm.email.trim(), full_name: adminForm.full_name || adminForm.email, password: adminForm.password }
+          ? {
+              mode: adminForm.mode,
+              email: adminForm.email.trim(),
+              full_name: adminForm.full_name || adminForm.email,
+              password: adminForm.mode === "existing" ? null : adminForm.password,
+            }
           : null,
+
       },
     });
 
@@ -566,33 +631,103 @@ export function BusinessSetupWizard({
                       />
                       {adminForm.enabled && (
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <div>
+                          <div className="sm:col-span-2">
+                            <Label className="text-xs">Email *</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="email"
+                                value={adminForm.email}
+                                placeholder="admin@negocio.cu"
+                                onChange={(e) => {
+                                  setAdminForm({ ...adminForm, email: e.target.value, mode: "new" });
+                                  setAdminCheck(null);
+                                }}
+                              />
+                              <Button variant="outline" size="sm" onClick={checkAdminEmail} disabled={checkingAdmin} className="shrink-0 text-xs">
+                                {checkingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Verificar"}
+                              </Button>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              Comprobamos si el usuario ya existe antes de crear el negocio.
+                            </p>
+                          </div>
+
+                          {adminCheck && adminCheck.email === adminForm.email.trim().toLowerCase() && (
+                            <div className="sm:col-span-2 rounded-lg border bg-card p-3 space-y-2">
+                              {!adminCheck.exists ? (
+                                <p className="text-xs flex items-center gap-1.5">
+                                  <Check className="h-3.5 w-3.5 text-primary" />
+                                  Email disponible: se creará un usuario nuevo.
+                                </p>
+                              ) : adminCheck.reusable ? (
+                                <>
+                                  <p className="text-xs flex items-center gap-1.5 font-medium">
+                                    <CircleAlert className="h-3.5 w-3.5 text-amber-500" />
+                                    Este usuario ya existe y no pertenece a ningún negocio.
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    {adminCheck.full_name || "Sin nombre"} · {adminCheck.confirmed ? "email confirmado" : "email sin confirmar"}
+                                  </p>
+                                  <div className="flex flex-wrap gap-2 pt-1">
+                                    <Button
+                                      size="sm"
+                                      variant={adminForm.mode === "existing" ? "default" : "outline"}
+                                      className="text-xs"
+                                      onClick={() => setAdminForm({ ...adminForm, mode: "existing", password: "" })}
+                                    >
+                                      Usar este usuario existente
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant={adminForm.mode === "new" ? "default" : "outline"}
+                                      className="text-xs"
+                                      onClick={() => setAdminForm({ ...adminForm, mode: "new" })}
+                                    >
+                                      Usar otro email
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : (
+                                <p className="text-xs text-destructive">
+                                  {adminCheck.is_superadmin
+                                    ? "Es un superadministrador: no puede ser administrador de un negocio."
+                                    : `Ya pertenece a otro negocio (${(adminCheck.tenant_names ?? []).join(", ")}). Cambia el email.`}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="sm:col-span-2">
                             <Label className="text-xs">Nombre completo</Label>
                             <Input value={adminForm.full_name} onChange={(e) => setAdminForm({ ...adminForm, full_name: e.target.value })} />
                           </div>
-                          <div>
-                            <Label className="text-xs">Email *</Label>
-                            <Input type="email" value={adminForm.email} onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })} />
-                          </div>
-                          <div className="sm:col-span-2">
-                            <Label className="text-xs">Contraseña temporal * (mín. 8)</Label>
-                            <Input type="password" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} />
-                          </div>
+
+                          {adminForm.mode === "new" && (
+                            <div className="sm:col-span-2">
+                              <Label className="text-xs">Contraseña temporal * (mín. 8)</Label>
+                              <Input type="password" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} />
+                            </div>
+                          )}
                         </div>
                       )}
+
                     </div>
                   )}
 
                   {/* 6 · Resumen */}
                   {step === 6 && template && (
                     <div className="space-y-3 text-xs">
-                      <SummaryRow k="Plantilla" v={`${template.name} (${template.code})`} />
-                      <SummaryRow k="Negocio" v={`${info.name} · ${slugify(info.slug || info.name)}`} />
+                      <p className="text-[11px] text-muted-foreground">
+                        Revisa los datos. Puedes volver a cualquier paso con “Editar” antes de crear el negocio.
+                      </p>
+                      <SummaryRow k="Plantilla" v={`${template.name} (${template.code})`} onEdit={() => setStep(0)} />
+                      <SummaryRow k="Negocio" v={`${info.name} · ${slugify(info.slug || info.name)}`} onEdit={() => setStep(1)} />
                       <SummaryRow k="Perfil contable" v={template.accounting_profile_code ?? "—"} />
-                      <SummaryRow k="Almacenes" v={warehouses.map((w) => w.name).join(", ")} />
-                      <SummaryRow k="Medios de pago" v={Object.keys(methods).filter((k) => methods[k]).join(", ")} />
+                      <SummaryRow k="Almacenes" v={warehouses.map((w) => w.name).join(", ")} onEdit={() => setStep(3)} />
+                      <SummaryRow k="Medios de pago" v={Object.keys(methods).filter((k) => methods[k]).join(", ")} onEdit={() => setStep(4)} />
                       <SummaryRow
                         k="Operación"
+                        onEdit={() => setStep(2)}
                         v={[
                           ops.tables && `${ops.tables_count} mesas`,
                           ops.kitchen && "cocina",
@@ -601,7 +736,16 @@ export function BusinessSetupWizard({
                           ops.loyalty && "fidelización",
                         ].filter(Boolean).join(" · ") || "básica"}
                       />
-                      <SummaryRow k="Administrador" v={adminForm.enabled ? adminForm.email : "se asignará después"} />
+                      <SummaryRow
+                        k="Administrador"
+                        onEdit={() => setStep(5)}
+                        v={
+                          !adminForm.enabled
+                            ? "se asignará después"
+                            : `${adminForm.email} · ${adminForm.mode === "existing" ? "usuario existente" : "usuario nuevo"}`
+                        }
+                      />
+
                       <p className="text-[11px] text-muted-foreground pt-2 border-t">
                         Al crear, MarIA OS genera el maestro de cuentas propio, año fiscal, períodos y el mapeo contable
                         del negocio. Si algo falla, no se crea nada.
@@ -665,11 +809,19 @@ function ToggleRow({
   );
 }
 
-function SummaryRow({ k, v }: { k: string; v: string }) {
+function SummaryRow({ k, v, onEdit }: { k: string; v: string; onEdit?: () => void }) {
   return (
-    <div className="flex justify-between gap-3 border-b pb-1.5">
+    <div className="flex items-center justify-between gap-3 border-b pb-1.5">
       <span className="text-muted-foreground">{k}</span>
-      <span className="font-medium text-right">{v}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="font-medium text-right truncate">{v}</span>
+        {onEdit && (
+          <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={onEdit}>
+            Editar
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
+

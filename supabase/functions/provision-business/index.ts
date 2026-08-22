@@ -74,6 +74,16 @@ serve(async (req) => {
       return json({ templates: data ?? [] });
     }
 
+    if (action === "check_admin") {
+      const email = String(body?.email ?? "").trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        return json({ error: "Email inválido" }, 400);
+      }
+      const { data, error } = await admin.rpc("lookup_business_admin_candidate", { _email: email });
+      if (error) return json({ error: error.message }, 400);
+      return json({ candidate: data });
+    }
+
     if (action === "validate") {
       const tenantId = String(body?.tenant_id ?? "");
       if (!tenantId) return json({ error: "tenant_id requerido" }, 400);
@@ -81,6 +91,7 @@ serve(async (req) => {
       if (error) return json({ error: error.message }, 400);
       return json({ validation: data });
     }
+
 
     // ---- action = create ----
     const templateCode = String(body?.template_code ?? "");
@@ -116,45 +127,80 @@ serve(async (req) => {
       }
     }
 
-    // 3) Administrador inicial: creado SOLO server-side con Admin API
+    // 3) Administrador inicial: nuevo (Admin API, solo server-side) o usuario existente reutilizable
     let adminUserId: string | null = null;
     let adminEmail: string | null = null;
+    const adminMode = String(adminInput?.mode ?? "new");
+
     if (adminInput?.email) {
       adminEmail = String(adminInput.email).trim().toLowerCase();
-      const password = String(adminInput.password ?? "").trim();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adminEmail)) {
         return json({ error: "Email del administrador inválido" }, 400);
       }
-      if (password.length < 8) {
-        return json({ error: "La contraseña del administrador debe tener al menos 8 caracteres" }, 400);
-      }
 
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
-        email: adminEmail,
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: adminInput.full_name ?? adminEmail },
+      // Estado real del email en Auth (fuente de verdad server-side)
+      const { data: candidate, error: lookupErr } = await admin.rpc("lookup_business_admin_candidate", {
+        _email: adminEmail,
       });
+      if (lookupErr) return json({ error: lookupErr.message }, 400);
 
-      if (createErr || !created?.user) {
-        const msg = String(createErr?.message ?? "");
-        if (/already|registered|exists/i.test(msg)) {
-          return json({ error: `El email ${adminEmail} ya está registrado. Usa otro email.` }, 409);
+      if (adminMode === "existing") {
+        if (!candidate?.exists) {
+          return json({ error: `No existe un usuario con el email ${adminEmail}` }, 404);
         }
-        return json({ error: msg || "No se pudo crear el administrador" }, 400);
-      }
-      createdUserId = created.user.id;
-      adminUserId = created.user.id;
+        if (!candidate.reusable) {
+          return json({
+            error: candidate.is_superadmin
+              ? "Ese usuario es superadministrador y no puede ser administrador de un negocio."
+              : `Ese usuario ya pertenece a otro negocio (${(candidate.tenant_names ?? []).join(", ")}). Usa otro email.`,
+          }, 409);
+        }
+        adminUserId = candidate.user_id as string;
+        const { error: profErr } = await admin.from("profiles").upsert(
+          { user_id: adminUserId, full_name: adminInput.full_name || candidate.full_name || adminEmail },
+          { onConflict: "user_id" },
+        );
+        if (profErr) return json({ error: `No se pudo actualizar el perfil: ${profErr.message}` }, 400);
+      } else {
+        if (candidate?.exists) {
+          return json({
+            error: `El email ${adminEmail} ya está registrado. Usa otro email o elige reutilizar el usuario existente.`,
+            candidate,
+          }, 409);
+        }
+        const password = String(adminInput.password ?? "").trim();
+        if (password.length < 8) {
+          return json({ error: "La contraseña del administrador debe tener al menos 8 caracteres" }, 400);
+        }
 
-      const { error: profErr } = await admin.from("profiles").upsert(
-        { user_id: adminUserId, full_name: adminInput.full_name ?? adminEmail },
-        { onConflict: "user_id" },
-      );
-      if (profErr) {
-        await rollback(`profile: ${profErr.message}`);
-        return json({ error: `No se pudo crear el perfil del administrador: ${profErr.message}` }, 400);
+        const { data: created, error: createErr } = await admin.auth.admin.createUser({
+          email: adminEmail,
+          password,
+          email_confirm: true,
+          user_metadata: { full_name: adminInput.full_name ?? adminEmail },
+        });
+
+        if (createErr || !created?.user) {
+          const msg = String(createErr?.message ?? "");
+          if (/already|registered|exists/i.test(msg)) {
+            return json({ error: `El email ${adminEmail} ya está registrado. Usa otro email.` }, 409);
+          }
+          return json({ error: msg || "No se pudo crear el administrador" }, 400);
+        }
+        createdUserId = created.user.id;
+        adminUserId = created.user.id;
+
+        const { error: profErr } = await admin.from("profiles").upsert(
+          { user_id: adminUserId, full_name: adminInput.full_name ?? adminEmail },
+          { onConflict: "user_id" },
+        );
+        if (profErr) {
+          await rollback(`profile: ${profErr.message}`);
+          return json({ error: `No se pudo crear el perfil del administrador: ${profErr.message}` }, 400);
+        }
       }
     }
+
 
     // 4) Provisionamiento transaccional. El tenant proviene SOLO de aquí.
     const { data, error } = await admin.rpc("create_business_from_template", {
