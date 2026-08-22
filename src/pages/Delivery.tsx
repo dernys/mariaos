@@ -307,16 +307,61 @@ export default function Delivery() {
 
 
         <Dialog open={!!assignDialog} onOpenChange={v => !v && setAssignDialog(null)}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader><DialogTitle>Asignar pedido</DialogTitle></DialogHeader>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <p className="text-sm text-muted-foreground">{assignDialog?.customer_name} — {assignDialog?.delivery_address}</p>
-              <div><Label>Repartidor</Label>
-                <Select value={assignForm.rider_id} onValueChange={v => setAssignForm({ ...assignForm, rider_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                  <SelectContent>{riders.filter(r => r.is_available).map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
-                </Select>
+
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Repartidores y ruta activa
+                </Label>
+                <div className="max-h-64 space-y-2 overflow-auto">
+                  {riders.filter(r => r.is_active !== false).length === 0 && (
+                    <p className="text-xs text-muted-foreground">Sin repartidores registrados.</p>
+                  )}
+                  {riders.filter(r => r.is_active !== false).map(r => {
+                    const route = activeRoutes[r.id] ?? [];
+                    const selected = assignForm.rider_id === r.id;
+                    const suggested = assignDialog?.delivery_address
+                      ? route.some(s => sameRoute(s.address, assignDialog.delivery_address))
+                      : false;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setAssignForm({ ...assignForm, rider_id: r.id })}
+                        className={`w-full rounded-lg border p-3 text-left transition ${selected ? "border-primary bg-primary/5" : "hover:bg-muted/40"}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">{r.name}</span>
+                            <Badge variant={r.is_available ? "default" : "secondary"} className="text-[10px]">
+                              {r.is_available ? "Disponible" : "Ocupado"}
+                            </Badge>
+                            {suggested && (
+                              <Badge variant="outline" className="text-[10px]">Misma ruta</Badge>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-muted-foreground">
+                            {route.length} pedido(s) en curso
+                          </span>
+                        </div>
+                        {route.length > 0 && (
+                          <ul className="mt-2 space-y-0.5">
+                            {route.slice(0, 4).map(s => (
+                              <li key={s.id} className="text-[11px] text-muted-foreground truncate">
+                                • {STATUS_LABELS[s.status] ?? s.status} — {s.address || "sin dirección"}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
               <div><Label>Zona</Label>
                 <Select value={assignForm.zone_id} onValueChange={v => setAssignForm({ ...assignForm, zone_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
@@ -324,9 +369,10 @@ export default function Delivery() {
                 </Select>
               </div>
             </div>
-            <DialogFooter><Button onClick={assignOrder}>Asignar</Button></DialogFooter>
+            <DialogFooter><Button onClick={assignOrder} disabled={!assignForm.rider_id}>Asignar</Button></DialogFooter>
           </DialogContent>
         </Dialog>
+
       </div>
     </AppLayout>
   );
