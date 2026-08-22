@@ -22,6 +22,8 @@ interface TenantContextType {
   tenant: TenantInfo | null;
   allTenants: TenantInfo[];
   setActiveTenantId: (id: string) => Promise<void>;
+  /** Re-reads the tenant list (use after provisioning a new business) */
+  refreshTenants: () => Promise<TenantInfo[]>;
   mode: TenantMode;
   setMode: (mode: TenantMode) => Promise<void>;
   isSuperadmin: boolean;
@@ -30,6 +32,7 @@ interface TenantContextType {
   loading: boolean;
   businessType: string;
 }
+
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
