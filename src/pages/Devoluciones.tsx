@@ -138,6 +138,25 @@ export default function Devoluciones() {
   const [refundMethod, setRefundMethod] = useState("cash");
   const [saving, setSaving] = useState(false);
 
+  // Detalle expandible: líneas devueltas de cada devolución
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Record<string, ReturnDetailItem[]>>({});
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const toggleDetail = async (returnId: string) => {
+    if (expanded === returnId) { setExpanded(null); return; }
+    setExpanded(returnId);
+    if (detail[returnId]) return;
+    setDetailLoading(true);
+    const { data } = await supabase
+      .from("sale_return_items")
+      .select("id, product_name, qty, price, total")
+      .eq("return_id", returnId);
+    setDetail((prev) => ({ ...prev, [returnId]: (data ?? []) as ReturnDetailItem[] }));
+    setDetailLoading(false);
+  };
+
+
   const openReturn = async (s: Sale) => {
     setSelectedSale(s);
     setReason("");
