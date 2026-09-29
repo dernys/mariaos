@@ -158,9 +158,11 @@ export function POSEmpresa() {
                 <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-base sm:text-lg font-heading font-bold text-primary">${product.price.toLocaleString()}</p>
-                  <Badge variant={product.stock <= product.price * 0 + 5 ? "destructive" : "secondary"} className="text-[8px] px-1 h-4">
-                    {t("pos.empresa.unitsBadge", { n: product.stock })}
-                  </Badge>
+                  {Number.isFinite(product.stock) && (
+                    <Badge variant={product.stock <= 5 ? "destructive" : "secondary"} className="text-[8px] px-1 h-4">
+                      {t("pos.empresa.unitsBadge", { n: product.stock })}
+                    </Badge>
+                  )}
                 </div>
               </motion.button>
             );
