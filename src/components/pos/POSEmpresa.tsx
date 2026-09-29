@@ -7,7 +7,10 @@ import { CartContent } from "./CartContent";
 import { PaymentDialog } from "./PaymentDialog";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { supabase } from "@/integrations/supabase/client";
+import { usePOSStock, notifyStockChanged } from "@/hooks/usePOSStock";
+import { toast as stockToast } from "sonner";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useActiveShift } from "@/hooks/useActiveShift";
 import { useTranslation } from "react-i18next";
 
 interface Product {
@@ -44,6 +47,14 @@ export function POSEmpresa() {
   const { t } = useTranslation();
   const { tenantId } = useTenantContext();
   const [products, setProducts] = useState<Product[]>([]);
+  const { shift } = useActiveShift();
+  const { stockOf } = usePOSStock(tenantId, shift?.store_id ?? null);
+  const canAdd = (productId: string, fallback: number, name: string, qtyInCart: number, delta = 1) => {
+    const limit = stockOf(productId, fallback);
+    if (limit === null || qtyInCart + delta <= limit) return true;
+    stockToast.error(`Existencia insuficiente de ${name}: disponible ${Math.max(0, limit)}`);
+    return false;
+  };
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
@@ -60,6 +71,8 @@ export function POSEmpresa() {
   const categories = useMemo(() => ["Todos", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[]], [products]);
 
   const addToCart = (product: Product) => {
+    const inCartQty = cart.filter((i) => i.productId === product.id).reduce((a, i) => a + i.qty, 0);
+    if (!canAdd(product.id, product.stock, product.name, inCartQty)) return;
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === product.id);
       if (existing) return prev.map((i) => (i.productId === product.id ? { ...i, qty: i.qty + 1 } : i));
@@ -68,6 +81,14 @@ export function POSEmpresa() {
   };
 
   const updateQty = (id: number, delta: number) => {
+    if (delta > 0) {
+      const it = cart.find((i) => i.id === id);
+      if (it?.productId) {
+        const p = products.find((x) => x.id === it.productId);
+        const inCartQty = cart.filter((i) => i.productId === it.productId).reduce((a, i) => a + i.qty, 0);
+        if (!canAdd(it.productId, p?.stock ?? 0, it.name, inCartQty, delta)) return;
+      }
+    }
     setCart((prev) => prev.map((i) => (i.id === id ? { ...i, qty: i.qty + delta } : i)).filter((i) => i.qty > 0));
   };
 
@@ -81,13 +102,14 @@ export function POSEmpresa() {
   const total = subtotal + tax;
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
 
-  const filtered = useMemo(() => products.filter((p) => {
+  const filtered = useMemo(() => products.map((p) => ({ ...p, stock: stockOf(p.id, p.stock) ?? Infinity })).filter((p) => {
     const ms = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
     const mc = activeCategory === "Todos" || p.category === activeCategory;
     return ms && mc;
-  }), [products, search, activeCategory]);
+  }), [products, search, activeCategory, stockOf]);
 
-  const handleSaleComplete = () => { setCart([]); setCartOpen(false); };
+  const handleSaleComplete = () => {
+    notifyStockChanged(); setCart([]); setCartOpen(false); };
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
@@ -136,9 +158,11 @@ export function POSEmpresa() {
                 <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-base sm:text-lg font-heading font-bold text-primary">${product.price.toLocaleString()}</p>
-                  <Badge variant={product.stock <= product.price * 0 + 5 ? "destructive" : "secondary"} className="text-[8px] px-1 h-4">
-                    {t("pos.empresa.unitsBadge", { n: product.stock })}
-                  </Badge>
+                  {Number.isFinite(product.stock) && (
+                    <Badge variant={product.stock <= 5 ? "destructive" : "secondary"} className="text-[8px] px-1 h-4">
+                      {t("pos.empresa.unitsBadge", { n: product.stock })}
+                    </Badge>
+                  )}
                 </div>
               </motion.button>
             );
