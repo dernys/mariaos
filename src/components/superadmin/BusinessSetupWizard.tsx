@@ -100,7 +100,7 @@ export function BusinessSetupWizard({
   const [opening, setOpening] = useState(false);
   const { setActiveTenantId, refreshTenants } = useTenantContext();
 
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
   const [templateCode, setTemplateCode] = useState<string>("");
   const [info, setInfo] = useState({ name: "", slug: "", email: "", phone: "", address: "", rfc: "" });
@@ -226,6 +226,9 @@ export function BusinessSetupWizard({
     setAdminCheck(null);
     setResult(null);
     setFailure(null);
+    // Nueva intención = nueva clave de idempotencia; si no, el backend
+    // devolvería el negocio anterior al crear un segundo negocio.
+    setIdempotencyKey(crypto.randomUUID());
   };
 
 
