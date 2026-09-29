@@ -10,6 +10,8 @@ import { ParkedSalesDialog } from "./ParkedSalesDialog";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { supabase } from "@/integrations/supabase/client";
+import { usePOSStock, notifyStockChanged } from "@/hooks/usePOSStock";
+import { toast as stockToast } from "sonner";
 import { offlineDB, snapshotProducts } from "@/lib/offline/db";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { toast } from "sonner";
@@ -75,6 +77,13 @@ export function POSBar() {
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [tabName, setTabName] = useState("");
   const { shift } = useActiveShift();
+  const { stockOf } = usePOSStock(tenantId, shift?.store_id ?? null);
+  const canAdd = (productId: string, fallback: number, name: string, qtyInCart: number, delta = 1) => {
+    const limit = stockOf(productId, fallback);
+    if (limit === null || qtyInCart + delta <= limit) return true;
+    stockToast.error(`Existencia insuficiente de ${name}: disponible ${Math.max(0, limit)}`);
+    return false;
+  };
 
 
   // Tenant-scoped cart persistence: re-hydrate when tenant becomes known.
@@ -138,6 +147,8 @@ export function POSBar() {
   const categories = useMemo(() => ["Todos", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[]], [products]);
 
   const addToCart = (product: Product) => {
+    const inCartQty = cart.filter((i) => i.productId === product.id).reduce((a, i) => a + i.qty, 0);
+    if (!canAdd(product.id, product.stock, product.name, inCartQty)) return;
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === product.id);
       if (existing) return prev.map((i) => (i.productId === product.id ? { ...i, qty: i.qty + 1 } : i));
@@ -154,6 +165,14 @@ export function POSBar() {
   useBarcodeScanner(handleScan);
 
   const updateQty = (id: number, delta: number) => {
+    if (delta > 0) {
+      const it = cart.find((i) => i.id === id);
+      if (it?.productId) {
+        const p = products.find((x) => x.id === it.productId);
+        const inCartQty = cart.filter((i) => i.productId === it.productId).reduce((a, i) => a + i.qty, 0);
+        if (!canAdd(it.productId, p?.stock ?? 0, it.name, inCartQty, delta)) return;
+      }
+    }
     setCart((prev) => prev.map((i) => (i.id === id ? { ...i, qty: i.qty + delta } : i)).filter((i) => i.qty > 0));
   };
 
@@ -167,13 +186,14 @@ export function POSBar() {
   const total = subtotal + tax;
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
 
-  const filtered = useMemo(() => products.filter((p) => {
+  const filtered = useMemo(() => products.map((p) => ({ ...p, stock: stockOf(p.id, p.stock) ?? Infinity })).filter((p) => {
     const ms = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
     const mc = activeCategory === "Todos" || p.category === activeCategory;
     return ms && mc;
-  }), [products, search, activeCategory]);
+  }), [products, search, activeCategory, stockOf]);
 
   const handleSaleComplete = () => {
+    notifyStockChanged();
     setCart([]);
     setCartOpen(false);
     setActiveOrderId(null);

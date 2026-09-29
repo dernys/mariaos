@@ -11,6 +11,8 @@ import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { FloorMap } from "./FloorMap";
 import { SplitBillDialog } from "./SplitBillDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { usePOSStock, notifyStockChanged } from "@/hooks/usePOSStock";
+import { toast as stockToast } from "sonner";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -63,6 +65,13 @@ export function POSRestaurant() {
   const { tenantId } = useTenantContext();
   const { toast } = useToast();
   const { shift } = useActiveShift();
+  const { stockOf } = usePOSStock(tenantId, shift?.store_id ?? null);
+  const canAdd = (productId: string, fallback: number, name: string, qtyInCart: number, delta = 1) => {
+    const limit = stockOf(productId, fallback);
+    if (limit === null || qtyInCart + delta <= limit) return true;
+    stockToast.error(`Existencia insuficiente de ${name}: disponible ${Math.max(0, limit)}`);
+    return false;
+  };
   const cartKey = tenantId ? `pos_rest_cart_${tenantId}` : "";
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -121,6 +130,8 @@ export function POSRestaurant() {
   const categories = useMemo(() => ["Todos", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[]], [products]);
 
   const addToCart = (product: Product) => {
+    const inCartQty = cart.filter((i) => i.productId === product.id).reduce((a, i) => a + i.qty, 0);
+    if (!canAdd(product.id, product.stock, product.name, inCartQty)) return;
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === product.id);
       if (existing) return prev.map((i) => (i.productId === product.id ? { ...i, qty: i.qty + 1 } : i));
@@ -129,6 +140,14 @@ export function POSRestaurant() {
   };
 
   const updateQty = (id: number, delta: number) => {
+    if (delta > 0) {
+      const it = cart.find((i) => i.id === id);
+      if (it?.productId) {
+        const p = products.find((x) => x.id === it.productId);
+        const inCartQty = cart.filter((i) => i.productId === it.productId).reduce((a, i) => a + i.qty, 0);
+        if (!canAdd(it.productId, p?.stock ?? 0, it.name, inCartQty, delta)) return;
+      }
+    }
     setCart((prev) => prev.map((i) => (i.id === id ? { ...i, qty: i.qty + delta } : i)).filter((i) => i.qty > 0));
   };
 
@@ -154,13 +173,14 @@ export function POSRestaurant() {
 
 
 
-  const filtered = useMemo(() => products.filter((p) => {
+  const filtered = useMemo(() => products.map((p) => ({ ...p, stock: stockOf(p.id, p.stock) ?? Infinity })).filter((p) => {
     const ms = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
     const mc = activeCategory === "Todos" || p.category === activeCategory;
     return ms && mc;
-  }), [products, search, activeCategory]);
+  }), [products, search, activeCategory, stockOf]);
 
   const handleSaleComplete = () => {
+    notifyStockChanged();
     setCart([]);
     setCartOpen(false);
     setSelectedTableId(null);
