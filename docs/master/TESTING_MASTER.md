@@ -10,3 +10,4 @@ Huecos por prioridad: 1) cross-tenant autenticado · 2) RBAC server-side · 3) R
 | Fecha | Alcance | Resultado |
 |---|---|---|
 | 2026-09-30 | Creación de MASTER files (sin cambios de código) | n/a |
+| 2026-09-30 | POS stock por tienda (stockRule) | 4/4 OK; E2E pendiente |

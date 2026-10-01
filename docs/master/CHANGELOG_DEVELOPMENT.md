@@ -11,3 +11,9 @@
 ## Anterior (resumen)
 - Trigger de sincronización `products.stock` ← `product_stock` y corrección de totales (sesión previa, sin prueba de venta completa).
 - Corrección de clave de idempotencia en el asistente de crear negocio.
+
+## 2026-09-30 — P1-TX-1/2 Stock por tienda
+- `pos_checkout`: en tienda, sin fila `product_stock` ⇒ disponible 0; respeta `pos_settings.allow_negative_stock`.
+- Frontend: regla única `src/lib/pos/stockRule.ts` usada por `usePOSStock` (Tienda/Bar/Restaurante); hasta cargar, 0.
+- Tests: `stockRule.test.ts` 4/4. Pendiente: venta E2E real y snapshot offline por tienda.
+- Siguiente: P1-OFF-1 snapshot `product_stock` por tienda; luego P0 test cross-tenant autenticado.

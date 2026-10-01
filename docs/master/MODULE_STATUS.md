@@ -6,7 +6,7 @@ Leyenda: FUNCIONA · PARCIAL · MOCK · NO IMPL. "Probado" = existe evidencia en
 |---|---|---|---|
 | Auth / Superadmin / selector tenant | FUNCIONA | parcial | Falta test A↔B autenticado |
 | RBAC (role_permissions, PermissionGate) | FUNCIONA | no automatizado | |
-| POS tienda/bar/restaurante | PARCIAL | manual | Stock por tienda: fallback a global si no hay fila (bug abierto) |
+| POS tienda/bar/restaurante | FUNCIONA (online) | unit stockRule | Stock por tienda; offline aún usa global |
 | Pagos múltiples (Cuba) | FUNCIONA | E2E 12/12 (manual SQL) | |
 | Turnos / caja / cierre Z | FUNCIONA | E2E manual | |
 | Inventario / kardex / lotes / seriales | FUNCIONA | unit (product) | |
