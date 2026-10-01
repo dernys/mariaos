@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { availableStock } from "@/lib/pos/stockRule";
 
 /**
  * Existencia real por tienda para el POS.
@@ -38,10 +39,15 @@ export function usePOSStock(tenantId: string | null | undefined, storeId: string
 
   /** Devuelve la existencia disponible o null si no aplica límite (receta). */
   const stockOf = useCallback((productId: string, fallback: number): number | null => {
-    if (recipeIds.has(productId)) return null;
-    if (storeStock.has(productId)) return storeStock.get(productId)!;
-    return Number(fallback ?? 0);
-  }, [storeStock, recipeIds]);
+    // Hasta cargar la existencia por tienda, no ofrecer stock global por error.
+    if (storeId && !loaded) return recipeIds.has(productId) ? null : 0;
+    return availableStock({
+      hasRecipe: recipeIds.has(productId),
+      storeScoped: !!storeId,
+      locationStock: storeStock.get(productId),
+      globalStock: fallback,
+    });
+  }, [storeStock, recipeIds, storeId, loaded]);
 
   return { stockOf, refresh, loaded };
 }

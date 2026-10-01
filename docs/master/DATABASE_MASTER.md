@@ -8,3 +8,4 @@
 - Auditoría: `audit_trigger`, `activity_log`, `domain_events` (append-only).
 
 Obsoleto/deuda: migración `20260620193555` usa nombres de columnas antiguos (no afecta runtime). 645+ avisos de linter preexistentes documentados.
+- Regla de stock POS: tienda sin fila = 0 (online y servidor). Offline pendiente.

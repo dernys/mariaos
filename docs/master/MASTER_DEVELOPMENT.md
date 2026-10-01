@@ -47,8 +47,8 @@ Nómina → compute_payroll_full → pay_payroll → journal.
 
 ## 9. Siguiente bloque autorizado (P1 Transaction Core — stock por ubicación)
 Estado anterior: `products.stock` (global) se sincroniza por trigger desde `product_stock` (hecho en la última sesión). Pendiente:
-1. `usePOSStock`: si no hay fila `product_stock` para la tienda del turno, disponible = **0** (hoy cae al total global).
-2. Validación server-side en `pos_checkout` / `process_sale_stock`: rechazar venta si stock de la tienda < cantidad (excepto productos con receta o `allow_negative` configurado).
+1. HECHO 2026-09-30: `usePOSStock` sin fila = 0.
+2. HECHO 2026-09-30: `pos_checkout` valida stock de tienda (respeta allow_negative_stock).
 3. Tests: venta con stock solo en almacén debe fallar; venta con receta descuenta ingredientes.
 4. Actualizar `MODULE_STATUS.md`, `DATABASE_MASTER.md`, `TESTING_MASTER.md`, `CHANGELOG_DEVELOPMENT.md`.
 
