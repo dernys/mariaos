@@ -10543,6 +10543,13 @@ export type Database = {
         }
         Returns: Json
       }
+      default_stock_location: {
+        Args: { p_tenant: string }
+        Returns: {
+          location_id: string
+          location_type: string
+        }[]
+      }
       distance_km: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
@@ -11241,6 +11248,18 @@ export type Database = {
             }
             Returns: string
           }
+      register_inventory_movement: {
+        Args: {
+          p_client_uuid?: string
+          p_location_id?: string
+          p_location_type?: string
+          p_product_id: string
+          p_quantity: number
+          p_reason?: string
+          p_type: string
+        }
+        Returns: Json
+      }
       register_payroll_signature: {
         Args: {
           p_document_ref?: string
