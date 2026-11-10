@@ -1,5 +1,12 @@
 # Changelog de desarrollo
 
+## 2026-11-10 — Nombres del restaurante demo
+- Hallazgo: los 31 productos de Restaurante La Mesa tenían `name = sku`; el POS mostraba directamente esos valores. El historial de auditoría conservaba los nombres originales y cambios con el valor `hijacked`.
+- Corrección de datos: restaurados los 31 nombres originales, por SKU y exclusivamente en el tenant demo restaurante. Sin cambios de código, esquema, precios, stock, recetas ni documentos históricos.
+- Validación: 31 productos, 0 nombres vacíos o iguales al SKU. Huella de todos los campos excepto nombre/fecha de actualización idéntica antes y después (`c3089d162a8effc56db729cdee41e8bf`).
+- Verificación autenticada: acceso desde el selector público de demos → `/app` → `/pos`; nombres recuperados visibles en escritorio y móvil. Registro en `TESTING_MASTER.md`.
+- Alcance: se recuperó el catálogo actual; no se reescribió el historial de ventas/cocina ni se atribuyó la causa de los cambios a un actor sin evidencia adicional.
+
 ## 2026-09-30 — Sistema MASTER
 - Objetivo: crear control maestro del desarrollo desde el estado real.
 - Estado anterior: documentación dispersa en `/docs`, parte obsoleta.
