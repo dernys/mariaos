@@ -1,43 +1,32 @@
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+// @refresh reset
+// Changing a custom hook's internal hook order must remount its consumers in preview.
+import { useState, useEffect } from "react";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { useAuth } from "@/hooks/useAuth";
 
 export function useSuperadmin() {
-  const { user } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const checkSuperadmin = useCallback(async () => {
-    if (!user) {
-      setIsSuperadmin(false);
+  useEffect(() => {
+    let cancelled = false;
+    setIsSuperadmin(false);
+    setLoading(true);
+    if (authLoading) return;
+    if (!user || !session) {
       setLoading(false);
       return;
     }
-
-    // Hydrate from cache for instant UI (does NOT stop loading,
-    // so guarded routes wait for the real verification before redirecting)
-    const cacheKey = `sa:${user.id}`;
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached !== null) {
-      setIsSuperadmin(cached === "1");
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke("check-superadmin");
-      const value = !error && !!data?.is_superadmin;
-      setIsSuperadmin(value);
-      sessionStorage.setItem(cacheKey, value ? "1" : "0");
-    } catch {
-      setIsSuperadmin(false);
-      sessionStorage.setItem(cacheKey, "0");
-    }
-    setLoading(false);
-  }, [user]);
-
-
-  useEffect(() => {
-    checkSuperadmin();
-  }, [checkSuperadmin]);
+    checkSuperadmin(user.id).then((value) => {
+      if (!cancelled) setIsSuperadmin(value);
+    }).catch(() => {
+      if (!cancelled) setIsSuperadmin(false);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [user?.id, session?.access_token, authLoading]);
 
   return { isSuperadmin, loading };
 }

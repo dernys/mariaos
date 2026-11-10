@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { InstallPWAPrompt } from "@/components/InstallPWAPrompt";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
 
 type AuthView = "login" | "forgot";
 
@@ -44,22 +45,19 @@ const Auth = () => {
 
   useEffect(() => {
     if (authLoading || !session) return;
+    let cancelled = false;
     const checkAndRedirect = async () => {
       try {
-        const cached = sessionStorage.getItem(`sa:${session.user.id}`);
         const next = getSafeNext();
         if (next) return navigate(next, { replace: true });
-        if (cached === "1") return navigate("/superadmin", { replace: true });
-        if (cached === "0") return navigate("/app", { replace: true });
-        const { data } = await supabase.functions.invoke("check-superadmin");
-        const isSA = !!data?.is_superadmin;
-        sessionStorage.setItem(`sa:${session.user.id}`, isSA ? "1" : "0");
-        navigate(isSA ? "/superadmin" : "/app", { replace: true });
+        const isSA = await checkSuperadmin(session.user.id);
+        if (!cancelled) navigate(isSA ? "/superadmin" : "/app", { replace: true });
       } catch {
-        navigate("/app", { replace: true });
+        if (!cancelled) navigate("/app", { replace: true });
       }
     };
     checkAndRedirect();
+    return () => { cancelled = true; };
   }, [session, authLoading, navigate, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
