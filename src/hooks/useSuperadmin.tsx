@@ -1,3 +1,5 @@
+// @refresh reset
+// Changing a custom hook's internal hook order must remount its consumers in preview.
 import { useState, useEffect } from "react";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { useAuth } from "@/hooks/useAuth";
