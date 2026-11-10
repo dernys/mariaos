@@ -1,5 +1,10 @@
 # Changelog de desarrollo
 
+## 2026-11-10 — Error 401 de check-superadmin
+- Reproducido HTTP 401 con sesión real antes de la corrección. Validación actualizada a `getClaims()` compatible con signing keys y cliente de autenticación separado del cliente privilegiado; identidad de superadmin sigue determinada por configuración server-side.
+- Comprobación cliente centralizada: sesión hidratada explícita, renovación preventiva y un único reintento tras 401. Redirección y hook dejan de derivar privilegios de sessionStorage; resultados de sesiones anteriores se descartan.
+- Función desplegada y verificada: sesión real HTTP 200 (`false`, usuario normal), token inválido HTTP 401; 7 tests pasan y `/auth` conduce a dashboard visible en `/app`. Cuenta superadmin no probada. Sin migraciones ni cambios de reglas multi-tenant.
+
 ## 2026-11-10 — Nombres del restaurante demo
 - Hallazgo: los 31 productos de Restaurante La Mesa tenían `name = sku`; el POS mostraba directamente esos valores. El historial de auditoría conservaba los nombres originales y cambios con el valor `hijacked`.
 - Corrección de datos: restaurados los 31 nombres originales, por SKU y exclusivamente en el tenant demo restaurante. Sin cambios de código, esquema, precios, stock, recetas ni documentos históricos.
