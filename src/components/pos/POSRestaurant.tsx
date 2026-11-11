@@ -414,6 +414,7 @@ export function POSRestaurant() {
                                 )}
                                 <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
                                 <p className="text-base font-heading font-bold mt-1 text-rose-400">${product.price}</p>
+                                {Number.isFinite(product.stock) && <Badge variant={product.stock <= 0 ? "destructive" : "secondary"} className="mt-1 text-[10px] px-1">{product.stock} uds</Badge>}
                               </motion.button>
                             );
                           })}
@@ -441,6 +442,7 @@ export function POSRestaurant() {
                         <p className="text-xs sm:text-sm font-medium truncate">{product.name}</p>
                         <p className="text-[10px] text-muted-foreground">{product.category}</p>
                         <p className="text-base sm:text-lg font-heading font-bold mt-1 text-rose-400">${product.price}</p>
+                        {Number.isFinite(product.stock) && <Badge variant={product.stock <= 0 ? "destructive" : "secondary"} className="mt-1 text-[10px] px-1">{product.stock} uds</Badge>}
                       </motion.button>
                     );
                   })}
