@@ -9,3 +9,4 @@
 
 Obsoleto/deuda: migración `20260620193555` usa nombres de columnas antiguos (no afecta runtime). 645+ avisos de linter preexistentes documentados.
 - Regla de stock POS: tienda sin fila = 0 (online y servidor). Offline pendiente.
+- 2026-11-10: auditados los 91 productos demo; totales coherentes con ubicaciones. Redistribución de 593 unidades existentes de Restaurante Terraza a Principal, 31 pares de movimientos `demo_pos_rebalance_20261110`, sin aumentar totales ni tocar negocios no demo. Las sucursales sin existencias no heredan stock de almacenes/global.
