@@ -336,7 +336,7 @@ export function POSBar() {
                 <p className="text-[10px] text-muted-foreground">{product.category}</p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-base sm:text-lg font-heading font-bold text-amber-400">${product.price}</p>
-                  {product.stock <= 10 && <Badge variant="destructive" className="text-[8px] px-1 h-4">{t("pos.bar.lowStockBadge")}</Badge>}
+                  {Number.isFinite(product.stock) && <Badge variant={product.stock <= 0 ? "destructive" : "secondary"} className="text-[10px] px-1">{product.stock} uds</Badge>}
                 </div>
               </motion.button>
             );
