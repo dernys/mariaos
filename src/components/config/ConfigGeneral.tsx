@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Save, Globe, Loader2, Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/hooks/useLocale";
+import { useTenantContext } from "@/hooks/useTenantContext";
 import { SUPPORTED_LOCALES, type AppLocale } from "@/i18n";
 
 const SETTINGS_KEYS = [
@@ -41,6 +42,7 @@ export function ConfigGeneral() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const { locale, setUserLocale, setTenantLocale } = useLocale();
+  const { refreshTenants } = useTenantContext();
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -57,14 +59,22 @@ export function ConfigGeneral() {
       if (data) {
         const map: Record<string, string> = {};
         data.forEach((d: any) => { map[d.key] = d.value || ""; });
-        setValues(map);
+        setValues((prev) => ({ ...map, ...Object.fromEntries(Object.entries(prev).filter(([, v]) => v)) }));
       }
     });
     (supabase as any).from("accounting_profiles").select("*").eq("active", true).then(({ data }: any) => {
       if (data) setProfiles(data);
     });
-    (supabase as any).from("tenants").select("country_code, accounting_profile_code, default_locale").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
+    (supabase as any).from("tenants").select("name, address, phone, email, country_code, accounting_profile_code, default_locale").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
       if (data) {
+        // Prefill from the business record when a setting was never saved
+        setValues((prev) => ({
+          ...prev,
+          business_name: prev.business_name || data.name || "",
+          business_address: prev.business_address || data.address || "",
+          business_phone: prev.business_phone || data.phone || "",
+          business_email: prev.business_email || data.email || "",
+        }));
         setCountryCode(data.country_code || "CU");
         setProfileCode(data.accounting_profile_code || "");
         setCurrentProfile(data.accounting_profile_code || null);
@@ -76,15 +86,25 @@ export function ConfigGeneral() {
   const handleSave = async () => {
     if (!tenantId) return;
     setSaving(true);
-    for (const setting of SETTINGS_KEYS) {
-      const val = values[setting.key] || "";
-      await supabase.from("system_settings").upsert(
-        { key: setting.key, value: val, category: setting.category, tenant_id: tenantId },
-        { onConflict: "key,tenant_id" }
-      );
+    try {
+      const rows = SETTINGS_KEYS.map((s) => ({ key: s.key, value: values[s.key] || "", category: s.category, tenant_id: tenantId }));
+      const { error } = await supabase.from("system_settings").upsert(rows, { onConflict: "key,tenant_id" });
+      if (error) throw error;
+      // Keep the business record (sidebar, tickets, marketplace) in sync with these fields
+      const patch: Record<string, string | null> = {};
+      if (values.business_name?.trim()) patch.name = values.business_name.trim();
+      patch.address = values.business_address?.trim() || null;
+      patch.phone = values.business_phone?.trim() || null;
+      patch.email = values.business_email?.trim() || null;
+      const { error: tErr } = await (supabase as any).from("tenants").update(patch).eq("id", tenantId);
+      if (tErr) throw tErr;
+      await refreshTenants();
+      toast({ title: trPT("Configuración guardada") });
+    } catch (e: any) {
+      toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + (e?.message ?? ""), variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
-    toast({ title: trPT("Configuración guardada") });
-    setSaving(false);
   };
 
   const handleApplyProfile = async () => {

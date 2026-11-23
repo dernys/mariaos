@@ -75,7 +75,7 @@ export function ConfigDelivery() {
         </div>
       </CardContent></Card>
 
-      <Button onClick={async () => { await d.save(s); toast({ title: trPT("Ajustes de delivery guardados") }); }} className="gap-2 gradient-brand text-primary-foreground">
+      <Button onClick={async () => { try { await d.save(s); toast({ title: trPT("Ajustes de delivery guardados") }); } catch (e: any) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + (e?.message ?? ""), variant: "destructive" }); } }} className="gap-2 gradient-brand text-primary-foreground">
         <Save className="h-3.5 w-3.5" /> {trPT("Guardar ajustes")}
       </Button>
     </div>

@@ -25,10 +25,12 @@ export function useModuleSettings<T extends Record<string, any>>(module: string,
   const save = async (patch: Partial<T>) => {
     if (!tenantId) return;
     const next = { ...settings, ...patch };
+    const prev = settings;
     setSettings(next);
-    await (supabase as any)
+    const { error } = await (supabase as any)
       .from("module_settings")
       .upsert({ tenant_id: tenantId, module, settings: next }, { onConflict: "tenant_id,module" });
+    if (error) { setSettings(prev); throw error; }
   };
 
   return { settings, loading, save, reload };

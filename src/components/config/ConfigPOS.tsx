@@ -29,8 +29,8 @@ export function ConfigPOS() {
   }, [tenantId]);
 
   const handleSave = async () => {
-    await save(local);
-    toast({ title: trPT("Ajustes guardados") });
+    try { await save(local); toast({ title: trPT("Ajustes guardados") }); }
+    catch (e: any) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + (e?.message ?? ""), variant: "destructive" }); }
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">Cargando...</p>;

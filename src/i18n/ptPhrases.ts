@@ -1,5 +1,6 @@
 /** Diccionario pt-BR por frase (clave = texto original en español). Usado por tr(). */
 export const PT_PHRASES: Record<string, string> = {
+  "No se pudo guardar": "Não foi possível salvar",
   "Acciones": "Ações", "Agrega al menos un producto": "Adicione pelo menos um produto", "Almacén": "Depósito",
   "Borrador": "Rascunho", "Borradores": "Rascunhos", "Cancelada": "Cancelada", "Cancelar": "Cancelar", "Cant": "Qtd",
   "Cargando órdenes…": "Carregando pedidos…", "Cobrado en firme (efectivo/tarjeta)": "Recebido confirmado (dinheiro/cartão)",

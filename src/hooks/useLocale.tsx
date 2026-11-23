@@ -35,7 +35,10 @@ export function useLocale() {
       }
       const tenantLocale = (tenant as any)?.default_locale ?? null;
       const browserLocale = typeof navigator !== "undefined" ? navigator.language : null;
-      const resolved = normalizeLocale(userLocale || tenantLocale || browserLocale);
+      let storedLocale: string | null = null;
+      try { storedLocale = localStorage.getItem(STORAGE_KEY); } catch { /* ignore */ }
+      // The user's explicit choice (account, then this device) always wins over tenant/browser defaults.
+      const resolved = normalizeLocale(userLocale || storedLocale || tenantLocale || browserLocale);
       if (!cancelled && resolved !== i18n.language) {
         await i18n.changeLanguage(resolved);
         localStorage.setItem(STORAGE_KEY, resolved);
@@ -44,7 +47,7 @@ export function useLocale() {
     return () => {
       cancelled = true;
     };
-  }, [user, tenant, i18n]);
+  }, [user?.id, tenant?.id, (tenant as any)?.default_locale, i18n]);
 
   const setUserLocale = async (locale: AppLocale) => {
     await i18n.changeLanguage(locale);

@@ -30,8 +30,8 @@ export function ConfigModules() {
   useEffect(() => setS(sh.settings), [sh.settings]);
 
   const saveAll = async () => {
-    await Promise.all([inv.save(i), pur.save(p), invc.save(iv), sh.save(s)]);
-    toast({ title: trPT("Ajustes guardados") });
+    try { await Promise.all([inv.save(i), pur.save(p), invc.save(iv), sh.save(s)]); toast({ title: trPT("Ajustes guardados") }); }
+    catch (e: any) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + (e?.message ?? ""), variant: "destructive" }); }
   };
 
   return (

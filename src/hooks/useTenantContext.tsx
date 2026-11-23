@@ -36,7 +36,7 @@ interface TenantContextType {
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
-const TENANT_COLS = "id, name, slug, business_type, email, phone, address";
+const TENANT_COLS = "id, name, slug, business_type, email, phone, address, default_locale";
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -130,7 +130,15 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   }, [tenantId, user?.id]);
 
   const refreshTenants = useCallback(async (): Promise<TenantInfo[]> => {
-    if (!isSuperadmin) return allTenants;
+    if (!isSuperadmin) {
+      if (!tenantId) return allTenants;
+      const { data } = await supabase.from("tenants").select(TENANT_COLS).eq("id", tenantId).maybeSingle();
+      if (!data) return allTenants;
+      const info = data as TenantInfo;
+      setTenant(info);
+      setAllTenants([info]);
+      return [info];
+    }
     const { data } = await supabase
       .from("tenants")
       .select(TENANT_COLS)
@@ -138,8 +146,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       .order("name");
     const list = (data ?? []) as TenantInfo[];
     setAllTenants(list);
+    const current = list.find((t) => t.id === tenantId);
+    if (current) setTenant(current);
     return list;
-  }, [isSuperadmin, allTenants]);
+  }, [isSuperadmin, allTenants, tenantId]);
 
   const setActiveTenantId = useCallback(
     async (id: string) => {

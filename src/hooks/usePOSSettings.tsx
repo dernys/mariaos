@@ -65,8 +65,10 @@ export function usePOSSettings() {
   const save = async (patch: Partial<POSSettings>) => {
     if (!tenantId) return;
     const next = { ...settings, ...patch };
+    const prev = settings;
     setSettings(next);
-    await (supabase as any).from("pos_settings").upsert({ tenant_id: tenantId, ...next }, { onConflict: "tenant_id" });
+    const { error } = await (supabase as any).from("pos_settings").upsert({ tenant_id: tenantId, ...next }, { onConflict: "tenant_id" });
+    if (error) { setSettings(prev); throw error; }
   };
 
   return { settings, loading, save, reload };
