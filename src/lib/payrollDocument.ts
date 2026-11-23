@@ -42,7 +42,13 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: "Anulada",
 };
 
-export function buildPayrollDocumentHtml(d: PayrollDocumentData): string {
+const escapeHtml = (v: unknown) =>
+  String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
+export function buildPayrollDocumentHtml(raw: PayrollDocumentData): string {
+  const d = Object.fromEntries(
+    Object.entries(raw).map(([k, v]) => [k, typeof v === "string" ? escapeHtml(v) : v]),
+  ) as PayrollDocumentData;
   const cur = d.currency || "CUP";
   const row = (label: string, value: string, strong = false, negative = false) => `
     <tr>

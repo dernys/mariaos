@@ -158,7 +158,7 @@ export default function Auditoria() {
         l.metadata ? JSON.stringify(l.metadata) : "",
       ]),
     ];
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const csv = rows.map(r => r.map(c => { const s = String(c ?? ""); const v = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s; return `"${v.replace(/"/g, '""')}"`; }).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

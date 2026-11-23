@@ -7,7 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-correlation-id",
 };
 
-const DEMO_PASSWORD = "demo1234";
+// Random per run: no shared, guessable password is ever baked into the code.
+const DEMO_PASSWORD = `Demo-${crypto.randomUUID()}`;
 
 type Prod = { name: string; sku: string; price: number; cost: number; stock: number; category: string; product_type?: string };
 type Recipe = { product_sku: string; ingredient_sku: string; quantity: number; unit: string };

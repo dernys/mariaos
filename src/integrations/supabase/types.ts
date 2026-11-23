@@ -10304,6 +10304,7 @@ export type Database = {
       }
       calculate_shift_summary: { Args: { p_shift_id: string }; Returns: Json }
       can_manage_accounting: { Args: { _tenant: string }; Returns: boolean }
+      can_manage_integrations: { Args: { _tenant: string }; Returns: boolean }
       cancel_delivery_assignment: {
         Args: { p_order_id: string; p_reason?: string }
         Returns: undefined

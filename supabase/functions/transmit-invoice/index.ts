@@ -18,6 +18,18 @@ function escapeXml(s: any): string {
     .replace(/'/g, "&apos;");
 }
 
+function isPublicHttpsUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:") return false;
+    const h = u.hostname.toLowerCase();
+    if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".internal")) return false;
+    if (/^(127\.|10\.|169\.254\.|192\.168\.|0\.)/.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
+    if (h === "::1" || h.startsWith("[")) return false;
+    return true;
+  } catch { return false; }
+}
+
 async function sha256(input: string): Promise<string> {
   const buf = new TextEncoder().encode(input);
   const digest = await crypto.subtle.digest("SHA-256", buf);
@@ -104,7 +116,10 @@ Deno.serve(async (req) => {
     let providerResponse: any = { mode: "local", cufe };
     const provider = settings?.provider || "local";
 
-    if (settings?.mode === "electronic" && settings?.webhook_url) {
+    if (settings?.mode === "electronic" && settings?.webhook_url && !isPublicHttpsUrl(settings.webhook_url)) {
+      status = "failed";
+      providerResponse = { mode: "electronic", error: "destino no permitido (solo HTTPS público)" };
+    } else if (settings?.mode === "electronic" && settings?.webhook_url) {
       try {
         const res = await fetch(settings.webhook_url, {
           method: "POST",

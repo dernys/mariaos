@@ -43,6 +43,13 @@
       "when": 1795461496226,
       "tag": "0005_tenants_public_country",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795462227909,
+      "tag": "0006_security_fixes_batch",
+      "breakpoints": true
     }
   ]
 }

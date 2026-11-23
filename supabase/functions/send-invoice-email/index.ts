@@ -5,6 +5,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-correlation-id",
 };
 
+const esc = (v: unknown) =>
+  String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+const plain = (v: unknown) => String(v ?? "").replace(/[\r\n<>"]/g, " ").slice(0, 120);
+
+/** Only accept a real, bounded PDF document as attachment. */
+function isValidPdfBase64(b64: unknown): b64 is string {
+  if (typeof b64 !== "string" || b64.length > 14_000_000 || !/^[A-Za-z0-9+/=\s]+$/.test(b64)) return false;
+  try { return atob(b64.slice(0, 16).replace(/\s/g, "")).startsWith("%PDF-"); } catch { return false; }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -26,6 +36,9 @@ Deno.serve(async (req) => {
     const { invoice_id, pdf_base64 } = await req.json();
     if (!invoice_id || !pdf_base64) {
       return new Response(JSON.stringify({ error: "Faltan parámetros" }), { status: 400, headers: corsHeaders });
+    }
+    if (!isValidPdfBase64(pdf_base64)) {
+      return new Response(JSON.stringify({ error: "El adjunto debe ser el PDF de la factura" }), { status: 400, headers: corsHeaders });
     }
 
     const { data: inv, error } = await supabase.from("invoices").select("*").eq("id", invoice_id).single();
@@ -56,13 +69,13 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const subject = `Factura ${inv.invoice_number} de ${inv.issuer_name}`;
+    const subject = `Factura ${plain(inv.invoice_number)} de ${plain(inv.issuer_name)}`;
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1f2937">
-        <h2 style="color:#10b981;margin:0 0 16px">Factura ${inv.invoice_number}</h2>
-        <p>Hola ${inv.customer_name},</p>
-        <p>Adjuntamos tu factura por un total de <strong>${Number(inv.total).toFixed(2)} ${inv.currency}</strong>.</p>
-        <p>Gracias por tu compra,<br/><strong>${inv.issuer_name}</strong></p>
+        <h2 style="color:#10b981;margin:0 0 16px">Factura ${esc(inv.invoice_number)}</h2>
+        <p>Hola ${esc(inv.customer_name)},</p>
+        <p>Adjuntamos tu factura por un total de <strong>${Number(inv.total).toFixed(2)} ${esc(inv.currency)}</strong>.</p>
+        <p>Gracias por tu compra,<br/><strong>${esc(inv.issuer_name)}</strong></p>
       </div>
     `;
 
@@ -70,11 +83,11 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
       body: JSON.stringify({
-        from: `${inv.issuer_name} <onboarding@resend.dev>`,
+        from: `${plain(inv.issuer_name)} <onboarding@resend.dev>`,
         to: [inv.customer_email],
         subject,
         html,
-        attachments: [{ filename: `Factura_${inv.invoice_number}.pdf`, content: pdf_base64 }],
+        attachments: [{ filename: `Factura_${String(inv.invoice_number).replace(/[^\w.-]/g, "_")}.pdf`, content: pdf_base64 }],
       }),
     });
     const result = await res.json();

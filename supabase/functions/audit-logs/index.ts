@@ -63,7 +63,11 @@ Deno.serve(async (req) => {
     if (entity_type) q = q.eq("entity_type", entity_type);
     if (entity_id) q = q.eq("entity_id", entity_id);
     if (action) q = q.ilike("action", `%${action}%`);
-    if (search) q = q.or(`description.ilike.%${search}%,action.ilike.%${search}%`);
+    if (search) {
+      // Strip PostgREST filter syntax so the search value cannot change the query structure.
+      const term = String(search).replace(/[,()*%\\:"']/g, " ").trim().slice(0, 100);
+      if (term) q = q.or(`description.ilike.*${term}*,action.ilike.*${term}*`);
+    }
     if (from_date) q = q.gte("created_at", from_date);
     if (to_date) q = q.lte("created_at", to_date);
 

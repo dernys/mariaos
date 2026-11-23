@@ -14,7 +14,8 @@ const DEMO_ROLES: Array<{ role: "admin" | "gerente" | "supervisor" | "cajero" | 
   { role: "cajero", label: "Cajero", is_owner: false },
 ];
 
-const DEMO_PASSWORD = "Demo2026!";
+// Random per run: no shared, guessable password is ever baked into the code.
+const DEMO_PASSWORD = `Demo-${crypto.randomUUID()}`;
 
 function slugify(s: string) {
   return s

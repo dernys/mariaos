@@ -34,8 +34,16 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+/** Neutralize spreadsheet formulas (=, +, -, @, tab, CR) in exported text cells. */
+export function neutralizeCsvCell(v: unknown): unknown {
+  return typeof v === "string" && /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
+}
+
 export function exportCsv<T>(rows: T[], cols: ExportColumn<T>[], filename: string) {
-  const csv = Papa.unparse(buildRows(rows, cols));
+  const safe = buildRows(rows, cols).map((r: any) =>
+    Array.isArray(r) ? r.map(neutralizeCsvCell) : Object.fromEntries(Object.entries(r).map(([k, v]) => [k, neutralizeCsvCell(v)])),
+  );
+  const csv = Papa.unparse(safe as any);
   downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8;" }), `${filename}.csv`);
 }
 
