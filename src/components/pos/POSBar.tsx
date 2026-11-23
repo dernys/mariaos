@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { tr } from "@/i18n/tr";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ShoppingCart, X, Beer, Wine, GlassWater, Coffee, Martini, Flame, Bookmark, ScanLine, ClipboardList, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -284,14 +285,14 @@ export function POSBar() {
           <Button variant="outline" size="icon" onClick={() => setParkingOpen(true)} title={t("pos.bar.parkedTitle")}>
             <Bookmark className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => setOrdersOpen(true)} title="Órdenes abiertas">
+          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => setOrdersOpen(true)} title={tr("Órdenes abiertas")}>
             <ClipboardList className="h-4 w-4" /> Órdenes
           </Button>
         </div>
         <Input
           value={tabName}
           onChange={(e) => setTabName(e.target.value)}
-          placeholder="Nombre de la cuenta / cliente (opcional)"
+          placeholder={tr("Nombre de la cuenta / cliente (opcional)")}
           className="mb-3 h-8 text-xs bg-card border-amber-500/10"
         />
 
@@ -381,7 +382,7 @@ export function POSBar() {
         <div className="p-4 border-b bg-gradient-to-r from-amber-500/10 to-transparent">
           <h2 className="font-heading font-semibold text-sm">🍸 {tabName || t("pos.bar.clientAccount")}</h2>
           <p className="text-[10px] text-muted-foreground">{t("pos.bar.itemsCount", { n: totalItems })} • ${subtotal.toLocaleString()} CUP</p>
-          {activeOrderId && <Badge variant="outline" className="mt-1 text-[9px] border-emerald-500/40 text-emerald-400">Cuenta abierta · pendiente de cobro</Badge>}
+          {activeOrderId && <Badge variant="outline" className="mt-1 text-[9px] border-emerald-500/40 text-emerald-400">{tr("Cuenta abierta · pendiente de cobro")}</Badge>}
         </div>
         <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.bar.taxLabel", { rate: taxRatePct })} checkoutLabel={activeOrderId ? `Cobrar cuenta $${total.toFixed(2)}` : undefined} extraActions={
           <Button size="sm" variant="outline" className="w-full text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
@@ -392,7 +393,7 @@ export function POSBar() {
 
       <Dialog open={ordersOpen} onOpenChange={setOrdersOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Cuentas y órdenes abiertas</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{tr("Cuentas y órdenes abiertas")}</DialogTitle></DialogHeader>
           <OpenOrdersPanel onCharge={loadOrder} onAddItems={loadOrder} />
         </DialogContent>
       </Dialog>

@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
+import { tr } from "@/i18n/tr";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -200,21 +201,21 @@ export default function Compras() {
   }));
 
   const handleCreateSupplier = async () => {
-    if (!supName.trim()) { toast({ title: "Nombre requerido", variant: "destructive" }); return; }
+    if (!supName.trim()) { toast({ title: tr("Nombre requerido"), variant: "destructive" }); return; }
     const { error } = await (supabase.from as any)("suppliers").insert({
       tenant_id: tenantId, name: supName.trim(), phone: supPhone || null, email: supEmail || null, tax_id: supTaxId || null,
     });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Proveedor creado" });
+    if (error) { toast({ title: tr("Error"), description: error.message, variant: "destructive" }); return; }
+    toast({ title: tr("Proveedor creado") });
     setOpenSup(false); setSupName(""); setSupPhone(""); setSupEmail(""); setSupTaxId("");
     fetchAll();
   };
 
   const handleCreate = async () => {
-    if (!destId) { toast({ title: "Selecciona un destino", variant: "destructive" }); return; }
+    if (!destId) { toast({ title: tr("Selecciona un destino"), variant: "destructive" }); return; }
     const valid = items.filter((it) => it.product_id && Number(it.qty) > 0);
-    if (!valid.length) { toast({ title: "Agrega al menos un producto", variant: "destructive" }); return; }
-    if (valid.some((it) => !it.unit)) { toast({ title: "Unidad requerida", description: "Indica la unidad de medida de cada producto.", variant: "destructive" }); return; }
+    if (!valid.length) { toast({ title: tr("Agrega al menos un producto"), variant: "destructive" }); return; }
+    if (valid.some((it) => !it.unit)) { toast({ title: tr("Unidad requerida"), description: tr("Indica la unidad de medida de cada producto."), variant: "destructive" }); return; }
 
     // Edición de borrador: se delega al RPC transaccional
     if (editingId) {
@@ -230,21 +231,21 @@ export default function Compras() {
         p_items: valid.map((it) => ({ product_id: it.product_id, qty: Number(it.qty), cost: Number(it.cost), unit: it.unit })),
       });
       setBusy(false);
-      if (error) { toast({ title: "Error al editar", description: error.message, variant: "destructive" }); return; }
-      toast({ title: "Compra actualizada" });
+      if (error) { toast({ title: tr("Error al editar"), description: error.message, variant: "destructive" }); return; }
+      toast({ title: tr("Compra actualizada") });
       setOpen(false); resetForm(); fetchAll();
       return;
     }
 
     const paid = totalPaidLines;
     if (paid > total + 0.01) {
-      toast({ title: "Pago excede el total", variant: "destructive" }); return;
+      toast({ title: tr("Pago excede el total"), variant: "destructive" }); return;
     }
     if (paid < total - 0.01 && !supplierId) {
-      toast({ title: "Proveedor requerido", description: "El saldo pendiente requiere proveedor.", variant: "destructive" }); return;
+      toast({ title: tr("Proveedor requerido"), description: tr("El saldo pendiente requiere proveedor."), variant: "destructive" }); return;
     }
     if (paid > 0 && !supplierId) {
-      toast({ title: "Proveedor requerido", description: "Para registrar pagos selecciona un proveedor.", variant: "destructive" }); return;
+      toast({ title: tr("Proveedor requerido"), description: tr("Para registrar pagos selecciona un proveedor."), variant: "destructive" }); return;
     }
 
     const code = "PC-" + Date.now().toString(36).toUpperCase();
@@ -261,7 +262,7 @@ export default function Compras() {
       created_by: user?.id,
       status: "draft",
     }).select("id").single();
-    if (error || !pch) { toast({ title: "Error", description: error?.message, variant: "destructive" }); return; }
+    if (error || !pch) { toast({ title: tr("Error"), description: error?.message, variant: "destructive" }); return; }
 
     const rows = valid.map((it) => {
       const prod = products.find((p) => p.id === it.product_id);
@@ -277,7 +278,7 @@ export default function Compras() {
 
 
     const { error: e2 } = await (supabase.from as any)("purchase_items").insert(rows);
-    if (e2) { toast({ title: "Error items", description: e2.message, variant: "destructive" }); return; }
+    if (e2) { toast({ title: tr("Error items"), description: e2.message, variant: "destructive" }); return; }
 
     if (supplierId && payLines.length > 0) {
       for (const l of payLines) {
@@ -300,7 +301,7 @@ export default function Compras() {
           p_reference_id: pch.id,
           p_notes: `Pago al crear compra ${code}`,
         }, ctx);
-        if (pe) { toast({ title: "Error registrando pago", description: pe, variant: "destructive" }); }
+        if (pe) { toast({ title: tr("Error registrando pago"), description: pe, variant: "destructive" }); }
       }
     }
 
@@ -326,7 +327,7 @@ export default function Compras() {
     } catch (e) { console.warn("business_events emit failed", e); }
 
 
-    toast({ title: "Compra creada", description: code });
+    toast({ title: tr("Compra creada"), description: code });
     setOpen(false); resetForm(); fetchAll();
   };
 
@@ -334,8 +335,8 @@ export default function Compras() {
   const receive = async (id: string, isConsignment: boolean) => {
     if (isConsignment) {
       const { error } = await supabase.rpc("receive_purchase_consignment" as any, { p_purchase_id: id });
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-      toast({ title: "Consignación recibida" });
+      if (error) { toast({ title: tr("Error"), description: error.message, variant: "destructive" }); return; }
+      toast({ title: tr("Consignación recibida") });
       fetchAll();
       return;
     }
@@ -347,8 +348,8 @@ export default function Compras() {
       correlationId: `purchase-receive:${id}`,
     });
     const { error } = await callFinancialRpc("receive_purchase", { p_purchase_id: id }, ctx);
-    if (error) { toast({ title: "Error", description: error, variant: "destructive" }); return; }
-    toast({ title: "Compra recibida y stock actualizado" });
+    if (error) { toast({ title: tr("Error"), description: error, variant: "destructive" }); return; }
+    toast({ title: tr("Compra recibida y stock actualizado") });
     fetchAll();
   };
 
@@ -360,9 +361,9 @@ export default function Compras() {
       p_reason: cancelReason || null,
     });
     setBusy(false);
-    if (error) { toast({ title: "No se pudo cancelar", description: error.message, variant: "destructive" }); return; }
+    if (error) { toast({ title: tr("No se pudo cancelar"), description: error.message, variant: "destructive" }); return; }
     toast({
-      title: "Compra cancelada",
+      title: tr("Compra cancelada"),
       description: cancelTarget.status === "received"
         ? "Se revirtió el stock y se reversaron los asientos contables."
         : undefined,
@@ -429,10 +430,10 @@ export default function Compras() {
         <TabsContent value="purchases" className="space-y-4">
 
           <StatRow>
-            <MiniStatCard label="Compras" value={stats.totalPurchases} icon={ShoppingCart} tone="primary" />
-            <MiniStatCard label="Borradores" value={stats.pendingDraft} icon={FileText} tone={stats.pendingDraft > 0 ? "warning" : "default"} />
-            <MiniStatCard label="Monto total" value={`$${stats.totalAmount.toLocaleString()}`} icon={DollarSign} />
-            <MiniStatCard label="Por pagar" value={`$${stats.totalDebt.toLocaleString()}`} icon={Wallet} tone={stats.totalDebt > 0 ? "destructive" : "success"} />
+            <MiniStatCard label={tr("Compras")} value={stats.totalPurchases} icon={ShoppingCart} tone="primary" />
+            <MiniStatCard label={tr("Borradores")} value={stats.pendingDraft} icon={FileText} tone={stats.pendingDraft > 0 ? "warning" : "default"} />
+            <MiniStatCard label={tr("Monto total")} value={`$${stats.totalAmount.toLocaleString()}`} icon={DollarSign} />
+            <MiniStatCard label={tr("Por pagar")} value={`$${stats.totalDebt.toLocaleString()}`} icon={Wallet} tone={stats.totalDebt > 0 ? "destructive" : "success"} />
           </StatRow>
 
           <TableToolbar
@@ -440,16 +441,16 @@ export default function Compras() {
             onSearchChange={purchasesTable.setSearch}
             searchPlaceholder="Buscar nº, proveedor, destino..."
             filters={[
-              { key: "status", label: "Estado", value: purchasesTable.filters.status || "__all__",
+              { key: "status", label: tr("Estado"), value: purchasesTable.filters.status || "__all__",
                 onChange: (v) => purchasesTable.setFilter("status", v),
                 options: [
-                  { value: "draft", label: "Borrador" },
-                  { value: "received", label: "Recibida" },
-                  { value: "cancelled", label: "Cancelada" },
+                  { value: "draft", label: tr("Borrador") },
+                  { value: "received", label: tr("Recibida") },
+                  { value: "cancelled", label: tr("Cancelada") },
                 ]},
-              { key: "payment", label: "Pago", value: purchasesTable.filters.payment || "__all__",
+              { key: "payment", label: tr("Pago"), value: purchasesTable.filters.payment || "__all__",
                 onChange: (v) => purchasesTable.setFilter("payment", v),
-                options: [{ value: "paid", label: "Pagado" }, { value: "pending", label: "Pendiente" }] },
+                options: [{ value: "paid", label: tr("Pagado") }, { value: "pending", label: tr("Pendiente") }] },
             ]}
             rightSlot={
               <>
@@ -459,12 +460,12 @@ export default function Compras() {
                   title={t("modules.purchases.header")}
                   columns={[
                     { key: "purchase_number", label: "Nº" },
-                    { key: "supplier_name", label: "Proveedor" },
-                    { key: "location_name", label: "Destino" },
-                    { key: "total", label: "Total" },
-                    { key: "amount_paid", label: "Pagado" },
-                    { key: "status", label: "Estado" },
-                    { key: "created_at", label: "Fecha" },
+                    { key: "supplier_name", label: tr("Proveedor") },
+                    { key: "location_name", label: tr("Destino") },
+                    { key: "total", label: tr("Total") },
+                    { key: "amount_paid", label: tr("Pagado") },
+                    { key: "status", label: tr("Estado") },
+                    { key: "created_at", label: tr("Fecha") },
                   ]}
                 />
                 <Button size="sm" className="gap-1 gradient-brand text-primary-foreground h-9" onClick={openNewPurchase}>
@@ -479,12 +480,12 @@ export default function Compras() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Nº</TableHead>
-                  <TableHead className="text-xs">Proveedor</TableHead>
-                  <TableHead className="text-xs">Destino</TableHead>
-                  <TableHead className="text-xs">Total</TableHead>
-                  <TableHead className="text-xs">Fecha</TableHead>
-                  <TableHead className="text-xs">Estado</TableHead>
-                  <TableHead className="text-xs w-44">Acciones</TableHead>
+                  <TableHead className="text-xs">{tr("Proveedor")}</TableHead>
+                  <TableHead className="text-xs">{tr("Destino")}</TableHead>
+                  <TableHead className="text-xs">{tr("Total")}</TableHead>
+                  <TableHead className="text-xs">{tr("Fecha")}</TableHead>
+                  <TableHead className="text-xs">{tr("Estado")}</TableHead>
+                  <TableHead className="text-xs w-44">{tr("Acciones")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -553,20 +554,20 @@ export default function Compras() {
       <Dialog open={openSup} onOpenChange={setOpenSup}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Nuevo Proveedor</DialogTitle>
-            <DialogDescription>Datos básicos de contacto</DialogDescription>
+            <DialogTitle>{tr("Nuevo Proveedor")}</DialogTitle>
+            <DialogDescription>{tr("Datos básicos de contacto")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div><Label>Nombre *</Label><Input value={supName} onChange={(e) => setSupName(e.target.value)} /></div>
+            <div><Label>{tr("Nombre *")}</Label><Input value={supName} onChange={(e) => setSupName(e.target.value)} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Teléfono</Label><Input value={supPhone} onChange={(e) => setSupPhone(e.target.value)} /></div>
-              <div><Label>Email</Label><Input value={supEmail} onChange={(e) => setSupEmail(e.target.value)} /></div>
+              <div><Label>{tr("Email")}</Label><Input value={supEmail} onChange={(e) => setSupEmail(e.target.value)} /></div>
             </div>
-            <div><Label>RFC / NIT</Label><Input value={supTaxId} onChange={(e) => setSupTaxId(e.target.value)} /></div>
+            <div><Label>{tr("RFC / NIT")}</Label><Input value={supTaxId} onChange={(e) => setSupTaxId(e.target.value)} /></div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenSup(false)}>Cancelar</Button>
-            <Button onClick={handleCreateSupplier} className="gradient-brand text-primary-foreground">Guardar</Button>
+            <Button variant="outline" onClick={() => setOpenSup(false)}>{tr("Cancelar")}</Button>
+            <Button onClick={handleCreateSupplier} className="gradient-brand text-primary-foreground">{tr("Guardar")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -586,26 +587,26 @@ export default function Compras() {
           <div className="grid gap-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Proveedor</Label>
+                <Label className="text-xs">{tr("Proveedor")}</Label>
                 <Select value={supplierId} onValueChange={setSupplierId}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={tr("Seleccionar")} /></SelectTrigger>
                   <SelectContent>
                     {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Destino</Label>
+                <Label className="text-xs">{tr("Destino")}</Label>
                 <div className="flex gap-2">
                   <Select value={destType} onValueChange={(v) => { setDestType(v as any); setDestId(""); }}>
                     <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="warehouse">Almacén</SelectItem>
-                      <SelectItem value="store">Tienda</SelectItem>
+                      <SelectItem value="warehouse">{tr("Almacén")}</SelectItem>
+                      <SelectItem value="store">{tr("Tienda")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={destId} onValueChange={setDestId}>
-                    <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder={tr("Seleccionar")} /></SelectTrigger>
                     <SelectContent>
                       {(destType === "warehouse" ? warehouses : stores).map((l) => (
                         <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
@@ -618,7 +619,7 @@ export default function Compras() {
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <Label className="text-xs font-semibold">Productos</Label>
+                <Label className="text-xs font-semibold">{tr("Productos")}</Label>
                 <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setItems([...items, { product_id: "", qty: "1", cost: "0", unit: defaultUnit?.code || "" }])}>
                   <Plus className="h-3 w-3 mr-1" /> Agregar
                 </Button>
@@ -634,20 +635,20 @@ export default function Compras() {
                       else if (!arr[i].unit) arr[i].unit = defaultUnit?.code || "";
                       setItems(arr);
                     }}>
-                      <SelectTrigger className="flex-1 h-9 text-xs"><SelectValue placeholder="Producto" /></SelectTrigger>
+                      <SelectTrigger className="flex-1 h-9 text-xs"><SelectValue placeholder={tr("Producto")} /></SelectTrigger>
                       <SelectContent>
                         {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Input type="number" min="1" className="w-20 h-9 text-xs" placeholder="Cant"
+                    <Input type="number" min="1" className="w-20 h-9 text-xs" placeholder={tr("Cant")}
                       value={it.qty} onChange={(e) => { const a = [...items]; a[i].qty = e.target.value; setItems(a); }} />
                     <Select value={it.unit || undefined} onValueChange={(v) => { const a = [...items]; a[i].unit = v; setItems(a); }}>
-                      <SelectTrigger className="w-24 h-9 text-xs"><SelectValue placeholder="Unidad" /></SelectTrigger>
+                      <SelectTrigger className="w-24 h-9 text-xs"><SelectValue placeholder={tr("Unidad")} /></SelectTrigger>
                       <SelectContent>
                         {units.map((u) => <SelectItem key={u.id} value={u.code}>{u.code} — {u.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Input type="number" min="0" className="w-24 h-9 text-xs" placeholder="Costo"
+                    <Input type="number" min="0" className="w-24 h-9 text-xs" placeholder={tr("Costo")}
                       value={it.cost} onChange={(e) => { const a = [...items]; a[i].cost = e.target.value; setItems(a); }} />
                     <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setItems(items.filter((_, j) => j !== i))}>
                       <Trash2 className="h-3.5 w-3.5" />
@@ -661,47 +662,47 @@ export default function Compras() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Tasa de impuesto</Label>
+                <Label className="text-xs">{tr("Tasa de impuesto")}</Label>
                 <Select value={taxRateId} onValueChange={(v) => { setTaxRateId(v); setTaxOverride(""); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Sin impuesto</SelectItem>
+                    <SelectItem value="none">{tr("Sin impuesto")}</SelectItem>
                     {taxes.map((t) => <SelectItem key={t.id} value={t.id}>{t.name} ({t.rate}%)</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Impuesto (override)</Label>
+                <Label className="text-xs">{tr("Impuesto (override)")}</Label>
                 <Input type="number" placeholder={computedTax.toFixed(2)} value={taxOverride} onChange={(e) => setTaxOverride(e.target.value)} />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div><Label className="text-xs">Subtotal</Label><Input value={subtotal.toFixed(2)} disabled /></div>
-              <div><Label className="text-xs">Impuesto</Label><Input value={computedTax.toFixed(2)} disabled /></div>
-              <div><Label className="text-xs">Total</Label><Input value={total.toFixed(2)} disabled className="font-bold" /></div>
+              <div><Label className="text-xs">{tr("Subtotal")}</Label><Input value={subtotal.toFixed(2)} disabled /></div>
+              <div><Label className="text-xs">{tr("Impuesto")}</Label><Input value={computedTax.toFixed(2)} disabled /></div>
+              <div><Label className="text-xs">{tr("Total")}</Label><Input value={total.toFixed(2)} disabled className="font-bold" /></div>
             </div>
 
             <div className={`border rounded-lg p-3 space-y-2 ${editingId ? "hidden" : ""}`}>
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold">Pagos al proveedor</Label>
+                <Label className="text-xs font-semibold">{tr("Pagos al proveedor")}</Label>
                 <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={addPayLine} disabled={!supplierId}>
                   <Plus className="h-3 w-3 mr-1" /> Agregar pago
                 </Button>
               </div>
-              {!supplierId && <p className="text-[10px] text-muted-foreground">Selecciona un proveedor para registrar pagos.</p>}
+              {!supplierId && <p className="text-[10px] text-muted-foreground">{tr("Selecciona un proveedor para registrar pagos.")}</p>}
               {payLines.map((l, idx) => (
                 <div key={l.id} className="grid grid-cols-12 gap-2 items-end">
                   <div className="col-span-4">
-                    {idx === 0 && <Label className="text-[10px]">Método</Label>}
+                    {idx === 0 && <Label className="text-[10px]">{tr("Método")}</Label>}
                     <Select value={l.method} onValueChange={(v) => updatePayLine(l.id, { method: v })}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {paymentMethods.length > 0 ? paymentMethods.map((m) => <SelectItem key={m.id} value={m.type}>{m.name}</SelectItem>) : (
                           <>
-                            <SelectItem value="cash">Efectivo</SelectItem>
-                            <SelectItem value="card">Tarjeta</SelectItem>
-                            <SelectItem value="transfer">Transferencia</SelectItem>
+                            <SelectItem value="cash">{tr("Efectivo")}</SelectItem>
+                            <SelectItem value="card">{tr("Tarjeta")}</SelectItem>
+                            <SelectItem value="transfer">{tr("Transferencia")}</SelectItem>
                             <SelectItem value="qr">QR</SelectItem>
                           </>
                         )}
@@ -709,7 +710,7 @@ export default function Compras() {
                     </Select>
                   </div>
                   <div className="col-span-3">
-                    {idx === 0 && <Label className="text-[10px]">Moneda</Label>}
+                    {idx === 0 && <Label className="text-[10px]">{tr("Moneda")}</Label>}
                     <Select value={l.currency} onValueChange={(v) => updatePayLine(l.id, { currency: v })}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -718,11 +719,11 @@ export default function Compras() {
                     </Select>
                   </div>
                   <div className="col-span-2">
-                    {idx === 0 && <Label className="text-[10px]">Monto</Label>}
+                    {idx === 0 && <Label className="text-[10px]">{tr("Monto")}</Label>}
                     <Input type="number" className="h-8 text-xs" value={l.amount} onChange={(e) => updatePayLine(l.id, { amount: e.target.value })} />
                   </div>
                   <div className="col-span-2">
-                    {idx === 0 && <Label className="text-[10px]">Tasa</Label>}
+                    {idx === 0 && <Label className="text-[10px]">{tr("Tasa")}</Label>}
                     <Input type="number" className="h-8 text-xs" value={l.rate} onChange={(e) => updatePayLine(l.id, { rate: e.target.value })} />
                   </div>
                   <div className="col-span-1 flex justify-end">
@@ -733,18 +734,18 @@ export default function Compras() {
                 </div>
               ))}
               <div className="flex items-center justify-between pt-2 border-t text-xs">
-                <span>Pagado: <b>${totalPaidLines.toFixed(2)}</b></span>
+                <span>{tr("Pagado:")} <b>${totalPaidLines.toFixed(2)}</b></span>
                 <span className={pendingAfterPay > 0.01 ? "text-warning" : "text-emerald-600"}>
                   Pendiente: <b>${pendingAfterPay.toFixed(2)}</b>
                 </span>
               </div>
             </div>
 
-            <div><Label className="text-xs">Notas</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+            <div><Label className="text-xs">{tr("Notas")}</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
 
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setOpen(false); setEditingId(null); }}>Cancelar</Button>
+            <Button variant="outline" onClick={() => { setOpen(false); setEditingId(null); }}>{tr("Cancelar")}</Button>
             <Button className="gradient-brand text-primary-foreground" onClick={handleCreate} disabled={busy}>
               {busy ? "Guardando..." : editingId ? "Guardar cambios" : t("modules.purchases.createPurchase")}
             </Button>
@@ -764,11 +765,11 @@ export default function Compras() {
             </DialogDescription>
           </DialogHeader>
           <div>
-            <Label className="text-xs">Motivo (auditoría)</Label>
-            <Input value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Ej: mercancía no recibida" />
+            <Label className="text-xs">{tr("Motivo (auditoría)")}</Label>
+            <Input value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder={tr("Ej: mercancía no recibida")} />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCancelTarget(null)}>Volver</Button>
+            <Button variant="outline" onClick={() => setCancelTarget(null)}>{tr("Volver")}</Button>
             <Button variant="destructive" onClick={confirmCancel} disabled={busy}>
               {busy ? "Cancelando..." : "Confirmar cancelación"}
             </Button>

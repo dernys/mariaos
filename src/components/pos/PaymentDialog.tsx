@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { tr } from "@/i18n/tr";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -226,7 +227,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     if (overpay > change + 0.01) {
       toast({
         title: t("common.error"),
-        description: "El sobrepago sólo se admite en efectivo (vuelto). Ajuste los montos no efectivos.",
+        description: tr("El sobrepago sólo se admite en efectivo (vuelto). Ajuste los montos no efectivos."),
         variant: "destructive",
       });
       return;
@@ -410,7 +411,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         });
         if (billErr) {
           console.error("bill_kitchen_order error:", billErr);
-          toast({ title: "Venta registrada", description: "No se pudo cerrar la orden de cocina: " + billErr.message });
+          toast({ title: tr("Venta registrada"), description: tr("No se pudo cerrar la orden de cocina: ") + billErr.message });
         }
       }
 
@@ -686,7 +687,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                         className="h-8 text-xs"
                         value={p.reference}
                         onChange={(e) => updatePayment(idx, "reference", e.target.value)}
-                        placeholder="Nro. de operación / transferencia"
+                        placeholder={tr("Nro. de operación / transferencia")}
                       />
                     </div>
                   </div>
@@ -802,12 +803,12 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
               <span className="font-heading font-semibold">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Cobrado en firme (efectivo/tarjeta)</span>
+              <span className="text-muted-foreground">{tr("Cobrado en firme (efectivo/tarjeta)")}</span>
               <span className="font-heading font-semibold text-primary">${confirmedInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
             </div>
             {pendingInBase > 0 && (
               <div className="flex justify-between text-warning">
-                <span>Digital por confirmar</span>
+                <span>{tr("Digital por confirmar")}</span>
                 <span className="font-heading font-semibold">${pendingInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
               </div>
             )}

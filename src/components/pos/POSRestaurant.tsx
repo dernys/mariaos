@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { tr } from "@/i18n/tr";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ShoppingCart, X, UtensilsCrossed, Soup, Fish, Salad, Cake, Wine, ChefHat, MapPin, SplitSquareVertical, Send, UserCheck, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -522,17 +523,17 @@ export function POSRestaurant() {
       <Dialog open={noteItemId !== null} onOpenChange={(v) => { if (!v) setNoteItemId(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Modificaciones y sugerencias</DialogTitle>
+            <DialogTitle>{tr("Modificaciones y sugerencias")}</DialogTitle>
           </DialogHeader>
           <Textarea
             value={noteDraft}
             onChange={(e) => setNoteDraft(e.target.value)}
-            placeholder="Sin cebolla, término medio, salsa aparte…"
+            placeholder={tr("Sin cebolla, término medio, salsa aparte…")}
             rows={4}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setNoteItemId(null)}>Cancelar</Button>
-            <Button onClick={saveNote}>Guardar</Button>
+            <Button variant="outline" onClick={() => setNoteItemId(null)}>{tr("Cancelar")}</Button>
+            <Button onClick={saveNote}>{tr("Guardar")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

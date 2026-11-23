@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { tr } from "@/i18n/tr";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { Badge } from "@/components/ui/badge";
@@ -107,7 +108,7 @@ export function OpenOrdersPanel({ onCharge, onAddItems, compact }: Props) {
     if (order.table_id) {
       await supabase.from("restaurant_tables").update({ status: "available", current_order_id: null, occupied_at: null }).eq("id", order.table_id);
     }
-    toast.success("Orden cancelada");
+    toast.success(tr("Orden cancelada"));
     reload();
   };
 
@@ -117,7 +118,7 @@ export function OpenOrdersPanel({ onCharge, onAddItems, compact }: Props) {
     reload();
   };
 
-  if (loading) return <p className="text-xs text-muted-foreground p-2">Cargando órdenes…</p>;
+  if (loading) return <p className="text-xs text-muted-foreground p-2">{tr("Cargando órdenes…")}</p>;
 
   if (orders.length === 0) {
     return (
