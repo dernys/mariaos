@@ -47,7 +47,6 @@ i18n
     },
     fallbackLng: FALLBACK_LOCALE,
     supportedLngs: SUPPORTED_LOCALES.map((l) => l.code),
-    nonExplicitSupportedLngs: true,
     interpolation: { escapeValue: false },
     detection: {
       order: ["localStorage", "navigator"],
@@ -56,5 +55,11 @@ i18n
     },
     returnNull: false,
   });
+
+if (typeof document !== "undefined") {
+  const setLang = (l: string) => { document.documentElement.lang = l; };
+  setLang(i18n.language || FALLBACK_LOCALE);
+  i18n.on("languageChanged", setLang);
+}
 
 export default i18n;

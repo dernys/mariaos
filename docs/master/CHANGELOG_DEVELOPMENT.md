@@ -37,3 +37,10 @@
 - Frontend: regla única `src/lib/pos/stockRule.ts` usada por `usePOSStock` (Tienda/Bar/Restaurante); hasta cargar, 0.
 - Tests: `stockRule.test.ts` 4/4. Pendiente: venta E2E real y snapshot offline por tienda.
 - Siguiente: P1-OFF-1 snapshot `product_stock` por tienda; luego P0 test cross-tenant autenticado.
+
+## 2026-11-23 — pt-BR y demo Brasil
+- Corregido i18n: `nonExplicitSupportedLngs` hacía que pt-BR/en-US resolvieran a español; test `src/i18n/index.test.ts` (3/3).
+- Landing traducida (pt-BR) con selector de idioma; `tr()` por frase (`src/i18n/tr.ts`) en POS/Inventario/Compras.
+- Cobro POS usa la moneda base del tenant (no CUP fijo).
+- Plantilla `LOJA_BR` (BRL, PIX, BR-SIMP) y demo `Mercado Piracicaba` (20 productos de ejemplo en Loja Centro). Clave demo renovada (la anterior era rechazada por la protección de claves filtradas).
+- Pendiente: ~100 pantallas con textos fijos en español (Turnos, Data Center, etc.); PIX dinámico; venta E2E en la demo BR no probada.

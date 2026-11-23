@@ -6,7 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-correlation-id",
 };
 
-const DEMO_PASSWORD = "Demo2026!";
+// Clave pública de demo (se devuelve al cliente); debe superar la protección contra claves filtradas.
+const DEMO_PASSWORD = "MarIA-Demo-Piracicaba-7Kq2!vX";
 const ALLOWED_ROLES = new Set(["admin", "gerente", "cajero"]);
 // SEC-001 (docs/security-audit.md): esta función es pública y crea usuarios con
 // contraseña conocida y propiedad del tenant. Debe operar EXCLUSIVAMENTE sobre

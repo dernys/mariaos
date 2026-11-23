@@ -57,6 +57,7 @@ const moduleSlides = [
 const demoBusinessTypes = [
   { id: "bar", icon: Store, title: "Bar / Cafetería", desc: "Cuentas abiertas, comanda rápida y cobro por consumición.", accent: "from-amber-500 to-orange-500" },
   { id: "restaurant", icon: Utensils, title: "Restaurante", desc: "Mapa de mesas, KDS de cocina y división de cuentas.", accent: "from-rose-500 to-red-500" },
+  { id: "br", icon: Store, title: "Mercado (Brasil)", desc: "Piracicaba-SP: precios en R$, PIX y catálogo en portugués.", accent: "from-emerald-500 to-yellow-500" },
   { id: "retail", icon: Building2, title: "Retail / Empresa", desc: "Búsqueda por SKU, multi-tienda y facturación.", accent: "from-primary to-emerald-500" },
 ];
 
@@ -162,11 +163,12 @@ const Landing = () => {
     return () => { alive = false; };
   }, []);
 
-  const findTenant = (type: string) =>
-    demoTenants.find((t) => (TYPE_ALIASES[type] ?? [type]).includes((t.business_type ?? "").toLowerCase()));
+  const isBr = (name?: string) => /piracicaba/i.test(name ?? "");
+  const matches = (type: string, bizType?: string, name?: string) =>
+    type === "br" ? isBr(name) : !isBr(name) && (TYPE_ALIASES[type] ?? [type]).includes((bizType ?? "").toLowerCase());
+  const findTenant = (type: string) => demoTenants.find((t) => matches(type, t.business_type, t.name));
 
-  const findBusiness = (type: string) =>
-    stats?.businesses?.find((b) => (TYPE_ALIASES[type] ?? [type]).includes((b.type ?? "").toLowerCase()));
+  const findBusiness = (type: string) => stats?.businesses?.find((b) => matches(type, b.type, b.name));
 
   const startDemo = async (type: string) => {
     setDemoLoading(type);
@@ -520,7 +522,7 @@ const Landing = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {demoBusinessTypes.map((b) => {
               const biz = findBusiness(b.id);
               return (

@@ -63,6 +63,7 @@ export const LANDING_PT: Record<string, string> = {
   "Matriz por módulo": "Matriz por módulo", "Resolución server-side": "Validação no servidor", "Menú por tipo de negocio": "Menu por tipo de negócio",
   "Bar / Cafetería": "Bar / Cafeteria", "Cuentas abiertas, comanda rápida y cobro por consumición.": "Contas abertas, comanda rápida e cobrança por consumo.",
   "Restaurante": "Restaurante", "Mapa de mesas, KDS de cocina y división de cuentas.": "Mapa de mesas, KDS de cozinha e divisão de contas.",
+  "Mercado (Brasil)": "Mercado (Brasil)", "Piracicaba-SP: precios en R$, PIX y catálogo en portugués.": "Piracicaba-SP: preços em R$, PIX e catálogo em português.",
   "Retail / Empresa": "Varejo / Empresa", "Búsqueda por SKU, multi-tienda y facturación.": "Busca por SKU, multiloja e faturamento.",
   "POS Adaptable": "PDV Adaptável",
   "Tres modos especializados: Bar con cuentas, Restaurante con mapa de mesas y KDS, y Retail con búsqueda por SKU/código de barras.": "Três modos especializados: Bar com contas, Restaurante com mapa de mesas e KDS, e Varejo com busca por SKU/código de barras.",
