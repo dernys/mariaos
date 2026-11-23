@@ -41,9 +41,9 @@ export function ConfigTaxRates() {
     if (!form.name.trim()) { toast({ title: "Error", description: trPT("Nombre requerido"), variant: "destructive" }); return; }
     const payload = { name: form.name.trim(), rate: parseFloat(form.rate) || 0, is_default: form.is_default, tenant_id: tenantId };
     if (editing) {
-      await supabase.from("tax_rates").update(payload).eq("id", editing.id);
+      { const { error } = await supabase.from("tax_rates").update(payload).eq("id", editing.id); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     } else {
-      await supabase.from("tax_rates").insert(payload);
+      { const { error } = await supabase.from("tax_rates").insert(payload); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     }
     toast({ title: editing ? "Impuesto actualizado" : "Impuesto creado" });
     setDialogOpen(false);
@@ -51,7 +51,7 @@ export function ConfigTaxRates() {
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from("tax_rates").delete().eq("id", id);
+    { const { error } = await supabase.from("tax_rates").delete().eq("id", id); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     toast({ title: trPT("Impuesto eliminado") });
     fetch();
   };

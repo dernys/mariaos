@@ -43,9 +43,9 @@ export function ConfigCurrencies() {
     if (!form.code.trim() || !form.name.trim()) { toast({ title: "Error", description: trPT("Código y nombre requeridos"), variant: "destructive" }); return; }
     const payload = { code: form.code.trim().toUpperCase(), name: form.name.trim(), symbol: form.symbol, exchange_rate: parseFloat(form.exchange_rate) || 1, is_base: form.is_base, tenant_id: tenantId };
     if (editing) {
-      await supabase.from("currencies").update(payload).eq("id", editing.id);
+      { const { error } = await supabase.from("currencies").update(payload).eq("id", editing.id); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     } else {
-      await supabase.from("currencies").insert(payload);
+      { const { error } = await supabase.from("currencies").insert(payload); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     }
     toast({ title: editing ? "Moneda actualizada" : "Moneda creada" });
     setDialogOpen(false);
@@ -53,7 +53,7 @@ export function ConfigCurrencies() {
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from("currencies").delete().eq("id", id);
+    { const { error } = await supabase.from("currencies").delete().eq("id", id); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     toast({ title: trPT("Moneda eliminada") });
     fetch();
   };

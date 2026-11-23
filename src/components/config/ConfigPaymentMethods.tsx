@@ -45,9 +45,9 @@ export function ConfigPaymentMethods() {
     if (!form.name.trim()) { toast({ title: "Error", description: trPT("Nombre requerido"), variant: "destructive" }); return; }
     const payload = { name: form.name.trim(), type: form.type, requires_card_info: form.requires_card_info, tenant_id: tenantId };
     if (editing) {
-      await supabase.from("payment_methods").update(payload).eq("id", editing.id);
+      { const { error } = await supabase.from("payment_methods").update(payload).eq("id", editing.id); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     } else {
-      await supabase.from("payment_methods").insert(payload);
+      { const { error } = await supabase.from("payment_methods").insert(payload); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     }
     toast({ title: editing ? "Método actualizado" : "Método creado" });
     setDialogOpen(false);
@@ -55,7 +55,7 @@ export function ConfigPaymentMethods() {
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from("payment_methods").delete().eq("id", id);
+    { const { error } = await supabase.from("payment_methods").delete().eq("id", id); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     toast({ title: trPT("Método eliminado") });
     fetch();
   };

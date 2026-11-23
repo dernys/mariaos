@@ -41,10 +41,10 @@ export function ConfigCategories() {
     if (!form.name.trim()) { toast({ title: "Error", description: trPT("Nombre requerido"), variant: "destructive" }); return; }
     const payload = { name: form.name.trim(), description: form.description || null, color: form.color, tenant_id: tenantId };
     if (editing) {
-      await supabase.from("product_categories").update(payload).eq("id", editing.id);
+      { const { error } = await supabase.from("product_categories").update(payload).eq("id", editing.id); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
       toast({ title: trPT("Categoría actualizada") });
     } else {
-      await supabase.from("product_categories").insert(payload);
+      { const { error } = await supabase.from("product_categories").insert(payload); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
       toast({ title: trPT("Categoría creada") });
     }
     setDialogOpen(false);
@@ -52,13 +52,13 @@ export function ConfigCategories() {
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from("product_categories").delete().eq("id", id);
+    { const { error } = await supabase.from("product_categories").delete().eq("id", id); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     toast({ title: trPT("Categoría eliminada") });
     fetch();
   };
 
   const toggleActive = async (c: Category) => {
-    await supabase.from("product_categories").update({ is_active: !c.is_active }).eq("id", c.id);
+    { const { error } = await supabase.from("product_categories").update({ is_active: !c.is_active }).eq("id", c.id); if (error) { toast({ title: "Error", description: trPT("No se pudo guardar") + ": " + error.message, variant: "destructive" }); return; } }
     fetch();
   };
 
