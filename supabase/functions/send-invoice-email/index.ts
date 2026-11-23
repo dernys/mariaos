@@ -33,28 +33,30 @@ Deno.serve(async (req) => {
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return new Response(JSON.stringify({ error: "No autorizado" }), { status: 401, headers: corsHeaders });
 
-    const { invoice_id, pdf_base64 } = await req.json();
-    if (!invoice_id || !pdf_base64) {
+    // Attachments are never accepted from the caller; the email body is built from stored invoice data only.
+    const { invoice_id } = await req.json();
+    if (!invoice_id) {
       return new Response(JSON.stringify({ error: "Faltan parámetros" }), { status: 400, headers: corsHeaders });
-    }
-    if (!isValidPdfBase64(pdf_base64)) {
-      return new Response(JSON.stringify({ error: "El adjunto debe ser el PDF de la factura" }), { status: 400, headers: corsHeaders });
     }
 
     const { data: inv, error } = await supabase.from("invoices").select("*").eq("id", invoice_id).single();
     if (error || !inv) return new Response(JSON.stringify({ error: "Factura no encontrada" }), { status: 404, headers: corsHeaders });
 
     // SEC-011 (IDOR): el llamante debe pertenecer al tenant dueño de la factura.
-    const [{ data: member }, { data: sa }] = await Promise.all([
-      supabase.from("tenant_users").select("id").eq("user_id", user.id).eq("tenant_id", inv.tenant_id).maybeSingle(),
-      supabase.rpc("is_superadmin", { _user_id: user.id }),
-    ]);
-    if (!member && !sa) {
+    const { data: member } = await supabase.from("tenant_users").select("id").eq("user_id", user.id).eq("tenant_id", inv.tenant_id).maybeSingle();
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+    const canSend = (roles ?? []).some((r: any) => ["admin", "gerente", "contador"].includes(r.role));
+    if (!member || !canSend) {
       return new Response(JSON.stringify({ error: "Sin acceso a esta factura" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!inv.customer_email) return new Response(JSON.stringify({ error: "Cliente sin email" }), { status: 400, headers: corsHeaders });
+    // Recipient must be the email saved on the linked customer record, not a free-text invoice field.
+    if (!inv.customer_id) return new Response(JSON.stringify({ error: "La factura no tiene cliente registrado" }), { status: 400, headers: corsHeaders });
+    const { data: cust } = await supabase.from("customers").select("email").eq("id", inv.customer_id).eq("tenant_id", inv.tenant_id).maybeSingle();
+    const recipient = String(cust?.email ?? "").trim();
+    if (!/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(recipient)) return new Response(JSON.stringify({ error: "Cliente sin email válido" }), { status: 400, headers: corsHeaders });
+    inv.customer_email = recipient;
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
@@ -74,7 +76,7 @@ Deno.serve(async (req) => {
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1f2937">
         <h2 style="color:#10b981;margin:0 0 16px">Factura ${esc(inv.invoice_number)}</h2>
         <p>Hola ${esc(inv.customer_name)},</p>
-        <p>Adjuntamos tu factura por un total de <strong>${Number(inv.total).toFixed(2)} ${esc(inv.currency)}</strong>.</p>
+        <p>Te enviamos tu factura por un total de <strong>${Number(inv.total).toFixed(2)} ${esc(inv.currency)}</strong>.</p>
         <p>Gracias por tu compra,<br/><strong>${esc(inv.issuer_name)}</strong></p>
       </div>
     `;
@@ -87,7 +89,6 @@ Deno.serve(async (req) => {
         to: [inv.customer_email],
         subject,
         html,
-        attachments: [{ filename: `Factura_${String(inv.invoice_number).replace(/[^\w.-]/g, "_")}.pdf`, content: pdf_base64 }],
       }),
     });
     const result = await res.json();

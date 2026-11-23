@@ -8,7 +8,8 @@ const corsHeaders = {
 
 // Clave pública de demo (se devuelve al cliente); debe superar la protección contra claves filtradas.
 const DEMO_PASSWORD = "MarIA-Demo-Piracicaba-7Kq2!vX";
-const ALLOWED_ROLES = new Set(["admin", "gerente", "cajero"]);
+// Public demo access never provisions administrator/owner accounts.
+const ALLOWED_ROLES = new Set(["gerente", "cajero"]);
 // SEC-001 (docs/security-audit.md): esta función es pública y crea usuarios con
 // contraseña conocida y propiedad del tenant. Debe operar EXCLUSIVAMENTE sobre
 // tenants marcados explícitamente como demo (tenants.is_demo = true); nunca
@@ -68,7 +69,7 @@ serve(async (req) => {
           tenant_id: t.id,
           name: t.name,
           business_type: t.business_type,
-          roles: ["admin", "gerente", "cajero"].map((r) => ({
+          roles: ["gerente", "cajero"].map((r) => ({
             role: r,
             email: `${r}.${slug}@demo.maria-os.app`,
           })),
@@ -83,7 +84,7 @@ serve(async (req) => {
     const tenantId: string | undefined = body?.tenant_id;
     const role: string | undefined = body?.role;
     if (!tenantId || !role || !ALLOWED_ROLES.has(role)) {
-      return new Response(JSON.stringify({ error: "tenant_id y role (admin|gerente|cajero) son requeridos" }), {
+      return new Response(JSON.stringify({ error: "tenant_id y role (gerente|cajero) son requeridos" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -117,8 +118,9 @@ serve(async (req) => {
       if (cErr) throw cErr;
       userId = created.user!.id;
     } else {
-      // Ensure password is the demo one (idempotent)
-      await admin.auth.admin.updateUserById(userId, { password: DEMO_PASSWORD, email_confirm: true });
+      // Only demo-domain accounts linked to this demo tenant are reused; never reset arbitrary accounts.
+      const { data: link } = await admin.from("tenant_users").select("id").eq("tenant_id", tenantId).eq("user_id", userId).maybeSingle();
+      if (!link) return new Response(JSON.stringify({ error: "demo_user_conflict" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     await admin.from("profiles").upsert(
@@ -126,7 +128,7 @@ serve(async (req) => {
       { onConflict: "user_id" }
     );
     await admin.from("tenant_users").upsert(
-      { tenant_id: tenantId, user_id: userId, is_owner: role === "admin" },
+      { tenant_id: tenantId, user_id: userId, is_owner: false },
       { onConflict: "tenant_id,user_id" }
     );
     await admin.from("user_roles").upsert(

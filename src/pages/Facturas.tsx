@@ -148,10 +148,8 @@ const Facturas = () => {
     const full = await fetchFull(id);
     if (!full) return;
     toast.info(trPT("Generando PDF y enviando..."));
-    const { getInvoicePdfBase64 } = await import("@/lib/invoicePdf");
-    const pdfBase64 = getInvoicePdfBase64(full);
     const { error } = await supabase.functions.invoke("send-invoice-email", {
-      body: { invoice_id: id, pdf_base64: pdfBase64 },
+      body: { invoice_id: id },
     });
     if (error) { toast.error("Error al enviar: " + error.message); return; }
     toast.success(trPT("Factura enviada por email"));

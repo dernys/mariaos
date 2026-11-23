@@ -102,8 +102,9 @@ Deno.serve(async (req) => {
 
     // Verify membership (or superadmin)
     const { data: member } = await supabase.from("tenant_users").select("id").eq("user_id", user.id).eq("tenant_id", inv.tenant_id).maybeSingle();
-    const { data: sa } = await supabase.from("superadmins").select("id").eq("user_id", user.id).maybeSingle();
-    if (!member && !sa) return new Response(JSON.stringify({ error: "Sin acceso a este tenant" }), { status: 403, headers: corsHeaders });
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+    const canTransmit = (roles ?? []).some((r: any) => ["admin", "contador"].includes(r.role));
+    if (!member || !canTransmit) return new Response(JSON.stringify({ error: "Sin acceso a este tenant" }), { status: 403, headers: corsHeaders });
 
     const { data: settings } = await supabase.from("einvoice_settings").select("*").eq("tenant_id", inv.tenant_id).maybeSingle();
 
@@ -116,9 +117,12 @@ Deno.serve(async (req) => {
     let providerResponse: any = { mode: "local", cufe };
     const provider = settings?.provider || "local";
 
-    if (settings?.mode === "electronic" && settings?.webhook_url && !isPublicHttpsUrl(settings.webhook_url)) {
+    // Only send to destinations explicitly allow-listed by the platform (EINVOICE_ALLOWED_HOSTS, comma-separated).
+    const allowedHosts = (Deno.env.get("EINVOICE_ALLOWED_HOSTS") ?? "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+    const hostAllowed = (raw: string) => { try { return allowedHosts.includes(new URL(raw).hostname.toLowerCase()); } catch { return false; } };
+    if (settings?.mode === "electronic" && settings?.webhook_url && (!isPublicHttpsUrl(settings.webhook_url) || !hostAllowed(settings.webhook_url))) {
       status = "failed";
-      providerResponse = { mode: "electronic", error: "destino no permitido (solo HTTPS público)" };
+      providerResponse = { mode: "electronic", error: "destino no autorizado por la plataforma" };
     } else if (settings?.mode === "electronic" && settings?.webhook_url) {
       try {
         const res = await fetch(settings.webhook_url, {

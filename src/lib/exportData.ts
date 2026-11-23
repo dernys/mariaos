@@ -48,7 +48,7 @@ export function exportCsv<T>(rows: T[], cols: ExportColumn<T>[], filename: strin
 }
 
 export function exportExcel<T>(rows: T[], cols: ExportColumn<T>[], filename: string) {
-  const ws = XLSX.utils.json_to_sheet(buildRows(rows, cols));
+  const ws = XLSX.utils.json_to_sheet(buildRows(rows, cols).map((r: any) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, neutralizeCsvCell(v)]))));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Datos");
   XLSX.writeFile(wb, `${filename}.xlsx`);

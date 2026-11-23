@@ -118,7 +118,6 @@ interface DemoTenant {
 }
 
 const DEMO_ROLES = [
-  { role: "admin", label: "Administrador", desc: "Acceso total" },
   { role: "gerente", label: "Gerente", desc: "Operación y reportes" },
   { role: "cajero", label: "Cajero", desc: "Solo POS y turnos" },
 ];
@@ -143,7 +142,7 @@ const Landing = () => {
   const [selected, setSelected] = useState(0);
   const [stats, setStats] = useState<DemoStats | null>(null);
   const [demoTenants, setDemoTenants] = useState<DemoTenant[]>([]);
-  const [demoRole, setDemoRole] = useState("admin");
+  const [demoRole, setDemoRole] = useState("gerente");
   const autoplay = useRef(Autoplay({ delay: 4500, stopOnInteraction: false, stopOnMouseEnter: true }));
 
   useEffect(() => {

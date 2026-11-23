@@ -428,7 +428,8 @@ export function downloadRows(rows: Record<string, unknown>[], filename: string, 
     URL.revokeObjectURL(a.href);
     return;
   }
-  const wb = rowsToWorkbook(rows, filename);
+  const safe = rows.map((r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, typeof v === "string" && /^[=+\-@\t\r]/.test(v) ? `'${v}` : v])));
+  const wb = rowsToWorkbook(safe, filename);
   XLSX.writeFile(wb, `${filename}.${format}`);
 }
 
