@@ -144,6 +144,8 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     if (empRes.data) setEmployees(empRes.data as Employee[]);
     if (currRes.data && currRes.data.length > 0) {
       setCurrencies(currRes.data as CurrencyConfig[]);
+      const base = (currRes.data as CurrencyConfig[]).find((c) => c.is_base)?.code;
+      if (base) setPayments((ps) => ps.map((p) => (!p.amount ? { ...p, currency: base } : p)));
     } else {
       // Fallback if no currencies configured
       setCurrencies([
@@ -153,6 +155,8 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
       ]);
     }
   };
+
+  const baseCode = currencies.find((c) => c.is_base)?.code ?? "CUP";
 
   const lineBase = (p: PaymentLine) => (parseFloat(p.amount) || 0) * (parseFloat(p.exchange_rate) || 1);
 
@@ -175,7 +179,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
   const change = Math.min(overpay, cashInBase);
 
   const blankLine = (): PaymentLine => ({
-    method: "CASH", currency: "CUP", amount: "", exchange_rate: "1",
+    method: "CASH", currency: baseCode, amount: "", exchange_rate: "1",
     card_last_four: "", card_holder: "", card_description: "", reference: "",
   });
 
@@ -526,7 +530,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         <DialogHeader>
           <DialogTitle className="font-heading">{t("pos.payment.title")}</DialogTitle>
           <DialogDescription>
-            {t("pos.payment.totalToCharge")}: <span className="font-bold text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+            {t("pos.payment.totalToCharge")}: <span className="font-bold text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -722,9 +726,9 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                   </div>
                 </div>
 
-                {p.currency !== "CUP" && parseFloat(p.amount) > 0 && (
+                {p.currency !== baseCode && parseFloat(p.amount) > 0 && (
                   <p className="text-[10px] text-muted-foreground">
-                    {t("pos.payment.equivalent")} ${((parseFloat(p.amount) || 0) * (parseFloat(p.exchange_rate) || 1)).toLocaleString()} CUP
+                    {t("pos.payment.equivalent")} ${((parseFloat(p.amount) || 0) * (parseFloat(p.exchange_rate) || 1)).toLocaleString()} {baseCode}
                   </p>
                 )}
 
@@ -795,28 +799,28 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
           <div className="bg-muted/60 rounded-lg p-3 space-y-1 text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("pos.payment.saleTotal")}</span>
-              <span className="font-heading font-semibold">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+              <span className="font-heading font-semibold">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Cobrado en firme (efectivo/tarjeta)</span>
-              <span className="font-heading font-semibold text-primary">${confirmedInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+              <span className="font-heading font-semibold text-primary">${confirmedInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
             </div>
             {pendingInBase > 0 && (
               <div className="flex justify-between text-warning">
                 <span>Digital por confirmar</span>
-                <span className="font-heading font-semibold">${pendingInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+                <span className="font-heading font-semibold">${pendingInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
               </div>
             )}
             {remaining > 0.01 && (
               <div className="flex justify-between text-destructive">
                 <span>{isPartial ? "A crédito (fiado)" : t("pos.payment.pending")}</span>
-                <span className="font-heading font-bold">${remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+                <span className="font-heading font-bold">${remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
               </div>
             )}
             {change > 0 && (
               <div className="flex justify-between text-primary">
                 <span>{t("pos.payment.change")} (efectivo)</span>
-                <span className="font-heading font-bold">${change.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP</span>
+                <span className="font-heading font-bold">${change.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
               </div>
             )}
             {overpay > change && (
@@ -833,8 +837,8 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
             className="w-full gradient-brand text-primary-foreground font-heading font-semibold h-11"
           >
             {saving ? t("pos.payment.processing") : isPartial && remaining > 0.01
-              ? (totalPaidInBase > 0 ? `${t("pos.payment.chargePartial")} $${totalPaidInBase.toFixed(2)} CUP` : `${t("pos.payment.leaveCredit")} $${total.toFixed(2)} CUP`)
-              : `${t("pos.cart.charge")} $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} CUP`}
+              ? (totalPaidInBase > 0 ? `${t("pos.payment.chargePartial")} $${totalPaidInBase.toFixed(2)} ${baseCode}` : `${t("pos.payment.leaveCredit")} $${total.toFixed(2)} ${baseCode}`)
+              : `${t("pos.cart.charge")} $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${baseCode}`}
           </Button>
         </div>
       </DialogContent>

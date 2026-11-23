@@ -15,6 +15,9 @@ import heroBg from "@/assets/landing-hero-bg.jpg";
 
 import { Clock4 } from "lucide-react";
 import { Seo } from "@/components/Seo";
+import { useTranslation } from "react-i18next";
+import { LANDING_PT } from "./landing/ptBR";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Heart } from "lucide-react";
 
@@ -122,10 +125,13 @@ const TYPE_ALIASES: Record<string, string[]> = {
 };
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("es-CU", { maximumFractionDigits: 0 }).format(n || 0);
+  new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n || 0);
 
 const Landing = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { i18n } = useTranslation();
+  const isPt = (i18n.language ?? "").startsWith("pt");
+  const T = (es: string) => (isPt ? LANDING_PT[es] ?? es : es);
   const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [api, setApi] = useState<CarouselApi | null>(null);
@@ -166,12 +172,12 @@ const Landing = () => {
     setDemoLoading(type);
     try {
       const tenant = findTenant(type);
-      if (!tenant) throw new Error("Demo no disponible en este momento");
+      if (!tenant) throw new Error(T("Demo no disponible en este momento"));
       const { data, error } = await supabase.functions.invoke("ensure-demo-user", {
         body: { action: "ensure", tenant_id: tenant.tenant_id, role: demoRole },
       });
       if (error) throw error;
-      if (!data?.email) throw new Error(data?.error ?? "No se pudo preparar la demo");
+      if (!data?.email) throw new Error(data?.error ?? T("No se pudo preparar la demo"));
       const { error: loginErr } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -180,7 +186,7 @@ const Landing = () => {
       toast.success(`Demo de ${tenant.name} lista (rol ${demoRole}).`);
       navigate("/app");
     } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo iniciar la demo");
+      toast.error(e?.message ?? T("No se pudo iniciar la demo"));
     } finally {
       setDemoLoading(null);
     }
@@ -190,8 +196,8 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       <Seo
-        title="MarIA OS — Sistema operativo empresarial con IA para Cuba y LatAm"
-        description="POS, inventario, contabilidad de partida doble, RRHH, delivery y agentes de IA en una sola plataforma. Prueba las demos reales por tipo de negocio."
+        title={isPt ? "MarIA OS — Sistema de gestão empresarial com IA" : "MarIA OS — Sistema operativo empresarial con IA para Cuba y LatAm"}
+        description={isPt ? "PDV, estoque, contabilidade, RH, delivery e agentes de IA em uma única plataforma. Teste as demos reais por tipo de negócio." : "POS, inventario, contabilidad de partida doble, RRHH, delivery y agentes de IA en una sola plataforma. Prueba las demos reales por tipo de negocio."}
         path="/"
         jsonLd={{
           "@context": "https://schema.org",
@@ -212,15 +218,16 @@ const Landing = () => {
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm">
             {NAV_LINKS.map((l) => (
-              <a key={l.href} href={l.href} className="text-muted-foreground hover:text-foreground transition-colors">{l.label}</a>
+              <a key={l.href} href={l.href} className="text-muted-foreground hover:text-foreground transition-colors">{T(l.label)}</a>
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <Link to="/auth" className="hidden sm:block"><Button variant="ghost" size="sm">Ingresar</Button></Link>
-            <Link to="/auth"><Button size="sm" className="bg-primary hover:bg-primary/90">Empezar</Button></Link>
+            <div className="hidden sm:block w-44"><LanguageSwitcher /></div>
+            <Link to="/auth" className="hidden sm:block"><Button variant="ghost" size="sm">{T("Ingresar")}</Button></Link>
+            <Link to="/auth"><Button size="sm" className="bg-primary hover:bg-primary/90">{T("Empezar")}</Button></Link>
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="md:hidden h-9 w-9" aria-label="Abrir menú">
+                <Button variant="outline" size="icon" className="md:hidden h-9 w-9" aria-label={T("Abrir menú")}>
                   <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
@@ -237,16 +244,17 @@ const Landing = () => {
                       onClick={() => setMenuOpen(false)}
                       className="rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                     >
-                      {l.label}
+                      {T(l.label)}
                     </a>
                   ))}
                 </nav>
                 <div className="p-3 mt-auto space-y-2 border-t">
+                  <LanguageSwitcher />
                   <Link to="/auth" onClick={() => setMenuOpen(false)} className="block">
-                    <Button variant="outline" className="w-full">Ingresar</Button>
+                    <Button variant="outline" className="w-full">{T("Ingresar")}</Button>
                   </Link>
                   <Link to="/marketplace" onClick={() => setMenuOpen(false)} className="block">
-                    <Button variant="ghost" className="w-full">Ir al Marketplace</Button>
+                    <Button variant="ghost" className="w-full">{T("Ir al Marketplace")}</Button>
                   </Link>
                 </div>
               </SheetContent>
@@ -282,27 +290,26 @@ const Landing = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-6 animate-fade-in">
             <Sparkles className="h-3.5 w-3.5" />
-            Plataforma todo-en-uno · by Kirabit
+            {T("Plataforma todo-en-uno · by Kirabit")}
           </div>
           <h1 className="font-heading font-bold text-4xl sm:text-6xl lg:text-7xl tracking-tight max-w-4xl mx-auto leading-[1.05] animate-fade-in">
-            El sistema operativo de tu{" "}
+            {T("El sistema operativo de tu")}{" "}
             <span className="bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
-              negocio moderno
+              {T("negocio moderno")}
             </span>
           </h1>
           <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto animate-fade-in">
-            POS adaptable, inventario, facturación electrónica, tesorería, marketplace, delivery, RRHH y agentes de IA
-            en una sola plataforma multi-empresa, multi-idioma y en tiempo real.
+{T("POS adaptable, inventario, facturación electrónica, tesorería, marketplace, delivery, RRHH y agentes de IA en una sola plataforma multi-empresa, multi-idioma y en tiempo real.")}
           </p>
           <div className="mt-9 flex items-center justify-center gap-3 flex-wrap animate-fade-in">
             <a href="#demo">
               <Button size="lg" className="bg-primary hover:bg-primary/90 gap-2">
-                <PlayCircle className="h-4 w-4" /> Probar la demo
+                <PlayCircle className="h-4 w-4" /> {T("Probar la demo")}
               </Button>
             </a>
             <Link to="/auth">
               <Button size="lg" variant="outline" className="gap-2">
-                Crear cuenta gratis <ArrowRight className="h-4 w-4" />
+                {T("Crear cuenta gratis")} <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -324,7 +331,7 @@ const Landing = () => {
               </div>
               <img
                 src="/landing/modules/dashboard.jpg"
-                alt="Dashboard ejecutivo de MarIA con KPIs, ventas y alertas en tiempo real"
+                alt={T("Dashboard ejecutivo de MarIA con KPIs, ventas y alertas en tiempo real")}
                 width={1600}
                 height={900}
                 fetchPriority="high"
@@ -341,12 +348,12 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
             {platformFeatures.map((f) => (
-              <div key={f.title} className="text-center sm:text-left">
+              <div key={T(f.title)} className="text-center sm:text-left">
                 <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-primary/10 text-primary mb-3">
                   <f.icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-heading font-semibold text-sm">{f.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{f.desc}</p>
+                <h3 className="font-heading font-semibold text-sm">{T(f.title)}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{T(f.desc)}</p>
               </div>
             ))}
           </div>
@@ -357,31 +364,31 @@ const Landing = () => {
       <section id="modulos" className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Módulos</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">{T("Módulos")}</p>
             <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
-              Todo lo que tu operación necesita
+              {T("Todo lo que tu operación necesita")}
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Diseñado para bares, restaurantes, retail y empresas multi-sucursal. Activa solo los módulos que uses.
+              {T("Diseñado para bares, restaurantes, retail y empresas multi-sucursal. Activa solo los módulos que uses.")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {modules.map((m) => (
               <div
-                key={m.title}
+                key={T(m.title)}
                 className="group relative rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.3)]"
               >
                 <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-primary to-emerald-500 text-primary-foreground mb-4 shadow-lg shadow-primary/20">
                   <m.icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-heading font-semibold text-base">{m.title}</h3>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{m.desc}</p>
+                <h3 className="font-heading font-semibold text-base">{T(m.title)}</h3>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{T(m.desc)}</p>
                 <ul className="mt-4 space-y-1.5">
                   {m.bullets.map((b) => (
                     <li key={b} className="flex items-start gap-2 text-xs text-foreground/80">
                       <Check className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-                      {b}
+                      {T(b)}
                     </li>
                   ))}
                 </ul>
@@ -395,12 +402,12 @@ const Landing = () => {
       <section id="tour" className="py-24 bg-gradient-to-b from-background via-card/30 to-background border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Tour visual</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">{T("Tour visual")}</p>
             <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
-              Conoce cada módulo en acción
+              {T("Conoce cada módulo en acción")}
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Desliza para explorar las pantallas reales y sus capacidades clave.
+              {T("Desliza para explorar las pantallas reales y sus capacidades clave.")}
             </p>
           </div>
 
@@ -414,7 +421,7 @@ const Landing = () => {
               {moduleSlides.map((s, i) => {
                 const isActive = i === selected;
                 return (
-                  <CarouselItem key={s.title} className="pl-4 md:basis-3/4 lg:basis-2/3 xl:basis-1/2">
+                  <CarouselItem key={T(s.title)} className="pl-4 md:basis-3/4 lg:basis-2/3 xl:basis-1/2">
                     <div
                       className={[
                         "group relative rounded-3xl overflow-hidden border bg-card transition-all duration-700 ease-out",
@@ -426,7 +433,7 @@ const Landing = () => {
                       <div className="relative aspect-[16/10] overflow-hidden">
                         <img
                           src={s.img}
-                          alt={s.title}
+                          alt={T(s.title)}
                           loading="lazy"
                           decoding="async"
                           width={1280}
@@ -439,16 +446,16 @@ const Landing = () => {
                         <div aria-hidden className={`absolute -bottom-24 left-1/2 -translate-x-1/2 h-40 w-2/3 rounded-full bg-primary/30 blur-3xl transition-opacity duration-700 ${isActive ? "opacity-60" : "opacity-0"}`} />
                         <div className="absolute top-4 left-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background/70 backdrop-blur-md border border-primary/30 text-primary text-xs font-medium shadow-sm">
                           <s.icon className="h-3.5 w-3.5" />
-                          {s.title}
+                          {T(s.title)}
                         </div>
                       </div>
                       <div className="p-6 sm:p-7">
-                        <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{T(s.desc)}</p>
                         <ul className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {s.features.map((f) => (
                             <li key={f} className="flex items-center gap-2 text-xs text-foreground/85">
                               <Check className="h-3.5 w-3.5 text-primary shrink-0" />
-                              {f}
+                              {T(f)}
                             </li>
                           ))}
                         </ul>
@@ -468,7 +475,7 @@ const Landing = () => {
               <button
                 key={i}
                 onClick={() => api?.scrollTo(i)}
-                aria-label={`Ir al módulo ${i + 1}`}
+                aria-label={`${T("Ir al módulo")} ${i + 1}`}
                 className={[
                   "h-1.5 rounded-full transition-all duration-500",
                   i === selected ? "w-8 bg-primary" : "w-2 bg-border hover:bg-muted-foreground/40",
@@ -485,14 +492,13 @@ const Landing = () => {
           <div className="text-center max-w-2xl mx-auto mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-4">
               <PlayCircle className="h-3.5 w-3.5" />
-              Demo interactiva
+              {T("Demo interactiva")}
             </div>
             <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
-              Elige tu tipo de negocio
+              {T("Elige tu tipo de negocio")}
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Empresas demo con operación real cargada: catálogo, ventas, turnos, cocina, nómina y contabilidad.
-              Entra con el rol que quieras probar y comprueba los permisos.
+{T("Empresas demo con operación real cargada: catálogo, ventas, turnos, cocina, nómina y contabilidad. Entra con el rol que quieras probar y comprueba los permisos.")}
             </p>
           </div>
 
@@ -509,7 +515,7 @@ const Landing = () => {
                     : "border-border text-muted-foreground hover:text-foreground",
                 ].join(" ")}
               >
-                {r.label} <span className="opacity-60">· {r.desc}</span>
+                {T(r.label)} <span className="opacity-60">· {T(r.desc)}</span>
               </button>
             ))}
           </div>
@@ -528,11 +534,11 @@ const Landing = () => {
                   <div className={`relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br ${b.accent} text-white shadow-lg mb-5`}>
                     <b.icon className="h-6 w-6" />
                   </div>
-                  <h3 className="relative font-heading font-semibold text-lg">{b.title}</h3>
+                  <h3 className="relative font-heading font-semibold text-lg">{T(b.title)}</h3>
                   {biz && (
                     <p className="relative text-xs text-primary font-medium mt-1">{biz.name}</p>
                   )}
-                  <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
+                  <p className="relative text-sm text-muted-foreground mt-2 leading-relaxed">{T(b.desc)}</p>
                   {biz && (
                     <dl className="relative mt-5 grid grid-cols-3 gap-2 border-t border-border/60 pt-4">
                       {[
@@ -540,18 +546,18 @@ const Landing = () => {
                         { l: "Ventas", v: String(biz.sales) },
                         { l: "Facturado", v: `$${fmtMoney(biz.revenue)}` },
                       ].map((m) => (
-                        <div key={m.l}>
+                        <div key={T(m.l)}>
                           <dd className="font-heading font-bold text-sm">{m.v}</dd>
-                          <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">{m.l}</dt>
+                          <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">{T(m.l)}</dt>
                         </div>
                       ))}
                     </dl>
                   )}
                   <div className="relative mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
                     {demoLoading === b.id ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" /> Preparando demo…</>
+                      <><Loader2 className="h-4 w-4 animate-spin" /> {T("Preparando demo…")}</>
                     ) : (
-                      <>Entrar como {demoRole} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
+                      <>{T("Entrar como")} {T(DEMO_ROLES.find((r) => r.role === demoRole)?.label ?? demoRole)} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
                     )}
                   </div>
                 </button>
@@ -563,7 +569,7 @@ const Landing = () => {
           <div className="mt-10 text-center">
             <Link to="/marketplace">
               <Button variant="outline" size="lg" className="gap-2">
-                <Globe className="h-4 w-4" /> Explorar marketplace público
+                <Globe className="h-4 w-4" /> {T("Explorar marketplace público")}
               </Button>
             </Link>
           </div>
@@ -574,11 +580,10 @@ const Landing = () => {
       <section id="nombre" className="py-20 sm:py-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">El nombre</p>
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-3">¿Qué significa MarIA OS?</h2>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">{T("El nombre")}</p>
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-3">{T("¿Qué significa MarIA OS?")}</h2>
             <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
-              Un nombre con dos capas: una técnica, que describe exactamente lo que hace el producto, y otra humana,
-              que explica por qué existe.
+{T("Un nombre con dos capas: una técnica, que describe exactamente lo que hace el producto, y otra humana, que explica por qué existe.")}
             </p>
           </div>
 
@@ -586,24 +591,24 @@ const Landing = () => {
             <div className="rounded-2xl border bg-card p-6">
               <p className="font-heading text-3xl font-bold text-primary mb-2">MarIA</p>
               <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">M</span>otor de <span className="text-foreground font-medium">A</span>dministración de{" "}
+                {isPt ? LANDING_PT["MARIA_DESC"] : (<><span className="text-foreground font-medium">M</span>otor de <span className="text-foreground font-medium">A</span>dministración de{" "}
                 <span className="text-foreground font-medium">R</span>ecursos con <span className="text-foreground font-medium">I</span>nteligencia{" "}
                 <span className="text-foreground font-medium">A</span>plicada: la capa que administra ventas, inventario,
-                finanzas y personas de forma unificada.
+                finanzas y personas de forma unificada.</>)}
               </p>
             </div>
             <div className="rounded-2xl border bg-card p-6">
               <p className="font-heading text-3xl font-bold text-primary mb-2">OS</p>
               <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">Operating System</span> — sistema operativo empresarial.
-                No es un módulo aislado: es la base sobre la que opera todo el negocio, del POS a la contabilidad.
+                {isPt ? LANDING_PT["OS_DESC"] : (<><span className="text-foreground font-medium">Operating System</span> — sistema operativo empresarial.
+                No es un módulo aislado: es la base sobre la que opera todo el negocio, del POS a la contabilidad.</>)}
               </p>
             </div>
             <div className="rounded-2xl border bg-card p-6">
               <p className="font-heading text-3xl font-bold text-primary mb-2">IA</p>
               <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">Inteligencia Artificial</span> integrada en la operación:
-                agentes que analizan riesgos, demanda, caja y decisiones, no un chat añadido al final.
+                {isPt ? LANDING_PT["IA_DESC"] : (<><span className="text-foreground font-medium">Inteligencia Artificial</span> integrada en la operación:
+                agentes que analizan riesgos, demanda, caja y decisiones, no un chat añadido al final.</>)}
               </p>
             </div>
           </div>
@@ -613,9 +618,9 @@ const Landing = () => {
               <Heart className="h-5 w-5 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground">
-              El nombre también honra a <span className="text-foreground font-medium">María</span>, origen de la
+              {isPt ? LANDING_PT["HEART_DESC"] : (<>El nombre también honra a <span className="text-foreground font-medium">María</span>, origen de la
               inspiración de este proyecto. Esa raíz explica el criterio con el que se construye: herramientas fiables
-              para negocios reales, hechas con cuidado por las personas que los sostienen.
+              para negocios reales, hechas con cuidado por las personas que los sostienen.</>)}
             </p>
           </div>
         </div>
@@ -628,12 +633,12 @@ const Landing = () => {
         <div aria-hidden className="absolute -top-32 right-1/4 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">¿Por qué MarIA?</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">{T("¿Por qué MarIA?")}</p>
             <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
-              Hecho para el ritmo de tu negocio
+              {T("Hecho para el ritmo de tu negocio")}
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Una sola plataforma que reemplaza POS, inventario, facturación, marketplace y RRHH.
+              {T("Una sola plataforma que reemplaza POS, inventario, facturación, marketplace y RRHH.")}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -646,14 +651,14 @@ const Landing = () => {
               { icon: Sparkles, title: "Activa solo lo que usas", desc: "Módulos opcionales: factura electrónica, fidelización, delivery, recetas y más." },
             ].map((b) => (
               <div
-                key={b.title}
+                key={T(b.title)}
                 className="group relative rounded-2xl border border-border bg-card/80 backdrop-blur p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_15px_45px_-15px_hsl(var(--primary)/0.4)]"
               >
                 <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-primary/20 to-emerald-400/10 text-primary border border-primary/20 mb-4">
                   <b.icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-heading font-semibold text-base">{b.title}</h3>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{b.desc}</p>
+                <h3 className="font-heading font-semibold text-base">{T(b.title)}</h3>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{T(b.desc)}</p>
               </div>
             ))}
           </div>
@@ -664,12 +669,12 @@ const Landing = () => {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Datos en vivo</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">{T("Datos en vivo")}</p>
             <h2 className="font-heading font-bold text-3xl sm:text-4xl tracking-tight">
-              Las demos operan con información real
+              {T("Las demos operan con información real")}
             </h2>
             <p className="mt-3 text-muted-foreground text-sm">
-              Estas cifras se leen directamente de las tres empresas demo del sistema, no son maquetas.
+              {T("Estas cifras se leen directamente de las tres empresas demo del sistema, no son maquetas.")}
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -683,11 +688,11 @@ const Landing = () => {
               { v: stats ? String(stats.agents) : "—", l: "Agentes de IA activos" },
               { v: "3", l: "Idiomas (ES/EN/PT-BR)" },
             ].map((s) => (
-              <div key={s.l} className="rounded-2xl border border-border bg-card p-6">
+              <div key={T(s.l)} className="rounded-2xl border border-border bg-card p-6">
                 <p className="font-heading font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
                   {s.v}
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">{s.l}</p>
+                <p className="text-xs text-muted-foreground mt-2">{T(s.l)}</p>
               </div>
             ))}
           </div>
@@ -696,11 +701,11 @@ const Landing = () => {
           <div className="mt-14 rounded-3xl border border-border bg-card/60 p-8 sm:p-10">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">Ingeniería verificada</p>
-                <h3 className="font-heading font-bold text-2xl sm:text-3xl tracking-tight">La plataforma por dentro</h3>
+                <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">{T("Ingeniería verificada")}</p>
+                <h3 className="font-heading font-bold text-2xl sm:text-3xl tracking-tight">{T("La plataforma por dentro")}</h3>
               </div>
               <p className="text-xs text-muted-foreground max-w-sm">
-                Cifras medidas sobre la base de datos y el código del sistema, no estimaciones de marketing.
+                {T("Cifras medidas sobre la base de datos y el código del sistema, no estimaciones de marketing.")}
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -714,9 +719,9 @@ const Landing = () => {
                 { v: "17", l: "Funciones serverless (IA, fiscal, integraciones)" },
                 { v: "3", l: "Idiomas: español, inglés y portugués (BR)" },
               ].map((s) => (
-                <div key={s.l}>
+                <div key={T(s.l)}>
                   <p className="font-heading font-bold text-2xl sm:text-3xl text-primary">{s.v}</p>
-                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{s.l}</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{T(s.l)}</p>
                 </div>
               ))}
             </div>
@@ -734,19 +739,19 @@ const Landing = () => {
             <div aria-hidden className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
             <div className="relative">
               <h2 className="font-heading font-bold text-3xl sm:text-5xl tracking-tight">
-                Listo para digitalizar tu negocio
+                {T("Listo para digitalizar tu negocio")}
               </h2>
               <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-                Comienza hoy con MarIA. Sin instalaciones, sin servidores, sin sorpresas.
+                {T("Comienza hoy con MarIA. Sin instalaciones, sin servidores, sin sorpresas.")}
               </p>
               <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
                 <Link to="/auth">
                   <Button size="lg" className="bg-primary hover:bg-primary/90 gap-2">
-                    Crear cuenta <ArrowRight className="h-4 w-4" />
+                    {T("Crear cuenta")} <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
                 <a href="mailto:hola@kirabit.app">
-                  <Button size="lg" variant="outline">Hablar con ventas</Button>
+                  <Button size="lg" variant="outline">{T("Hablar con ventas")}</Button>
                 </a>
               </div>
             </div>
@@ -760,13 +765,13 @@ const Landing = () => {
           <div className="flex items-center gap-2">
             <img src={mariaLogo} alt="MarIA" width={28} height={28} className="h-7 w-7" decoding="async" />
             <span className="font-heading font-semibold text-sm">MarIA OS</span>
-            <span className="text-xs text-muted-foreground ml-2">© {new Date().getFullYear()} Kirabit · Todos los derechos reservados.</span>
+            <span className="text-xs text-muted-foreground ml-2">© {new Date().getFullYear()} Kirabit · {T("Todos los derechos reservados.")}</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
-            <a href="#modulos" className="hover:text-foreground">Módulos</a>
-            <a href="#plataforma" className="hover:text-foreground">Plataforma</a>
+            <a href="#modulos" className="hover:text-foreground">{T("Módulos")}</a>
+            <a href="#plataforma" className="hover:text-foreground">{T("Plataforma")}</a>
             <Link to="/marketplace" className="hover:text-foreground">Marketplace</Link>
-            <Link to="/auth" className="hover:text-foreground">Ingresar</Link>
+            <Link to="/auth" className="hover:text-foreground">{T("Ingresar")}</Link>
           </div>
         </div>
       </footer>

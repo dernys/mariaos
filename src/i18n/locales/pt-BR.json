@@ -1040,7 +1040,7 @@
     "location": "Local",
     "reason": "Motivo",
     "type": "Tipo",
-    "ticket": "Ticket"
+    "ticket": "Cupom"
   },
   "dialog": {
     "confirmTitle": "Tem certeza?",
@@ -1268,7 +1268,7 @@
       "pending": "Pendente",
       "change": "Troco",
       "processing": "Processando...",
-      "chargePartial": "Cobrar Parcial",
+      "chargePartial": "Cobrar parcial",
       "leaveCredit": "Deixar Fiado",
       "errors": {
         "notCovered": "O valor pago não cobre o total. Ative pagamento parcial ou ajuste os valores.",
@@ -1288,7 +1288,7 @@
         "savedOfflineDesc": "Será sincronizada ao restabelecer a conexão.",
         "queuedOffline": "Venda enfileirada offline",
         "queuedOfflineDesc": "Será enviada ao restabelecer a conexão.",
-        "ticket": "Ticket {{number}}",
+        "ticket": "Cupom {{number}}",
         "pendingAmount": "Pendente: ${{amount}} CUP",
         "fullPaid": "Pagamento integral registrado"
       }
