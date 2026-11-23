@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -60,15 +61,15 @@ export function AccountingAuditPanel() {
     <Card className="p-5 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold">Auditoría Contable</h3>
+          <h3 className="text-base font-semibold">{trPT("Auditoría Contable")}</h3>
           <p className="text-xs text-muted-foreground">
-            Trazabilidad de comprobantes y cuadre del libro mayor
+            {trPT("Trazabilidad de comprobantes y cuadre del libro mayor")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={issues === 0 ? "default" : "destructive"} className="gap-1">
             {issues === 0
-              ? <><CheckCircle2 className="h-3.5 w-3.5" /> Sin gaps</>
+              ? <><CheckCircle2 className="h-3.5 w-3.5" /> {trPT("Sin gaps")}</>
               : <><AlertTriangle className="h-3.5 w-3.5" /> {issues} pendientes</>}
           </Badge>
           <Button size="sm" variant="outline" onClick={load}>
@@ -80,7 +81,7 @@ export function AccountingAuditPanel() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {rows.map((r) => (
           <div key={r.label} className="rounded-lg border bg-card/50 p-3">
-            <div className="text-xs text-muted-foreground">{r.label}</div>
+            <div className="text-xs text-muted-foreground">{trPT(r.label)}</div>
             <div className={`mt-1 text-lg font-semibold ${r.value > 0 ? "text-rose-500" : "text-emerald-500"}`}>
               {r.value}
             </div>
@@ -90,22 +91,22 @@ export function AccountingAuditPanel() {
 
       <div className="grid grid-cols-3 gap-3 pt-2 border-t">
         <div>
-          <div className="text-xs text-muted-foreground">Asientos totales</div>
+          <div className="text-xs text-muted-foreground">{trPT("Asientos totales")}</div>
           <div className="text-base font-semibold">{data.total_entries}</div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">Total Debe</div>
+          <div className="text-xs text-muted-foreground">{trPT("Total Debe")}</div>
           <div className="text-base font-semibold">{fmt(Number(data.total_debit))}</div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">Total Haber</div>
+          <div className="text-xs text-muted-foreground">{trPT("Total Haber")}</div>
           <div className="text-base font-semibold">{fmt(Number(data.total_credit))}</div>
         </div>
       </div>
 
       <div className={`text-xs rounded-md p-2 ${Math.abs(diff) < 0.01 ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}`}>
         {Math.abs(diff) < 0.01
-          ? "✔ Doble partida cuadrada: Debe = Haber"
+          ? trPT("✔ Doble partida cuadrada: Debe = Haber")
           : `⚠ Diferencia Debe-Haber: ${fmt(diff)}`}
       </div>
     </Card>

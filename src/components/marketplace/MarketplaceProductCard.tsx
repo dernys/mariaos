@@ -3,7 +3,7 @@ import { Plus, Minus, MapPin, Truck, Tag, Clock, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { bizIcon, formatPrice } from "./types";
+import { bizIcon, formatPrice, currencyForCountry } from "./types";
 import { RatingStars } from "./RatingStars";
 import type { MarketProduct, Tenant } from "./types";
 
@@ -157,10 +157,10 @@ export const MarketplaceProductCard = ({
           <div className="leading-none">
             {discountPct > 0 && (
               <p className="text-[11px] text-muted-foreground line-through">
-                {formatPrice(product.price)}
+                {formatPrice(product.price, currencyForCountry(tenant?.country_code))}
               </p>
             )}
-            <span className="text-base font-bold text-primary">{formatPrice(finalPrice)}</span>
+            <span className="text-base font-bold text-primary">{formatPrice(finalPrice, currencyForCountry(tenant?.country_code))}</span>
           </div>
           {qtyInCart > 0 ? (
             <div className="flex items-center gap-1">

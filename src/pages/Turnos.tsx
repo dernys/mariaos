@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
@@ -114,12 +115,12 @@ const Turnos = () => {
   const needsOpenPin = !!selectedOpenEmp && !openerIsWorker;
 
   const openShift = async () => {
-    if (!openCash) return toast.error("Ingresa el monto inicial");
-    if (!openStoreId) return toast.error("Selecciona una tienda");
-    if (!openEmployeeId) return toast.error("Selecciona un cajero");
+    if (!openCash) return toast.error(trPT("Ingresa el monto inicial"));
+    if (!openStoreId) return toast.error(trPT("Selecciona una tienda"));
+    if (!openEmployeeId) return toast.error(trPT("Selecciona un cajero"));
     if (needsOpenPin) {
       if (!selectedOpenEmp?.has_pin) return toast.error(`${selectedOpenEmp?.name} no tiene PIN configurado. Configúralo primero.`);
-      if (!openPin || openPin.length < 4) return toast.error("Ingresa el PIN del trabajador (mín. 4)");
+      if (!openPin || openPin.length < 4) return toast.error(trPT("Ingresa el PIN del trabajador (mín. 4)"));
     }
 
     const { data, error } = await supabase.rpc("open_shift" as any, {
@@ -131,7 +132,7 @@ const Turnos = () => {
     });
 
     if (error) return toast.error(error.message);
-    toast.success("Turno abierto correctamente");
+    toast.success(trPT("Turno abierto correctamente"));
     setShowOpen(false);
     setOpenCash(""); setOpenStoreId(""); setOpenEmployeeId(""); setOpenPin(""); setOpenNotes("");
     fetchAll();
@@ -154,7 +155,7 @@ const Turnos = () => {
     if (!selectedShift) return;
     if (needsEditPin) {
       if (!selectedEditEmp?.has_pin) return toast.error(`${selectedEditEmp?.name} no tiene PIN configurado.`);
-      if (!editPin || editPin.length < 4) return toast.error("Ingresa el PIN del nuevo trabajador");
+      if (!editPin || editPin.length < 4) return toast.error(trPT("Ingresa el PIN del nuevo trabajador"));
     }
     const { error } = await supabase.rpc("update_shift" as any, {
       _shift_id: selectedShift.id,
@@ -164,17 +165,17 @@ const Turnos = () => {
       _pin: needsEditPin ? editPin : null,
     });
     if (error) return toast.error(error.message);
-    toast.success("Turno actualizado");
+    toast.success(trPT("Turno actualizado"));
     setShowEdit(false);
     fetchAll();
   };
 
   const submitSetPin = async () => {
-    if (!pinEmployeeId) return toast.error("Selecciona un empleado");
-    if (!newPin || newPin.length < 4) return toast.error("PIN mínimo 4 caracteres");
+    if (!pinEmployeeId) return toast.error(trPT("Selecciona un empleado"));
+    if (!newPin || newPin.length < 4) return toast.error(trPT("PIN mínimo 4 caracteres"));
     const { error } = await supabase.rpc("set_employee_pin" as any, { _employee_id: pinEmployeeId, _pin: newPin });
     if (error) return toast.error(error.message);
-    toast.success("PIN actualizado");
+    toast.success(trPT("PIN actualizado"));
     setShowSetPin(false); setPinEmployeeId(""); setNewPin("");
     fetchAll();
   };
@@ -202,7 +203,7 @@ const Turnos = () => {
 
 
   const closeShift = async () => {
-    if (!selectedShift || !closeCash) return toast.error("Ingresa el monto de cierre");
+    if (!selectedShift || !closeCash) return toast.error(trPT("Ingresa el monto de cierre"));
     // Cierre Z profesional: genera arqueo + asiento contable + bloqueo en una sola llamada
     const { data, error } = await supabase.rpc("close_shift_z" as any, {
       p_shift_id: selectedShift.id,
@@ -236,7 +237,7 @@ const Turnos = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-heading">
-                Turnos abiertos ({openShifts.length})
+                {trPT("Turnos abiertos (")}{openShifts.length})
               </h3>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -301,28 +302,28 @@ const Turnos = () => {
         <Dialog open={showClose} onOpenChange={setShowClose}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Calculator className="h-5 w-5" /> Cierre y Arqueo</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><Calculator className="h-5 w-5" /> {trPT("Cierre y Arqueo")}</DialogTitle>
               <DialogDescription>{selectedShift && `${getStoreName(selectedShift)} · ${getEmployeeName(selectedShift.employee_id)}`}</DialogDescription>
             </DialogHeader>
             {summary ? (
               <div className="space-y-3">
                 <div className="bg-muted/40 rounded-lg p-3 space-y-1 text-xs">
-                  <div className="flex justify-between"><span>Caja inicial</span><span className="font-heading font-semibold">${Number(summary.opening_cash).toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span>Ventas en efectivo</span><span className="font-heading font-semibold text-success">+${Number(summary.cash_sales).toFixed(2)}</span></div>
-                  <div className="flex justify-between text-muted-foreground"><span>Ventas tarjeta</span><span>${Number(summary.card_sales).toFixed(2)}</span></div>
-                  <div className="flex justify-between text-muted-foreground"><span>Ventas transferencia / QR</span><span>${Number(summary.transfer_sales).toFixed(2)}</span></div>
-                  <div className="flex justify-between text-muted-foreground"><span>Ventas a crédito (fiado)</span><span>${Number(summary.credit_sales).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>{trPT("Caja inicial")}</span><span className="font-heading font-semibold">${Number(summary.opening_cash).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>{trPT("Ventas en efectivo")}</span><span className="font-heading font-semibold text-success">+${Number(summary.cash_sales).toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>{trPT("Ventas tarjeta")}</span><span>${Number(summary.card_sales).toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>{trPT("Ventas transferencia / QR")}</span><span>${Number(summary.transfer_sales).toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>{trPT("Ventas a crédito (fiado)")}</span><span>${Number(summary.credit_sales).toFixed(2)}</span></div>
 
-                  <div className="flex justify-between"><span>Ingresos manuales</span><span className="font-heading font-semibold text-success">+${Number(summary.cash_in).toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span>Egresos manuales</span><span className="font-heading font-semibold text-destructive">-${Number(summary.cash_out).toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span>Devoluciones efectivo</span><span className="font-heading font-semibold text-destructive">-${Number(summary.returns_cash).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>{trPT("Ingresos manuales")}</span><span className="font-heading font-semibold text-success">+${Number(summary.cash_in).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>{trPT("Egresos manuales")}</span><span className="font-heading font-semibold text-destructive">-${Number(summary.cash_out).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>{trPT("Devoluciones efectivo")}</span><span className="font-heading font-semibold text-destructive">-${Number(summary.returns_cash).toFixed(2)}</span></div>
                   <div className="border-t pt-1 mt-1 flex justify-between text-sm">
-                    <span className="font-heading font-bold">Esperado en caja</span>
+                    <span className="font-heading font-bold">{trPT("Esperado en caja")}</span>
                     <span className="font-heading font-bold text-primary">${Number(summary.expected_cash).toFixed(2)}</span>
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs">Efectivo declarado *</Label>
+                  <Label className="text-xs">{trPT("Efectivo declarado *")}</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input type="number" placeholder="0.00" value={closeCash} onChange={(e) => setCloseCash(e.target.value)} className="pl-9 text-lg font-bold" />
@@ -333,7 +334,7 @@ const Turnos = () => {
                     Math.abs(parseFloat(closeCash) - summary.expected_cash) < 0.01 ? "bg-success/10 text-success"
                       : parseFloat(closeCash) > summary.expected_cash ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"
                   }`}>
-                    Diferencia: ${(parseFloat(closeCash) - summary.expected_cash).toFixed(2)}
+                    {trPT("Diferencia: $")}{(parseFloat(closeCash) - summary.expected_cash).toFixed(2)}
                   </div>
                 )}
                 <div>
@@ -347,7 +348,7 @@ const Turnos = () => {
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowClose(false)}>Cancelar</Button>
               <Button onClick={closeShift} disabled={!closeCash || !summary} className="gradient-brand text-primary-foreground">
-                Confirmar Cierre
+                {trPT("Confirmar Cierre")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -357,7 +358,7 @@ const Turnos = () => {
         <Dialog open={showEdit} onOpenChange={setShowEdit}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Pencil className="h-5 w-5" /> Editar Turno</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><Pencil className="h-5 w-5" /> {trPT("Editar Turno")}</DialogTitle>
               <DialogDescription>{selectedShift && getStoreName(selectedShift)}</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
@@ -366,12 +367,12 @@ const Turnos = () => {
                 <Select value={editEmployeeId} onValueChange={setEditEmployeeId}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}{e.user_id === user?.id ? " · tú" : ""}</SelectItem>)}
+                    {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}{e.user_id === user?.id ? trPT(" · tú") : ""}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Efectivo inicial</Label>
+                <Label className="text-xs">{trPT("Efectivo inicial")}</Label>
                 <Input type="number" value={editCash} onChange={(e) => setEditCash(e.target.value)} />
               </div>
               <div>
@@ -380,7 +381,7 @@ const Turnos = () => {
               </div>
               {needsEditPin && (
                 <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2">
-                  <p className="text-[11px] flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> El nuevo trabajador <b>{selectedEditEmp?.name}</b> debe autorizar con su PIN.</p>
+                  <p className="text-[11px] flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> {trPT("El nuevo trabajador")} <b>{selectedEditEmp?.name}</b> {trPT("debe autorizar con su PIN.")}</p>
                   <Input type="password" inputMode="numeric" placeholder="PIN" value={editPin} onChange={(e) => setEditPin(e.target.value)} />
                 </div>
               )}
@@ -396,21 +397,21 @@ const Turnos = () => {
         <Dialog open={showSetPin} onOpenChange={setShowSetPin}>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> Configurar PIN</DialogTitle>
-              <DialogDescription>Cada trabajador necesita un PIN para autorizar la apertura de turnos en su nombre.</DialogDescription>
+              <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> {trPT("Configurar PIN")}</DialogTitle>
+              <DialogDescription>{trPT("Cada trabajador necesita un PIN para autorizar la apertura de turnos en su nombre.")}</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
               <div>
                 <Label className="text-xs">Empleado</Label>
                 <Select value={pinEmployeeId} onValueChange={setPinEmployeeId}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={trPT("Seleccionar empleado")} /></SelectTrigger>
                   <SelectContent>
-                    {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.has_pin ? "· ✓" : "· sin PIN"}</SelectItem>)}
+                    {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.has_pin ? "· ✓" : trPT("· sin PIN")}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Nuevo PIN (mín. 4)</Label>
+                <Label className="text-xs">{trPT("Nuevo PIN (mín. 4)")}</Label>
                 <Input type="password" inputMode="numeric" value={newPin} onChange={(e) => setNewPin(e.target.value)} />
               </div>
             </div>
@@ -424,14 +425,14 @@ const Turnos = () => {
 
         {/* Header */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <p className="text-sm text-muted-foreground">Historial de turnos</p>
+          <p className="text-sm text-muted-foreground">{trPT("Historial de turnos")}</p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowSetPin(true)} className="gap-1 text-xs">
-              <KeyRound className="h-3.5 w-3.5" /> PIN empleado
+              <KeyRound className="h-3.5 w-3.5" /> {trPT("PIN empleado")}
             </Button>
             {stores.some((s) => !openShifts.find((os) => os.store_id === s.id)) && (
               <Button size="sm" onClick={() => setShowOpen(!showOpen)} className="gap-1 text-xs gradient-brand text-primary-foreground">
-                <Plus className="h-3.5 w-3.5" /> Abrir Turno
+                <Plus className="h-3.5 w-3.5" /> {trPT("Abrir Turno")}
               </Button>
             )}
           </div>
@@ -442,13 +443,13 @@ const Turnos = () => {
           {showOpen && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
               <div className="bg-card rounded-xl p-5 shadow-card border space-y-3">
-                <h3 className="font-heading font-semibold text-sm">Abrir Nuevo Turno</h3>
+                <h3 className="font-heading font-semibold text-sm">{trPT("Abrir Nuevo Turno")}</h3>
                 <p className="text-[11px] text-muted-foreground">
-                  Abierto por <b>{user?.email}</b>. Si el trabajador que operará el turno es otro, deberá autorizar con su PIN.
+                  {trPT("Abierto por")} <b>{user?.email}</b>{trPT(". Si el trabajador que operará el turno es otro, deberá autorizar con su PIN.")}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <Label className="text-xs">Tienda *</Label>
+                    <Label className="text-xs">{trPT("Tienda *")}</Label>
                     <Select value={openStoreId} onValueChange={async (v) => {
                       setOpenStoreId(v);
                       const { data } = await (supabase.rpc as any)("store_expected_opening_cash", { p_store_id: v });
@@ -456,7 +457,7 @@ const Turnos = () => {
                       setExpectedOpening(prev);
                       setOpenCash(String(prev));
                     }}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar tienda" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={trPT("Seleccionar tienda")} /></SelectTrigger>
                       <SelectContent>
                         {stores.filter((s) => !openShifts.find((os) => os.store_id === s.id)).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                       </SelectContent>
@@ -464,24 +465,24 @@ const Turnos = () => {
                   </div>
 
                   <div>
-                    <Label className="text-xs">Trabajador del turno *</Label>
+                    <Label className="text-xs">{trPT("Trabajador del turno *")}</Label>
                     <Select value={openEmployeeId} onValueChange={setOpenEmployeeId}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar trabajador" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={trPT("Seleccionar trabajador")} /></SelectTrigger>
                       <SelectContent>
-                        {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.position && `(${e.position})`}{e.user_id === user?.id ? " · tú" : ""}</SelectItem>)}
+                        {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.position && `(${e.position})`}{e.user_id === user?.id ? trPT(" · tú") : ""}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Fondo inicial de caja *</Label>
+                    <Label className="text-xs">{trPT("Fondo inicial de caja *")}</Label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input type="number" placeholder="0.00" value={openCash} onChange={(e) => setOpenCash(e.target.value)} className="pl-9" />
                     </div>
                     {expectedOpening !== null && (
                       <p className="text-[10px] text-muted-foreground mt-1">
-                        Cierre anterior: ${expectedOpening.toFixed(2)}
-                        {Math.abs(Number(openCash || 0) - expectedOpening) > 0.005 && " · la diferencia quedará registrada en auditoría"}
+                        {trPT("Cierre anterior: $")}{expectedOpening.toFixed(2)}
+                        {Math.abs(Number(openCash || 0) - expectedOpening) > 0.005 && trPT(" · la diferencia quedará registrada en auditoría")}
                       </p>
                     )}
                   </div>
@@ -490,22 +491,22 @@ const Turnos = () => {
 
                 {needsOpenPin && (
                   <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2">
-                    <p className="text-[11px] flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> El trabajador <b>{selectedOpenEmp?.name}</b> debe autorizar con su PIN.</p>
-                    <Input type="password" inputMode="numeric" placeholder="PIN del trabajador" value={openPin} onChange={(e) => setOpenPin(e.target.value)} />
+                    <p className="text-[11px] flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> {trPT("El trabajador")} <b>{selectedOpenEmp?.name}</b> {trPT("debe autorizar con su PIN.")}</p>
+                    <Input type="password" inputMode="numeric" placeholder={trPT("PIN del trabajador")} value={openPin} onChange={(e) => setOpenPin(e.target.value)} />
                     {!selectedOpenEmp?.has_pin && (
-                      <p className="text-[10px] text-destructive">Este trabajador aún no tiene PIN. Configúralo con el botón "PIN empleado".</p>
+                      <p className="text-[10px] text-destructive">{trPT("Este trabajador aún no tiene PIN. Configúralo con el botón \"PIN empleado\".")}</p>
                     )}
                   </div>
                 )}
 
                 <div>
                   <Label className="text-xs">Notas</Label>
-                  <Textarea rows={2} value={openNotes} onChange={(e) => setOpenNotes(e.target.value)} placeholder="Observaciones del turno..." />
+                  <Textarea rows={2} value={openNotes} onChange={(e) => setOpenNotes(e.target.value)} placeholder={trPT("Observaciones del turno...")} />
                 </div>
 
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" size="sm" onClick={() => setShowOpen(false)}>Cancelar</Button>
-                  <Button size="sm" onClick={openShift} className="gradient-brand text-primary-foreground font-heading font-semibold">Abrir Turno</Button>
+                  <Button size="sm" onClick={openShift} className="gradient-brand text-primary-foreground font-heading font-semibold">{trPT("Abrir Turno")}</Button>
                 </div>
               </div>
             </motion.div>
@@ -522,15 +523,15 @@ const Turnos = () => {
                   <th className="text-left p-3 font-medium text-muted-foreground text-xs">Cajero</th>
                   <th className="text-left p-3 font-medium text-muted-foreground text-xs">Apertura</th>
                   <th className="text-left p-3 font-medium text-muted-foreground text-xs hidden sm:table-cell">Cierre</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground text-xs">Caja Inicio</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground text-xs hidden sm:table-cell">Caja Cierre</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground text-xs">{trPT("Caja Inicio")}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground text-xs hidden sm:table-cell">{trPT("Caja Cierre")}</th>
                   <th className="text-left p-3 font-medium text-muted-foreground text-xs">Ventas</th>
                   <th className="text-left p-3 font-medium text-muted-foreground text-xs">Estado</th>
                 </tr>
               </thead>
               <tbody>
                 {shifts.length === 0 ? (
-                  <tr><td colSpan={8} className="p-8 text-center text-muted-foreground text-xs">No hay turnos registrados</td></tr>
+                  <tr><td colSpan={8} className="p-8 text-center text-muted-foreground text-xs">{trPT("No hay turnos registrados")}</td></tr>
                 ) : (
                   shifts.map((shift) => (
                     <tr key={shift.id} onClick={() => nav(`/turnos/${shift.id}`)} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors">
@@ -546,7 +547,7 @@ const Turnos = () => {
                       <td className="p-3 text-xs font-heading font-semibold text-primary">${shift.total_sales ?? 0}</td>
                       <td className="p-3">
                         <Badge variant={shift.status === "open" ? "default" : "secondary"} className="text-[10px]">
-                          {shift.status === "open" ? "Abierto" : "Cerrado"}
+                          {shift.status === "open" ? trPT("Abierto") : trPT("Cerrado")}
                         </Badge>
                       </td>
                     </tr>

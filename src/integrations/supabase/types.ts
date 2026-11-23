@@ -9839,6 +9839,7 @@ export type Database = {
       tenants_public: {
         Row: {
           business_type: string | null
+          country_code: string | null
           id: string | null
           logo_url: string | null
           name: string | null
@@ -9846,6 +9847,7 @@ export type Database = {
         }
         Insert: {
           business_type?: string | null
+          country_code?: string | null
           id?: string | null
           logo_url?: string | null
           name?: string | null
@@ -9853,6 +9855,7 @@ export type Database = {
         }
         Update: {
           business_type?: string | null
+          country_code?: string | null
           id?: string | null
           logo_url?: string | null
           name?: string | null
@@ -10245,12 +10248,21 @@ export type Database = {
         Args: { p_approve: boolean; p_leave_id: string; p_reason?: string }
         Returns: undefined
       }
+      approve_leave_impl: {
+        Args: { p_approve: boolean; p_leave_id: string; p_reason?: string }
+        Returns: undefined
+      }
       approve_payroll_run: { Args: { p_payroll_id: string }; Returns: string }
       assert_public_tenant: { Args: { _tenant: string }; Returns: boolean }
+      assert_record_tenant: { Args: { p_tenant: string }; Returns: undefined }
       assert_tenant_access: { Args: { _tenant: string }; Returns: boolean }
       audit_actor_role: { Args: never; Returns: string }
       auto_assign_best_rider: { Args: { p_order_id: string }; Returns: Json }
       auto_match_bank_transaction: {
+        Args: { p_tx_id: string }
+        Returns: string
+      }
+      auto_match_bank_transaction_impl: {
         Args: { p_tx_id: string }
         Returns: string
       }
@@ -10259,12 +10271,21 @@ export type Database = {
         Returns: number
       }
       award_loyalty_points: { Args: { p_sale_id: string }; Returns: number }
+      award_loyalty_points_impl: {
+        Args: { p_sale_id: string }
+        Returns: number
+      }
       bill_kitchen_order: {
+        Args: { p_order_id: string; p_sale_id: string }
+        Returns: undefined
+      }
+      bill_kitchen_order_impl: {
         Args: { p_order_id: string; p_sale_id: string }
         Returns: undefined
       }
       bootstrap_tenant_accounting: { Args: { p_tenant: string }; Returns: Json }
       br_generate_nfe: { Args: { p_sale_id: string }; Returns: string }
+      br_generate_nfe_impl: { Args: { p_sale_id: string }; Returns: string }
       br_generate_sped_ecd: {
         Args: { p_fiscal_year: number; p_tenant_id: string }
         Returns: string
@@ -10300,6 +10321,10 @@ export type Database = {
         Returns: undefined
       }
       cancel_sale: {
+        Args: { p_reason: string; p_sale_id: string }
+        Returns: undefined
+      }
+      cancel_sale_impl: {
         Args: { p_reason: string; p_sale_id: string }
         Returns: undefined
       }
@@ -10352,6 +10377,10 @@ export type Database = {
       }
       close_accounting_period: { Args: { p_period: string }; Returns: Json }
       close_bank_reconciliation: {
+        Args: { p_reconciliation_id: string }
+        Returns: boolean
+      }
+      close_bank_reconciliation_impl: {
         Args: { p_reconciliation_id: string }
         Returns: boolean
       }

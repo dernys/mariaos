@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useMemo, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,11 +75,10 @@ export default function EventStore() {
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
               <Database className="h-6 w-6 text-primary" />
-              Event Store — Modo sombra
+              {trPT("Event Store — Modo sombra")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Fase 4: los eventos de negocio se registran de forma append-only y se comparan con el estado real.
-              Ningún trigger contable se retira hasta {CLEAN_RUN_DAYS_REQUIRED} días sin divergencias.
+              {trPT("Fase 4: los eventos de negocio se registran de forma append-only y se comparan con el estado real. Ningún trigger contable se retira hasta")} {CLEAN_RUN_DAYS_REQUIRED} {trPT("días sin divergencias.")}
             </p>
           </div>
           <Button variant="outline" onClick={() => refetch()} disabled={isRefetching}>
@@ -90,7 +90,7 @@ export default function EventStore() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Eventos registrados</CardDescription>
+              <CardDescription>{trPT("Eventos registrados")}</CardDescription>
               <CardTitle className="text-3xl">{summary?.total_events ?? 0}</CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
@@ -104,13 +104,13 @@ export default function EventStore() {
               <CardTitle className="text-3xl">{summary?.divergences ?? 0}</CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
-              {(summary?.divergences ?? 0) === 0 ? "Estado y eventos cuadran" : "Requiere revisión"}
+              {(summary?.divergences ?? 0) === 0 ? trPT("Estado y eventos cuadran") : trPT("Requiere revisión")}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Salud del shadow run</CardDescription>
+              <CardDescription>{trPT("Salud del shadow run")}</CardDescription>
               <CardTitle className="text-3xl">{health}%</CardTitle>
             </CardHeader>
             <CardContent>
@@ -120,7 +120,7 @@ export default function EventStore() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Días en observación</CardDescription>
+              <CardDescription>{trPT("Días en observación")}</CardDescription>
               <CardTitle className="text-3xl">{runDays}</CardTitle>
             </CardHeader>
             <CardContent>
@@ -135,7 +135,7 @@ export default function EventStore() {
               <Activity className="mr-2 h-4 w-4" /> Eventos
             </TabsTrigger>
             <TabsTrigger value="divergences">
-              <AlertTriangle className="mr-2 h-4 w-4" /> Divergencias ({divergences.length})
+              <AlertTriangle className="mr-2 h-4 w-4" /> {trPT("Divergencias (")}{divergences.length})
             </TabsTrigger>
             <TabsTrigger value="coverage">
               <ShieldCheck className="mr-2 h-4 w-4" /> Cobertura
@@ -148,7 +148,7 @@ export default function EventStore() {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   className="pl-9"
-                  placeholder="Buscar por correlación o id de agregado"
+                  placeholder={trPT("Buscar por correlación o id de agregado")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && setTerm(search.trim())}
@@ -156,10 +156,10 @@ export default function EventStore() {
               </div>
               <Select value={eventType} onValueChange={setEventType}>
                 <SelectTrigger className="sm:w-64">
-                  <SelectValue placeholder="Tipo de evento" />
+                  <SelectValue placeholder={trPT("Tipo de evento")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos los tipos</SelectItem>
+                  <SelectItem value="all">{trPT("Todos los tipos")}</SelectItem>
                   {SHADOW_EVENT_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>
                       {eventLabel(t)}
@@ -179,9 +179,9 @@ export default function EventStore() {
                     <TableRow>
                       <TableHead>Evento</TableHead>
                       <TableHead>Agregado</TableHead>
-                      <TableHead className="text-right">Monto / cantidad</TableHead>
+                      <TableHead className="text-right">{trPT("Monto / cantidad")}</TableHead>
                       <TableHead>Origen</TableHead>
-                      <TableHead>Correlación</TableHead>
+                      <TableHead>{trPT("Correlación")}</TableHead>
                       <TableHead>Ocurrido</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -189,13 +189,13 @@ export default function EventStore() {
                     {loading ? (
                       <TableRow>
                         <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                          Cargando eventos…
+                          {trPT("Cargando eventos…")}
                         </TableCell>
                       </TableRow>
                     ) : events.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                          Aún no hay eventos para esta empresa.
+                          {trPT("Aún no hay eventos para esta empresa.")}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -238,9 +238,9 @@ export default function EventStore() {
           <TabsContent value="divergences">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Panel de divergencias</CardTitle>
+                <CardTitle className="text-lg">{trPT("Panel de divergencias")}</CardTitle>
                 <CardDescription>
-                  Eventos sin proyección contable y estado sin evento emitido, desde el inicio del shadow run.
+                  {trPT("Eventos sin proyección contable y estado sin evento emitido, desde el inicio del shadow run.")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
@@ -259,7 +259,7 @@ export default function EventStore() {
                       <TableRow>
                         <TableCell colSpan={5} className="py-10 text-center">
                           <CheckCircle2 className="mx-auto mb-2 h-6 w-6 text-primary" />
-                          <span className="text-muted-foreground">Sin divergencias: eventos y estado cuadran.</span>
+                          <span className="text-muted-foreground">{trPT("Sin divergencias: eventos y estado cuadran.")}</span>
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -270,8 +270,8 @@ export default function EventStore() {
                               variant={d.divergence_type === "event_without_projection" ? "destructive" : "outline"}
                             >
                               {d.divergence_type === "event_without_projection"
-                                ? "Evento sin asiento"
-                                : "Estado sin evento"}
+                                ? trPT("Evento sin asiento")
+                                : trPT("Estado sin evento")}
                             </Badge>
                           </TableCell>
                           <TableCell>{eventLabel(d.event_type)}</TableCell>
@@ -302,9 +302,9 @@ export default function EventStore() {
           <TabsContent value="coverage" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Cobertura por tipo de evento</CardTitle>
+                <CardTitle className="text-lg">{trPT("Cobertura por tipo de evento")}</CardTitle>
                 <CardDescription>
-                  Un tipo de evento solo puede promoverse fuera del modo sombra con 0 divergencias sostenidas.
+                  {trPT("Un tipo de evento solo puede promoverse fuera del modo sombra con 0 divergencias sostenidas.")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
@@ -328,14 +328,14 @@ export default function EventStore() {
                           <TableCell className="text-right tabular-nums">{diverging}</TableCell>
                           <TableCell>
                             {total === 0 ? (
-                              <Badge className={READINESS_STYLES.no_data}>Sin datos</Badge>
+                              <Badge className={READINESS_STYLES.no_data}>{trPT("Sin datos")}</Badge>
                             ) : diverging > 0 ? (
                               <Badge className={READINESS_STYLES.diverging}>Divergiendo</Badge>
                             ) : runDays >= CLEAN_RUN_DAYS_REQUIRED ? (
-                              <Badge className={READINESS_STYLES.ready}>Listo para promover</Badge>
+                              <Badge className={READINESS_STYLES.ready}>{trPT("Listo para promover")}</Badge>
                             ) : (
                               <Badge className={READINESS_STYLES.observing}>
-                                En observación ({runDays}/{CLEAN_RUN_DAYS_REQUIRED} d)
+                                {trPT("En observación (")}{runDays}/{CLEAN_RUN_DAYS_REQUIRED} d)
                               </Badge>
                             )}
                           </TableCell>

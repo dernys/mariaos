@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
@@ -294,12 +295,12 @@ export default function RRHH() {
   const approvePayroll = async (p: Payroll) => {
     const { error } = await (supabase.rpc as any)("approve_payroll_run", { p_payroll_id: p.id });
     if (error) return toast({ title: t("common.error"), description: error.message, variant: "destructive" });
-    toast({ title: "Nómina aprobada", description: `${p.employees?.name || "—"} · $${Number(p.net_pay).toFixed(2)}` });
+    toast({ title: trPT("Nómina aprobada"), description: `${p.employees?.name || "—"} · $${Number(p.net_pay).toFixed(2)}` });
     load();
   };
   const payNow = async (p: Payroll) => {
     if (hrSettings.require_payroll_approval && p.status !== "approved") {
-      return toast({ title: "Aprobación requerida", description: "Aprueba la nómina antes de registrar el pago.", variant: "destructive" });
+      return toast({ title: trPT("Aprobación requerida"), description: trPT("Aprueba la nómina antes de registrar el pago."), variant: "destructive" });
     }
     if (!confirm(t("modules.hr.payroll.payConfirm", { name: p.employees?.name || "—", amount: `$${Number(p.net_pay).toFixed(2)}` }))) return;
     const { error } = await (supabase.rpc as any)("pay_payroll", { _payroll_id: p.id, _method: p.payment_method || hrSettings.payment_method || "transfer", _notes: null });
@@ -546,7 +547,7 @@ export default function RRHH() {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2 flex-1 min-w-[280px]">
                 <div className="col-span-2 md:col-span-1">
                   <Label className="text-[11px]">Buscar</Label>
-                  <Input className="h-9" placeholder="Trabajador o comprobante" value={payFilters.q}
+                  <Input className="h-9" placeholder={trPT("Trabajador o comprobante")} value={payFilters.q}
                     onChange={(e) => { setPayPage(1); setPayFilters({ ...payFilters, q: e.target.value }); }} />
                 </div>
                 <div>
@@ -590,10 +591,10 @@ export default function RRHH() {
             </div>
 
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-              <span>{filteredPayrolls.length} nómina(s)</span>
-              <span>Neto filtrado: <b className="text-foreground tabular-nums">${filteredNet.toFixed(2)}</b></span>
-              <span>Pendientes de aprobar: <b className="text-foreground">{filteredPayrolls.filter((p) => p.status === "pending").length}</b></span>
-              <span>Aprobadas sin pagar: <b className="text-foreground">{filteredPayrolls.filter((p) => p.status === "approved").length}</b></span>
+              <span>{filteredPayrolls.length} {trPT("nómina(s)")}</span>
+              <span>{trPT("Neto filtrado:")} <b className="text-foreground tabular-nums">${filteredNet.toFixed(2)}</b></span>
+              <span>{trPT("Pendientes de aprobar:")} <b className="text-foreground">{filteredPayrolls.filter((p) => p.status === "pending").length}</b></span>
+              <span>{trPT("Aprobadas sin pagar:")} <b className="text-foreground">{filteredPayrolls.filter((p) => p.status === "approved").length}</b></span>
             </div>
 
             <Card><CardContent className="p-0 overflow-x-auto">

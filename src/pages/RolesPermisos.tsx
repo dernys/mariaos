@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +30,7 @@ const RolesPermisos = () => {
               </TabsTrigger>
               <TabsTrigger value="modules" className="gap-2 text-xs">
                 <Boxes className="h-3.5 w-3.5" />
-                Módulos
+                {trPT("Módulos")}
               </TabsTrigger>
             </>
           )}

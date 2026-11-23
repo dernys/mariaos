@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
-import { tr } from "@/i18n/tr";
+import { tr as trPT } from "@/i18n/tr";
 import { ProductImportWizard } from "@/components/inventory/ProductImportWizard";
 import { FileSpreadsheet } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -148,7 +148,7 @@ const Inventario = () => {
       await deleteProductMutation.mutateAsync(p);
       toast({ title: t("modules.inventory.toasts.productDeleted") });
     } catch (e: any) {
-      toast({ title: tr("Error"), description: domainMessage(e, t), variant: "destructive" });
+      toast({ title: trPT("Error"), description: domainMessage(e, t), variant: "destructive" });
     }
   };
 
@@ -419,17 +419,17 @@ const Inventario = () => {
                   title={t("modules.inventory.header")}
                   columns={[
                     { key: "sku", label: "SKU" },
-                    { key: "name", label: tr("Producto") },
+                    { key: "name", label: trPT("Producto") },
                     { key: "category", label: "Categoría" },
                     { key: "stock", label: "Stock" },
                     { key: "min_stock", label: "Mínimo" },
                     { key: "price", label: "Precio" },
-                    { key: "cost", label: tr("Costo") },
+                    { key: "cost", label: trPT("Costo") },
                   ]}
                 />
                 {mayCreate && (
                   <Button size="sm" variant="outline" onClick={() => setImportOpen(true)} className="gap-1 text-xs h-9">
-                    <FileSpreadsheet className="h-3.5 w-3.5" /> Importar Excel
+                    <FileSpreadsheet className="h-3.5 w-3.5" /> {trPT("Importar Excel")}
                   </Button>
                 )}
                 {mayCreate && (
@@ -501,7 +501,7 @@ const Inventario = () => {
                             </button>
                           )}
                           {!mayCreate && !mayEdit && !mayDelete && (
-                            <span className="text-[10px] text-muted-foreground">{tr("Solo lectura")}</span>
+                            <span className="text-[10px] text-muted-foreground">{trPT("Solo lectura")}</span>
                           )}
                         </div>
                       </TableCell>
@@ -554,8 +554,8 @@ const Inventario = () => {
                 filename="movimientos-inventario"
                 title={t("modules.inventory.tabs.movements")}
                 columns={[
-                  { key: "created_at", label: tr("Fecha") },
-                  { key: "productName", label: tr("Producto") },
+                  { key: "created_at", label: trPT("Fecha") },
+                  { key: "productName", label: trPT("Producto") },
                   { key: "movement_type", label: "Tipo" },
                   { key: "quantity", label: "Cantidad" },
                   { key: "previous_stock", label: "Anterior" },
@@ -665,7 +665,7 @@ const Inventario = () => {
                 title={t("modules.inventory.tabs.stock")}
                 columns={[
                   { key: "sku", label: "SKU" },
-                  { key: "productName", label: tr("Producto") },
+                  { key: "productName", label: trPT("Producto") },
                   { key: "locationName", label: "Ubicación" },
                   { key: "stock", label: "Stock" },
                 ]}
@@ -758,7 +758,7 @@ const Inventario = () => {
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3">
               <div><Label>{t("modules.inventory.dialog.name")} *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div><Label>{tr("SKU *")}</Label><Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></div>
+              <div><Label>{trPT("SKU *")}</Label><Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></div>
             </div>
             <div><Label>{t("modules.inventory.dialog.description")}</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
@@ -782,13 +782,13 @@ const Inventario = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>{tr("Unidad de medida")}</Label>
+                <Label>{trPT("Unidad de medida")}</Label>
                 <SearchableSelect
                   options={units.map((u) => ({ value: u.code, label: `${u.code} — ${u.name}` }))}
                   value={form.unit_code}
                   onChange={(v) => setForm({ ...form, unit_code: v })}
-                  placeholder={tr("Unidad")}
-                  searchPlaceholder="Buscar unidad..."
+                  placeholder={trPT("Unidad")}
+                  searchPlaceholder={trPT("Buscar unidad...")}
                 />
               </div>
             </div>
@@ -838,8 +838,8 @@ const Inventario = () => {
 
               {/* Imágenes secundarias (galería del marketplace) */}
               <div className="pt-2 border-t space-y-2">
-                <Label className="text-xs font-medium">{tr("Imágenes secundarias (galería)")}</Label>
-                <p className="text-[11px] text-muted-foreground">{tr("La principal se muestra primero; estas completan la galería del producto en el marketplace.")}</p>
+                <Label className="text-xs font-medium">{trPT("Imágenes secundarias (galería)")}</Label>
+                <p className="text-[11px] text-muted-foreground">{trPT("La principal se muestra primero; estas completan la galería del producto en el marketplace.")}</p>
                 {form.images.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {form.images.map((url, i) => (
@@ -847,7 +847,7 @@ const Inventario = () => {
                         <img src={url} alt={`secundaria ${i + 1}`} className="h-16 w-16 rounded-lg object-cover border" />
                         <button
                           type="button"
-                          aria-label={tr("Quitar imagen")}
+                          aria-label={trPT("Quitar imagen")}
                           onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }))}
                           className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs leading-none"
                         >×</button>
@@ -942,7 +942,7 @@ const Inventario = () => {
       <Dialog open={!!editMov} onOpenChange={(o) => !o && setEditMov(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{tr("Editar movimiento")}</DialogTitle>
+            <DialogTitle>{trPT("Editar movimiento")}</DialogTitle>
             <DialogDescription>
               {editMov?.productName} · {editMov ? format(new Date(editMov.created_at), "dd/MM/yy HH:mm") : ""} ·{" "}
               {editMov?.movement_type} {editMov?.quantity} u.
@@ -950,10 +950,10 @@ const Inventario = () => {
           </DialogHeader>
           <div className="grid gap-3">
             <p className="text-[11px] text-muted-foreground">
-              Las cantidades de un movimiento no se modifican para preservar la trazabilidad contable: registra un ajuste si hay una diferencia real.
+              {trPT("Las cantidades de un movimiento no se modifican para preservar la trazabilidad contable: registra un ajuste si hay una diferencia real.")}
             </p>
             <div><Label>{t("modules.inventory.table.reason")}</Label><Input value={editMovForm.reason} onChange={(e) => setEditMovForm({ ...editMovForm, reason: e.target.value })} /></div>
-            <div><Label>{tr("Notas")}</Label><Input value={editMovForm.notes} onChange={(e) => setEditMovForm({ ...editMovForm, notes: e.target.value })} /></div>
+            <div><Label>{trPT("Notas")}</Label><Input value={editMovForm.notes} onChange={(e) => setEditMovForm({ ...editMovForm, notes: e.target.value })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditMov(null)}>{t("modules.inventory.dialog.cancel")}</Button>
@@ -966,12 +966,12 @@ const Inventario = () => {
       <Dialog open={!!historyMovId} onOpenChange={(o) => !o && setHistoryMovId(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{tr("Historial del movimiento")}</DialogTitle>
-            <DialogDescription>{tr("Trazabilidad completa: origen, documento asociado y cambios auditados")}</DialogDescription>
+            <DialogTitle>{trPT("Historial del movimiento")}</DialogTitle>
+            <DialogDescription>{trPT("Trazabilidad completa: origen, documento asociado y cambios auditados")}</DialogDescription>
           </DialogHeader>
           {movementTrace.isLoading && <p className="text-xs text-muted-foreground py-4">{t("common.loading")}</p>}
           {movementTrace.isError && (
-            <p className="text-xs text-destructive py-4">{tr("No se pudo cargar la trazabilidad del movimiento.")}</p>
+            <p className="text-xs text-destructive py-4">{trPT("No se pudo cargar la trazabilidad del movimiento.")}</p>
           )}
           {trace && (
             <div className="space-y-3 max-h-[70vh] overflow-y-auto">
@@ -981,7 +981,7 @@ const Inventario = () => {
                   <div>
                     <p className="text-sm font-heading font-semibold">{trace.product_name ?? "—"}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      {trace.product_sku ? `SKU ${trace.product_sku}` : "Sin SKU"}
+                      {trace.product_sku ? `SKU ${trace.product_sku}` : trPT("Sin SKU")}
                       {trace.unit ? ` · ${trace.unit}` : ""}
                     </p>
                   </div>
@@ -991,7 +991,7 @@ const Inventario = () => {
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg bg-background border p-2">
-                    <p className="text-[10px] text-muted-foreground">{tr("Stock anterior")}</p>
+                    <p className="text-[10px] text-muted-foreground">{trPT("Stock anterior")}</p>
                     <p className="text-sm font-heading font-bold">{trace.previous_stock ?? "—"}</p>
                   </div>
                   <div className="rounded-lg bg-background border p-2">
@@ -999,30 +999,30 @@ const Inventario = () => {
                     <p className="text-sm font-heading font-bold">{trace.quantity ?? "—"}</p>
                   </div>
                   <div className="rounded-lg bg-background border p-2">
-                    <p className="text-[10px] text-muted-foreground">{tr("Stock final")}</p>
+                    <p className="text-[10px] text-muted-foreground">{trPT("Stock final")}</p>
                     <p className="text-sm font-heading font-bold">{trace.new_stock ?? "—"}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-                  <p className="text-muted-foreground">Ubicación</p>
+                  <p className="text-muted-foreground">{trPT("Ubicación")}</p>
                   <p className="text-right font-medium">{trace.location_name ?? "—"}</p>
                   <p className="text-muted-foreground">Registrado</p>
                   <p className="text-right font-medium">
                     {trace.created_at ? format(new Date(trace.created_at), "dd/MM/yy HH:mm") : "—"}
                   </p>
                   <p className="text-muted-foreground">Responsable</p>
-                  <p className="text-right font-medium">{trace.performed_by_name ?? "Sistema"}</p>
+                  <p className="text-right font-medium">{trace.performed_by_name ?? trPT("Sistema")}</p>
                   <p className="text-muted-foreground">Motivo</p>
                   <p className="text-right font-medium">{trace.reason || "—"}</p>
                   {trace.notes && (
                     <>
-                      <p className="text-muted-foreground">{tr("Notas")}</p>
+                      <p className="text-muted-foreground">{trPT("Notas")}</p>
                       <p className="text-right font-medium">{trace.notes}</p>
                     </>
                   )}
                   {trace.edited_at && (
                     <>
-                      <p className="text-muted-foreground">{tr("Última edición")}</p>
+                      <p className="text-muted-foreground">{trPT("Última edición")}</p>
                       <p className="text-right font-medium">
                         {format(new Date(trace.edited_at), "dd/MM/yy HH:mm")}
                         {trace.edited_by_name ? ` · ${trace.edited_by_name}` : ""}
@@ -1035,7 +1035,7 @@ const Inventario = () => {
               {/* Documento origen */}
               <div className="rounded-xl border p-3 space-y-1">
                 <p className="text-[11px] font-heading font-semibold uppercase tracking-wide text-muted-foreground">
-                  Documento origen
+                  {trPT("Documento origen")}
                 </p>
                 {trace.reference_type ? (
                   <p className="text-xs">
@@ -1044,14 +1044,14 @@ const Inventario = () => {
                     {traceRelated?.date ? ` · ${format(new Date(traceRelated.date), "dd/MM/yy HH:mm")}` : ""}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">{tr("Movimiento manual sin documento asociado")}</p>
+                  <p className="text-xs text-muted-foreground">{trPT("Movimiento manual sin documento asociado")}</p>
                 )}
               </div>
 
               {/* Cambios auditados */}
               <div className="space-y-2">
                 <p className="text-[11px] font-heading font-semibold uppercase tracking-wide text-muted-foreground">
-                  Cambios auditados ({traceChanges.length})
+                  {trPT("Cambios auditados (")}{traceChanges.length})
                 </p>
                 {traceChanges.map((h: any) => (
                   <div key={h.id} className="border rounded-lg p-2.5 text-xs bg-muted/30">
@@ -1068,7 +1068,7 @@ const Inventario = () => {
                 ))}
                 {traceChanges.length === 0 && (
                   <p className="text-xs text-muted-foreground py-3 text-center border rounded-lg border-dashed">
-                    El movimiento no ha sido modificado desde su registro
+                    {trPT("El movimiento no ha sido modificado desde su registro")}
                   </p>
                 )}
               </div>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useMemo } from "react";
@@ -116,14 +117,14 @@ const Almacenes = () => {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
+    if (!form.name.trim()) { toast({ title: "Error", description: trPT("El nombre es obligatorio"), variant: "destructive" }); return; }
     const payload = { name: form.name.trim(), location: form.location || null, capacity: parseInt(form.capacity) || 0, tenant_id: tenantId };
     if (editing) {
       const { error } = await supabase.from("warehouses").update(payload).eq("id", editing.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       await syncStores(editing.id);
       await logActivity({ entity_type: "warehouse", entity_id: editing.id, action: "Almacén actualizado", description: `Se actualizó ${payload.name} · ${selectedStores.length} tienda(s) asociada(s)`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Almacén actualizado" });
+      toast({ title: trPT("Almacén actualizado") });
     } else {
       const { data, error } = await supabase.from("warehouses").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
@@ -131,7 +132,7 @@ const Almacenes = () => {
         await syncStores(data.id);
         await logActivity({ entity_type: "warehouse", entity_id: data.id, action: "Almacén creado", description: `Se creó ${payload.name} · ${selectedStores.length} tienda(s) asociada(s)`, tenant_id: tenantId, performed_by: user?.id });
       }
-      toast({ title: "Almacén creado" });
+      toast({ title: trPT("Almacén creado") });
     }
     setDialogOpen(false);
     fetchData();
@@ -141,7 +142,7 @@ const Almacenes = () => {
     const { error } = await supabase.from("warehouses").delete().eq("id", w.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     await logActivity({ entity_type: "warehouse", entity_id: w.id, action: "Almacén eliminado", description: `Se eliminó ${w.name}`, tenant_id: tenantId, performed_by: user?.id });
-    toast({ title: "Almacén eliminado" });
+    toast({ title: trPT("Almacén eliminado") });
     fetchData();
   };
 
@@ -168,7 +169,7 @@ const Almacenes = () => {
         <TableToolbar
           search={table.search}
           onSearchChange={table.setSearch}
-          searchPlaceholder="Buscar almacén, ubicación o tienda..."
+          searchPlaceholder={trPT("Buscar almacén, ubicación o tienda...")}
           filters={[
             {
               key: "active", label: "Estado", value: table.filters.active || "__all__",
@@ -183,7 +184,7 @@ const Almacenes = () => {
           ]}
           rightSlot={
             <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground h-9">
-              <Plus className="h-3.5 w-3.5" /> Nuevo Almacén
+              <Plus className="h-3.5 w-3.5" /> {trPT("Nuevo Almacén")}
             </Button>
           }
         />
@@ -209,7 +210,7 @@ const Almacenes = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={wh.is_active ? "default" : "secondary"} className="text-[10px]">
-                      {wh.is_active ? "Activo" : "Inactivo"}
+                      {wh.is_active ? trPT("Activo") : trPT("Inactivo")}
                     </Badge>
                     <button onClick={() => openEdit(wh)} className="p-1 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
                     <button onClick={() => handleDelete(wh)} className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -227,7 +228,7 @@ const Almacenes = () => {
                 <div className="mt-3 flex flex-wrap gap-1 items-center">
                   <StoreIcon className="h-3 w-3 text-muted-foreground" />
                   {linkedStores.length === 0 ? (
-                    <span className="text-[11px] text-muted-foreground">Sin tiendas asociadas</span>
+                    <span className="text-[11px] text-muted-foreground">{trPT("Sin tiendas asociadas")}</span>
                   ) : (
                     linkedStores.map((sid) => (
                       <Badge key={sid} variant="outline" className="text-[9px]">{storeName(sid)}</Badge>
@@ -277,7 +278,7 @@ const Almacenes = () => {
           {table.total === 0 && !loading && (
             <div className="col-span-full text-center py-12 text-muted-foreground">
               <Warehouse className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No hay almacenes registrados</p>
+              <p className="text-sm">{trPT("No hay almacenes registrados")}</p>
             </div>
           )}
         </div>
@@ -291,16 +292,16 @@ const Almacenes = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar Almacén" : "Nuevo Almacén"}</DialogTitle>
-            <DialogDescription>Datos del almacén y tiendas que abastece</DialogDescription>
+            <DialogTitle>{editing ? trPT("Editar Almacén") : trPT("Nuevo Almacén")}</DialogTitle>
+            <DialogDescription>{trPT("Datos del almacén y tiendas que abastece")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><Label>Ubicación</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
-            <div><Label>Capacidad (productos)</Label><Input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} /></div>
+            <div><Label>{trPT("Nombre *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><Label>{trPT("Ubicación")}</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+            <div><Label>{trPT("Capacidad (productos)")}</Label><Input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} /></div>
             <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
-              <Label className="text-sm">Tiendas asociadas</Label>
-              <p className="text-[11px] text-muted-foreground">Un almacén puede abastecer una o varias tiendas.</p>
+              <Label className="text-sm">{trPT("Tiendas asociadas")}</Label>
+              <p className="text-[11px] text-muted-foreground">{trPT("Un almacén puede abastecer una o varias tiendas.")}</p>
               <div className="max-h-44 overflow-y-auto space-y-1.5 pt-1">
                 {stores.map((s) => (
                   <label key={s.id} className="flex items-center gap-2 text-xs cursor-pointer">
@@ -313,7 +314,7 @@ const Almacenes = () => {
                     {s.name}
                   </label>
                 ))}
-                {stores.length === 0 && <p className="text-xs text-muted-foreground">No hay tiendas registradas</p>}
+                {stores.length === 0 && <p className="text-xs text-muted-foreground">{trPT("No hay tiendas registradas")}</p>}
               </div>
             </div>
           </div>
@@ -328,7 +329,7 @@ const Almacenes = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{detailWh?.name}</DialogTitle>
-            <DialogDescription>Historial de actividad</DialogDescription>
+            <DialogDescription>{trPT("Historial de actividad")}</DialogDescription>
           </DialogHeader>
           {detailWh && <ActivityTimeline entityType="warehouse" entityId={detailWh.id} />}
         </DialogContent>

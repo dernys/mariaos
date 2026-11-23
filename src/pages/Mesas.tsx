@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -60,14 +61,14 @@ const Mesas = () => {
       updates.waiter_id = null;
     }
     await supabase.from("restaurant_tables").update(updates as any).eq("id", tableId);
-    toast({ title: "Mesa actualizada", description: `Estado: ${status}` });
+    toast({ title: trPT("Mesa actualizada"), description: `Estado: ${status}` });
     setSelectedTable(null);
     refresh();
   };
 
   const assignWaiter = async (tableId: string, waiterId: string) => {
     await supabase.from("restaurant_tables").update({ waiter_id: waiterId }).eq("id", tableId);
-    toast({ title: "Mesero asignado" });
+    toast({ title: trPT("Mesero asignado") });
     setSelectedTable((prev) => prev ? { ...prev, waiter_id: waiterId } : null);
   };
 
@@ -97,10 +98,10 @@ const Mesas = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
-            <h2 className="font-heading font-bold text-sm">Salón del Restaurante</h2>
+            <h2 className="font-heading font-bold text-sm">{trPT("Salón del Restaurante")}</h2>
           </div>
           <Button size="sm" className="gap-1 text-xs" onClick={() => { setEditTable(null); setManageOpen(true); }}>
-            <Plus className="h-3 w-3" /> Nueva Mesa
+            <Plus className="h-3 w-3" /> {trPT("Nueva Mesa")}
           </Button>
         </div>
 
@@ -116,7 +117,7 @@ const Mesas = () => {
               <div>
                 <h3 className="font-heading font-bold text-sm">{selectedTable.name}</h3>
                 <p className="text-[10px] text-muted-foreground">
-                  Capacidad: {selectedTable.capacity} personas
+                  {trPT("Capacidad:")} {selectedTable.capacity} personas
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -137,7 +138,7 @@ const Mesas = () => {
                 onValueChange={(v) => assignWaiter(selectedTable.id, v)}
               >
                 <SelectTrigger className="h-8 text-xs flex-1">
-                  <SelectValue placeholder="Asignar mesero..." />
+                  <SelectValue placeholder={trPT("Asignar mesero...")} />
                 </SelectTrigger>
                 <SelectContent>
                   {employees.map((e) => (
@@ -159,7 +160,7 @@ const Mesas = () => {
                   className="text-xs"
                   onClick={() => updateTableStatus(selectedTable.id, action.next)}
                 >
-                  {action.label}
+                  {trPT(action.label)}
                 </Button>
               ))}
             </div>

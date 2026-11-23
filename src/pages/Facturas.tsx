@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
@@ -122,14 +123,14 @@ const Facturas = () => {
       p_tax_rate_id: issueTaxId || null,
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("Factura emitida");
+    toast.success(trPT("Factura emitida"));
     setIssueOpen(false);
     await load();
   };
 
   const fetchFull = async (id: string): Promise<InvoiceData | null> => {
     const { data, error } = await supabase.from("invoices").select("*").eq("id", id).single();
-    if (error || !data) { toast.error("No se pudo cargar la factura"); return null; }
+    if (error || !data) { toast.error(trPT("No se pudo cargar la factura")); return null; }
     return {
       ...data,
       items: Array.isArray((data as any).items) ? (data as any).items : [],
@@ -143,17 +144,17 @@ const Facturas = () => {
 
   const sendEmail = async (id: string) => {
     const inv = paged.find((i) => i.id === id);
-    if (!inv?.customer_email) { toast.error("La factura no tiene email del cliente"); return; }
+    if (!inv?.customer_email) { toast.error(trPT("La factura no tiene email del cliente")); return; }
     const full = await fetchFull(id);
     if (!full) return;
-    toast.info("Generando PDF y enviando...");
+    toast.info(trPT("Generando PDF y enviando..."));
     const { getInvoicePdfBase64 } = await import("@/lib/invoicePdf");
     const pdfBase64 = getInvoicePdfBase64(full);
     const { error } = await supabase.functions.invoke("send-invoice-email", {
       body: { invoice_id: id, pdf_base64: pdfBase64 },
     });
     if (error) { toast.error("Error al enviar: " + error.message); return; }
-    toast.success("Factura enviada por email");
+    toast.success(trPT("Factura enviada por email"));
     await load();
   };
 
@@ -165,7 +166,7 @@ const Facturas = () => {
       .update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_reason: reason })
       .eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Factura anulada");
+    toast.success(trPT("Factura anulada"));
     await load();
   };
 
@@ -176,7 +177,7 @@ const Facturas = () => {
   const transmitted = issued.filter((i) => i.transmission_status === "transmitted").length;
 
   const downloadXml = (inv: Invoice) => {
-    if (!inv.xml_content) { toast.error("Esta factura aún no tiene XML. Transmítela primero."); return; }
+    if (!inv.xml_content) { toast.error(trPT("Esta factura aún no tiene XML. Transmítela primero.")); return; }
     const blob = new Blob([inv.xml_content], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -189,7 +190,7 @@ const Facturas = () => {
     const { data, error } = await supabase.functions.invoke("transmit-invoice", { body: { invoice_id: id } });
     setTransmittingId(null);
     if (error) { toast.error("Error al transmitir: " + error.message); return; }
-    if ((data as any)?.status === "failed") toast.error("Transmisión fallida. Revisa la configuración del proveedor.");
+    if ((data as any)?.status === "failed") toast.error(trPT("Transmisión fallida. Revisa la configuración del proveedor."));
     else toast.success("Factura transmitida (CUFE: " + ((data as any)?.cufe || "").slice(0, 12) + "…)");
     await load();
   };
@@ -201,7 +202,7 @@ const Facturas = () => {
 
         <MiniStatCard label="Emitidas" value={issued.length} tone="success" />
         <MiniStatCard label="Transmitidas" value={transmitted} tone="primary" />
-        <MiniStatCard label="Total facturado" value={totalBilled.toFixed(2)} tone="primary" />
+        <MiniStatCard label={trPT("Total facturado")} value={totalBilled.toFixed(2)} tone="primary" />
         <MiniStatCard label="Cobrado" value={totalPaid.toFixed(2)} tone="success" />
       </div>
 
@@ -210,13 +211,13 @@ const Facturas = () => {
           <h2 className="text-lg font-semibold">{t("modules.invoices.header")}</h2>
           <div className="flex gap-2 flex-wrap">
             <Button onClick={() => setSettingsOpen(true)} size="sm" variant="outline" className="gap-1">
-              <Settings className="h-4 w-4" /> Facturación electrónica
+              <Settings className="h-4 w-4" /> {trPT("Facturación electrónica")}
             </Button>
             <Button onClick={() => nav("/pos")} size="sm" variant="outline" className="gap-1">
               <ShoppingCart className="h-4 w-4" /> {t("modules.invoices.goPos")}
             </Button>
             <Button onClick={() => setQuickOpen(true)} size="sm" variant="outline" className="gap-1">
-              <Plus className="h-4 w-4" /> Venta rápida
+              <Plus className="h-4 w-4" /> {trPT("Venta rápida")}
             </Button>
             <Button onClick={openIssue} size="sm" className="gap-1">
               <Plus className="h-4 w-4" /> {t("modules.invoices.issue")}
@@ -227,7 +228,7 @@ const Facturas = () => {
         <TableToolbar
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Buscar por número o cliente..."
+          searchPlaceholder={trPT("Buscar por número o cliente...")}
           filters={[
             {
               key: "status",
@@ -264,12 +265,12 @@ const Facturas = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Número</TableHead>
+                <TableHead>{trPT("Número")}</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Transmisión</TableHead>
+                <TableHead>{trPT("Transmisión")}</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -296,7 +297,7 @@ const Facturas = () => {
                   <TableCell className="text-right">{Number(inv.total).toFixed(2)} {inv.currency}</TableCell>
                   <TableCell>
                     <Badge variant={inv.status === "issued" ? "default" : "destructive"}>
-                      {inv.status === "issued" ? "Emitida" : "Anulada"}
+                      {inv.status === "issued" ? trPT("Emitida") : trPT("Anulada")}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -305,7 +306,7 @@ const Facturas = () => {
                       tStatus === "failed" ? "bg-destructive/10 text-destructive" :
                       tStatus === "pending" ? "bg-warning/10 text-warning" : "bg-muted"
                     }`} title={inv.cufe ? `CUFE: ${inv.cufe}` : ""}>
-                      {tStatus === "transmitted" ? "Transmitida" : tStatus === "failed" ? "Fallida" : tStatus === "pending" ? "Pendiente" : "Local"}
+                      {tStatus === "transmitted" ? trPT("Transmitida") : tStatus === "failed" ? trPT("Fallida") : tStatus === "pending" ? trPT("Pendiente") : trPT("Local")}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -354,29 +355,29 @@ const Facturas = () => {
 
       <Dialog open={issueOpen} onOpenChange={setIssueOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Emitir factura desde venta</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{trPT("Emitir factura desde venta")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <Label>Selecciona una venta cobrada sin factura</Label>
+            <Label>{trPT("Selecciona una venta cobrada sin factura")}</Label>
             <Select value={selectedSale} onValueChange={setSelectedSale}>
               <SelectTrigger><SelectValue placeholder={t("modules.invoices.chooseSale")} /></SelectTrigger>
               <SelectContent>
                 {pendingSales.map((s: any) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {(s.ticket_number || s.id.slice(0, 8))} — {s.customers?.name ?? "Consumidor"} — {Number(s.total).toFixed(2)}
+                    {(s.ticket_number || s.id.slice(0, 8))} — {s.customers?.name ?? trPT("Consumidor")} — {Number(s.total).toFixed(2)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {pendingSales.length === 0 && (
-              <p className="text-sm text-muted-foreground">No hay ventas pendientes de facturar.</p>
+              <p className="text-sm text-muted-foreground">{trPT("No hay ventas pendientes de facturar.")}</p>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Serie</Label>
                 <Select value={issueSeries || "auto"} onValueChange={(v) => setIssueSeries(v === "auto" ? "" : v)}>
-                  <SelectTrigger><SelectValue placeholder="Serie por defecto" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={trPT("Serie por defecto")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="auto">Serie por defecto</SelectItem>
+                    <SelectItem value="auto">{trPT("Serie por defecto")}</SelectItem>
                     {seriesList.map((s: any) => (
                       <SelectItem key={s.id} value={s.code}>{s.code} — {s.name}</SelectItem>
                     ))}
@@ -384,11 +385,11 @@ const Facturas = () => {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Impuesto a aplicar</Label>
+                <Label className="text-xs">{trPT("Impuesto a aplicar")}</Label>
                 <Select value={issueTaxId || "none"} onValueChange={(v) => setIssueTaxId(v === "none" ? "" : v)}>
-                  <SelectTrigger><SelectValue placeholder="Sin impuesto" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={trPT("Sin impuesto")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Sin impuesto (0%)</SelectItem>
+                    <SelectItem value="none">{trPT("Sin impuesto (0%)")}</SelectItem>
                     {taxes.map((tr) => (
                       <SelectItem key={tr.id} value={tr.id}>{tr.name} — {Number(tr.rate)}%</SelectItem>
                     ))}
@@ -397,8 +398,7 @@ const Facturas = () => {
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Los tipos de impuesto se administran en Configuración → Impuestos. Solo se recalcula el importe si la venta
-              no tenía impuesto ni cobros registrados; en el resto de casos la factura conserva los importes de la venta.
+              {trPT("Los tipos de impuesto se administran en Configuración → Impuestos. Solo se recalcula el importe si la venta no tenía impuesto ni cobros registrados; en el resto de casos la factura conserva los importes de la venta.")}
             </p>
           </div>
           <DialogFooter>

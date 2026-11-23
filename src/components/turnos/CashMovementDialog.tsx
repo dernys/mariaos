@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,9 +44,9 @@ export function CashMovementDialog({ open, onOpenChange, shiftId, availableCash,
 
   const submit = async () => {
     if (!shiftId) return;
-    if (!amt || amt <= 0) return toast.error("Monto inválido");
-    if (insufficient) return toast.error("Efectivo insuficiente en caja");
-    if (!reason.trim()) return toast.error("Indica el concepto del movimiento (auditoría)");
+    if (!amt || amt <= 0) return toast.error(trPT("Monto inválido"));
+    if (insufficient) return toast.error(trPT("Efectivo insuficiente en caja"));
+    if (!reason.trim()) return toast.error(trPT("Indica el concepto del movimiento (auditoría)"));
     setSaving(true);
     const { data, error } = await supabase.rpc("register_shift_cash_movement" as any, {
       p_shift_id: shiftId,
@@ -71,9 +72,9 @@ export function CashMovementDialog({ open, onOpenChange, shiftId, availableCash,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Movimiento de caja</DialogTitle>
+          <DialogTitle>{trPT("Movimiento de caja")}</DialogTitle>
           <DialogDescription>
-            Todo movimiento genera su asiento contable automáticamente y queda en la auditoría del turno.
+            {trPT("Todo movimiento genera su asiento contable automáticamente y queda en la auditoría del turno.")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -87,34 +88,34 @@ export function CashMovementDialog({ open, onOpenChange, shiftId, availableCash,
           </div>
 
           <div>
-            <Label className="text-xs">Concepto contable *</Label>
+            <Label className="text-xs">{trPT("Concepto contable *")}</Label>
             <SearchableSelect value={category} onChange={setCategory} options={options} placeholder="Selecciona" />
             {counterpart && (
               <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                <Landmark className="h-3 w-3" /> Contrapartida: {counterpart} ↔ Caja
+                <Landmark className="h-3 w-3" /> {trPT("Contrapartida:")} {counterpart} {trPT("↔ Caja")}
               </p>
             )}
           </div>
 
           <div>
-            <Label className="text-xs">Monto *</Label>
+            <Label className="text-xs">{trPT("Monto *")}</Label>
             <Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="text-lg font-bold" />
             {availableCash !== undefined && (
               <p className={`text-[11px] mt-1 ${insufficient ? "text-destructive" : "text-muted-foreground"}`}>
-                Efectivo disponible en caja: ${availableCash.toFixed(2)}
+                {trPT("Efectivo disponible en caja: $")}{availableCash.toFixed(2)}
               </p>
             )}
           </div>
 
           <div>
-            <Label className="text-xs">Concepto / justificación *</Label>
-            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Pago de gas, depósito en banco, retiro autorizado..." />
+            <Label className="text-xs">{trPT("Concepto / justificación *")}</Label>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder={trPT("Pago de gas, depósito en banco, retiro autorizado...")} />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={submit} disabled={saving || insufficient} className="gradient-brand text-primary-foreground">
-            {saving ? "Registrando..." : "Registrar y contabilizar"}
+            {saving ? "Registrando..." : trPT("Registrar y contabilizar")}
           </Button>
         </DialogFooter>
       </DialogContent>

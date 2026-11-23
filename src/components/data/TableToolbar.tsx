@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { ReactNode } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,7 @@ export function TableToolbar({ search, onSearchChange, searchPlaceholder = "Busc
         <SearchableSelect
           key={f.key}
           className="w-full sm:w-44"
-          placeholder={f.label}
+          placeholder={trPT(f.label)}
           searchPlaceholder={`${f.label}...`}
           value={f.value === "__all__" ? "__all__" : f.value}
           onChange={f.onChange}

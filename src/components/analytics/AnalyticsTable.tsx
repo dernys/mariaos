@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 // Tabla analítica con búsqueda, ordenación, paginación y exportación.
 
 import { ReactNode, useMemo, useState } from "react";
@@ -111,7 +112,7 @@ export function AnalyticsTable<T>({
                     className={`text-[11px] whitespace-nowrap ${c.align === "right" ? "text-right" : ""} ${c.sortValue ? "cursor-pointer select-none hover:text-foreground" : ""}`}
                   >
                     <span className={`inline-flex items-center gap-1 ${c.align === "right" ? "justify-end" : ""}`}>
-                      {c.label}
+                      {trPT(c.label)}
                       {sortKey === c.key && c.sortValue && (desc ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />)}
                     </span>
                   </TableHead>
@@ -122,7 +123,7 @@ export function AnalyticsTable<T>({
               {pageRows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="text-center text-xs text-muted-foreground py-8">
-                    Sin datos para los filtros aplicados
+                    {trPT("Sin datos para los filtros aplicados")}
                   </TableCell>
                 </TableRow>
               ) : (

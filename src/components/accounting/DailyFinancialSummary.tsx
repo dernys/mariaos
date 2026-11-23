@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Banknote, Calculator, Loader2, RefreshCw, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -130,8 +131,8 @@ export function DailyFinancialSummary() {
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Calculator className="h-4 w-4 text-primary" />
-          <h2 className="font-heading font-semibold text-sm">Resumen financiero del día</h2>
-          {data && <Badge variant="secondary" className="text-[10px]">{data.scope.shifts} turno(s)</Badge>}
+          <h2 className="font-heading font-semibold text-sm">{trPT("Resumen financiero del día")}</h2>
+          {data && <Badge variant="secondary" className="text-[10px]">{data.scope.shifts} {trPT("turno(s)")}</Badge>}
         </div>
         <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={load} disabled={loading}>
           {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />} Actualizar
@@ -173,41 +174,41 @@ export function DailyFinancialSummary() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="rounded-lg border border-border p-3">
-              <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Wallet className="h-3 w-3" /> Dinero disponible (caja esperada)</p>
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Wallet className="h-3 w-3" /> {trPT("Dinero disponible (caja esperada)")}</p>
               <p className="font-heading font-bold text-lg">{money(data.expected_cash)}</p>
-              <p className="text-[10px] text-muted-foreground">Incluye el fondo inicial de {money(data.opening_cash)}</p>
+              <p className="text-[10px] text-muted-foreground">{trPT("Incluye el fondo inicial de")} {money(data.opening_cash)}</p>
             </div>
             <div className="rounded-lg border border-border p-3">
-              <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Banknote className="h-3 w-3" /> Ventas del período</p>
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Banknote className="h-3 w-3" /> {trPT("Ventas del período")}</p>
               <p className="font-heading font-bold text-lg">{money(data.gross_sales)}</p>
-              <p className="text-[10px] text-muted-foreground">{data.transactions} operaciones · impuesto {money(data.tax)}</p>
+              <p className="text-[10px] text-muted-foreground">{data.transactions} {trPT("operaciones · impuesto")} {money(data.tax)}</p>
             </div>
             <div className="rounded-lg border border-border p-3">
-              <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Calculator className="h-3 w-3" /> Utilidad bruta</p>
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Calculator className="h-3 w-3" /> {trPT("Utilidad bruta")}</p>
               <p className={`font-heading font-bold text-lg ${data.gross_profit >= 0 ? "text-success" : "text-destructive"}`}>{money(data.gross_profit)}</p>
-              <p className="text-[10px] text-muted-foreground">Ventas netas − costo de ventas</p>
+              <p className="text-[10px] text-muted-foreground">{trPT("Ventas netas − costo de ventas")}</p>
             </div>
           </div>
 
           <p className="text-[10px] text-muted-foreground">
-            Dinero disponible ≠ ventas ≠ utilidad: el efectivo incluye el fondo inicial y cobros de deudas; la utilidad descuenta costo y gastos.
+            {trPT("Dinero disponible ≠ ventas ≠ utilidad: el efectivo incluye el fondo inicial y cobros de deudas; la utilidad descuenta costo y gastos.")}
           </p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <h3 className="font-heading font-semibold text-xs">Resultado (ventas → utilidad)</h3>
+              <h3 className="font-heading font-semibold text-xs">{trPT("Resultado (ventas → utilidad)")}</h3>
               {pnl.map((r) => (
                 <div key={r.label} className={`flex justify-between text-xs py-1 border-b border-border/50 ${r.strong ? "font-heading font-semibold" : ""}`}>
-                  <span className={r.strong ? "" : "text-muted-foreground"}>{r.label}</span>
+                  <span className={r.strong ? "" : "text-muted-foreground"}>{trPT(r.label)}</span>
                   <span>{money(r.value)}</span>
                 </div>
               ))}
             </div>
             <div className="space-y-1">
-              <h3 className="font-heading font-semibold text-xs">Caja (saldo inicial → saldo final)</h3>
+              <h3 className="font-heading font-semibold text-xs">{trPT("Caja (saldo inicial → saldo final)")}</h3>
               {cash.map((r) => (
                 <div key={r.label} className={`flex justify-between text-xs py-1 border-b border-border/50 ${(r as any).strong ? "font-heading font-semibold" : ""}`}>
-                  <span className={(r as any).strong ? "" : "text-muted-foreground"}>{r.label}</span>
+                  <span className={(r as any).strong ? "" : "text-muted-foreground"}>{trPT(r.label)}</span>
                   <span>{money(r.value)}</span>
                 </div>
               ))}
@@ -234,7 +235,7 @@ export function DailyFinancialSummary() {
 
           {data.bank_accounts.length > 0 && (
             <div className="space-y-1">
-              <h3 className="font-heading font-semibold text-xs">Saldos por cuenta bancaria / medio digital</h3>
+              <h3 className="font-heading font-semibold text-xs">{trPT("Saldos por cuenta bancaria / medio digital")}</h3>
               {data.bank_accounts.map((b) => (
                 <div key={b.id} className="flex justify-between text-xs py-1 border-b border-border/50">
                   <span className="text-muted-foreground">{b.name}{b.bank_name ? ` · ${b.bank_name}` : ""} ({b.currency})</span>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -35,8 +36,8 @@ export function ActivityTimeline({ entityType, entityId }: Props) {
       });
   }, [entityType, entityId]);
 
-  if (loading) return <p className="text-xs text-muted-foreground">Cargando historial...</p>;
-  if (activities.length === 0) return <p className="text-xs text-muted-foreground">Sin actividad registrada</p>;
+  if (loading) return <p className="text-xs text-muted-foreground">{trPT("Cargando historial...")}</p>;
+  if (activities.length === 0) return <p className="text-xs text-muted-foreground">{trPT("Sin actividad registrada")}</p>;
 
   return (
     <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -47,7 +48,7 @@ export function ActivityTimeline({ entityType, entityId }: Props) {
           </div>
           <div>
             <p className="text-xs font-medium">{a.action}</p>
-            {a.description && <p className="text-[10px] text-muted-foreground">{a.description}</p>}
+            {a.description && <p className="text-[10px] text-muted-foreground">{trPT(a.description)}</p>}
             <p className="text-[10px] text-muted-foreground/60">
               {format(new Date(a.created_at), "dd MMM yyyy HH:mm", { locale: es })}
             </p>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -24,21 +25,21 @@ export default function Decisions() {
 
   const setStatus = async (id: string, status: "approved" | "rejected" | "executed" | "pending" | "failed") => {
     const { error } = await supabase.from("business_decisions").update({ status }).eq("id", id);
-    if (error) toast.error(error.message); else { toast.success("Decisión actualizada"); load(); }
+    if (error) toast.error(error.message); else { toast.success(trPT("Decisión actualizada")); load(); }
   };
 
   return (
     <AppLayout title={t("nav.items.decisions")}>
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Recomendaciones generadas por agentes. Aprueba, rechaza o revisa.</p>
-        {items.length === 0 && <Card><CardContent className="py-12 text-center text-sm text-muted-foreground"><Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />Sin decisiones aún.</CardContent></Card>}
+        <p className="text-sm text-muted-foreground">{trPT("Recomendaciones generadas por agentes. Aprueba, rechaza o revisa.")}</p>
+        {items.length === 0 && <Card><CardContent className="py-12 text-center text-sm text-muted-foreground"><Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />{trPT("Sin decisiones aún.")}</CardContent></Card>}
         {items.map((d) => {
           const rec = d.recommendation as any;
           return (
             <Card key={d.id} className="border-border/50">
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
-                  <CardTitle className="text-base">{d.title}</CardTitle>
+                  <CardTitle className="text-base">{trPT(d.title)}</CardTitle>
                   <Badge variant={d.status === "pending" ? "secondary" : d.status === "executed" || d.status === "approved" ? "default" : "destructive"}>{d.status}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(d.created_at), { locale: es, addSuffix: true })}</p>
@@ -52,7 +53,7 @@ export default function Decisions() {
                     <p className="text-xs font-semibold text-muted-foreground">Recomendaciones</p>
                     {rec.recommendations.map((r: any, k: number) => (
                       <div key={k} className="p-3 rounded-lg border border-border/50 bg-card/40">
-                        <div className="flex items-center gap-2 mb-1"><Badge className="text-[9px]">{r.priority}</Badge><p className="text-sm font-medium">{r.title}</p></div>
+                        <div className="flex items-center gap-2 mb-1"><Badge className="text-[9px]">{r.priority}</Badge><p className="text-sm font-medium">{trPT(r.title)}</p></div>
                         <p className="text-xs text-muted-foreground">{r.rationale}</p>
                       </div>
                     ))}

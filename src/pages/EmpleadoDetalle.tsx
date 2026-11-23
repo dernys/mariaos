@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -54,7 +55,7 @@ export default function EmpleadoDetalle() {
       hours_worked: hours, base_salary: base, net_pay: base, status: "draft",
     });
     if (insErr) { toast({ title: "Error", description: insErr.message, variant: "destructive" }); return; }
-    toast({ title: "Nómina generada", description: `Horas: ${hours} · Base: $${base}` });
+    toast({ title: trPT("Nómina generada"), description: `Horas: ${hours} · Base: $${base}` });
     fetchAll();
   };
 
@@ -70,7 +71,7 @@ export default function EmpleadoDetalle() {
         <DetailHeader
           icon={UserCheck}
           title={e.name}
-          subtitle={e.position || "Empleado"}
+          subtitle={e.position || trPT("Empleado")}
           backTo="/empleados"
           badges={[{ label: e.is_active ? "Activo" : "Inactivo", variant: e.is_active ? "default" : "secondary" }]}
           kpis={[
@@ -84,9 +85,9 @@ export default function EmpleadoDetalle() {
         <Tabs defaultValue="resumen">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="resumen">Resumen</TabsTrigger>
-            <TabsTrigger value="shifts">Turnos ({shifts.length})</TabsTrigger>
+            <TabsTrigger value="shifts">{trPT("Turnos (")}{shifts.length})</TabsTrigger>
             <TabsTrigger value="attendance">Asistencia</TabsTrigger>
-            <TabsTrigger value="payroll">Nómina</TabsTrigger>
+            <TabsTrigger value="payroll">{trPT("Nómina")}</TabsTrigger>
             <TabsTrigger value="advances">Adelantos</TabsTrigger>
             <TabsTrigger value="activity">Actividad</TabsTrigger>
           </TabsList>
@@ -95,8 +96,8 @@ export default function EmpleadoDetalle() {
             <div className="bg-card rounded-xl border p-4 space-y-2 text-sm">
               {e.phone && <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" />{e.phone}</div>}
               {e.email && <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" />{e.email}</div>}
-              <div className="flex items-center gap-2"><Briefcase className="h-4 w-4 text-muted-foreground" />Salario: ${Number(e.salary || 0).toLocaleString()}</div>
-              {e.hire_date && <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" />Contratación: {e.hire_date}</div>}
+              <div className="flex items-center gap-2"><Briefcase className="h-4 w-4 text-muted-foreground" />{trPT("Salario: $")}{Number(e.salary || 0).toLocaleString()}</div>
+              {e.hire_date && <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" />{trPT("Contratación:")} {e.hire_date}</div>}
               {e.notes && <p className="text-xs text-muted-foreground italic mt-2">{e.notes}</p>}
             </div>
           </TabsContent>
@@ -123,7 +124,7 @@ export default function EmpleadoDetalle() {
                       <TableCell><Badge variant={s.status === "open" ? "default" : "secondary"} className="text-[10px]">{s.status}</Badge></TableCell>
                     </TableRow>
                   ))}
-                  {shifts.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Sin turnos</TableCell></TableRow>}
+                  {shifts.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin turnos")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -147,7 +148,7 @@ export default function EmpleadoDetalle() {
                       <TableCell className="text-xs text-muted-foreground">{a.notes || "—"}</TableCell>
                     </TableRow>
                   ))}
-                  {attendance.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">Sin asistencia registrada</TableCell></TableRow>}
+                  {attendance.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin asistencia registrada")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -157,7 +158,7 @@ export default function EmpleadoDetalle() {
             <div className="bg-card rounded-xl border p-3 flex flex-wrap items-end gap-2">
               <div><Label className="text-xs">Inicio</Label><Input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} /></div>
               <div><Label className="text-xs">Fin</Label><Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} /></div>
-              <Button size="sm" onClick={generatePayroll} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-3.5 w-3.5" />Generar nómina</Button>
+              <Button size="sm" onClick={generatePayroll} className="gap-1 gradient-brand text-primary-foreground"><Plus className="h-3.5 w-3.5" />{trPT("Generar nómina")}</Button>
             </div>
             <div className="bg-card rounded-xl border overflow-hidden">
               <Table>
@@ -178,7 +179,7 @@ export default function EmpleadoDetalle() {
                       <TableCell><Badge variant="outline" className="text-[10px]">{p.status}</Badge></TableCell>
                     </TableRow>
                   ))}
-                  {payroll.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin nóminas generadas</TableCell></TableRow>}
+                  {payroll.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin nóminas generadas")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -190,7 +191,7 @@ export default function EmpleadoDetalle() {
                 <TableHeader><TableRow>
                   <TableHead className="text-xs">Fecha</TableHead>
                   <TableHead className="text-xs">Tipo</TableHead>
-                  <TableHead className="text-xs">Método</TableHead>
+                  <TableHead className="text-xs">{trPT("Método")}</TableHead>
                   <TableHead className="text-xs">Notas</TableHead>
                   <TableHead className="text-xs text-right">Monto</TableHead>
                 </TableRow></TableHeader>
@@ -198,13 +199,13 @@ export default function EmpleadoDetalle() {
                   {advances.map((m) => (
                     <TableRow key={m.id}>
                       <TableCell className="text-xs">{format(new Date(m.created_at), "dd/MM/yy HH:mm")}</TableCell>
-                      <TableCell><Badge variant="outline" className="text-[10px]">{m.direction === "in" ? "Cobro" : "Adelanto"}</Badge></TableCell>
+                      <TableCell><Badge variant="outline" className="text-[10px]">{m.direction === "in" ? trPT("Cobro") : trPT("Adelanto")}</Badge></TableCell>
                       <TableCell className="text-xs capitalize">{m.method}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{m.notes || "—"}</TableCell>
                       <TableCell className="text-xs text-right font-bold">${Number(m.amount_in_base).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
-                  {advances.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin movimientos</TableCell></TableRow>}
+                  {advances.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin movimientos")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>

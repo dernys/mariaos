@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -96,7 +97,7 @@ export const RiderRecommendationDialog = ({ orderId, onOpenChange, onAssigned, r
         });
     setAssigning(null);
     if (error) {
-      toast({ title: "No se pudo asignar", description: error.message, variant: "destructive" });
+      toast({ title: trPT("No se pudo asignar"), description: error.message, variant: "destructive" });
       return;
     }
     toast({
@@ -113,11 +114,10 @@ export const RiderRecommendationDialog = ({ orderId, onOpenChange, onAssigned, r
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Route className="h-5 w-5 text-primary" /> Repartidores recomendados
+            <Route className="h-5 w-5 text-primary" /> {trPT("Repartidores recomendados")}
           </DialogTitle>
           <DialogDescription>
-            Sólo se consideran repartidores aprobados, disponibles y con capacidad. La puntuación combina
-            proximidad, carga actual, experiencia, valoración y puntualidad.
+            {trPT("Sólo se consideran repartidores aprobados, disponibles y con capacidad. La puntuación combina proximidad, carga actual, experiencia, valoración y puntualidad.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -128,7 +128,7 @@ export const RiderRecommendationDialog = ({ orderId, onOpenChange, onAssigned, r
         ) : recs.length === 0 ? (
           <div className="py-10 text-center text-sm text-muted-foreground">
             <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            No hay repartidores aprobados y disponibles en este momento.
+            {trPT("No hay repartidores aprobados y disponibles en este momento.")}
           </div>
         ) : (
           <div className="space-y-3">
@@ -152,7 +152,7 @@ export const RiderRecommendationDialog = ({ orderId, onOpenChange, onAssigned, r
                     </div>
                   </div>
                   <Badge className={`text-[10px] ${compatColor(r.score)}`}>
-                    Compatibilidad: {compat(r.score)} · {Number(r.score).toFixed(0)}
+                    {trPT("Compatibilidad:")} {compat(r.score)} · {Number(r.score).toFixed(0)}
                   </Badge>
                 </div>
 
@@ -186,7 +186,7 @@ export const RiderRecommendationDialog = ({ orderId, onOpenChange, onAssigned, r
                     {assigning === r.rider_profile_id ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      "Solicitar entrega"
+                      trPT("Solicitar entrega")
                     )}
                   </Button>
                 </div>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState, useCallback } from "react";
@@ -90,11 +91,11 @@ export default function TurnoDetalle() {
   const submitPay = async () => {
     if (!paySale) return;
     const amt = parseFloat(payAmount);
-    if (!amt || amt <= 0) { toast({ title: "Monto inválido", variant: "destructive" }); return; }
+    if (!amt || amt <= 0) { toast({ title: trPT("Monto inválido"), variant: "destructive" }); return; }
     const partyType = paySale.customer_id ? "customer" : paySale.employee_id ? "employee" : null;
     const partyId = paySale.customer_id || paySale.employee_id;
     if (!partyType || !partyId) {
-      toast({ title: "Sin contraparte", description: "La venta no tiene cliente ni empleado para registrar el pago.", variant: "destructive" });
+      toast({ title: trPT("Sin contraparte"), description: trPT("La venta no tiene cliente ni empleado para registrar el pago."), variant: "destructive" });
       return;
     }
     setPaying(true);
@@ -111,7 +112,7 @@ export default function TurnoDetalle() {
     });
     setPaying(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Pago registrado", description: `$${amt.toFixed(2)} aplicado a la venta` });
+    toast({ title: trPT("Pago registrado"), description: `$${amt.toFixed(2)} aplicado a la venta` });
     setPaySale(null);
     fetchAll();
   };
@@ -119,7 +120,7 @@ export default function TurnoDetalle() {
   const submitCancel = async () => {
     if (!cancelSale) return;
     if (cancelReason.trim().length < 3) {
-      toast({ title: "Motivo requerido", description: "Indica el motivo de la cancelación.", variant: "destructive" });
+      toast({ title: trPT("Motivo requerido"), description: trPT("Indica el motivo de la cancelación."), variant: "destructive" });
       return;
     }
     setCancelling(true);
@@ -129,7 +130,7 @@ export default function TurnoDetalle() {
     });
     setCancelling(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Venta cancelada", description: "Stock revertido y registro conservado en el historial." });
+    toast({ title: trPT("Venta cancelada"), description: trPT("Stock revertido y registro conservado en el historial.") });
     setCancelSale(null);
     setCancelReason("");
     fetchAll();
@@ -168,8 +169,8 @@ export default function TurnoDetalle() {
 
         <Tabs defaultValue="caja">
           <TabsList>
-            <TabsTrigger value="caja">Caja y flujo</TabsTrigger>
-            <TabsTrigger value="ventas">Ventas ({sales.length})</TabsTrigger>
+            <TabsTrigger value="caja">{trPT("Caja y flujo")}</TabsTrigger>
+            <TabsTrigger value="ventas">{trPT("Ventas (")}{sales.length})</TabsTrigger>
             <TabsTrigger value="resumen">Arqueo</TabsTrigger>
           </TabsList>
 
@@ -196,7 +197,7 @@ export default function TurnoDetalle() {
               ))}
               {shift.z_journal_entry_id && (
                 <div className="bg-success/10 border border-success/20 rounded-lg p-3">
-                  <p className="text-[10px] text-muted-foreground">Asiento de descuadre</p>
+                  <p className="text-[10px] text-muted-foreground">{trPT("Asiento de descuadre")}</p>
                   <p className="font-heading font-bold mt-0.5 text-success">{String(shift.z_journal_entry_id).slice(0, 8)}</p>
                 </div>
               )}
@@ -247,12 +248,12 @@ export default function TurnoDetalle() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center justify-end gap-1">
-                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Ver detalle"
+                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title={trPT("Ver detalle")}
                                 onClick={() => nav(`/ventas/${s.id}`)}>
                                 <Eye className="h-3.5 w-3.5" />
                               </Button>
                               {!isCancelled && pending > 0.01 && hasParty && (
-                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-success" title="Cobrar saldo"
+                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-success" title={trPT("Cobrar saldo")}
                                   onClick={() => openPay(s)}>
                                   <DollarSign className="h-3.5 w-3.5" />
                                 </Button>
@@ -264,7 +265,7 @@ export default function TurnoDetalle() {
                                 </Button>
                               )}
                               {!isCancelled && (
-                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" title="Cancelar venta"
+                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" title={trPT("Cancelar venta")}
                                   onClick={() => { setCancelSale(s); setCancelReason(""); }}>
                                   <Ban className="h-3.5 w-3.5" />
                                 </Button>
@@ -275,7 +276,7 @@ export default function TurnoDetalle() {
                       );
                     })}
                     {sales.length === 0 && (
-                      <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin ventas en este turno</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin ventas en este turno")}</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -292,9 +293,9 @@ export default function TurnoDetalle() {
       <Dialog open={!!paySale} onOpenChange={(o) => !o && setPaySale(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Cobrar saldo</DialogTitle>
+            <DialogTitle>{trPT("Cobrar saldo")}</DialogTitle>
             <DialogDescription>
-              Ticket {paySale?.ticket_number || paySale?.id.slice(0, 8)} · Saldo pendiente ${(Number(paySale?.total || 0) - Number(paySale?.amount_paid || 0)).toFixed(2)}
+              Ticket {paySale?.ticket_number || paySale?.id.slice(0, 8)} {trPT("· Saldo pendiente $")}{(Number(paySale?.total || 0) - Number(paySale?.amount_paid || 0)).toFixed(2)}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -306,7 +307,7 @@ export default function TurnoDetalle() {
               </div>
             </div>
             <div>
-              <Label className="text-xs">Método</Label>
+              <Label className="text-xs">{trPT("Método")}</Label>
               <Select value={payMethod} onValueChange={setPayMethod}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -321,7 +322,7 @@ export default function TurnoDetalle() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaySale(null)}>Cancelar</Button>
             <Button onClick={submitPay} disabled={paying} className="gradient-brand text-primary-foreground">
-              {paying ? "Procesando..." : "Registrar pago"}
+              {paying ? "Procesando..." : trPT("Registrar pago")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -331,24 +332,23 @@ export default function TurnoDetalle() {
       <Dialog open={!!cancelSale} onOpenChange={(o) => !o && setCancelSale(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Ban className="h-5 w-5 text-destructive" /> Cancelar venta</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><Ban className="h-5 w-5 text-destructive" /> {trPT("Cancelar venta")}</DialogTitle>
             <DialogDescription>
-              Ticket {cancelSale?.ticket_number || cancelSale?.id.slice(0, 8)}. Se revertirá el stock vendido y el saldo pendiente.
-              La venta queda en el historial como <b>cancelada</b>.
+              Ticket {cancelSale?.ticket_number || cancelSale?.id.slice(0, 8)}{trPT(". Se revertirá el stock vendido y el saldo pendiente. La venta queda en el historial como")} <b>cancelada</b>.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label className="text-xs">Motivo de cancelación *</Label>
+              <Label className="text-xs">{trPT("Motivo de cancelación *")}</Label>
               <Textarea value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} rows={3}
-                placeholder="Ej. Error del cajero, cliente desistió, productos equivocados..." />
-              <p className="text-[10px] text-muted-foreground mt-1">Mínimo 3 caracteres. Quedará registrado en la actividad.</p>
+                placeholder={trPT("Ej. Error del cajero, cliente desistió, productos equivocados...")} />
+              <p className="text-[10px] text-muted-foreground mt-1">{trPT("Mínimo 3 caracteres. Quedará registrado en la actividad.")}</p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCancelSale(null)}>No cancelar</Button>
+            <Button variant="outline" onClick={() => setCancelSale(null)}>{trPT("No cancelar")}</Button>
             <Button variant="destructive" onClick={submitCancel} disabled={cancelling}>
-              {cancelling ? "Cancelando..." : "Confirmar cancelación"}
+              {cancelling ? "Cancelando..." : trPT("Confirmar cancelación")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -22,6 +22,27 @@
       "when": 1795460344217,
       "tag": "0002_brazil_fix_auto_mappings",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795461110404,
+      "tag": "0003_piracicaba_demo_businesses",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795461216940,
+      "tag": "0004_security_tenant_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795461496226,
+      "tag": "0005_tenants_public_country",
+      "breakpoints": true
     }
   ]
 }

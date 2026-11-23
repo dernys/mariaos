@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -89,16 +90,16 @@ export default function Developers() {
     <AppLayout title={t("nav.items.developers")}>
       <Tabs defaultValue="keys" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="keys">API Keys</TabsTrigger>
+          <TabsTrigger value="keys">{trPT("API Keys")}</TabsTrigger>
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
-          <TabsTrigger value="docs">Documentación</TabsTrigger>
+          <TabsTrigger value="docs">{trPT("Documentación")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="keys" className="space-y-4">
           <Card>
-            <CardHeader><CardTitle>Nueva API Key</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{trPT("Nueva API Key")}</CardTitle></CardHeader>
             <CardContent className="flex gap-2">
-              <Input placeholder="Nombre (ej: integración Zapier)" value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} />
+              <Input placeholder={trPT("Nombre (ej: integración Zapier)")} value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} />
               <Button onClick={createKey}><Plus className="h-4 w-4 mr-1" />Generar</Button>
             </CardContent>
           </Card>
@@ -106,7 +107,7 @@ export default function Developers() {
           {newSecret && (
             <Card className="border-warning bg-warning/10">
               <CardContent className="pt-4 space-y-2">
-                <p className="text-sm font-semibold">⚠️ Copia esta clave ahora. No volverá a mostrarse.</p>
+                <p className="text-sm font-semibold">{trPT("⚠️ Copia esta clave ahora. No volverá a mostrarse.")}</p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 text-xs bg-background p-2 rounded break-all">{newSecret}</code>
                   <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(newSecret); toast.success("Copiada"); }}>
@@ -119,17 +120,17 @@ export default function Developers() {
           )}
 
           <Card>
-            <CardHeader><CardTitle>Claves activas</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{trPT("Claves activas")}</CardTitle></CardHeader>
             <CardContent className="space-y-2">
-              {keys.length === 0 && <p className="text-sm text-muted-foreground">Sin claves todavía.</p>}
+              {keys.length === 0 && <p className="text-sm text-muted-foreground">{trPT("Sin claves todavía.")}</p>}
               {keys.map((k) => (
                 <div key={k.id} className="flex items-center justify-between p-2 border rounded">
                   <div>
                     <div className="font-medium text-sm">{k.name}</div>
-                    <div className="text-xs text-muted-foreground">{k.key_prefix}… · {k.scopes?.join(", ")} · {k.last_used_at ? `usada ${new Date(k.last_used_at).toLocaleString()}` : "sin uso"}</div>
+                    <div className="text-xs text-muted-foreground">{k.key_prefix}… · {k.scopes?.join(", ")} · {k.last_used_at ? `usada ${new Date(k.last_used_at).toLocaleString()}` : trPT("sin uso")}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={k.is_active ? "default" : "outline"}>{k.is_active ? "Activa" : "Revocada"}</Badge>
+                    <Badge variant={k.is_active ? "default" : "outline"}>{k.is_active ? trPT("Activa") : trPT("Revocada")}</Badge>
                     {k.is_active && <Button size="sm" variant="ghost" onClick={() => revokeKey(k.id)}><Trash2 className="h-4 w-4" /></Button>}
                   </div>
                 </div>
@@ -140,11 +141,11 @@ export default function Developers() {
 
         <TabsContent value="webhooks" className="space-y-4">
           <Card>
-            <CardHeader><CardTitle>Nuevo webhook</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{trPT("Nuevo webhook")}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div><Label>Nombre</Label><Input value={whName} onChange={(e) => setWhName(e.target.value)} /></div>
-                <div><Label>URL</Label><Input placeholder="https://tu-servicio/webhook" value={whUrl} onChange={(e) => setWhUrl(e.target.value)} /></div>
+                <div><Label>URL</Label><Input placeholder={trPT("https://tu-servicio/webhook")} value={whUrl} onChange={(e) => setWhUrl(e.target.value)} /></div>
               </div>
               <div>
                 <Label className="mb-2 block">Eventos</Label>
@@ -159,14 +160,14 @@ export default function Developers() {
                   ))}
                 </div>
               </div>
-              <Button onClick={createWebhook}><Plus className="h-4 w-4 mr-1" />Crear webhook</Button>
+              <Button onClick={createWebhook}><Plus className="h-4 w-4 mr-1" />{trPT("Crear webhook")}</Button>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Webhooks activos</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{trPT("Webhooks activos")}</CardTitle></CardHeader>
             <CardContent className="space-y-2">
-              {webhooks.length === 0 && <p className="text-sm text-muted-foreground">Sin webhooks.</p>}
+              {webhooks.length === 0 && <p className="text-sm text-muted-foreground">{trPT("Sin webhooks.")}</p>}
               {webhooks.map((w) => (
                 <div key={w.id} className="flex items-start justify-between p-2 border rounded">
                   <div className="flex-1 min-w-0">
@@ -175,7 +176,7 @@ export default function Developers() {
                     <div className="text-xs mt-1 flex flex-wrap gap-1">
                       {w.events?.map((e: string) => <Badge key={e} variant="secondary" className="text-xs">{e}</Badge>)}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">secret: <code>{w.secret.slice(0, 12)}…</code> · fallos: {w.failure_count}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{trPT("secret:")} <code>{w.secret.slice(0, 12)}…</code> {trPT("· fallos:")} {w.failure_count}</div>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => deleteWebhook(w.id)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
@@ -186,28 +187,28 @@ export default function Developers() {
 
         <TabsContent value="docs">
           <Card>
-            <CardHeader><CardTitle>API REST v1</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{trPT("API REST v1")}</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div>
-                <p className="font-medium">Base URL</p>
+                <p className="font-medium">{trPT("Base URL")}</p>
                 <code className="text-xs bg-muted p-2 rounded block break-all">{apiUrl}</code>
               </div>
               <div>
-                <p className="font-medium">Autenticación</p>
-                <p className="text-muted-foreground">Cabecera <code>x-api-key: TU_CLAVE</code></p>
+                <p className="font-medium">{trPT("Autenticación")}</p>
+                <p className="text-muted-foreground">Cabecera <code>{trPT("x-api-key: TU_CLAVE")}</code></p>
               </div>
               <div>
                 <p className="font-medium">Endpoints</p>
                 <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                  <li><code>GET /products?limit=100</code></li>
-                  <li><code>GET /sales?limit=50&from=2026-01-01</code></li>
-                  <li><code>GET /stock</code></li>
-                  <li><code>GET /customers</code></li>
+                  <li><code>{trPT("GET /products?limit=100")}</code></li>
+                  <li><code>{trPT("GET /sales?limit=50&from=2026-01-01")}</code></li>
+                  <li><code>{trPT("GET /stock")}</code></li>
+                  <li><code>{trPT("GET /customers")}</code></li>
                 </ul>
               </div>
               <div>
-                <p className="font-medium">Firma de webhooks</p>
-                <p className="text-muted-foreground">Cabecera <code>X-MarIA-Signature</code> = HMAC-SHA256(secret, body). Valida en tu servidor antes de procesar.</p>
+                <p className="font-medium">{trPT("Firma de webhooks")}</p>
+                <p className="text-muted-foreground">Cabecera <code>X-MarIA-Signature</code> {trPT("= HMAC-SHA256(secret, body). Valida en tu servidor antes de procesar.")}</p>
               </div>
             </CardContent>
           </Card>

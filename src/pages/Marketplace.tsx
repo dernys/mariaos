@@ -1,3 +1,5 @@
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +30,7 @@ import {
   defaultFilterState,
   distanceKm,
   formatPrice,
+  currencyForCountry,
 } from "@/components/marketplace/types";
 import { Seo } from "@/components/Seo";
 import type {
@@ -288,8 +291,8 @@ const Marketplace = () => {
   return (
     <div className="min-h-screen bg-background">
       <Seo
-        title="Marketplace — compra en negocios locales"
-        description="Explora productos de bares, restaurantes y tiendas locales: busca por categoría, compara precios y pide con entrega a domicilio o recogida."
+        title={trPT("Marketplace — compra en negocios locales")}
+        description={trPT("Explora productos de bares, restaurantes y tiendas locales: busca por categoría, compara precios y pide con entrega a domicilio o recogida.")}
         path="/marketplace"
         jsonLd={{
           "@context": "https://schema.org",
@@ -319,6 +322,7 @@ const Marketplace = () => {
           />
 
           <div className="flex items-center gap-2 shrink-0">
+            <div className="shrink-0"><span className="sm:hidden"><LanguageSwitcher collapsed variant="surface" /></span><span className="hidden sm:block"><LanguageSwitcher variant="surface" /></span></div>
             {!user && (
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/marketplace/acceso")} className="rounded-full text-xs hidden sm:inline-flex">
@@ -531,7 +535,7 @@ const Marketplace = () => {
                     className="h-8 w-8 rounded-full"
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={currentPage <= 1}
-                    aria-label="Página anterior"
+                    aria-label={trPT("Página anterior")}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -557,14 +561,14 @@ const Marketplace = () => {
                     className="h-8 w-8 rounded-full"
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage >= totalPages}
-                    aria-label="Página siguiente"
+                    aria-label={trPT("Página siguiente")}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">Por página</span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">{trPT("Por página")}</span>
                   <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
                     <SelectTrigger className="h-8 w-[72px] rounded-full text-xs">
                       <SelectValue />
@@ -594,7 +598,7 @@ const Marketplace = () => {
             className="w-full rounded-full shadow-xl h-12 text-sm"
           >
             <ShoppingCart className="h-5 w-5 mr-2" />
-            {t("marketplace.viewCart")} ({cartCount}) · {formatPrice(cartTotal)}
+            {t("marketplace.viewCart")} ({cartCount}) · {formatPrice(cartTotal, currencyForCountry(tenantsMap[cart[0]?.tenant_id]?.country_code))}
           </Button>
         </motion.div>
       )}

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -54,9 +55,9 @@ export default function InventoryIntelligence() {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h2 className="font-heading text-lg font-semibold flex items-center gap-2">
-              <Brain className="h-5 w-5 text-primary" /> Predicciones y análisis
+              <Brain className="h-5 w-5 text-primary" /> {trPT("Predicciones y análisis")}
             </h2>
-            <p className="text-xs text-muted-foreground">Predicción de demanda, ABC, anomalías y rebalanceo entre ubicaciones</p>
+            <p className="text-xs text-muted-foreground">{trPT("Predicción de demanda, ABC, anomalías y rebalanceo entre ubicaciones")}</p>
           </div>
           <Button onClick={run} disabled={loading} size="sm" className="gap-1">
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
@@ -75,17 +76,17 @@ export default function InventoryIntelligence() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <KPI icon={<Package className="h-4 w-4" />} label="Productos" value={data?.counts.products ?? 0} />
-          <KPI icon={<AlertTriangle className="h-4 w-4 text-warning" />} label="Riesgo quiebre" value={data?.counts.stockout_risk ?? 0} variant="warn" />
-          <KPI icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} label="Baja rotación" value={data?.counts.slow_movers ?? 0} />
-          <KPI icon={<ArrowRightLeft className="h-4 w-4 text-primary" />} label="Sugerencias rebalanceo" value={data?.counts.rebalance ?? 0} />
+          <KPI icon={<AlertTriangle className="h-4 w-4 text-warning" />} label={trPT("Riesgo quiebre")} value={data?.counts.stockout_risk ?? 0} variant="warn" />
+          <KPI icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} label={trPT("Baja rotación")} value={data?.counts.slow_movers ?? 0} />
+          <KPI icon={<ArrowRightLeft className="h-4 w-4 text-primary" />} label={trPT("Sugerencias rebalanceo")} value={data?.counts.rebalance ?? 0} />
         </div>
 
         <Tabs defaultValue="forecast">
           <TabsList className="grid grid-cols-5 w-full max-w-3xl">
-            <TabsTrigger value="forecast" className="text-xs">Pronóstico</TabsTrigger>
-            <TabsTrigger value="risk" className="text-xs">Riesgo quiebre</TabsTrigger>
-            <TabsTrigger value="abc" className="text-xs">Análisis ABC</TabsTrigger>
-            <TabsTrigger value="slow" className="text-xs">Baja rotación</TabsTrigger>
+            <TabsTrigger value="forecast" className="text-xs">{trPT("Pronóstico")}</TabsTrigger>
+            <TabsTrigger value="risk" className="text-xs">{trPT("Riesgo quiebre")}</TabsTrigger>
+            <TabsTrigger value="abc" className="text-xs">{trPT("Análisis ABC")}</TabsTrigger>
+            <TabsTrigger value="slow" className="text-xs">{trPT("Baja rotación")}</TabsTrigger>
             <TabsTrigger value="rebalance" className="text-xs">Rebalanceo</TabsTrigger>
           </TabsList>
 
@@ -98,7 +99,7 @@ export default function InventoryIntelligence() {
             <DataList rows={(data?.stockout_risk || []).map((p) => ({
               title: p.name,
               subtitle: `Stock: ${p.stock} · Demanda diaria: ${p.daily_demand.toFixed(2)}`,
-              right: <Badge variant="destructive" className="text-[10px]">{p.days_of_cover.toFixed(1)} días</Badge>,
+              right: <Badge variant="destructive" className="text-[10px]">{p.days_of_cover.toFixed(1)} {trPT("días")}</Badge>,
             }))} empty="Sin productos en riesgo" />
           </TabsContent>
 
@@ -114,7 +115,7 @@ export default function InventoryIntelligence() {
             <DataList rows={(data?.slow_movers || []).map((p) => ({
               title: p.name,
               subtitle: `Sin ventas en 60 días`,
-              right: <Badge variant="outline" className="text-[10px]">{p.stock} en stock</Badge>,
+              right: <Badge variant="outline" className="text-[10px]">{p.stock} {trPT("en stock")}</Badge>,
             }))} empty="Todo rotando bien" />
           </TabsContent>
 
@@ -147,8 +148,8 @@ function DataList({ rows, empty }: { rows: { title: string; subtitle: string; ri
       {rows.map((r, i) => (
         <div key={i} className="flex items-center justify-between p-3 hover:bg-muted/30">
           <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{r.title}</p>
-            <p className="text-[11px] text-muted-foreground truncate">{r.subtitle}</p>
+            <p className="text-sm font-medium truncate">{trPT(r.title)}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{trPT(r.subtitle)}</p>
           </div>
           <div className="shrink-0">{r.right}</div>
         </div>

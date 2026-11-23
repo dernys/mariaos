@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -109,12 +110,12 @@ export const ProductReviewsSection = ({ productId, tenantId, ratingAvg, reviewsC
         <div className="bg-card border border-border rounded-2xl p-4 space-y-2 text-center">
           <ShieldCheck className="h-6 w-6 text-primary mx-auto" />
           <p className="text-sm font-medium">
-            {user ? "Confirma tu correo para poder comentar" : t("marketplace.reviews.loginRequired")}
+            {user ? trPT("Confirma tu correo para poder comentar") : t("marketplace.reviews.loginRequired")}
           </p>
           <p className="text-xs text-muted-foreground">
             {user
-              ? "Te enviamos un enlace de verificación al registrarte. Actívalo y vuelve a esta página."
-              : "Solo los compradores con cuenta verificada pueden valorar y comentar productos."}
+              ? trPT("Te enviamos un enlace de verificación al registrarte. Actívalo y vuelve a esta página.")
+              : trPT("Solo los compradores con cuenta verificada pueden valorar y comentar productos.")}
           </p>
           {!user && (
             <Button asChild size="sm" className="rounded-full mt-1">
@@ -172,7 +173,7 @@ export const ProductReviewsSection = ({ productId, tenantId, ratingAvg, reviewsC
             <div className="flex items-start justify-between gap-2">
               <div>
                 <RatingStars value={r.rating} size={14} />
-                {r.title && <p className="font-semibold text-sm mt-1">{r.title}</p>}
+                {r.title && <p className="font-semibold text-sm mt-1">{trPT(r.title)}</p>}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground">

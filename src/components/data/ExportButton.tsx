@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { Download, FileSpreadsheet, FileText, FileType } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +30,7 @@ export function ExportButton<T>({ rows, columns, filename, title, disabled }: Pr
           <FileText className="h-4 w-4 mr-2" /> CSV
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportExcel(rows, columns, filename)}>
-          <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel (.xlsx)
+          <FileSpreadsheet className="h-4 w-4 mr-2" /> {trPT("Excel (.xlsx)")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportPdf(rows, columns, filename, title)}>
           <FileType className="h-4 w-4 mr-2" /> PDF

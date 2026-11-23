@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Archive, CheckCircle2, Clock, Copy, Database, Download, HardDrive, History, Loader2, RefreshCw,
@@ -82,7 +83,7 @@ export default function DataCenter() {
       setBackups(b.backups ?? []);
       setHistory(h.operations ?? []);
     } catch (e) {
-      toast({ title: "No se pudo cargar el Data Center", description: (e as Error).message, variant: "destructive" });
+      toast({ title: trPT("No se pudo cargar el Data Center"), description: (e as Error).message, variant: "destructive" });
     }
     setLoading(false);
   }, [tenantId, toast]);
@@ -96,11 +97,11 @@ export default function DataCenter() {
         action: "export", entity: exportEntity, tenant_id: tenantId,
         from: from || undefined, to: to || undefined, format: exportFormat,
       });
-      if (!res.rows?.length) toast({ title: "Sin datos", description: "No hay registros para los filtros seleccionados." });
+      if (!res.rows?.length) toast({ title: trPT("Sin datos"), description: trPT("No hay registros para los filtros seleccionados.") });
       downloadRows(res.rows ?? [], `${exportEntity}-${new Date().toISOString().slice(0, 10)}`, exportFormat);
       load();
     } catch (e) {
-      toast({ title: "Error al exportar", description: (e as Error).message, variant: "destructive" });
+      toast({ title: trPT("Error al exportar"), description: (e as Error).message, variant: "destructive" });
     }
     setBusy(null);
   };
@@ -109,11 +110,11 @@ export default function DataCenter() {
     setBusy("backup");
     try {
       const res = await callDataCenter({ action: "backup_create", tenant_id: tenantId, label: label || undefined });
-      toast({ title: "Copia creada", description: `${res.backup?.record_count ?? 0} registros · ${fmtBytes(res.backup?.size_bytes)}` });
+      toast({ title: trPT("Copia creada"), description: `${res.backup?.record_count ?? 0} registros · ${fmtBytes(res.backup?.size_bytes)}` });
       setLabel("");
       load();
     } catch (e) {
-      toast({ title: "Error al crear la copia", description: (e as Error).message, variant: "destructive" });
+      toast({ title: trPT("Error al crear la copia"), description: (e as Error).message, variant: "destructive" });
     }
     setBusy(null);
   };
@@ -130,11 +131,11 @@ export default function DataCenter() {
           variant: res.valid ? "default" : "destructive",
         });
       }
-      if (action === "backup_restore") toast({ title: "Restauración completada", description: `${res.restored} registros restaurados.` });
-      if (action === "backup_delete") toast({ title: "Copia eliminada" });
+      if (action === "backup_restore") toast({ title: trPT("Restauración completada"), description: `${res.restored} registros restaurados.` });
+      if (action === "backup_delete") toast({ title: trPT("Copia eliminada") });
       load();
     } catch (e) {
-      toast({ title: "Operación fallida", description: (e as Error).message, variant: "destructive" });
+      toast({ title: trPT("Operación fallida"), description: (e as Error).message, variant: "destructive" });
     }
     setBusy(null);
   };
@@ -144,10 +145,10 @@ export default function DataCenter() {
     setBusy("clone");
     try {
       const res = await callDataCenter({ action: "clone", tenant_id: tenantId, target_tenant_id: cloneTarget });
-      toast({ title: "Clonación completada", description: `${res.copied} registros maestros copiados.` });
+      toast({ title: trPT("Clonación completada"), description: `${res.copied} registros maestros copiados.` });
       load();
     } catch (e) {
-      toast({ title: "Error al clonar", description: (e as Error).message, variant: "destructive" });
+      toast({ title: trPT("Error al clonar"), description: (e as Error).message, variant: "destructive" });
     }
     setBusy(null);
   };
@@ -160,21 +161,21 @@ export default function DataCenter() {
   ];
 
   return (
-    <AppLayout title="Data Center">
+    <AppLayout title={trPT("Data Center")}>
     <div className="space-y-6">
       <Seo
-        title="Data Center | MarIA OS"
-        description="Importación masiva, exportación, copias de seguridad y clonación de negocios con trazabilidad completa."
+        title={trPT("Data Center | MarIA OS")}
+        description={trPT("Importación masiva, exportación, copias de seguridad y clonación de negocios con trazabilidad completa.")}
         path="/data-center"
       />
 
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Database className="h-6 w-6 text-primary" /> Data Center
+            <Database className="h-6 w-6 text-primary" /> {trPT("Data Center")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Tus datos de {tenant?.name ?? "el negocio"}: importar, exportar, respaldar y clonar con auditoría completa.
+            {trPT("Tus datos de")} {tenant?.name ?? trPT("el negocio")}{trPT(": importar, exportar, respaldar y clonar con auditoría completa.")}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
@@ -188,7 +189,7 @@ export default function DataCenter() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                  <p className="text-xs text-muted-foreground">{trPT(s.label)}</p>
                   <p className="text-lg font-semibold">{s.value}</p>
                 </div>
                 <s.icon className="h-5 w-5 text-muted-foreground" />
@@ -201,9 +202,9 @@ export default function DataCenter() {
       {!dashboard?.last_backup && !loading && (
         <Alert>
           <ShieldCheck className="h-4 w-4" />
-          <AlertTitle>Aún no tienes copias de seguridad</AlertTitle>
+          <AlertTitle>{trPT("Aún no tienes copias de seguridad")}</AlertTitle>
           <AlertDescription>
-            Crea la primera copia antes de importar datos: te permite volver atrás con un clic.
+            {trPT("Crea la primera copia antes de importar datos: te permite volver atrás con un clic.")}
           </AlertDescription>
         </Alert>
       )}
@@ -221,14 +222,14 @@ export default function DataCenter() {
         <TabsContent value="import" className="space-y-4 mt-4">
           {!canEdit ? (
             <Alert>
-              <AlertTitle>Solo lectura</AlertTitle>
-              <AlertDescription>Tu rol no permite importar datos. Solicita acceso al administrador del negocio.</AlertDescription>
+              <AlertTitle>{trPT("Solo lectura")}</AlertTitle>
+              <AlertDescription>{trPT("Tu rol no permite importar datos. Solicita acceso al administrador del negocio.")}</AlertDescription>
             </Alert>
           ) : (
             <>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => downloadFullTemplate(forms)}>
-                  <Download className="h-4 w-4 mr-2" /> Plantilla del negocio completo
+                  <Download className="h-4 w-4 mr-2" /> {trPT("Plantilla del negocio completo")}
                 </Button>
               </div>
               <DataImportWizard forms={forms} tenantId={tenantId} onDone={load} />
@@ -240,8 +241,8 @@ export default function DataCenter() {
         <TabsContent value="export" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Exportar datos</CardTitle>
-              <CardDescription>Descarga cualquier entidad de tu negocio en Excel, CSV o JSON.</CardDescription>
+              <CardTitle>{trPT("Exportar datos")}</CardTitle>
+              <CardDescription>{trPT("Descarga cualquier entidad de tu negocio en Excel, CSV o JSON.")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -250,8 +251,8 @@ export default function DataCenter() {
                   <Select value={exportEntity} onValueChange={setExportEntity}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {forms.map((f) => <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>)}
-                      {EXPORT_ONLY_ENTITIES.map((e) => <SelectItem key={e.key} value={e.key}>{e.label}</SelectItem>)}
+                      {forms.map((f) => <SelectItem key={f.key} value={f.key}>{trPT(f.label)}</SelectItem>)}
+                      {EXPORT_ONLY_ENTITIES.map((e) => <SelectItem key={e.key} value={e.key}>{trPT(e.label)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -260,7 +261,7 @@ export default function DataCenter() {
                   <Select value={exportFormat} onValueChange={(v) => setExportFormat(v as typeof exportFormat)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="xlsx">Excel (.xlsx)</SelectItem>
+                      <SelectItem value="xlsx">{trPT("Excel (.xlsx)")}</SelectItem>
                       <SelectItem value="csv">CSV</SelectItem>
                       <SelectItem value="json">JSON</SelectItem>
                     </SelectContent>
@@ -288,24 +289,24 @@ export default function DataCenter() {
           {canEdit && (
             <Card>
               <CardHeader>
-                <CardTitle>Nueva copia de seguridad</CardTitle>
-                <CardDescription>Incluye todos los datos maestros del negocio con checksum de integridad.</CardDescription>
+                <CardTitle>{trPT("Nueva copia de seguridad")}</CardTitle>
+                <CardDescription>{trPT("Incluye todos los datos maestros del negocio con checksum de integridad.")}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-wrap items-end gap-3">
                 <div className="space-y-2 flex-1 min-w-[220px]">
-                  <Label>Etiqueta (opcional)</Label>
-                  <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Antes de la migración de precios" />
+                  <Label>{trPT("Etiqueta (opcional)")}</Label>
+                  <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={trPT("Antes de la migración de precios")} />
                 </div>
                 <Button onClick={createBackup} disabled={busy === "backup"}>
                   {busy === "backup" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Archive className="h-4 w-4 mr-2" />}
-                  Crear copia
+                  {trPT("Crear copia")}
                 </Button>
               </CardContent>
             </Card>
           )}
 
           <Card>
-            <CardHeader><CardTitle>Copias disponibles</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{trPT("Copias disponibles")}</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
@@ -314,20 +315,20 @@ export default function DataCenter() {
                       <TableHead>Etiqueta</TableHead>
                       <TableHead>Fecha</TableHead>
                       <TableHead>Registros</TableHead>
-                      <TableHead>Tamaño</TableHead>
+                      <TableHead>{trPT("Tamaño")}</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {backups.length === 0 && (
-                      <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">Todavía no hay copias.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">{trPT("Todavía no hay copias.")}</TableCell></TableRow>
                     )}
                     {backups.map((b) => (
                       <TableRow key={b.id}>
                         <TableCell className="font-medium">
-                          {b.label}
-                          <div className="text-xs text-muted-foreground">{b.kind === "pre_operation" ? "Punto de restauración" : b.scope === "full" ? "Completa" : "Parcial"}</div>
+                          {trPT(b.label)}
+                          <div className="text-xs text-muted-foreground">{b.kind === "pre_operation" ? trPT("Punto de restauración") : b.scope === "full" ? trPT("Completa") : trPT("Parcial")}</div>
                         </TableCell>
                         <TableCell className="text-sm">{fmtDate(b.created_at)}</TableCell>
                         <TableCell>{b.record_count ?? 0}</TableCell>
@@ -367,21 +368,20 @@ export default function DataCenter() {
         <TabsContent value="clone" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Clonar datos maestros</CardTitle>
+              <CardTitle>{trPT("Clonar datos maestros")}</CardTitle>
               <CardDescription>
-                Copia catálogo, categorías, impuestos, unidades, tiendas y almacenes a otro negocio. Nunca se copian ventas,
-                movimientos financieros, turnos ni credenciales.
+                {trPT("Copia catálogo, categorías, impuestos, unidades, tiendas y almacenes a otro negocio. Nunca se copian ventas, movimientos financieros, turnos ni credenciales.")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {!canEdit ? (
-                <Alert><AlertTitle>Solo lectura</AlertTitle><AlertDescription>Tu rol no permite clonar negocios.</AlertDescription></Alert>
+                <Alert><AlertTitle>{trPT("Solo lectura")}</AlertTitle><AlertDescription>{trPT("Tu rol no permite clonar negocios.")}</AlertDescription></Alert>
               ) : (
                 <>
                   <div className="space-y-2 max-w-md">
-                    <Label>Negocio destino</Label>
+                    <Label>{trPT("Negocio destino")}</Label>
                     <Select value={cloneTarget} onValueChange={setCloneTarget}>
-                      <SelectTrigger><SelectValue placeholder="Selecciona el negocio destino" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={trPT("Selecciona el negocio destino")} /></SelectTrigger>
                       <SelectContent>
                         {allTenants.filter((t) => t.id !== tenantId).map((t) => (
                           <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
@@ -391,7 +391,7 @@ export default function DataCenter() {
                   </div>
                   <Button onClick={runClone} disabled={!cloneTarget || busy === "clone"}>
                     {busy === "clone" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Copy className="h-4 w-4 mr-2" />}
-                    Clonar datos maestros
+                    {trPT("Clonar datos maestros")}
                   </Button>
                 </>
               )}
@@ -403,15 +403,15 @@ export default function DataCenter() {
         <TabsContent value="history" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Historial de operaciones</CardTitle>
-              <CardDescription>Cada importación, exportación, copia y restauración queda registrada y auditada.</CardDescription>
+              <CardTitle>{trPT("Historial de operaciones")}</CardTitle>
+              <CardDescription>{trPT("Cada importación, exportación, copia y restauración queda registrada y auditada.")}</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Código</TableHead>
+                      <TableHead>{trPT("Código")}</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Entidad</TableHead>
                       <TableHead>Resultado</TableHead>
@@ -421,7 +421,7 @@ export default function DataCenter() {
                   </TableHeader>
                   <TableBody>
                     {history.length === 0 && (
-                      <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">Sin operaciones registradas.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">{trPT("Sin operaciones registradas.")}</TableCell></TableRow>
                     )}
                     {history.map((o) => (
                       <TableRow key={o.id}>
@@ -454,10 +454,9 @@ export default function DataCenter() {
       <AlertDialog open={!!confirmRestore} onOpenChange={(o) => !o && setConfirmRestore(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Restaurar «{confirmRestore?.label}»?</AlertDialogTitle>
+            <AlertDialogTitle>{trPT("¿Restaurar «")}{trPT(confirmRestore?.label)}»?</AlertDialogTitle>
             <AlertDialogDescription>
-              Los datos actuales se sobrescribirán con el contenido de la copia. Antes de restaurar se guarda
-              automáticamente el estado actual como punto de retorno.
+              {trPT("Los datos actuales se sobrescribirán con el contenido de la copia. Antes de restaurar se guarda automáticamente el estado actual como punto de retorno.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -472,8 +471,8 @@ export default function DataCenter() {
       <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar «{confirmDelete?.label}»?</AlertDialogTitle>
-            <AlertDialogDescription>La copia y su archivo se borrarán de forma permanente.</AlertDialogDescription>
+            <AlertDialogTitle>{trPT("¿Eliminar «")}{trPT(confirmDelete?.label)}»?</AlertDialogTitle>
+            <AlertDialogDescription>{trPT("La copia y su archivo se borrarán de forma permanente.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>

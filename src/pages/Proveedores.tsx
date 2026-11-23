@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -92,18 +93,18 @@ export default function Proveedores() {
   };
 
   const save = async () => {
-    if (!form.name.trim()) { toast({ title: "Nombre requerido", variant: "destructive" }); return; }
+    if (!form.name.trim()) { toast({ title: trPT("Nombre requerido"), variant: "destructive" }); return; }
     const payload = { ...form, name: form.name.trim(), tenant_id: tenantId };
     if (editing) {
       const { error } = await (supabase.from as any)("suppliers").update(payload).eq("id", editing.id);
       if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
       await logActivity({ entity_type: "supplier", entity_id: editing.id, action: "Proveedor actualizado", description: `Se actualizó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Proveedor actualizado" });
+      toast({ title: trPT("Proveedor actualizado") });
     } else {
       const { data, error } = await (supabase.from as any)("suppliers").insert(payload).select("id").single();
       if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
       if (data) await logActivity({ entity_type: "supplier", entity_id: data.id, action: "Proveedor creado", description: `Se creó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Proveedor creado" });
+      toast({ title: trPT("Proveedor creado") });
     }
     setOpen(false); fetchAll();
   };
@@ -126,15 +127,15 @@ export default function Proveedores() {
         <StatRow>
           <MiniStatCard label="Proveedores" value={statRows.length} icon={Truck} tone="primary" />
 
-          <MiniStatCard label="Con saldo" value={withDebt} icon={Wallet} tone={withDebt > 0 ? "warning" : "default"} />
-          <MiniStatCard label="Por pagar" value={`$${totalDebt.toLocaleString()}`} icon={DollarSign} tone={totalDebt > 0 ? "destructive" : "success"} />
+          <MiniStatCard label={trPT("Con saldo")} value={withDebt} icon={Wallet} tone={withDebt > 0 ? "warning" : "default"} />
+          <MiniStatCard label={trPT("Por pagar")} value={`$${totalDebt.toLocaleString()}`} icon={DollarSign} tone={totalDebt > 0 ? "destructive" : "success"} />
           <MiniStatCard label="Productos" value={totalProducts} icon={Package} />
         </StatRow>
 
         <TableToolbar
           search={table.search}
           onSearchChange={table.setSearch}
-          searchPlaceholder="Buscar proveedor, contacto, RFC..."
+          searchPlaceholder={trPT("Buscar proveedor, contacto, RFC...")}
           filters={[
             { key: "debt", label: "Saldo", value: table.filters.debt || "__all__",
               onChange: (v) => table.setFilter("debt", v),
@@ -164,7 +165,7 @@ export default function Proveedores() {
               <TableRow>
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs hidden sm:table-cell">Contacto</TableHead>
-                <TableHead className="text-xs hidden md:table-cell">Teléfono</TableHead>
+                <TableHead className="text-xs hidden md:table-cell">{trPT("Teléfono")}</TableHead>
                 <TableHead className="text-xs hidden lg:table-cell">Email</TableHead>
                 <TableHead className="text-xs text-right">Productos</TableHead>
                 <TableHead className="text-xs text-right">Saldo</TableHead>
@@ -223,18 +224,18 @@ export default function Proveedores() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar Proveedor" : "Nuevo Proveedor"}</DialogTitle>
-            <DialogDescription>Datos del proveedor y contacto comercial</DialogDescription>
+            <DialogTitle>{editing ? trPT("Editar Proveedor") : trPT("Nuevo Proveedor")}</DialogTitle>
+            <DialogDescription>{trPT("Datos del proveedor y contacto comercial")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><Label>{trPT("Nombre *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div><Label>Contacto</Label><Input value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Teléfono</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div><Label>{trPT("Teléfono")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
               <div><Label>Email</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             </div>
-            <div><Label>RFC / NIT</Label><Input value={form.rfc} onChange={(e) => setForm({ ...form, rfc: e.target.value })} /></div>
-            <div><Label>Dirección</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div><Label>{trPT("RFC / NIT")}</Label><Input value={form.rfc} onChange={(e) => setForm({ ...form, rfc: e.target.value })} /></div>
+            <div><Label>{trPT("Dirección")}</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>

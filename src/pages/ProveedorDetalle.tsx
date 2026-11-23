@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -56,7 +57,7 @@ export default function ProveedorDetalle() {
   const updateStatus = async (rowId: string, status: string) => {
     const { error } = await (supabase.from as any)("supplier_products").update({ status }).eq("id", rowId);
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Estado actualizado" }); fetchAll();
+    toast({ title: trPT("Estado actualizado") }); fetchAll();
   };
   useEffect(() => { fetchAll(); }, [id]);
 
@@ -90,17 +91,17 @@ export default function ProveedorDetalle() {
   };
 
   const settle = async () => {
-    if (selected.size === 0) { toast({ title: "Selecciona liquidaciones", variant: "destructive" }); return; }
+    if (selected.size === 0) { toast({ title: trPT("Selecciona liquidaciones"), variant: "destructive" }); return; }
     const { error } = await (supabase.rpc as any)("settle_consignment_lots", {
       p_settlement_ids: Array.from(selected), p_method: "cash", p_notes: "Liquidación manual",
     });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Liquidación registrada" });
+    toast({ title: trPT("Liquidación registrada") });
     setSelected(new Set()); fetchAll();
   };
 
   const openPay = (amount: number, refType: any = null, refId: string | null = null, title = "Pagar a proveedor") => {
-    if (amount <= 0) { toast({ title: "Sin saldo a pagar" }); return; }
+    if (amount <= 0) { toast({ title: trPT("Sin saldo a pagar") }); return; }
     setPayCtx({ amount, refType, refId, title });
     setPayOpen(true);
   };
@@ -133,7 +134,7 @@ export default function ProveedorDetalle() {
         <DetailHeader
           icon={Truck}
           title={s.name}
-          subtitle={s.email || s.phone || "Proveedor"}
+          subtitle={s.email || s.phone || trPT("Proveedor")}
           backTo="/proveedores"
           badges={[{ label: debt > 0 ? `Debemos $${debt.toFixed(2)}` : "Sin deuda", variant: debt > 0 ? "destructive" : "secondary" }]}
           kpis={[
@@ -146,22 +147,22 @@ export default function ProveedorDetalle() {
 
         <div className="flex flex-wrap gap-2">
           <Button size="sm" className="gap-1 gradient-brand text-primary-foreground" disabled={debt <= 0} onClick={() => openPay(debt, null, null, "Pagar saldo total")}>
-            <ArrowUpFromLine className="h-3.5 w-3.5" /> Pagar saldo (${debt.toFixed(2)})
+            <ArrowUpFromLine className="h-3.5 w-3.5" /> {trPT("Pagar saldo ($")}{debt.toFixed(2)})
           </Button>
           <Button size="sm" variant="outline" className="gap-1" onClick={() => nav(`/compras?supplier=${s.id}`)}>
-            <Package className="h-3.5 w-3.5" /> Nueva compra
+            <Package className="h-3.5 w-3.5" /> {trPT("Nueva compra")}
           </Button>
         </div>
 
         <Tabs defaultValue="resumen">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="resumen">Resumen</TabsTrigger>
-            <TabsTrigger value="catalog">Productos ({catalog.length})</TabsTrigger>
-            <TabsTrigger value="trace">Rastreo ({trace.length})</TabsTrigger>
-            <TabsTrigger value="purchases">Compras ({purchases.length})</TabsTrigger>
-            <TabsTrigger value="payables">Por pagar</TabsTrigger>
+            <TabsTrigger value="catalog">{trPT("Productos (")}{catalog.length})</TabsTrigger>
+            <TabsTrigger value="trace">{trPT("Rastreo (")}{trace.length})</TabsTrigger>
+            <TabsTrigger value="purchases">{trPT("Compras (")}{purchases.length})</TabsTrigger>
+            <TabsTrigger value="payables">{trPT("Por pagar")}</TabsTrigger>
             <TabsTrigger value="payments">Pagos</TabsTrigger>
-            <TabsTrigger value="consignment">Consignación ({activeLots.length})</TabsTrigger>
+            <TabsTrigger value="consignment">{trPT("Consignación (")}{activeLots.length})</TabsTrigger>
             <TabsTrigger value="activity">Actividad</TabsTrigger>
           </TabsList>
 
@@ -173,9 +174,9 @@ export default function ProveedorDetalle() {
                   <TableHead className="text-xs">SKU</TableHead>
                   <TableHead className="text-xs text-right">Comprado</TableHead>
                   <TableHead className="text-xs text-right">Recibido</TableHead>
-                  <TableHead className="text-xs text-right">En consig.</TableHead>
+                  <TableHead className="text-xs text-right">{trPT("En consig.")}</TableHead>
                   <TableHead className="text-xs text-right">Vendido</TableHead>
-                  <TableHead className="text-xs text-right">Total invertido</TableHead>
+                  <TableHead className="text-xs text-right">{trPT("Total invertido")}</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {trace.map((t, i) => (
@@ -189,7 +190,7 @@ export default function ProveedorDetalle() {
                       <TableCell className="text-xs text-right font-bold">${t.spent.toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
-                  {trace.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin movimientos</TableCell></TableRow>}
+                  {trace.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin movimientos")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -202,9 +203,9 @@ export default function ProveedorDetalle() {
                   <TableHead className="text-xs">Producto</TableHead>
                   <TableHead className="text-xs">SKU</TableHead>
                   <TableHead className="text-xs text-right">Costo</TableHead>
-                  <TableHead className="text-xs text-right">Mín. orden</TableHead>
+                  <TableHead className="text-xs text-right">{trPT("Mín. orden")}</TableHead>
                   <TableHead className="text-xs">Lead</TableHead>
-                  <TableHead className="text-xs">Última compra</TableHead>
+                  <TableHead className="text-xs">{trPT("Última compra")}</TableHead>
                   <TableHead className="text-xs">Estado</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
@@ -219,14 +220,14 @@ export default function ProveedorDetalle() {
                       <TableCell>
                         <select className="text-[10px] bg-background border rounded px-1.5 py-0.5" value={c.status} onChange={(e) => updateStatus(c.id, e.target.value)}>
                           <option value="available">Disponible</option>
-                          <option value="low_stock">Bajo stock</option>
+                          <option value="low_stock">{trPT("Bajo stock")}</option>
                           <option value="out_of_stock">Agotado</option>
                           <option value="discontinued">Descontinuado</option>
                         </select>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {catalog.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin productos catalogados — se agregan automáticamente al registrar compras</TableCell></TableRow>}
+                  {catalog.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin productos catalogados — se agregan automáticamente al registrar compras")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -236,7 +237,7 @@ export default function ProveedorDetalle() {
             <div className="bg-card rounded-xl border p-4 space-y-2 text-sm">
               {s.phone && <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" />{s.phone}</div>}
               {s.email && <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" />{s.email}</div>}
-              {s.tax_id && <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" />NIT: {s.tax_id}</div>}
+              {s.tax_id && <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" />{trPT("NIT:")} {s.tax_id}</div>}
               {s.address && <div className="text-xs text-muted-foreground">{s.address}</div>}
             </div>
           </TabsContent>
@@ -262,7 +263,7 @@ export default function ProveedorDetalle() {
                         <TableCell className="text-xs">{format(new Date(p.created_at), "dd/MM/yy")}</TableCell>
                         <TableCell className="text-xs text-right font-bold">${Number(p.total).toFixed(2)}</TableCell>
                         <TableCell className="text-xs text-right">${Number(p.amount_paid).toFixed(2)}</TableCell>
-                        <TableCell><Badge variant={p.is_consignment ? "default" : "outline"} className="text-[10px]">{p.is_consignment ? "Consignación" : "Compra"}</Badge></TableCell>
+                        <TableCell><Badge variant={p.is_consignment ? "default" : "outline"} className="text-[10px]">{p.is_consignment ? trPT("Consignación") : trPT("Compra")}</Badge></TableCell>
                         <TableCell><Badge variant="outline" className="text-[10px]">{p.status}</Badge></TableCell>
                         <TableCell className="text-right">
                           {remaining > 0.01 && (
@@ -274,7 +275,7 @@ export default function ProveedorDetalle() {
                       </TableRow>
                     );
                   })}
-                  {purchases.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin compras</TableCell></TableRow>}
+                  {purchases.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin compras")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -282,23 +283,23 @@ export default function ProveedorDetalle() {
 
           <TabsContent value="payables" className="space-y-3">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="bg-card rounded-xl border p-3"><p className="text-[10px] text-muted-foreground">0-30 días</p><p className="font-bold">${aging.b1.toFixed(2)}</p></div>
-              <div className="bg-card rounded-xl border p-3"><p className="text-[10px] text-muted-foreground">31-60 días</p><p className="font-bold text-warning">${aging.b2.toFixed(2)}</p></div>
-              <div className="bg-card rounded-xl border p-3"><p className="text-[10px] text-muted-foreground">61-90 días</p><p className="font-bold text-warning">${aging.b3.toFixed(2)}</p></div>
-              <div className="bg-card rounded-xl border p-3"><p className="text-[10px] text-muted-foreground">+90 días</p><p className="font-bold text-destructive">${aging.b4.toFixed(2)}</p></div>
+              <div className="bg-card rounded-xl border p-3"><p className="text-[10px] text-muted-foreground">{trPT("0-30 días")}</p><p className="font-bold">${aging.b1.toFixed(2)}</p></div>
+              <div className="bg-card rounded-xl border p-3"><p className="text-[10px] text-muted-foreground">{trPT("31-60 días")}</p><p className="font-bold text-warning">${aging.b2.toFixed(2)}</p></div>
+              <div className="bg-card rounded-xl border p-3"><p className="text-[10px] text-muted-foreground">{trPT("61-90 días")}</p><p className="font-bold text-warning">${aging.b3.toFixed(2)}</p></div>
+              <div className="bg-card rounded-xl border p-3"><p className="text-[10px] text-muted-foreground">{trPT("+90 días")}</p><p className="font-bold text-destructive">${aging.b4.toFixed(2)}</p></div>
             </div>
             <div className="bg-card rounded-xl border overflow-hidden">
               <div className="flex items-center justify-between p-3 border-b">
-                <p className="text-xs font-heading font-semibold">Compras pendientes de pago</p>
+                <p className="text-xs font-heading font-semibold">{trPT("Compras pendientes de pago")}</p>
                 <Button size="sm" className="h-8 text-xs gap-1 gradient-brand text-primary-foreground" disabled={debt <= 0} onClick={() => openPay(debt, null, null, "Pagar saldo total")}>
-                  <ArrowUpFromLine className="h-3 w-3" />Pagar todo
+                  <ArrowUpFromLine className="h-3 w-3" />{trPT("Pagar todo")}
                 </Button>
               </div>
               <Table>
                 <TableHeader><TableRow>
                   <TableHead className="text-xs">Nº</TableHead>
                   <TableHead className="text-xs">Fecha</TableHead>
-                  <TableHead className="text-xs">Antigüedad</TableHead>
+                  <TableHead className="text-xs">{trPT("Antigüedad")}</TableHead>
                   <TableHead className="text-xs text-right">Total</TableHead>
                   <TableHead className="text-xs text-right">Pagado</TableHead>
                   <TableHead className="text-xs text-right">Saldo</TableHead>
@@ -312,7 +313,7 @@ export default function ProveedorDetalle() {
                       <TableRow key={p.id}>
                         <TableCell className="text-xs font-medium">{p.purchase_number}</TableCell>
                         <TableCell className="text-xs">{format(new Date(p.created_at), "dd/MM/yy")}</TableCell>
-                        <TableCell className="text-xs"><Badge variant="outline" className={`text-[10px] ${days > 60 ? "bg-destructive/10 text-destructive" : days > 30 ? "bg-warning/10 text-warning" : ""}`}>{days} días</Badge></TableCell>
+                        <TableCell className="text-xs"><Badge variant="outline" className={`text-[10px] ${days > 60 ? "bg-destructive/10 text-destructive" : days > 30 ? "bg-warning/10 text-warning" : ""}`}>{days} {trPT("días")}</Badge></TableCell>
                         <TableCell className="text-xs text-right">${Number(p.total).toFixed(2)}</TableCell>
                         <TableCell className="text-xs text-right">${Number(p.amount_paid).toFixed(2)}</TableCell>
                         <TableCell className="text-xs text-right font-bold text-destructive">${remaining.toFixed(2)}</TableCell>
@@ -324,7 +325,7 @@ export default function ProveedorDetalle() {
                       </TableRow>
                     );
                   })}
-                  {pendingPurchases.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin saldos pendientes</TableCell></TableRow>}
+                  {pendingPurchases.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin saldos pendientes")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -335,7 +336,7 @@ export default function ProveedorDetalle() {
               <Table>
                 <TableHeader><TableRow>
                   <TableHead className="text-xs">Fecha</TableHead>
-                  <TableHead className="text-xs">Método</TableHead>
+                  <TableHead className="text-xs">{trPT("Método")}</TableHead>
                   <TableHead className="text-xs">Referencia</TableHead>
                   <TableHead className="text-xs">Notas</TableHead>
                   <TableHead className="text-xs text-right">Monto</TableHead>
@@ -350,7 +351,7 @@ export default function ProveedorDetalle() {
                       <TableCell className="text-xs text-right font-bold">${Number(m.amount_in_base).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
-                  {payments.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin pagos</TableCell></TableRow>}
+                  {payments.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin pagos")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -359,16 +360,16 @@ export default function ProveedorDetalle() {
           <TabsContent value="consignment" className="space-y-3">
             <div className="bg-card rounded-xl border overflow-hidden">
               <div className="flex items-center justify-between p-3 border-b">
-                <p className="text-xs font-heading font-semibold flex items-center gap-1.5"><Package className="h-3.5 w-3.5" />Lotes en consignación</p>
+                <p className="text-xs font-heading font-semibold flex items-center gap-1.5"><Package className="h-3.5 w-3.5" />{trPT("Lotes en consignación")}</p>
               </div>
               <Table>
                 <TableHeader><TableRow>
                   <TableHead className="text-xs">Producto</TableHead>
                   <TableHead className="text-xs">Recibido</TableHead>
-                  <TableHead className="text-xs text-right">Cant. recibida</TableHead>
+                  <TableHead className="text-xs text-right">{trPT("Cant. recibida")}</TableHead>
                   <TableHead className="text-xs text-right">Vendido</TableHead>
                   <TableHead className="text-xs text-right">Restante</TableHead>
-                  <TableHead className="text-xs text-right">Costo unit.</TableHead>
+                  <TableHead className="text-xs text-right">{trPT("Costo unit.")}</TableHead>
                   <TableHead className="text-xs">Estado</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
@@ -383,16 +384,16 @@ export default function ProveedorDetalle() {
                       <TableCell><Badge variant="outline" className="text-[10px]">{l.status}</Badge></TableCell>
                     </TableRow>
                   ))}
-                  {lots.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin lotes</TableCell></TableRow>}
+                  {lots.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin lotes")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
 
             <div className="bg-card rounded-xl border overflow-hidden">
               <div className="flex items-center justify-between p-3 border-b">
-                <p className="text-xs font-heading font-semibold flex items-center gap-1.5"><Wallet className="h-3.5 w-3.5" />Liquidaciones por unidades vendidas</p>
+                <p className="text-xs font-heading font-semibold flex items-center gap-1.5"><Wallet className="h-3.5 w-3.5" />{trPT("Liquidaciones por unidades vendidas")}</p>
                 <Button size="sm" className="h-8 text-xs gap-1 gradient-brand text-primary-foreground" disabled={selected.size === 0} onClick={settle}>
-                  <Check className="h-3 w-3" />Liquidar ({selected.size})
+                  <Check className="h-3 w-3" />{trPT("Liquidar (")}{selected.size})
                 </Button>
               </div>
               <Table>
@@ -401,7 +402,7 @@ export default function ProveedorDetalle() {
                   <TableHead className="text-xs">Fecha</TableHead>
                   <TableHead className="text-xs">Producto</TableHead>
                   <TableHead className="text-xs text-right">Cant.</TableHead>
-                  <TableHead className="text-xs text-right">Costo unit.</TableHead>
+                  <TableHead className="text-xs text-right">{trPT("Costo unit.")}</TableHead>
                   <TableHead className="text-xs text-right">Total</TableHead>
                   <TableHead className="text-xs">Estado</TableHead>
                 </TableRow></TableHeader>
@@ -421,7 +422,7 @@ export default function ProveedorDetalle() {
                       <TableCell><Badge variant={st.status === "settled" ? "default" : "outline"} className="text-[10px]">{st.status}</Badge></TableCell>
                     </TableRow>
                   ))}
-                  {settlements.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">Sin liquidaciones</TableCell></TableRow>}
+                  {settlements.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin liquidaciones")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -445,7 +446,7 @@ export default function ProveedorDetalle() {
           amountDue={payCtx.amount}
           referenceType={payCtx.refType}
           referenceId={payCtx.refId}
-          title={payCtx.title}
+          title={trPT(payCtx.title)}
           onPaid={fetchAll}
         />
       )}

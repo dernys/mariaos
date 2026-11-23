@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -47,7 +48,7 @@ export function OrderEditDialog({ order, onOpenChange, onSaved }: Props) {
   const save = async () => {
     if (!order) return;
     if (form.type === "delivery" && !form.address.trim()) {
-      return toast({ title: "Falta la dirección", description: "Un pedido de delivery necesita dirección de entrega.", variant: "destructive" });
+      return toast({ title: trPT("Falta la dirección"), description: trPT("Un pedido de delivery necesita dirección de entrega."), variant: "destructive" });
     }
     setSaving(true);
     const { error } = await (supabase.rpc as any)("update_online_order", {
@@ -61,8 +62,8 @@ export function OrderEditDialog({ order, onOpenChange, onSaved }: Props) {
       p_delivery_type: form.type,
     });
     setSaving(false);
-    if (error) return toast({ title: "No se pudo editar el pedido", description: error.message, variant: "destructive" });
-    toast({ title: "Pedido actualizado", description: "Los cambios quedaron registrados en el historial." });
+    if (error) return toast({ title: trPT("No se pudo editar el pedido"), description: error.message, variant: "destructive" });
+    toast({ title: trPT("Pedido actualizado"), description: trPT("Los cambios quedaron registrados en el historial.") });
     onOpenChange(false);
     onSaved();
   };
@@ -71,13 +72,13 @@ export function OrderEditDialog({ order, onOpenChange, onSaved }: Props) {
     <Dialog open={!!order} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar pedido</DialogTitle>
-          <DialogDescription>Cada cambio se registra en el historial del pedido.</DialogDescription>
+          <DialogTitle>{trPT("Editar pedido")}</DialogTitle>
+          <DialogDescription>{trPT("Cada cambio se registra en el historial del pedido.")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div><Label className="text-xs">Cliente</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><Label className="text-xs">Teléfono</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+            <div><Label className="text-xs">{trPT("Teléfono")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label className="text-xs">Modalidad</Label>
@@ -89,18 +90,18 @@ export function OrderEditDialog({ order, onOpenChange, onSaved }: Props) {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label className="text-xs">Coste de envío</Label>
+            <div><Label className="text-xs">{trPT("Coste de envío")}</Label>
               <Input type="number" step="0.01" value={form.type === "pickup" ? "0" : form.fee} disabled={form.type === "pickup"}
                 onChange={(e) => setForm({ ...form, fee: e.target.value })} /></div>
           </div>
           {form.type === "delivery" && (
             <>
-              <div><Label className="text-xs">Dirección de entrega</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-              <div><Label className="text-xs">Instrucciones para el repartidor</Label>
+              <div><Label className="text-xs">{trPT("Dirección de entrega")}</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+              <div><Label className="text-xs">{trPT("Instrucciones para el repartidor")}</Label>
                 <Textarea rows={2} value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} /></div>
             </>
           )}
-          <div><Label className="text-xs">Notas del pedido</Label>
+          <div><Label className="text-xs">{trPT("Notas del pedido")}</Label>
             <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         </div>
         <DialogFooter>

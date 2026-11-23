@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -88,16 +89,16 @@ export function FinancialExceptionsPanel() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="text-base font-semibold flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-primary" /> Control interno · Excepciones
+            <ShieldAlert className="h-4 w-4 text-primary" /> {trPT("Control interno · Excepciones")}
           </h3>
           <p className="text-xs text-muted-foreground">
-            Operaciones que requieren revisión de administración o contabilidad. Solo del negocio activo.
+            {trPT("Operaciones que requieren revisión de administración o contabilidad. Solo del negocio activo.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className={criticals === 0 ? SEV_STYLE.info : SEV_STYLE.critical}>
-            {criticals === 0 ? <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> 0 críticas</>
-                             : <><AlertTriangle className="h-3.5 w-3.5 mr-1" /> {criticals} críticas</>}
+            {criticals === 0 ? <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> {trPT("0 críticas")}</>
+                             : <><AlertTriangle className="h-3.5 w-3.5 mr-1" /> {criticals} {trPT("críticas")}</>}
           </Badge>
           <Badge variant="outline" className={SEV_STYLE.warning}>{warnings} avisos</Badge>
           <Button size="sm" variant="outline" onClick={load}><RefreshCw className="h-3.5 w-3.5" /></Button>
@@ -106,7 +107,7 @@ export function FinancialExceptionsPanel() {
 
       {groups.length === 0 ? (
         <div className="rounded-lg border bg-card/50 p-6 text-center text-xs text-muted-foreground">
-          Sin excepciones: cada operación tiene su consecuencia contable, sin duplicados ni huérfanos.
+          {trPT("Sin excepciones: cada operación tiene su consecuencia contable, sin duplicados ni huérfanos.")}
         </div>
       ) : (
         <>
@@ -132,7 +133,7 @@ export function FinancialExceptionsPanel() {
               onChange={setFilter}
               options={[{ value: "__all__", label: "Todas las excepciones" },
                         ...groups.map((g) => ({ value: g.code, label: `${LABEL[g.code] ?? g.code} (${g.count})` }))]}
-              placeholder="Filtrar por tipo"
+              placeholder={trPT("Filtrar por tipo")}
             />
           </div>
 

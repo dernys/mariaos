@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -32,12 +33,12 @@ export function KeyboardShortcutsHelp() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Atajos de teclado</DialogTitle>
+          <DialogTitle>{trPT("Atajos de teclado")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-2">
           {shortcuts.map((s) => (
             <div key={s.desc} className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{s.desc}</span>
+              <span className="text-muted-foreground">{trPT(s.desc)}</span>
               <div className="flex gap-1">
                 {s.keys.map((k) => (
                   <kbd key={k} className="rounded bg-muted px-2 py-0.5 text-xs font-mono border">{k}</kbd>

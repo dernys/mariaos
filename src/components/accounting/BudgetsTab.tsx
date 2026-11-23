@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -98,7 +99,7 @@ export function BudgetsTab() {
 
   const saveBudget = async () => {
     if (!tenantId || !budForm.name.trim()) {
-      toast({ title: "Nombre obligatorio", variant: "destructive" }); return;
+      toast({ title: trPT("Nombre obligatorio"), variant: "destructive" }); return;
     }
     const payload: any = {
       tenant_id: tenantId,
@@ -121,13 +122,13 @@ export function BudgetsTab() {
     if (!current) return;
     const { error } = await (supabase as any).from("budgets").update({ status, approved_at: status === "approved" ? new Date().toISOString() : null }).eq("id", current.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Estado actualizado" });
+    toast({ title: trPT("Estado actualizado") });
     loadAll();
   };
 
   const saveLine = async () => {
     if (!selectedBudget || !lineForm.account_id) {
-      toast({ title: "Cuenta obligatoria", variant: "destructive" }); return;
+      toast({ title: trPT("Cuenta obligatoria"), variant: "destructive" }); return;
     }
     const payload: any = {
       budget_id: selectedBudget,
@@ -148,7 +149,7 @@ export function BudgetsTab() {
   };
 
   const removeLine = async (id: string) => {
-    if (!confirm("¿Eliminar línea?")) return;
+    if (!confirm(trPT("¿Eliminar línea?"))) return;
     await (supabase as any).from("budget_lines").delete().eq("id", id);
     loadDetail();
   };
@@ -166,7 +167,7 @@ export function BudgetsTab() {
             value={selectedBudget || ""}
             onChange={(e) => setSelectedBudget(e.target.value || null)}
           >
-            <option value="">— Selecciona un presupuesto —</option>
+            <option value="">{trPT("— Selecciona un presupuesto —")}</option>
             {budgets.map((b) => (
               <option key={b.id} value={b.id}>{b.year} · {b.name} [{b.status}]</option>
             ))}
@@ -186,21 +187,21 @@ export function BudgetsTab() {
           )}
         </div>
         <Button size="sm" onClick={() => { setEditingBud(null); setBudForm({ name: "", year: new Date().getFullYear(), period_type: "monthly", notes: "" }); setBudOpen(true); }} className="gap-1">
-          <Plus className="h-4 w-4" />Nuevo presupuesto
+          <Plus className="h-4 w-4" />{trPT("Nuevo presupuesto")}
         </Button>
       </div>
 
       {current && (
         <Tabs defaultValue="lines">
           <TabsList>
-            <TabsTrigger value="lines"><ListChecks className="h-3.5 w-3.5 mr-1" />Líneas</TabsTrigger>
-            <TabsTrigger value="execution">Ejecución vs Real</TabsTrigger>
+            <TabsTrigger value="lines"><ListChecks className="h-3.5 w-3.5 mr-1" />{trPT("Líneas")}</TabsTrigger>
+            <TabsTrigger value="execution">{trPT("Ejecución vs Real")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="lines" className="space-y-3">
             <div className="flex justify-end">
               <Button size="sm" disabled={current.status !== "draft"} onClick={() => { setEditingLine(null); setLineForm({ account_id: "", cost_center_id: "", period_month: 1, amount: "0", notes: "" }); setLineOpen(true); }} className="gap-1">
-                <Plus className="h-4 w-4" />Agregar línea
+                <Plus className="h-4 w-4" />{trPT("Agregar línea")}
               </Button>
             </div>
             <Card><CardContent className="p-0">
@@ -214,7 +215,7 @@ export function BudgetsTab() {
                 </TableRow></TableHeader>
                 <TableBody>
                   {lines.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Sin líneas</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{trPT("Sin líneas")}</TableCell></TableRow>
                   ) : lines.map((l) => {
                     const acc = accounts.find((a) => a.id === l.account_id);
                     const cc = costCenters.find((c) => c.id === l.cost_center_id);
@@ -247,7 +248,7 @@ export function BudgetsTab() {
                 <p className="text-xl font-bold font-mono">{fmt(totalActual)}</p>
               </CardContent></Card>
               <Card><CardContent className="p-4">
-                <p className="text-xs text-muted-foreground">Variación</p>
+                <p className="text-xs text-muted-foreground">{trPT("Variación")}</p>
                 <p className={`text-xl font-bold font-mono ${totalBudgeted - totalActual < 0 ? "text-destructive" : "text-success"}`}>
                   {fmt(totalBudgeted - totalActual)}
                 </p>
@@ -261,11 +262,11 @@ export function BudgetsTab() {
                   <TableHead>Mes</TableHead>
                   <TableHead className="text-right">Presupuesto</TableHead>
                   <TableHead className="text-right">Real</TableHead>
-                  <TableHead className="text-right">Variación</TableHead>
+                  <TableHead className="text-right">{trPT("Variación")}</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {execution.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Sin datos</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{trPT("Sin datos")}</TableCell></TableRow>
                   ) : execution.map((r, i) => (
                     <TableRow key={i}>
                       <TableCell className="text-sm">{r.account_code} - {r.account_name}</TableCell>
@@ -289,13 +290,13 @@ export function BudgetsTab() {
       <Dialog open={budOpen} onOpenChange={setBudOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingBud ? "Editar presupuesto" : "Nuevo presupuesto"}</DialogTitle>
-            <DialogDescription>Define el plan financiero del período.</DialogDescription>
+            <DialogTitle>{editingBud ? trPT("Editar presupuesto") : trPT("Nuevo presupuesto")}</DialogTitle>
+            <DialogDescription>{trPT("Define el plan financiero del período.")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <div><Label>Nombre *</Label><Input value={budForm.name} onChange={(e) => setBudForm({ ...budForm, name: e.target.value })} placeholder="Presupuesto operativo 2026" /></div>
+            <div><Label>{trPT("Nombre *")}</Label><Input value={budForm.name} onChange={(e) => setBudForm({ ...budForm, name: e.target.value })} placeholder={trPT("Presupuesto operativo 2026")} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Año</Label><Input type="number" value={budForm.year} onChange={(e) => setBudForm({ ...budForm, year: Number(e.target.value) })} /></div>
+              <div><Label>{trPT("Año")}</Label><Input type="number" value={budForm.year} onChange={(e) => setBudForm({ ...budForm, year: Number(e.target.value) })} /></div>
               <div><Label>Periodicidad</Label>
                 <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={budForm.period_type} onChange={(e) => setBudForm({ ...budForm, period_type: e.target.value })}>
                   <option value="monthly">Mensual</option>
@@ -308,7 +309,7 @@ export function BudgetsTab() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setBudOpen(false)}>Cancelar</Button>
-            <Button onClick={saveBudget}>{editingBud ? "Guardar" : "Crear"}</Button>
+            <Button onClick={saveBudget}>{editingBud ? trPT("Guardar") : trPT("Crear")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -317,18 +318,18 @@ export function BudgetsTab() {
       <Dialog open={lineOpen} onOpenChange={setLineOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingLine ? "Editar línea" : "Nueva línea presupuestal"}</DialogTitle>
+            <DialogTitle>{editingLine ? trPT("Editar línea") : trPT("Nueva línea presupuestal")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <div><Label>Cuenta *</Label>
+            <div><Label>{trPT("Cuenta *")}</Label>
               <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={lineForm.account_id} onChange={(e) => setLineForm({ ...lineForm, account_id: e.target.value })}>
-                <option value="">— Selecciona —</option>
+                <option value="">{trPT("— Selecciona —")}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
               </select>
             </div>
-            <div><Label>Centro de costo (opcional)</Label>
+            <div><Label>{trPT("Centro de costo (opcional)")}</Label>
               <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={lineForm.cost_center_id} onChange={(e) => setLineForm({ ...lineForm, cost_center_id: e.target.value })}>
-                <option value="">— Sin centro —</option>
+                <option value="">{trPT("— Sin centro —")}</option>
                 {costCenters.map((c) => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
               </select>
             </div>
@@ -344,7 +345,7 @@ export function BudgetsTab() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setLineOpen(false)}>Cancelar</Button>
-            <Button onClick={saveLine}>{editingLine ? "Guardar" : "Crear"}</Button>
+            <Button onClick={saveLine}>{editingLine ? trPT("Guardar") : trPT("Crear")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

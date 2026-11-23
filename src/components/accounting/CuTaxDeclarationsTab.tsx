@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -103,7 +104,7 @@ export default function TaxDeclarationsTab() {
     setLoading(false);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {
-      toast({ title: "Declaración calculada desde el libro mayor" });
+      toast({ title: trPT("Declaración calculada desde el libro mayor") });
       load();
     }
   };
@@ -112,7 +113,7 @@ export default function TaxDeclarationsTab() {
     const { data, error } = await supabase.rpc("submit_cu_tax_declaration", { p_declaration_id: id });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {
-      toast({ title: "Declaración presentada", description: (data as any)?.msg || "Asiento contable generado" });
+      toast({ title: trPT("Declaración presentada"), description: (data as any)?.msg || "Asiento contable generado" });
       load();
     }
   };
@@ -124,14 +125,14 @@ export default function TaxDeclarationsTab() {
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2 text-base">
-            <Calculator className="h-4 w-4" /> Calcular declaración fiscal
-            <Badge variant="secondary" className="text-[10px]">Régimen: {countryLabel}</Badge>
+            <Calculator className="h-4 w-4" /> {trPT("Calcular declaración fiscal")}
+            <Badge variant="secondary" className="text-[10px]">{trPT("Régimen:")} {countryLabel}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="grid sm:grid-cols-4 gap-3 items-end">
             <div>
-              <Label className="text-xs">Período</Label>
+              <Label className="text-xs">{trPT("Período")}</Label>
               <Select value={periodId} onValueChange={setPeriodId}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                 <SelectContent>
@@ -144,7 +145,7 @@ export default function TaxDeclarationsTab() {
             <div>
               <Label className="text-xs">Tributo</Label>
               <Select value={ruleCode} onValueChange={setRuleCode}>
-                <SelectTrigger><SelectValue placeholder="Sin reglas fiscales" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={trPT("Sin reglas fiscales")} /></SelectTrigger>
                 <SelectContent>
                   {declarable.map((r) => (
                     <SelectItem key={r.code} value={r.code}>
@@ -155,7 +156,7 @@ export default function TaxDeclarationsTab() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Tasa (%)</Label>
+              <Label className="text-xs">{trPT("Tasa (%)")}</Label>
               <Input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} />
             </div>
             <Button onClick={compute} disabled={loading || !periodId || !ruleCode} className="gradient-brand text-primary-foreground">
@@ -163,22 +164,22 @@ export default function TaxDeclarationsTab() {
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Las tasas provienen del catálogo fiscal de {countryLabel} y de los ajustes propios de la empresa; puedes sobreescribirlas aquí.
+            {trPT("Las tasas provienen del catálogo fiscal de")} {countryLabel} {trPT("y de los ajustes propios de la empresa; puedes sobreescribirlas aquí.")}
           </p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Declaraciones registradas</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{trPT("Declaraciones registradas")}</CardTitle></CardHeader>
         <CardContent className="overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Período</TableHead>
+                <TableHead>{trPT("Período")}</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead className="text-right">Ingresos</TableHead>
-                <TableHead className="text-right">Gastos deducibles</TableHead>
-                <TableHead className="text-right">Base imponible</TableHead>
+                <TableHead className="text-right">{trPT("Gastos deducibles")}</TableHead>
+                <TableHead className="text-right">{trPT("Base imponible")}</TableHead>
                 <TableHead className="text-right">Tasa</TableHead>
                 <TableHead className="text-right">Impuesto</TableHead>
                 <TableHead>Estado</TableHead>
@@ -187,7 +188,7 @@ export default function TaxDeclarationsTab() {
             </TableHeader>
             <TableBody>
               {declarations.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-6">Sin declaraciones</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-6">{trPT("Sin declaraciones")}</TableCell></TableRow>
               )}
               {declarations.map((d) => (
                 <TableRow key={d.id}>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -72,13 +73,13 @@ export function ModulesTab() {
         .update({ name, slug, description: description || null })
         .eq("id", editingId);
       if (error) toast.error(error.message);
-      else toast.success("Módulo actualizado");
+      else toast.success(trPT("Módulo actualizado"));
     } else {
       const { error } = await supabase
         .from("app_modules")
         .insert({ name, slug, description: description || null });
       if (error) toast.error(error.message);
-      else toast.success("Módulo creado");
+      else toast.success(trPT("Módulo creado"));
     }
 
     setSaving(false);
@@ -92,7 +93,7 @@ export function ModulesTab() {
     const { error } = await supabase.from("app_modules").delete().eq("id", id);
     if (error) toast.error(error.message);
     else {
-      toast.success("Módulo eliminado");
+      toast.success(trPT("Módulo eliminado"));
       await fetchModules();
     }
   };
@@ -122,19 +123,19 @@ export function ModulesTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {modules.length} módulo{modules.length !== 1 ? "s" : ""}
+          {modules.length} {trPT("módulo")}{modules.length !== 1 ? "s" : ""}
         </p>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" onClick={openCreate} className="gap-2 gradient-brand text-primary-foreground font-heading font-semibold">
               <Plus className="h-4 w-4" />
-              Nuevo Módulo
+              {trPT("Nuevo Módulo")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-heading">
-                {editingId ? "Editar Módulo" : "Crear Módulo"}
+                {editingId ? trPT("Editar Módulo") : trPT("Crear Módulo")}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSave} className="space-y-4">
@@ -143,15 +144,15 @@ export function ModulesTab() {
                 <Input value={name} onChange={(e) => handleNameChange(e.target.value)} required />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Slug (ruta)</label>
+                <label className="text-xs font-medium text-muted-foreground">{trPT("Slug (ruta)")}</label>
                 <Input value={slug} onChange={(e) => setSlug(e.target.value)} required />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Descripción (opcional)</label>
+                <label className="text-xs font-medium text-muted-foreground">{trPT("Descripción (opcional)")}</label>
                 <Input value={description} onChange={(e) => setDescription(e.target.value)} />
               </div>
               <Button type="submit" disabled={saving} className="w-full gradient-brand text-primary-foreground font-heading font-semibold">
-                {saving ? "Guardando..." : editingId ? "Actualizar" : "Crear"}
+                {saving ? "Guardando..." : editingId ? trPT("Actualizar") : trPT("Crear")}
               </Button>
             </form>
           </DialogContent>
@@ -165,7 +166,7 @@ export function ModulesTab() {
               <tr className="border-b bg-muted/30">
                 <th className="text-left p-3 font-medium text-muted-foreground text-xs">Nombre</th>
                 <th className="text-left p-3 font-medium text-muted-foreground text-xs">Slug</th>
-                <th className="text-left p-3 font-medium text-muted-foreground text-xs">Descripción</th>
+                <th className="text-left p-3 font-medium text-muted-foreground text-xs">{trPT("Descripción")}</th>
                 <th className="text-center p-3 font-medium text-muted-foreground text-xs w-24">Acciones</th>
               </tr>
             </thead>
@@ -179,7 +180,7 @@ export function ModulesTab() {
                     <p className="text-xs text-muted-foreground">/{mod.slug}</p>
                   </td>
                   <td className="p-3">
-                    <p className="text-xs text-muted-foreground">{mod.description ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">{trPT(mod.description) ?? "—"}</p>
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex items-center justify-center gap-1">
@@ -201,7 +202,7 @@ export function ModulesTab() {
               {modules.length === 0 && (
                 <tr>
                   <td colSpan={4} className="p-6 text-center text-xs text-muted-foreground">
-                    No hay módulos. Crea uno para empezar.
+                    {trPT("No hay módulos. Crea uno para empezar.")}
                   </td>
                 </tr>
               )}

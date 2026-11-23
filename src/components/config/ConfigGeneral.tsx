@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -82,7 +83,7 @@ export function ConfigGeneral() {
         { onConflict: "key,tenant_id" }
       );
     }
-    toast({ title: "Configuración guardada" });
+    toast({ title: trPT("Configuración guardada") });
     setSaving(false);
   };
 
@@ -97,7 +98,7 @@ export function ConfigGeneral() {
       });
       if (error) throw error;
       setCurrentProfile(profileCode);
-      toast({ title: "Perfil contable aplicado", description: "Plan de cuentas e impuestos sincronizados" });
+      toast({ title: trPT("Perfil contable aplicado"), description: trPT("Plan de cuentas e impuestos sincronizados") });
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     } finally {
@@ -139,7 +140,7 @@ export function ConfigGeneral() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {SUPPORTED_LOCALES.map((l) => (
-                    <SelectItem key={l.code} value={l.code}>{l.flag} {l.label}</SelectItem>
+                    <SelectItem key={l.code} value={l.code}>{l.flag} {trPT(l.label)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -151,7 +152,7 @@ export function ConfigGeneral() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {SUPPORTED_LOCALES.map((l) => (
-                    <SelectItem key={l.code} value={l.code}>{l.flag} {l.label}</SelectItem>
+                    <SelectItem key={l.code} value={l.code}>{l.flag} {trPT(l.label)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -164,18 +165,18 @@ export function ConfigGeneral() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Globe className="h-4 w-4 text-primary" /> Configuración Regional y Contable
+            <Globe className="h-4 w-4 text-primary" /> {trPT("Configuración Regional y Contable")}
           </CardTitle>
           <CardDescription>
-            País, régimen tributario y plan de cuentas. Al aplicar el perfil se materializa el plan de cuentas y los impuestos correspondientes.
+            {trPT("País, régimen tributario y plan de cuentas. Al aplicar el perfil se materializa el plan de cuentas y los impuestos correspondientes.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">País</Label>
+              <Label className="text-xs">{trPT("País")}</Label>
               <Select value={countryCode} onValueChange={(v) => { setCountryCode(v); setProfileCode(""); }}>
-                <SelectTrigger><SelectValue placeholder="Selecciona país" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={trPT("Selecciona país")} /></SelectTrigger>
                 <SelectContent>
                   {countries.map((c) => (
                     <SelectItem key={c} value={c}>{countryLabel(c)}</SelectItem>
@@ -184,9 +185,9 @@ export function ConfigGeneral() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Régimen / Perfil Contable</Label>
+              <Label className="text-xs">{trPT("Régimen / Perfil Contable")}</Label>
               <Select value={profileCode} onValueChange={setProfileCode}>
-                <SelectTrigger><SelectValue placeholder="Selecciona régimen" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={trPT("Selecciona régimen")} /></SelectTrigger>
                 <SelectContent>
                   {profilesForCountry.map((p) => (
                     <SelectItem key={p.code} value={p.code}>{p.name}</SelectItem>
@@ -199,18 +200,18 @@ export function ConfigGeneral() {
           {selectedProfile && (
             <div className="rounded-md border bg-muted/30 p-3 space-y-2 text-xs">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="secondary">Moneda base: {selectedProfile.base_currency}</Badge>
+                <Badge variant="secondary">{trPT("Moneda base:")} {selectedProfile.base_currency}</Badge>
                 <Badge variant="outline">{selectedProfile.regime}</Badge>
                 {currentProfile === selectedProfile.code && (
                   <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">Activo</Badge>
                 )}
               </div>
               {selectedProfile.description && (
-                <p className="text-muted-foreground">{selectedProfile.description}</p>
+                <p className="text-muted-foreground">{trPT(selectedProfile.description)}</p>
               )}
               {Array.isArray(selectedProfile.regulatory_exports) && selectedProfile.regulatory_exports.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-1">
-                  <span className="text-muted-foreground">Exportaciones regulatorias:</span>
+                  <span className="text-muted-foreground">{trPT("Exportaciones regulatorias:")}</span>
                   {selectedProfile.regulatory_exports.map((e: string) => (
                     <Badge key={e} variant="outline" className="text-[10px]">{e}</Badge>
                   ))}
@@ -221,20 +222,20 @@ export function ConfigGeneral() {
 
           <Button onClick={handleApplyProfile} disabled={!profileCode || applying} variant="secondary" className="gap-2 w-fit">
             {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
-            {currentProfile === profileCode ? "Re-aplicar perfil" : "Aplicar perfil contable"}
+            {currentProfile === profileCode ? trPT("Re-aplicar perfil") : trPT("Aplicar perfil contable")}
           </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Datos de la Empresa</CardTitle>
-          <CardDescription>Información general del negocio</CardDescription>
+          <CardTitle className="text-base">{trPT("Datos de la Empresa")}</CardTitle>
+          <CardDescription>{trPT("Información general del negocio")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
           {grouped.general.map((s) => (
             <div key={s.key}>
-              <Label className="text-xs">{s.label}</Label>
+              <Label className="text-xs">{trPT(s.label)}</Label>
               <Input value={values[s.key] || ""} onChange={(e) => setValues({ ...values, [s.key]: e.target.value })} />
             </div>
           ))}
@@ -244,12 +245,12 @@ export function ConfigGeneral() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Ventas</CardTitle>
-          <CardDescription>Configuración de ventas y tickets</CardDescription>
+          <CardDescription>{trPT("Configuración de ventas y tickets")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
           {grouped.sales.map((s) => (
             <div key={s.key}>
-              <Label className="text-xs">{s.label}</Label>
+              <Label className="text-xs">{trPT(s.label)}</Label>
               <Input value={values[s.key] || ""} onChange={(e) => setValues({ ...values, [s.key]: e.target.value })} />
             </div>
           ))}
@@ -259,12 +260,12 @@ export function ConfigGeneral() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Inventario</CardTitle>
-          <CardDescription>Configuración de inventario</CardDescription>
+          <CardDescription>{trPT("Configuración de inventario")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
           {grouped.inventory.map((s) => (
             <div key={s.key}>
-              <Label className="text-xs">{s.label}</Label>
+              <Label className="text-xs">{trPT(s.label)}</Label>
               <Input value={values[s.key] || ""} onChange={(e) => setValues({ ...values, [s.key]: e.target.value })} />
             </div>
           ))}
@@ -272,7 +273,7 @@ export function ConfigGeneral() {
       </Card>
 
       <Button onClick={handleSave} disabled={saving} className="gradient-brand text-primary-foreground gap-2">
-        <Save className="h-4 w-4" /> {saving ? "Guardando..." : "Guardar Configuración"}
+        <Save className="h-4 w-4" /> {saving ? "Guardando..." : trPT("Guardar Configuración")}
       </Button>
     </div>
   );

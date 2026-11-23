@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -50,12 +51,12 @@ export default function DigitalTwin() {
     try {
       const res = await twin.rebuild.mutateAsync();
       toast({
-        title: "Grafo reconstruido",
+        title: trPT("Grafo reconstruido"),
         description: `${res.nodes} entidades y ${res.edges} relaciones derivadas de datos reales.`,
       });
     } catch (e) {
       toast({
-        title: "No se pudo reconstruir el grafo",
+        title: trPT("No se pudo reconstruir el grafo"),
         description: e instanceof Error ? e.message : String(e),
         variant: "destructive",
       });
@@ -67,12 +68,10 @@ export default function DigitalTwin() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-sm text-muted-foreground">
-            Fase 5: gemelo digital sobre datos reales. Importes tipados con <code>Money</code>, grafo de
-            conocimiento y motor de simulación de escenarios.
+            {trPT("Fase 5: gemelo digital sobre datos reales. Importes tipados con")} <code>Money</code>{trPT(", grafo de conocimiento y motor de simulación de escenarios.")}
             {baseline.staleWindow && baseline.windowTo && (
               <span className="block text-amber-500 mt-1">
-                Sin ventas en los últimos {baseline.windowDays} días: se analiza la última ventana con
-                actividad (hasta {new Date(baseline.windowTo).toLocaleDateString()}).
+                {trPT("Sin ventas en los últimos")} {baseline.windowDays} {trPT("días: se analiza la última ventana con actividad (hasta")} {new Date(baseline.windowTo).toLocaleDateString()}).
               </span>
             )}
           </p>
@@ -83,21 +82,21 @@ export default function DigitalTwin() {
             </Button>
             <Button size="sm" onClick={rebuild} disabled={twin.rebuild.isPending}>
               <Network className={`h-4 w-4 mr-2 ${twin.rebuild.isPending ? "animate-pulse" : ""}`} />
-              Reconstruir grafo
+              {trPT("Reconstruir grafo")}
             </Button>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
           <Stat label={`Ingresos ${baseline.windowDays}d`} money={baseline.revenue} loading={twin.loading} />
-          <Stat label="Ticket promedio" money={baseline.avgTicket} loading={twin.loading} />
+          <Stat label={trPT("Ticket promedio")} money={baseline.avgTicket} loading={twin.loading} />
           <Stat
-            label="Margen bruto"
+            label={trPT("Margen bruto")}
             text={`${baseline.grossMarginPct.toFixed(1)}%`}
             loading={twin.loading}
           />
           <Stat
-            label="Runway de caja"
+            label={trPT("Runway de caja")}
             text={twin.runwayDays === null ? "n/d" : `${twin.runwayDays} días`}
             loading={twin.loading}
           />
@@ -105,9 +104,9 @@ export default function DigitalTwin() {
 
         <Tabs defaultValue="simulacion">
           <TabsList>
-            <TabsTrigger value="simulacion">Simulación</TabsTrigger>
-            <TabsTrigger value="grafo">Grafo de conocimiento</TabsTrigger>
-            <TabsTrigger value="senales">Señales</TabsTrigger>
+            <TabsTrigger value="simulacion">{trPT("Simulación")}</TabsTrigger>
+            <TabsTrigger value="grafo">{trPT("Grafo de conocimiento")}</TabsTrigger>
+            <TabsTrigger value="senales">{trPT("Señales")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="simulacion" className="mt-4">
@@ -115,39 +114,39 @@ export default function DigitalTwin() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-primary" /> Variables del escenario
+                    <Activity className="h-4 w-4 text-primary" /> {trPT("Variables del escenario")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <NumberField
-                    label="Cambio de precio (%)"
+                    label={trPT("Cambio de precio (%)")}
                     value={scenario.priceChangePct}
                     onChange={(v) => patchScenario({ priceChangePct: v })}
                   />
                   <NumberField
-                    label="Cambio de costo (%)"
+                    label={trPT("Cambio de costo (%)")}
                     value={scenario.costChangePct}
                     onChange={(v) => patchScenario({ costChangePct: v })}
                   />
                   <NumberField
-                    label="Cambio de demanda (%)"
+                    label={trPT("Cambio de demanda (%)")}
                     value={scenario.demandChangePct}
                     onChange={(v) => patchScenario({ demandChangePct: v })}
                   />
                   <NumberField
-                    label="Cambio de gastos fijos (%)"
+                    label={trPT("Cambio de gastos fijos (%)")}
                     value={scenario.fixedCostChangePct}
                     onChange={(v) => patchScenario({ fixedCostChangePct: v })}
                   />
                   <NumberField
-                    label="Horizonte (días)"
+                    label={trPT("Horizonte (días)")}
                     value={scenario.horizonDays}
                     onChange={(v) => patchScenario({ horizonDays: Math.max(1, v) })}
                   />
                   <div className="flex items-center justify-between pt-2">
                     <p className="text-[11px] text-muted-foreground">
-                      Base: {baseline.orders} tickets y {baseline.units} unidades reales en{" "}
-                      {baseline.windowDays} días.
+                      {trPT("Base:")} {baseline.orders} {trPT("tickets y")} {baseline.units} {trPT("unidades reales en")}{" "}
+                      {baseline.windowDays} {trPT("días.")}
                     </p>
                     <Button size="sm" variant="ghost" onClick={resetScenario}>
                       Reiniciar
@@ -159,7 +158,7 @@ export default function DigitalTwin() {
               <Card className="bg-gradient-to-br from-primary/10 via-card to-card border-primary/20">
                 <CardHeader>
                   <CardTitle className="text-base">
-                    Resultado proyectado · {simulation.horizonDays} días
+                    {trPT("Resultado proyectado ·")} {simulation.horizonDays} {trPT("días")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -168,9 +167,9 @@ export default function DigitalTwin() {
                   ) : (
                     <>
                       <Row label="Ingresos" base={simulation.baseRevenue} proj={simulation.projRevenue} />
-                      <Row label="Costo de ventas" base={simulation.baseCogs} proj={simulation.projCogs} invert />
+                      <Row label={trPT("Costo de ventas")} base={simulation.baseCogs} proj={simulation.projCogs} invert />
                       <Row
-                        label="Gastos fijos"
+                        label={trPT("Gastos fijos")}
                         base={simulation.baseFixedCosts}
                         proj={simulation.projFixedCosts}
                         invert
@@ -190,15 +189,15 @@ export default function DigitalTwin() {
                           Δ {simulation.profitDelta.format()} ({simulation.profitDeltaPct.toFixed(1)}%)
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-1">
-                          <span>Margen proyectado: {simulation.projMarginPct.toFixed(1)}%</span>
-                          <span>Caja estimada: {simulation.projCash.format()}</span>
+                          <span>{trPT("Margen proyectado:")} {simulation.projMarginPct.toFixed(1)}%</span>
+                          <span>{trPT("Caja estimada:")} {simulation.projCash.format()}</span>
                           <span>
-                            Equilibrio:{" "}
+                            {trPT("Equilibrio:")}{" "}
                             {simulation.breakevenDailyUnits === null
                               ? "n/d"
                               : `${simulation.breakevenDailyUnits} uds/día`}
                           </span>
-                          <span>Concentración top 5: {twin.concentrationPct.toFixed(1)}%</span>
+                          <span>{trPT("Concentración top 5:")} {twin.concentrationPct.toFixed(1)}%</span>
                         </div>
                       </div>
                     </>
@@ -213,21 +212,21 @@ export default function DigitalTwin() {
               <Stat label="Entidades" text={String(stats.nodeCount)} loading={twin.loading} />
               <Stat label="Relaciones" text={String(stats.edgeCount)} loading={twin.loading} />
               <Stat label="Densidad" text={stats.density.toFixed(4)} loading={twin.loading} />
-              <Stat label="Sin conexiones" text={String(stats.isolatedNodes)} loading={twin.loading} />
+              <Stat label={trPT("Sin conexiones")} text={String(stats.isolatedNodes)} loading={twin.loading} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Network className="h-4 w-4 text-primary" /> Composición del grafo
+                    <Network className="h-4 w-4 text-primary" /> {trPT("Composición del grafo")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex flex-wrap gap-2">
                     {stats.byType.length === 0 ? (
                       <span className="text-sm text-muted-foreground">
-                        Grafo vacío. Pulsa «Reconstruir grafo».
+                        {trPT("Grafo vacío. Pulsa «Reconstruir grafo».")}
                       </span>
                     ) : (
                       stats.byType.map((tp) => (
@@ -250,7 +249,7 @@ export default function DigitalTwin() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Brain className="h-4 w-4 text-primary" /> Nodos más influyentes
+                    <Brain className="h-4 w-4 text-primary" /> {trPT("Nodos más influyentes")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -266,13 +265,13 @@ export default function DigitalTwin() {
                       {[...twin.topProductsGraph, ...twin.topCustomersGraph].length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={3} className="text-sm text-muted-foreground">
-                            Sin datos todavía.
+                            {trPT("Sin datos todavía.")}
                           </TableCell>
                         </TableRow>
                       ) : (
                         [...twin.topProductsGraph, ...twin.topCustomersGraph].map((n) => (
                           <TableRow key={n.id}>
-                            <TableCell className="font-medium">{n.label}</TableCell>
+                            <TableCell className="font-medium">{trPT(n.label)}</TableCell>
                             <TableCell className="text-muted-foreground">
                               {TYPE_LABELS[String(n.type)] ?? n.type}
                             </TableCell>
@@ -293,7 +292,7 @@ export default function DigitalTwin() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-primary" /> Señales derivadas del grafo
+                  <AlertTriangle className="h-4 w-4 text-primary" /> {trPT("Señales derivadas del grafo")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -301,7 +300,7 @@ export default function DigitalTwin() {
                   <Skeleton className="h-24 w-full" />
                 ) : insights.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Sin riesgos estructurales detectados en el grafo.
+                    {trPT("Sin riesgos estructurales detectados en el grafo.")}
                   </p>
                 ) : (
                   insights.map((i) => (
@@ -318,7 +317,7 @@ export default function DigitalTwin() {
                         >
                           {i.code}
                         </Badge>
-                        <span className="text-sm font-medium">{i.title}</span>
+                        <span className="text-sm font-medium">{trPT(i.title)}</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">{i.detail}</p>
                     </div>
@@ -331,13 +330,13 @@ export default function DigitalTwin() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Top productos por ingresos reales</CardTitle>
+            <CardTitle className="text-base">{trPT("Top productos por ingresos reales")}</CardTitle>
           </CardHeader>
           <CardContent>
             {twin.loading ? (
               <Skeleton className="h-24 w-full" />
             ) : baseline.topProducts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin ventas en la ventana analizada.</p>
+              <p className="text-sm text-muted-foreground">{trPT("Sin ventas en la ventana analizada.")}</p>
             ) : (
               <Table>
                 <TableHeader>

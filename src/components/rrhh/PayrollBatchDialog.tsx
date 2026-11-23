@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -37,7 +38,7 @@ export function PayrollBatchDialog({ tenantId, defaultBonus = 0, defaultDeductio
       p_deductions: parseFloat(form.ded || "0") || 0,
     });
     setRunning(false);
-    if (error) return toast({ title: "No se pudo generar el lote", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: trPT("No se pudo generar el lote"), description: error.message, variant: "destructive" });
     const res = data as any;
     toast({
       title: `Lote generado: ${res?.created ?? 0} nóminas`,
@@ -50,20 +51,20 @@ export function PayrollBatchDialog({ tenantId, defaultBonus = 0, defaultDeductio
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-1"><Layers className="h-4 w-4" />Generar en lote</Button>
+        <Button variant="outline" className="gap-1"><Layers className="h-4 w-4" />{trPT("Generar en lote")}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Generar nóminas en lote</DialogTitle>
+          <DialogTitle>{trPT("Generar nóminas en lote")}</DialogTitle>
           <DialogDescription>
-            Calcula la nómina del período para todos los empleados activos con cargo asignado. Los que ya tengan nómina en ese período se omiten.
+            {trPT("Calcula la nómina del período para todos los empleados activos con cargo asignado. Los que ya tengan nómina en ese período se omiten.")}
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-3">
           <div><Label className="text-xs">Desde</Label><Input type="date" value={form.start} onChange={(e) => setForm({ ...form, start: e.target.value })} /></div>
           <div><Label className="text-xs">Hasta</Label><Input type="date" value={form.end} onChange={(e) => setForm({ ...form, end: e.target.value })} /></div>
-          <div><Label className="text-xs">Bono por empleado</Label><Input type="number" step="0.01" value={form.bonus} onChange={(e) => setForm({ ...form, bonus: e.target.value })} /></div>
-          <div><Label className="text-xs">Deducción por empleado</Label><Input type="number" step="0.01" value={form.ded} onChange={(e) => setForm({ ...form, ded: e.target.value })} /></div>
+          <div><Label className="text-xs">{trPT("Bono por empleado")}</Label><Input type="number" step="0.01" value={form.bonus} onChange={(e) => setForm({ ...form, bonus: e.target.value })} /></div>
+          <div><Label className="text-xs">{trPT("Deducción por empleado")}</Label><Input type="number" step="0.01" value={form.ded} onChange={(e) => setForm({ ...form, ded: e.target.value })} /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>

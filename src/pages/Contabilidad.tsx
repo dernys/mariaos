@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useMemo } from "react";
@@ -726,7 +727,7 @@ const Contabilidad = () => {
                         <TableCell className="text-xs font-heading font-semibold" onClick={() => openEntryDetail(e)}>{e.entry_number}</TableCell>
                         <TableCell className="text-xs text-muted-foreground" onClick={() => openEntryDetail(e)}>{format(new Date(e.date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="text-xs" onClick={() => openEntryDetail(e)}>
-                          {e.description || "—"}
+                          {trPT(e.description) || "—"}
                           {e.reverses && <Badge variant="outline" className="ml-2 text-[9px]">{t("modules.accounting.entries.reversalBadge")}</Badge>}
                           {e.reversed_by && <Badge variant="destructive" className="ml-2 text-[9px]">{t("modules.accounting.entries.reversedBadge")}</Badge>}
                         </TableCell>
@@ -798,8 +799,8 @@ const Contabilidad = () => {
         {section === "fiscal" && (
           <Tabs value={subTab} onValueChange={setSubTab} className="space-y-4">
             <TabsList>
-              <TabsTrigger value="onat"><Landmark className="h-3.5 w-3.5 mr-1" />Declaraciones fiscales</TabsTrigger>
-              <TabsTrigger value="costos"><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Plantillas de Costos</TabsTrigger>
+              <TabsTrigger value="onat"><Landmark className="h-3.5 w-3.5 mr-1" />{trPT("Declaraciones fiscales")}</TabsTrigger>
+              <TabsTrigger value="costos"><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />{trPT("Plantillas de Costos")}</TabsTrigger>
             </TabsList>
             <TabsContent value="onat" className="space-y-4">
               <CuTaxDeclarationsTab />
@@ -978,7 +979,7 @@ const Contabilidad = () => {
           <DialogHeader>
             <DialogTitle>{t("modules.accounting.entryDetail.title", { number: detailEntry?.entry_number })}</DialogTitle>
             <DialogDescription>
-              {detailEntry?.description || t("modules.accounting.entryDetail.noDescription")} · {detailEntry?.date && format(new Date(detailEntry.date), "dd/MM/yyyy")}
+              {trPT(detailEntry?.description) || t("modules.accounting.entryDetail.noDescription")} · {detailEntry?.date && format(new Date(detailEntry.date), "dd/MM/yyyy")}
             </DialogDescription>
           </DialogHeader>
           <Table>

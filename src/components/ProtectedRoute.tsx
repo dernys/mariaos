@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useSuperadmin } from "@/hooks/useSuperadmin";
@@ -19,13 +20,13 @@ function Forbidden() {
         <ShieldAlert className="h-7 w-7 text-destructive" />
       </div>
       <div className="space-y-1">
-        <h1 className="font-heading text-xl font-bold">Acceso restringido</h1>
+        <h1 className="font-heading text-xl font-bold">{trPT("Acceso restringido")}</h1>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Tu rol no tiene permiso para ver este módulo. Contacta al administrador si necesitas acceso.
+          {trPT("Tu rol no tiene permiso para ver este módulo. Contacta al administrador si necesitas acceso.")}
         </p>
       </div>
       <Button asChild variant="outline" size="sm">
-        <Link to="/app">Volver al inicio</Link>
+        <Link to="/app">{trPT("Volver al inicio")}</Link>
       </Button>
     </div>
   );

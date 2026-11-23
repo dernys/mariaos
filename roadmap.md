@@ -1,5 +1,9 @@
-# Demo stock correction
-- [x] Verify all official demo product totals, locations and POS scope.
-- [x] Redistribute existing restaurant demo store stock into its active POS store without increasing totals; append audit movements.
-- [x] Prevent stale location stock during POS context changes; run regression tests and verify the real POS.
-- [x] Document verified results and remaining limitations.
+# Roadmap (petición 2026-11-23)
+- [ ] Seguridad: escaneo rápido + profundo y corregir hallazgos
+- [ ] Sin pérdida de datos al refrescar (borradores de formularios persistidos)
+- [ ] PRIORIDAD: traducción pt-BR de todas las pantallas
+- [ ] Selector de idioma en el marketplace
+- [ ] Datos de ejemplo en demo Mercado Piracicaba (con fotos)
+- [ ] Demos Piracicaba: Restaurante, Bar, Serviços (con fotos)
+- [ ] Perfeccionar marketplace y delivery
+- [ ] Optimizar paquetes/librerías (deps sin uso, carga diferida)

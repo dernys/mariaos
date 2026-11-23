@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -117,7 +118,7 @@ export function PermissionsTab() {
       }
     }
     queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
-    toast.success("Permisos guardados correctamente");
+    toast.success(trPT("Permisos guardados correctamente"));
     await fetchData();
     setSaving(false);
   };
@@ -146,7 +147,7 @@ export function PermissionsTab() {
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
-              {role.label}
+              {trPT(role.label)}
             </button>
           ))}
         </div>
@@ -162,7 +163,7 @@ export function PermissionsTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-left p-3 font-medium text-muted-foreground text-xs w-48">Módulo</th>
+                <th className="text-left p-3 font-medium text-muted-foreground text-xs w-48">{trPT("Módulo")}</th>
                 {PERMISSION_KEYS.map((key) => (
                   <th key={key} className="text-center p-3 font-medium text-muted-foreground text-xs w-24">
                     {PERMISSION_LABELS[key]}
@@ -201,7 +202,7 @@ export function PermissionsTab() {
               {modules.length === 0 && (
                 <tr>
                   <td colSpan={5} className="p-6 text-center text-xs text-muted-foreground">
-                    No hay módulos. Crea uno en la pestaña "Módulos" primero.
+                    {trPT("No hay módulos. Crea uno en la pestaña \"Módulos\" primero.")}
                   </td>
                 </tr>
               )}
@@ -217,7 +218,7 @@ export function PermissionsTab() {
           className="gap-2 gradient-brand text-primary-foreground font-heading font-semibold"
         >
           <Save className="h-4 w-4" />
-          {saving ? "Guardando..." : "Guardar Permisos"}
+          {saving ? "Guardando..." : trPT("Guardar Permisos")}
         </Button>
       </div>
     </div>

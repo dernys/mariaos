@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -122,7 +123,7 @@ export default function CuCostSheetsTab() {
     if (!selected) return;
     const { error } = await supabase.rpc("recompute_cu_cost_sheet", { p_cost_sheet_id: selected.id });
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Costo recalculado" });
+    toast({ title: trPT("Costo recalculado") });
     const fresh = await supabase.from("cu_cost_sheets").select("*").eq("id", selected.id).single();
     if (fresh.data) setSelected(fresh.data as Sheet);
     await loadSheets();
@@ -136,7 +137,7 @@ export default function CuCostSheetsTab() {
           <Button size="sm" onClick={() => setNewDialog(true)}><Plus className="h-4 w-4" /></Button>
         </CardHeader>
         <CardContent className="space-y-1">
-          {sheets.length === 0 && <p className="text-xs text-muted-foreground">Sin plantillas</p>}
+          {sheets.length === 0 && <p className="text-xs text-muted-foreground">{trPT("Sin plantillas")}</p>}
           {sheets.map((s) => (
             <button
               key={s.id}
@@ -145,8 +146,8 @@ export default function CuCostSheetsTab() {
             >
               <div className="font-medium">{s.name}</div>
               <div className="text-xs text-muted-foreground flex justify-between">
-                <span>Costo: {fmt(s.unit_cost)}</span>
-                <span>Precio: {fmt(s.suggested_price)}</span>
+                <span>{trPT("Costo:")} {fmt(s.unit_cost)}</span>
+                <span>{trPT("Precio:")} {fmt(s.suggested_price)}</span>
               </div>
             </button>
           ))}
@@ -155,20 +156,20 @@ export default function CuCostSheetsTab() {
 
       <Card className="lg:col-span-2">
         {!selected ? (
-          <CardContent className="py-12 text-center text-muted-foreground text-sm">Selecciona una plantilla</CardContent>
+          <CardContent className="py-12 text-center text-muted-foreground text-sm">{trPT("Selecciona una plantilla")}</CardContent>
         ) : (
           <>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-base">{selected.name}</CardTitle>
-                <p className="text-xs text-muted-foreground">Margen {selected.margin_pct}% → Precio sugerido {fmt(selected.suggested_price)}</p>
+                <p className="text-xs text-muted-foreground">Margen {selected.margin_pct}{trPT("% → Precio sugerido")} {fmt(selected.suggested_price)}</p>
               </div>
               <Button size="sm" variant="outline" onClick={recompute}><RefreshCw className="h-3.5 w-3.5 mr-1" />Recalcular</Button>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                 <div className="p-2 rounded bg-muted/40"><div className="text-muted-foreground">Materias</div><div className="font-semibold">{fmt(selected.raw_materials_cost)}</div></div>
-                <div className="p-2 rounded bg-muted/40"><div className="text-muted-foreground">M. Obra</div><div className="font-semibold">{fmt(selected.labor_cost)}</div></div>
+                <div className="p-2 rounded bg-muted/40"><div className="text-muted-foreground">{trPT("M. Obra")}</div><div className="font-semibold">{fmt(selected.labor_cost)}</div></div>
                 <div className="p-2 rounded bg-muted/40"><div className="text-muted-foreground">Indirectos</div><div className="font-semibold">{fmt(selected.indirect_cost)}</div></div>
                 <div className="p-2 rounded bg-muted/40"><div className="text-muted-foreground">Empaque</div><div className="font-semibold">{fmt(selected.packaging_cost)}</div></div>
                 <div className="p-2 rounded bg-muted/40"><div className="text-muted-foreground">Otros</div><div className="font-semibold">{fmt(selected.other_cost)}</div></div>
@@ -176,26 +177,26 @@ export default function CuCostSheetsTab() {
 
               <div className="grid grid-cols-12 gap-2 items-end p-2 border rounded-md">
                 <div className="col-span-3">
-                  <Label className="text-[10px]">Categoría</Label>
+                  <Label className="text-[10px]">{trPT("Categoría")}</Label>
                   <Select value={itemForm.category} onValueChange={(v) => setItemForm({ ...itemForm, category: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-4"><Label className="text-[10px]">Descripción</Label><Input value={itemForm.description} onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })} /></div>
+                <div className="col-span-4"><Label className="text-[10px]">{trPT("Descripción")}</Label><Input value={itemForm.description} onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })} /></div>
                 <div className="col-span-1"><Label className="text-[10px]">Cant</Label><Input type="number" value={itemForm.quantity} onChange={(e) => setItemForm({ ...itemForm, quantity: Number(e.target.value) })} /></div>
                 <div className="col-span-1"><Label className="text-[10px]">Un</Label><Input value={itemForm.unit} onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })} /></div>
-                <div className="col-span-2"><Label className="text-[10px]">Costo unit.</Label><Input type="number" value={itemForm.unit_cost} onChange={(e) => setItemForm({ ...itemForm, unit_cost: Number(e.target.value) })} /></div>
+                <div className="col-span-2"><Label className="text-[10px]">{trPT("Costo unit.")}</Label><Input type="number" value={itemForm.unit_cost} onChange={(e) => setItemForm({ ...itemForm, unit_cost: Number(e.target.value) })} /></div>
                 <div className="col-span-1"><Button size="sm" onClick={addItem}><Plus className="h-3.5 w-3.5" /></Button></div>
               </div>
 
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Descripción</TableHead>
+                    <TableHead>{trPT("Categoría")}</TableHead>
+                    <TableHead>{trPT("Descripción")}</TableHead>
                     <TableHead className="text-right">Cant</TableHead>
-                    <TableHead className="text-right">Costo unit.</TableHead>
+                    <TableHead className="text-right">{trPT("Costo unit.")}</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
@@ -204,14 +205,14 @@ export default function CuCostSheetsTab() {
                   {items.map((i) => (
                     <TableRow key={i.id}>
                       <TableCell className="text-xs">{i.category}</TableCell>
-                      <TableCell>{i.description}</TableCell>
+                      <TableCell>{trPT(i.description)}</TableCell>
                       <TableCell className="text-right">{i.quantity} {i.unit}</TableCell>
                       <TableCell className="text-right">{fmt(i.unit_cost)}</TableCell>
                       <TableCell className="text-right font-semibold">{fmt(i.total)}</TableCell>
                       <TableCell><Button size="icon" variant="ghost" onClick={() => delItem(i.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
                     </TableRow>
                   ))}
-                  {items.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-4 text-xs text-muted-foreground">Sin renglones</TableCell></TableRow>}
+                  {items.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-4 text-xs text-muted-foreground">{trPT("Sin renglones")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
@@ -221,10 +222,10 @@ export default function CuCostSheetsTab() {
 
       <Dialog open={newDialog} onOpenChange={setNewDialog}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Nueva plantilla de costos</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{trPT("Nueva plantilla de costos")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>Nombre</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><Label>Margen (%)</Label><Input type="number" value={form.margin_pct} onChange={(e) => setForm({ ...form, margin_pct: Number(e.target.value) })} /></div>
+            <div><Label>{trPT("Margen (%)")}</Label><Input type="number" value={form.margin_pct} onChange={(e) => setForm({ ...form, margin_pct: Number(e.target.value) })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewDialog(false)}>Cancelar</Button>

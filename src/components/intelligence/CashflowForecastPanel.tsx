@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 // Sprint D — Inteligencia predictiva: pronóstico de tesorería por semanas.
 
 import { useQuery } from "@tanstack/react-query";
@@ -46,16 +47,16 @@ export function CashflowForecastPanel({ weeks = 8 }: { weeks?: number }) {
             <TrendingUp className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold">Pronóstico de tesorería · {weeks} semanas</h3>
+            <h3 className="text-sm font-semibold">{trPT("Pronóstico de tesorería ·")} {weeks} semanas</h3>
             <p className="text-xs text-muted-foreground">
-              Saldo bancario actual proyectado con cobros de facturas, pagos a proveedores y previsiones.
+              {trPT("Saldo bancario actual proyectado con cobros de facturas, pagos a proveedores y previsiones.")}
             </p>
           </div>
         </div>
         {shortfall && (
           <Badge variant="destructive" className="gap-1 text-[10px]">
             <AlertTriangle className="h-3 w-3" />
-            Descubierto previsto el {format(parseISO(shortfall.week_start), "dd/MM")}
+            {trPT("Descubierto previsto el")} {format(parseISO(shortfall.week_start), "dd/MM")}
           </Badge>
         )}
       </div>
@@ -68,7 +69,7 @@ export function CashflowForecastPanel({ weeks = 8 }: { weeks?: number }) {
               <TableHead className="text-right">Cobros</TableHead>
               <TableHead className="text-right">Pagos</TableHead>
               <TableHead className="text-right">Neto</TableHead>
-              <TableHead className="text-right">Saldo proyectado</TableHead>
+              <TableHead className="text-right">{trPT("Saldo proyectado")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -84,10 +85,10 @@ export function CashflowForecastPanel({ weeks = 8 }: { weeks?: number }) {
               </TableRow>
             ))}
             {query.isLoading && (
-              <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Calculando…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">{trPT("Calculando…")}</TableCell></TableRow>
             )}
             {!query.isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin datos suficientes para proyectar.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin datos suficientes para proyectar.")}</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

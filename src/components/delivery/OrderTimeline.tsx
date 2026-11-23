@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -57,7 +58,7 @@ export function OrderTimeline({ orderId, refreshKey = 0 }: { orderId: string; re
     setSaving(true);
     const { error } = await (supabase.rpc as any)("add_online_order_note", { p_order_id: orderId, p_note: note.trim() });
     setSaving(false);
-    if (error) return toast({ title: "No se pudo guardar la nota", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: trPT("No se pudo guardar la nota"), description: error.message, variant: "destructive" });
     setNote("");
     load();
   };
@@ -65,14 +66,14 @@ export function OrderTimeline({ orderId, refreshKey = 0 }: { orderId: string; re
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-xs font-semibold">
-        <History className="h-3.5 w-3.5 text-primary" /> Historial y actividad
+        <History className="h-3.5 w-3.5 text-primary" /> {trPT("Historial y actividad")}
         <Badge variant="outline" className="text-[10px]">{events.length}</Badge>
       </div>
 
       <div className="flex gap-2">
         <Input
           value={note}
-          placeholder="Añadir nota interna o seguimiento…"
+          placeholder={trPT("Añadir nota interna o seguimiento…")}
           onChange={(e) => setNote(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addNote(); } }}
         />
@@ -84,7 +85,7 @@ export function OrderTimeline({ orderId, refreshKey = 0 }: { orderId: string; re
       {loading ? (
         <div className="py-6 flex justify-center"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>
       ) : events.length === 0 ? (
-        <p className="text-xs text-muted-foreground py-4 text-center">Aún no hay actividad registrada.</p>
+        <p className="text-xs text-muted-foreground py-4 text-center">{trPT("Aún no hay actividad registrada.")}</p>
       ) : (
         <ol className="space-y-2 max-h-64 overflow-y-auto pr-1">
           {events.map((ev) => {
@@ -95,7 +96,7 @@ export function OrderTimeline({ orderId, refreshKey = 0 }: { orderId: string; re
                 <Icon className="h-3.5 w-3.5 mt-0.5 text-primary shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium">
-                    {meta.label}
+                    {trPT(meta.label)}
                     {ev.from_status && ev.to_status && (
                       <span className="text-muted-foreground font-normal"> · {ev.from_status} → {ev.to_status}</span>
                     )}

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 // Sprint D — Inteligencia predictiva: pronóstico de demanda y reposición.
 
 import { useState } from "react";
@@ -52,22 +53,22 @@ export function DemandForecastPanel() {
             <PackageSearch className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold">Pronóstico de demanda</h3>
+            <h3 className="text-sm font-semibold">{trPT("Pronóstico de demanda")}</h3>
             <p className="text-xs text-muted-foreground">
-              Venta media de los últimos 30 días proyectada al horizonte elegido, con sugerencia de reposición.
+              {trPT("Venta media de los últimos 30 días proyectada al horizonte elegido, con sugerencia de reposición.")}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {urgent > 0 && <Badge variant="destructive" className="text-[10px]">{urgent} con menos de 7 días</Badge>}
+          {urgent > 0 && <Badge variant="destructive" className="text-[10px]">{urgent} {trPT("con menos de 7 días")}</Badge>}
           <Select value={horizon} onValueChange={setHorizon}>
             <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">7 días</SelectItem>
-              <SelectItem value="14">14 días</SelectItem>
-              <SelectItem value="30">30 días</SelectItem>
-              <SelectItem value="60">60 días</SelectItem>
-              <SelectItem value="90">90 días</SelectItem>
+              <SelectItem value="7">{trPT("7 días")}</SelectItem>
+              <SelectItem value="14">{trPT("14 días")}</SelectItem>
+              <SelectItem value="30">{trPT("30 días")}</SelectItem>
+              <SelectItem value="60">{trPT("60 días")}</SelectItem>
+              <SelectItem value="90">{trPT("90 días")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -79,7 +80,7 @@ export function DemandForecastPanel() {
             <TableRow>
               <TableHead>Producto</TableHead>
               <TableHead className="text-right">Stock</TableHead>
-              <TableHead className="text-right hidden sm:table-cell">Venta/día</TableHead>
+              <TableHead className="text-right hidden sm:table-cell">{trPT("Venta/día")}</TableHead>
               <TableHead className="text-right">Demanda {horizon}d</TableHead>
               <TableHead className="text-right hidden md:table-cell">Cobertura</TableHead>
               <TableHead className="text-right">Reponer</TableHead>
@@ -107,10 +108,10 @@ export function DemandForecastPanel() {
               );
             })}
             {query.isLoading && (
-              <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Calculando…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">{trPT("Calculando…")}</TableCell></TableRow>
             )}
             {!query.isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Sin ventas recientes para proyectar demanda.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin ventas recientes para proyectar demanda.")}</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

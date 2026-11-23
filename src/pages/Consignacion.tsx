@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -47,11 +48,11 @@ export default function Consignacion() {
       if (!supplierMap.has(s.supplier_id)) supplierMap.set(s.supplier_id, []);
       supplierMap.get(s.supplier_id)!.push(s.id);
     });
-    if (supplierMap.size > 1) { toast({ title: "Selecciona un solo proveedor", variant: "destructive" }); return; }
+    if (supplierMap.size > 1) { toast({ title: trPT("Selecciona un solo proveedor"), variant: "destructive" }); return; }
     const [sIds] = Array.from(supplierMap.values());
     const { error } = await (supabase.rpc as any)("settle_consignment_lots", { p_settlement_ids: sIds, p_method: "cash", p_notes: "Liquidación" });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Liquidación registrada" });
+    toast({ title: trPT("Liquidación registrada") });
     setSelected(new Set()); fetchAll();
   };
 
@@ -59,14 +60,14 @@ export default function Consignacion() {
     <AppLayout title={t("nav.items.consignments")}>
       <div className="space-y-4">
         <StatRow>
-          <MiniStatCard label="Lotes activos" value={activeLots.length} icon={Package} tone="primary" />
-          <MiniStatCard label="Unidades pendientes" value={totalUnits} icon={Package} />
-          <MiniStatCard label="Valor en consignación" value={`$${valuePending.toLocaleString()}`} icon={DollarSign} />
-          <MiniStatCard label="Por liquidar" value={`$${settlePending.toLocaleString()}`} icon={Wallet} tone={settlePending > 0 ? "warning" : "success"} />
+          <MiniStatCard label={trPT("Lotes activos")} value={activeLots.length} icon={Package} tone="primary" />
+          <MiniStatCard label={trPT("Unidades pendientes")} value={totalUnits} icon={Package} />
+          <MiniStatCard label={trPT("Valor en consignación")} value={`$${valuePending.toLocaleString()}`} icon={DollarSign} />
+          <MiniStatCard label={trPT("Por liquidar")} value={`$${settlePending.toLocaleString()}`} icon={Wallet} tone={settlePending > 0 ? "warning" : "success"} />
         </StatRow>
 
         <div className="bg-card rounded-xl border overflow-hidden">
-          <div className="p-3 border-b"><p className="text-xs font-heading font-semibold">Lotes en consignación</p></div>
+          <div className="p-3 border-b"><p className="text-xs font-heading font-semibold">{trPT("Lotes en consignación")}</p></div>
           <Table>
             <TableHeader><TableRow>
               <TableHead className="text-xs">Proveedor</TableHead>
@@ -91,16 +92,16 @@ export default function Consignacion() {
                   <TableCell><Badge variant="outline" className="text-[10px]">{l.status}</Badge></TableCell>
                 </TableRow>
               ))}
-              {lots.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-xs text-muted-foreground py-6">Sin lotes</TableCell></TableRow>}
+              {lots.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin lotes")}</TableCell></TableRow>}
             </TableBody>
           </Table>
         </div>
 
         <div className="bg-card rounded-xl border overflow-hidden">
           <div className="flex items-center justify-between p-3 border-b">
-            <p className="text-xs font-heading font-semibold">Liquidaciones pendientes</p>
+            <p className="text-xs font-heading font-semibold">{trPT("Liquidaciones pendientes")}</p>
             <Button size="sm" disabled={selected.size === 0} onClick={settle} className="h-8 text-xs gap-1 gradient-brand text-primary-foreground">
-              <Check className="h-3 w-3" />Liquidar ({selected.size})
+              <Check className="h-3 w-3" />{trPT("Liquidar (")}{selected.size})
             </Button>
           </div>
           <Table>
@@ -123,7 +124,7 @@ export default function Consignacion() {
                   <TableCell className="text-xs text-right font-bold">${Number(s.total).toFixed(2)}</TableCell>
                 </TableRow>
               ))}
-              {settlements.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Nada por liquidar</TableCell></TableRow>}
+              {settlements.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">{trPT("Nada por liquidar")}</TableCell></TableRow>}
             </TableBody>
           </Table>
         </div>

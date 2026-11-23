@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { tr } from "@/i18n/tr";
+import { tr as trPT } from "@/i18n/tr";
 import { Plus, Minus, Trash2, ShoppingCart, MessageSquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
@@ -59,7 +59,7 @@ export function CartContent({ cart, updateQty, removeItem, subtotal, tax, total,
               </div>
               <p className="text-xs font-heading font-bold w-16 text-right">${(item.price * item.qty).toLocaleString()}</p>
               {onEditNote && (
-                <button onClick={() => onEditNote(item.id)} title={tr("Modificaciones / sugerencias")} className="text-muted-foreground hover:text-primary transition-colors p-1">
+                <button onClick={() => onEditNote(item.id)} title={trPT("Modificaciones / sugerencias")} className="text-muted-foreground hover:text-primary transition-colors p-1">
                   <MessageSquarePlus className="h-3.5 w-3.5" />
                 </button>
               )}

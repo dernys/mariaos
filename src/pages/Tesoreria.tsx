@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -149,7 +150,7 @@ export default function Tesoreria() {
                   {txs.map((t2) => (
                     <TableRow key={t2.id}>
                       <TableCell>{format(new Date(t2.transaction_date), "dd/MM/yyyy")}</TableCell>
-                      <TableCell>{t2.description || "—"}</TableCell>
+                      <TableCell>{trPT(t2.description) || "—"}</TableCell>
                       <TableCell className="font-mono text-xs">{t2.reference || "—"}</TableCell>
                       <TableCell className={`text-right font-mono ${t2.direction === "in" ? "text-success" : "text-destructive"}`}>{t2.direction === "in" ? "+" : "-"}{Number(t2.amount).toFixed(2)}</TableCell>
                       <TableCell><Badge variant={t2.status === "matched" ? "default" : t2.status === "ignored" ? "outline" : "secondary"}>{statusLabel(t2.status)}</Badge></TableCell>
@@ -180,7 +181,7 @@ export default function Tesoreria() {
                       <TableCell>{format(new Date(f.due_date), "dd/MM/yyyy")}</TableCell>
                       <TableCell><Badge variant={f.direction === "in" ? "default" : "destructive"}>{f.direction === "in" ? t("modules.treasury.directions.income") : t("modules.treasury.directions.payment")}</Badge></TableCell>
                       <TableCell>{f.category || "—"}</TableCell>
-                      <TableCell>{f.description || "—"}</TableCell>
+                      <TableCell>{trPT(f.description) || "—"}</TableCell>
                       <TableCell className="text-right font-mono">{Number(f.amount).toFixed(2)} {f.currency}</TableCell>
                       <TableCell><Badge variant="outline">{statusLabel(f.status)}</Badge></TableCell>
                     </TableRow>
@@ -267,7 +268,7 @@ export default function Tesoreria() {
             <DialogHeader>
               <DialogTitle>{t("modules.treasury.match.title")}</DialogTitle>
               <DialogDescription>
-                {matchTx && <>{t("modules.treasury.match.amount")}: <b>{Number(matchTx.amount).toFixed(2)}</b> · {matchTx.description}</>}
+                {matchTx && <>{t("modules.treasury.match.amount")}: <b>{Number(matchTx.amount).toFixed(2)}</b> · {trPT(matchTx.description)}</>}
               </DialogDescription>
             </DialogHeader>
             <div className="max-h-96 overflow-auto">

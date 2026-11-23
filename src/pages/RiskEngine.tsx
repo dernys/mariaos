@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -102,7 +103,7 @@ export default function RiskEngine() {
     ];
     if ((data?.auto_resolved ?? 0) > 0) parts.push(`${data.auto_resolved} resueltos automáticamente`);
     toast.success(parts.join(" · "));
-    if (data?.ai_enabled === false) toast.info("Análisis de IA no disponible: se mostraron reglas deterministas.");
+    if (data?.ai_enabled === false) toast.info(trPT("Análisis de IA no disponible: se mostraron reglas deterministas."));
     await load();
   };
 
@@ -143,19 +144,19 @@ export default function RiskEngine() {
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <p className="text-sm text-muted-foreground">
-            Motor de riesgo sobre datos reales de la empresa: caja, inventario, crédito, contabilidad y cumplimiento.
+            {trPT("Motor de riesgo sobre datos reales de la empresa: caja, inventario, crédito, contabilidad y cumplimiento.")}
           </p>
           <Button onClick={scan} disabled={scanning || !tenantId}>
             {scanning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Shield className="h-4 w-4 mr-2" />}
-            {scanning ? "Analizando con IA…" : "Escanear ahora"}
+            {scanning ? trPT("Analizando con IA…") : trPT("Escanear ahora")}
           </Button>
         </div>
 
         <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Índice de riesgo</p><p className="text-2xl font-bold">{riskScore}<span className="text-sm text-muted-foreground">/100</span></p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Críticos abiertos</p><p className="text-2xl font-bold text-destructive">{counts.critical}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Altos abiertos</p><p className="text-2xl font-bold text-amber-500">{counts.high}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Medios abiertos</p><p className="text-2xl font-bold">{counts.medium}</p></CardContent></Card>
+          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{trPT("Índice de riesgo")}</p><p className="text-2xl font-bold">{riskScore}<span className="text-sm text-muted-foreground">/100</span></p></CardContent></Card>
+          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{trPT("Críticos abiertos")}</p><p className="text-2xl font-bold text-destructive">{counts.critical}</p></CardContent></Card>
+          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{trPT("Altos abiertos")}</p><p className="text-2xl font-bold text-amber-500">{counts.high}</p></CardContent></Card>
+          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{trPT("Medios abiertos")}</p><p className="text-2xl font-bold">{counts.medium}</p></CardContent></Card>
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Resueltos</p><p className="text-2xl font-bold text-emerald-500">{counts.resolved}</p></CardContent></Card>
         </div>
 
@@ -163,7 +164,7 @@ export default function RiskEngine() {
           <Card className="border-primary/30 bg-primary/5">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" /> Diagnóstico de la IA
+                <Sparkles className="h-4 w-4 text-primary" /> {trPT("Diagnóstico de la IA")}
                 {lastScan && <span className="text-[10px] font-normal text-muted-foreground">· {formatDistanceToNow(new Date(lastScan), { locale: es, addSuffix: true })}</span>}
               </CardTitle>
             </CardHeader>
@@ -183,18 +184,18 @@ export default function RiskEngine() {
           <Select value={severity} onValueChange={setSeverity}>
             <SelectTrigger className="w-[160px]"><SelectValue placeholder="Severidad" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toda severidad</SelectItem>
+              <SelectItem value="all">{trPT("Toda severidad")}</SelectItem>
               {["critical", "high", "medium", "low"].map((s) => (
                 <SelectItem key={s} value={s}>{SEVERITY_LABEL[s]}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Categoría" /></SelectTrigger>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder={trPT("Categoría")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las áreas</SelectItem>
+              <SelectItem value="all">{trPT("Todas las áreas")}</SelectItem>
               {categories.map((c) => (
-                <SelectItem key={c} value={c}>{CATEGORY_META[c]?.label ?? c}</SelectItem>
+                <SelectItem key={c} value={c}>{trPT(CATEGORY_META[c]?.label) ?? c}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -202,15 +203,15 @@ export default function RiskEngine() {
 
         {loading && (
           <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">
-            <Loader2 className="h-6 w-6 mx-auto mb-2 animate-spin" />Cargando alertas…
+            <Loader2 className="h-6 w-6 mx-auto mb-2 animate-spin" />{trPT("Cargando alertas…")}
           </CardContent></Card>
         )}
 
         {!loading && filtered.length === 0 && (
           <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">
             {open.length === 0 && items.length > 0
-              ? <><CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-emerald-500" />Sin riesgos abiertos con estos filtros.</>
-              : <><ShieldAlert className="h-8 w-8 mx-auto mb-2 opacity-50" />Sin alertas. Ejecuta un escaneo para analizar los datos reales de la empresa.</>}
+              ? <><CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-emerald-500" />{trPT("Sin riesgos abiertos con estos filtros.")}</>
+              : <><ShieldAlert className="h-8 w-8 mx-auto mb-2 opacity-50" />{trPT("Sin alertas. Ejecuta un escaneo para analizar los datos reales de la empresa.")}</>}
           </CardContent></Card>
         )}
 
@@ -227,22 +228,22 @@ export default function RiskEngine() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <CardTitle className="text-sm leading-snug">{a.title}</CardTitle>
+                      <CardTitle className="text-sm leading-snug">{trPT(a.title)}</CardTitle>
                     </div>
                     <Badge variant="outline" className={SEVERITY_STYLES[a.severity] ?? ""}>
                       {SEVERITY_LABEL[a.severity] ?? a.severity}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <Badge variant="secondary" className="text-[9px]">{meta.label}</Badge>
+                    <Badge variant="secondary" className="text-[9px]">{trPT(meta.label)}</Badge>
                     <Badge variant={a.status === "open" ? "destructive" : "secondary"} className="text-[9px]">
-                      {a.status === "open" ? "Abierto" : "Resuelto"}
+                      {a.status === "open" ? trPT("Abierto") : trPT("Resuelto")}
                     </Badge>
                     <span>· {formatDistanceToNow(new Date(a.created_at), { locale: es, addSuffix: true })}</span>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-xs text-muted-foreground">{a.description}</p>
+                  <p className="text-xs text-muted-foreground">{trPT(a.description)}</p>
 
                   {evidence.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
@@ -261,7 +262,7 @@ export default function RiskEngine() {
                       <Separator />
                       <div className="space-y-1">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-primary flex items-center gap-1">
-                          <Sparkles className="h-3 w-3" /> Acciones recomendadas por la IA
+                          <Sparkles className="h-3 w-3" /> {trPT("Acciones recomendadas por la IA")}
                         </p>
                         <ul className="space-y-1">
                           {actions.map((act, i) => (
@@ -277,7 +278,7 @@ export default function RiskEngine() {
                   <div className="flex gap-2">
                     {a.status === "open" ? (
                       <Button size="sm" variant="outline" onClick={() => setAlertStatus(a.id, "resolved")}>
-                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />Marcar resuelto
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />{trPT("Marcar resuelto")}
                       </Button>
                     ) : (
                       <Button size="sm" variant="ghost" onClick={() => setAlertStatus(a.id, "open")}>

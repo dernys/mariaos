@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building2, Beer, UtensilsCrossed, Briefcase } from "lucide-react";
@@ -22,7 +23,7 @@ export function TenantSelector() {
   return (
     <Select value={tenantId ?? ""} onValueChange={setActiveTenantId}>
       <SelectTrigger className="h-8 text-xs w-full bg-sidebar-accent border-sidebar-border text-sidebar-foreground">
-        <SelectValue placeholder="Seleccionar empresa" />
+        <SelectValue placeholder={trPT("Seleccionar empresa")} />
       </SelectTrigger>
       <SelectContent>
         {allTenants.map((t) => {

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -37,7 +38,7 @@ export function ConfigTaxRates() {
   const openEdit = (t: TaxRate) => { setEditing(t); setForm({ name: t.name, rate: String(t.rate), is_default: t.is_default }); setDialogOpen(true); };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast({ title: "Error", description: "Nombre requerido", variant: "destructive" }); return; }
+    if (!form.name.trim()) { toast({ title: "Error", description: trPT("Nombre requerido"), variant: "destructive" }); return; }
     const payload = { name: form.name.trim(), rate: parseFloat(form.rate) || 0, is_default: form.is_default, tenant_id: tenantId };
     if (editing) {
       await supabase.from("tax_rates").update(payload).eq("id", editing.id);
@@ -51,16 +52,16 @@ export function ConfigTaxRates() {
 
   const handleDelete = async (id: string) => {
     await supabase.from("tax_rates").delete().eq("id", id);
-    toast({ title: "Impuesto eliminado" });
+    toast({ title: trPT("Impuesto eliminado") });
     fetch();
   };
 
   return (
     <div className="space-y-4 max-w-2xl">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{taxes.length} tasas de impuesto</p>
+        <p className="text-sm text-muted-foreground">{taxes.length} {trPT("tasas de impuesto")}</p>
         <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground">
-          <Plus className="h-3.5 w-3.5" /> Nueva Tasa
+          <Plus className="h-3.5 w-3.5" /> {trPT("Nueva Tasa")}
         </Button>
       </div>
 
@@ -78,29 +79,29 @@ export function ConfigTaxRates() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {t.is_default && <Badge className="text-[10px]">Por defecto</Badge>}
-                <Badge variant={t.is_active ? "default" : "secondary"} className="text-[10px]">{t.is_active ? "Activo" : "Inactivo"}</Badge>
+                {t.is_default && <Badge className="text-[10px]">{trPT("Por defecto")}</Badge>}
+                <Badge variant={t.is_active ? "default" : "secondary"} className="text-[10px]">{t.is_active ? trPT("Activo") : trPT("Inactivo")}</Badge>
                 <button onClick={() => openEdit(t)} className="p-1.5 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
                 <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
               </div>
             </CardContent>
           </Card>
         ))}
-        {taxes.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No hay tasas de impuesto</p>}
+        {taxes.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">{trPT("No hay tasas de impuesto")}</p>}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar" : "Nueva"} Tasa de Impuesto</DialogTitle>
-            <DialogDescription>Configura las tasas de impuesto del sistema</DialogDescription>
+            <DialogTitle>{editing ? trPT("Editar") : trPT("Nueva")} {trPT("Tasa de Impuesto")}</DialogTitle>
+            <DialogDescription>{trPT("Configura las tasas de impuesto del sistema")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="IVA 16%" /></div>
-            <div><Label>Tasa (%)</Label><Input type="number" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} /></div>
+            <div><Label>{trPT("Nombre *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={trPT("IVA 16%")} /></div>
+            <div><Label>{trPT("Tasa (%)")}</Label><Input type="number" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} /></div>
             <div className="flex items-center gap-2">
               <input type="checkbox" id="default-tax" checked={form.is_default} onChange={(e) => setForm({ ...form, is_default: e.target.checked })} className="h-4 w-4 rounded border-input" />
-              <Label htmlFor="default-tax" className="text-xs cursor-pointer">Impuesto por defecto</Label>
+              <Label htmlFor="default-tax" className="text-xs cursor-pointer">{trPT("Impuesto por defecto")}</Label>
             </div>
           </div>
           <DialogFooter>

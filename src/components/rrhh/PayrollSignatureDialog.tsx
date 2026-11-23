@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -38,8 +39,8 @@ export function PayrollSignatureDialog({ payroll, onOpenChange, onSaved }: Props
       p_document_ref: payroll.receipt_number || null,
     });
     setSaving(false);
-    if (error) return toast({ title: "No se pudo registrar la firma", description: error.message, variant: "destructive" });
-    toast({ title: "Firma registrada", description: `${form.name} · ${payroll.period_start} → ${payroll.period_end}` });
+    if (error) return toast({ title: trPT("No se pudo registrar la firma"), description: error.message, variant: "destructive" });
+    toast({ title: trPT("Firma registrada"), description: `${form.name} · ${payroll.period_start} → ${payroll.period_end}` });
     onOpenChange(false);
     onSaved();
   };
@@ -48,31 +49,31 @@ export function PayrollSignatureDialog({ payroll, onOpenChange, onSaved }: Props
     <Dialog open={!!payroll} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><PenLine className="h-4 w-4 text-primary" />Registrar firma del trabajador</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><PenLine className="h-4 w-4 text-primary" />{trPT("Registrar firma del trabajador")}</DialogTitle>
           <DialogDescription>
-            Queda registrado quién firma, la fecha y hora, el método y la evidencia. La firma se asocia a esta nómina.
+            {trPT("Queda registrado quién firma, la fecha y hora, el método y la evidencia. La firma se asocia a esta nómina.")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label className="text-xs">Nombre de quien firma</Label>
+            <Label className="text-xs">{trPT("Nombre de quien firma")}</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
-            <Label className="text-xs">Método</Label>
+            <Label className="text-xs">{trPT("Método")}</Label>
             <Select value={form.method} onValueChange={(v) => setForm({ ...form, method: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="paper">Documento en papel</SelectItem>
-                <SelectItem value="digital">Firma digital</SelectItem>
-                <SelectItem value="pin">Código / PIN</SelectItem>
-                <SelectItem value="biometric">Biométrica</SelectItem>
+                <SelectItem value="paper">{trPT("Documento en papel")}</SelectItem>
+                <SelectItem value="digital">{trPT("Firma digital")}</SelectItem>
+                <SelectItem value="pin">{trPT("Código / PIN")}</SelectItem>
+                <SelectItem value="biometric">{trPT("Biométrica")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Evidencia (enlace al documento escaneado o imagen)</Label>
-            <Input value={form.evidence} onChange={(e) => setForm({ ...form, evidence: e.target.value })} placeholder="https://…" />
+            <Label className="text-xs">{trPT("Evidencia (enlace al documento escaneado o imagen)")}</Label>
+            <Input value={form.evidence} onChange={(e) => setForm({ ...form, evidence: e.target.value })} placeholder={trPT("https://…")} />
           </div>
           <div>
             <Label className="text-xs">Observaciones</Label>
@@ -82,7 +83,7 @@ export function PayrollSignatureDialog({ payroll, onOpenChange, onSaved }: Props
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={save} disabled={saving || !form.name} className="gap-1 gradient-brand text-primary-foreground">
-            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PenLine className="h-3.5 w-3.5" />} Registrar firma
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PenLine className="h-3.5 w-3.5" />} {trPT("Registrar firma")}
           </Button>
         </DialogFooter>
       </DialogContent>

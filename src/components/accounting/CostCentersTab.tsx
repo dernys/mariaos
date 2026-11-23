@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -60,7 +61,7 @@ export function CostCentersTab() {
 
   const save = async () => {
     if (!tenantId || !form.code.trim() || !form.name.trim()) {
-      toast({ title: "Código y nombre obligatorios", variant: "destructive" });
+      toast({ title: trPT("Código y nombre obligatorios"), variant: "destructive" });
       return;
     }
     const payload: any = {
@@ -93,7 +94,7 @@ export function CostCentersTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm text-muted-foreground flex items-center gap-2">
-          <Building2 className="h-4 w-4" /> {items.length} centros de costo
+          <Building2 className="h-4 w-4" /> {items.length} {trPT("centros de costo")}
         </p>
         <Button size="sm" onClick={openNew} className="gap-1"><Plus className="h-4 w-4" />Nuevo</Button>
       </div>
@@ -103,7 +104,7 @@ export function CostCentersTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Código</TableHead>
+                <TableHead>{trPT("Código")}</TableHead>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Departamento</TableHead>
                 <TableHead>Padre</TableHead>
@@ -113,9 +114,9 @@ export function CostCentersTab() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Cargando…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{trPT("Cargando…")}</TableCell></TableRow>
               ) : items.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Sin centros de costo</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{trPT("Sin centros de costo")}</TableCell></TableRow>
               ) : items.map((cc) => (
                 <TableRow key={cc.id}>
                   <TableCell className="font-mono text-xs">{cc.code}</TableCell>
@@ -125,7 +126,7 @@ export function CostCentersTab() {
                     {cc.parent_id ? items.find((x) => x.id === cc.parent_id)?.code || "—" : "—"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={cc.is_active ? "default" : "secondary"}>{cc.is_active ? "Activo" : "Inactivo"}</Badge>
+                    <Badge variant={cc.is_active ? "default" : "secondary"}>{cc.is_active ? trPT("Activo") : trPT("Inactivo")}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(cc)}><Edit2 className="h-4 w-4" /></Button>
@@ -141,32 +142,32 @@ export function CostCentersTab() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar centro" : "Nuevo centro de costo"}</DialogTitle>
-            <DialogDescription>Dimensión analítica para asientos, ventas y compras.</DialogDescription>
+            <DialogTitle>{editing ? trPT("Editar centro") : trPT("Nuevo centro de costo")}</DialogTitle>
+            <DialogDescription>{trPT("Dimensión analítica para asientos, ventas y compras.")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Código *</Label>
+                <Label>{trPT("Código *")}</Label>
                 <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="CC001" />
               </div>
               <div>
                 <Label>Departamento</Label>
-                <Input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} placeholder="Cocina, Sala, Admin…" />
+                <Input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} placeholder={trPT("Cocina, Sala, Admin…")} />
               </div>
             </div>
             <div>
-              <Label>Nombre *</Label>
+              <Label>{trPT("Nombre *")}</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
-              <Label>Centro padre (opcional)</Label>
+              <Label>{trPT("Centro padre (opcional)")}</Label>
               <select
                 className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
                 value={form.parent_id}
                 onChange={(e) => setForm({ ...form, parent_id: e.target.value })}
               >
-                <option value="">— Ninguno —</option>
+                <option value="">{trPT("— Ninguno —")}</option>
                 {items.filter((x) => x.id !== editing?.id).map((x) => (
                   <option key={x.id} value={x.id}>{x.code} - {x.name}</option>
                 ))}
@@ -183,7 +184,7 @@ export function CostCentersTab() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={save}>{editing ? "Guardar" : "Crear"}</Button>
+            <Button onClick={save}>{editing ? trPT("Guardar") : trPT("Crear")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

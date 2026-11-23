@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { tr } from "@/i18n/tr";
+import { tr as trPT } from "@/i18n/tr";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { Badge } from "@/components/ui/badge";
@@ -108,7 +108,7 @@ export function OpenOrdersPanel({ onCharge, onAddItems, compact }: Props) {
     if (order.table_id) {
       await supabase.from("restaurant_tables").update({ status: "available", current_order_id: null, occupied_at: null }).eq("id", order.table_id);
     }
-    toast.success(tr("Orden cancelada"));
+    toast.success(trPT("Orden cancelada"));
     reload();
   };
 
@@ -118,14 +118,14 @@ export function OpenOrdersPanel({ onCharge, onAddItems, compact }: Props) {
     reload();
   };
 
-  if (loading) return <p className="text-xs text-muted-foreground p-2">{tr("Cargando órdenes…")}</p>;
+  if (loading) return <p className="text-xs text-muted-foreground p-2">{trPT("Cargando órdenes…")}</p>;
 
   if (orders.length === 0) {
     return (
       <Card>
         <CardContent className="py-10 text-center text-sm text-muted-foreground">
           <ChefHat className="h-8 w-8 mx-auto mb-2 opacity-30" />
-          No hay órdenes abiertas. Las órdenes enviadas a cocina aparecen aquí hasta que se cobran.
+          {trPT("No hay órdenes abiertas. Las órdenes enviadas a cocina aparecen aquí hasta que se cobran.")}
         </CardContent>
       </Card>
     );
@@ -134,7 +134,7 @@ export function OpenOrdersPanel({ onCharge, onAddItems, compact }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">{orders.length} orden(es) pendientes de cobro</p>
+        <p className="text-xs text-muted-foreground">{orders.length} {trPT("orden(es) pendientes de cobro")}</p>
         <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={reload}>
           <RefreshCw className="h-3 w-3" /> Actualizar
         </Button>
@@ -149,7 +149,7 @@ export function OpenOrdersPanel({ onCharge, onAddItems, compact }: Props) {
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-xs font-heading font-bold truncate">
-                      {o.table_name || "Sin mesa"} {o.order_code && <span className="text-muted-foreground">· {o.order_code}</span>}
+                      {o.table_name || trPT("Sin mesa")} {o.order_code && <span className="text-muted-foreground">· {o.order_code}</span>}
                     </p>
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Clock className="h-2.5 w-2.5" /> {mins} min {o.waiter_name && `· ${o.waiter_name}`}
@@ -171,7 +171,7 @@ export function OpenOrdersPanel({ onCharge, onAddItems, compact }: Props) {
                     </div>
                   ))}
                 </div>
-                {o.notes && <p className="text-[10px] italic text-muted-foreground">Nota: {o.notes}</p>}
+                {o.notes && <p className="text-[10px] italic text-muted-foreground">{trPT("Nota:")} {o.notes}</p>}
 
                 <div className="flex items-center justify-between border-t pt-2">
                   <span className="text-xs font-heading font-bold">${total.toFixed(2)}</span>
@@ -183,7 +183,7 @@ export function OpenOrdersPanel({ onCharge, onAddItems, compact }: Props) {
                     )}
                     {onAddItems && (
                       <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => onAddItems(o)}>
-                        <Plus className="h-3 w-3" /> Añadir
+                        <Plus className="h-3 w-3" /> {trPT("Añadir")}
                       </Button>
                     )}
                     <Button size="sm" className="h-7 text-[10px] gap-1" onClick={() => onCharge(o)}>

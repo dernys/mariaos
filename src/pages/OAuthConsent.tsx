@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ShieldCheck, XCircle } from "lucide-react";
@@ -105,9 +106,9 @@ export default function OAuthConsent() {
             <ShieldCheck className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="font-heading text-xl">Connect {clientName} to MarIA OS</CardTitle>
+            <CardTitle className="font-heading text-xl">Connect {clientName} {trPT("to MarIA OS")}</CardTitle>
             <CardDescription>
-              {clientName} will be able to call MarIA OS agent tools while signed in as you.
+              {clientName} {trPT("will be able to call MarIA OS agent tools while signed in as you.")}
             </CardDescription>
           </div>
         </CardHeader>
@@ -122,18 +123,18 @@ export default function OAuthConsent() {
           {!details && !error ? (
             <div className="py-8 flex items-center justify-center text-sm text-muted-foreground">
               <span className="mr-2 h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-              Loading authorization request…
+              {trPT("Loading authorization request…")}
             </div>
           ) : details ? (
             <>
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Signed-in account</span>
-                  <span className="font-medium truncate">{accountEmail ?? "Current user"}</span>
+                  <span className="text-muted-foreground">{trPT("Signed-in account")}</span>
+                  <span className="font-medium truncate">{accountEmail ?? trPT("Current user")}</span>
                 </div>
                 {details.redirect_uri && (
                   <div className="flex items-start justify-between gap-3">
-                    <span className="text-muted-foreground shrink-0">Client redirect</span>
+                    <span className="text-muted-foreground shrink-0">{trPT("Client redirect")}</span>
                     <span className="font-mono text-xs text-right break-all">{details.redirect_uri}</span>
                   </div>
                 )}
@@ -142,28 +143,28 @@ export default function OAuthConsent() {
               <Separator />
 
               <div className="space-y-2">
-                <p className="text-sm font-medium">Access summary</p>
+                <p className="text-sm font-medium">{trPT("Access summary")}</p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>Use enabled MCP tools for tenants you can already access.</li>
-                  <li>Read AI agents, pending business decisions, and open risk alerts.</li>
-                  <li>Approve or reject decisions and resolve risk alerts when app permissions allow it.</li>
-                  <li>This does not bypass MarIA OS permissions or backend policies.</li>
+                  <li>{trPT("Use enabled MCP tools for tenants you can already access.")}</li>
+                  <li>{trPT("Read AI agents, pending business decisions, and open risk alerts.")}</li>
+                  <li>{trPT("Approve or reject decisions and resolve risk alerts when app permissions allow it.")}</li>
+                  <li>{trPT("This does not bypass MarIA OS permissions or backend policies.")}</li>
                 </ul>
               </div>
 
               {scopes.length > 0 && (
                 <div className="rounded-lg border bg-background/60 p-3">
-                  <p className="text-xs font-medium mb-1">Identity scopes</p>
+                  <p className="text-xs font-medium mb-1">{trPT("Identity scopes")}</p>
                   <p className="text-xs text-muted-foreground">{scopes.join(", ")}</p>
                 </div>
               )}
 
               <div className="flex gap-2 pt-2">
                 <Button className="flex-1 gradient-brand text-primary-foreground" disabled={busy} onClick={() => decide(true)}>
-                  {busy ? "Connecting…" : "Approve"}
+                  {busy ? "Connecting…" : trPT("Approve")}
                 </Button>
                 <Button className="flex-1" variant="outline" disabled={busy} onClick={() => decide(false)}>
-                  Cancel connection
+                  {trPT("Cancel connection")}
                 </Button>
               </div>
             </>

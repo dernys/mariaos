@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -59,7 +60,7 @@ export function PayrollActionsMenu({ payroll: p, tenantName, requireApproval, si
     setBusy(true);
     const { error } = await (supabase.rpc as any)(fn, args);
     setBusy(false);
-    if (error) return toast({ title: "No se pudo completar la acción", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: trPT("No se pudo completar la acción"), description: error.message, variant: "destructive" });
     toast({ title: okTitle, description: `${p.employees?.name || "—"} · ${p.period_start} → ${p.period_end}` });
     onRefresh();
   };
@@ -80,32 +81,32 @@ export function PayrollActionsMenu({ payroll: p, tenantName, requireApproval, si
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel className="text-[11px]">
-          {p.employees?.name || "Trabajador"} · {Number(p.net_pay).toFixed(2)}
+          {p.employees?.name || trPT("Trabajador")} · {Number(p.net_pay).toFixed(2)}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
         <DropdownMenuItem onClick={() => onDetail(p)}>
-          <Eye className="h-3.5 w-3.5 mr-2" /> Ver detalle
+          <Eye className="h-3.5 w-3.5 mr-2" /> {trPT("Ver detalle")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onDetail(p)}>
-          <History className="h-3.5 w-3.5 mr-2" /> Historial y auditoría
+          <History className="h-3.5 w-3.5 mr-2" /> {trPT("Historial y auditoría")}
         </DropdownMenuItem>
 
         {canEdit && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onEdit(p)}>
-              <Edit2 className="h-3.5 w-3.5 mr-2" /> Editar importes
+              <Edit2 className="h-3.5 w-3.5 mr-2" /> {trPT("Editar importes")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => run("recompute_payroll_run", { p_payroll_id: p.id }, "Nómina recalculada")}>
-              <Calculator className="h-3.5 w-3.5 mr-2" /> Recalcular con asistencia
+              <Calculator className="h-3.5 w-3.5 mr-2" /> {trPT("Recalcular con asistencia")}
             </DropdownMenuItem>
           </>
         )}
 
         {isPending && (
           <DropdownMenuItem onClick={() => run("approve_payroll_run", { p_payroll_id: p.id }, "Nómina aprobada")}>
-            <ShieldCheck className="h-3.5 w-3.5 mr-2" /> Revisar y aprobar
+            <ShieldCheck className="h-3.5 w-3.5 mr-2" /> {trPT("Revisar y aprobar")}
           </DropdownMenuItem>
         )}
         {isApproved && (
@@ -123,39 +124,39 @@ export function PayrollActionsMenu({ payroll: p, tenantName, requireApproval, si
               run("pay_payroll", { _payroll_id: p.id, _method: p.payment_method || "transfer", _notes: null }, "Pago registrado")
             }
           >
-            <CheckCircle2 className="h-3.5 w-3.5 mr-2" /> Registrar pago
+            <CheckCircle2 className="h-3.5 w-3.5 mr-2" /> {trPT("Registrar pago")}
           </DropdownMenuItem>
         )}
         {isPaid && (
           <DropdownMenuItem
             onClick={() => {
-              if (!confirm("¿Revertir el pago de esta nómina? Se generará el movimiento de reverso.")) return;
+              if (!confirm(trPT("¿Revertir el pago de esta nómina? Se generará el movimiento de reverso."))) return;
               run("revert_payroll_payment", { p_payroll_id: p.id, p_reason: "Corrección de pago" }, "Pago revertido");
             }}
           >
-            <Undo2 className="h-3.5 w-3.5 mr-2" /> Revertir pago
+            <Undo2 className="h-3.5 w-3.5 mr-2" /> {trPT("Revertir pago")}
           </DropdownMenuItem>
         )}
 
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => printPayrollDocument(buildDocData(p, tenantName))}>
-          <Printer className="h-3.5 w-3.5 mr-2" /> Imprimir comprobante
+          <Printer className="h-3.5 w-3.5 mr-2" /> {trPT("Imprimir comprobante")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => downloadPayrollDocument(buildDocData(p, tenantName))}>
-          <Download className="h-3.5 w-3.5 mr-2" /> Descargar nómina individual
+          <Download className="h-3.5 w-3.5 mr-2" /> {trPT("Descargar nómina individual")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => printPayrollDocument(buildDocData(p, tenantName, true))}>
-          <FileSignature className="h-3.5 w-3.5 mr-2" /> Exportar nómina para firma
+          <FileSignature className="h-3.5 w-3.5 mr-2" /> {trPT("Exportar nómina para firma")}
         </DropdownMenuItem>
         {!isCancelled && (
           <DropdownMenuItem onClick={() => onSign(p)}>
-            <PenLine className="h-3.5 w-3.5 mr-2" /> {signed ? "Añadir otra firma" : "Registrar firma del trabajador"}
+            <PenLine className="h-3.5 w-3.5 mr-2" /> {signed ? trPT("Añadir otra firma") : trPT("Registrar firma del trabajador")}
           </DropdownMenuItem>
         )}
 
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => run("duplicate_payroll_run", { p_payroll_id: p.id }, "Nómina duplicada")}>
-          <Copy className="h-3.5 w-3.5 mr-2" /> Duplicar como nueva nómina
+          <Copy className="h-3.5 w-3.5 mr-2" /> {trPT("Duplicar como nueva nómina")}
         </DropdownMenuItem>
         {!isPaid && !isCancelled && (
           <DropdownMenuItem
@@ -166,7 +167,7 @@ export function PayrollActionsMenu({ payroll: p, tenantName, requireApproval, si
               run("cancel_payroll_run", { p_payroll_id: p.id, p_reason: reason }, "Nómina anulada");
             }}
           >
-            <XCircle className="h-3.5 w-3.5 mr-2" /> Anular nómina
+            <XCircle className="h-3.5 w-3.5 mr-2" /> {trPT("Anular nómina")}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

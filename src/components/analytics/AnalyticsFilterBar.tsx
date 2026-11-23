@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 // Barra de filtros unificada para Dashboard / Analytics / Reportes / BI.
 
 import { ReactNode } from "react";
@@ -56,7 +57,7 @@ export function AnalyticsFilterBar({
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
           <CalendarRange className="h-3.5 w-3.5" />
-          <span className="font-medium">Período</span>
+          <span className="font-medium">{trPT("Período")}</span>
         </div>
         <div className="flex flex-wrap gap-1">
           {presets.map((p) => (
@@ -82,7 +83,7 @@ export function AnalyticsFilterBar({
             >
               {GRANULARITIES.map((g) => (
                 <ToggleGroupItem key={g.value} value={g.value} className="h-7 px-2.5 text-xs">
-                  {g.label}
+                  {trPT(g.label)}
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
@@ -114,7 +115,7 @@ export function AnalyticsFilterBar({
         </div>
         {filters.map((f) => (
           <div key={f.key} className="space-y-1 min-w-[10rem]">
-            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">{f.label}</Label>
+            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">{trPT(f.label)}</Label>
             <SearchableSelect
               className="h-8 w-full sm:w-48"
               placeholder={`${f.label}: Todos`}
@@ -126,7 +127,7 @@ export function AnalyticsFilterBar({
           </div>
         ))}
         <p className="text-[10px] text-muted-foreground ml-auto pb-1">
-          {range.days} día(s) · {range.compare ? "vs período anterior" : "sin comparación"}
+          {range.days} {trPT("día(s) ·")} {range.compare ? trPT("vs período anterior") : trPT("sin comparación")}
         </p>
       </div>
     </Card>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -134,10 +135,10 @@ const MisPedidos = () => {
     });
     setCancelling(null);
     if (error) {
-      toast({ title: "No se pudo cancelar", description: error.message, variant: "destructive" });
+      toast({ title: trPT("No se pudo cancelar"), description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Pedido cancelado" });
+    toast({ title: trPT("Pedido cancelado") });
     load();
   };
 
@@ -155,7 +156,7 @@ const MisPedidos = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "¡Gracias por tu valoración!" });
+    toast({ title: trPT("¡Gracias por tu valoración!") });
     setRating(null);
     setComment("");
     setStars(5);
@@ -200,18 +201,18 @@ const MisPedidos = () => {
           </Link>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" className="rounded-full" onClick={() => navigate("/marketplace/repartidor")}>
-              <Bike className="h-4 w-4 mr-1" /> Quiero ser repartidor
+              <Bike className="h-4 w-4 mr-1" /> {trPT("Quiero ser repartidor")}
             </Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        <h1 className="text-2xl font-bold">Mi cuenta</h1>
+        <h1 className="text-2xl font-bold">{trPT("Mi cuenta")}</h1>
 
         <Tabs defaultValue="orders">
           <TabsList>
-            <TabsTrigger value="orders">Mis pedidos</TabsTrigger>
+            <TabsTrigger value="orders">{trPT("Mis pedidos")}</TabsTrigger>
             <TabsTrigger value="addresses">Direcciones</TabsTrigger>
           </TabsList>
 
@@ -223,24 +224,24 @@ const MisPedidos = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="active">En curso</SelectItem>
+                  <SelectItem value="active">{trPT("En curso")}</SelectItem>
                   <SelectItem value="pickup">Recogidas</SelectItem>
                   <SelectItem value="delivery">Deliveries</SelectItem>
                   {Object.entries(ORDER_STATUS).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
-                      {v.label}
+                      {trPT(v.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Badge variant="outline">{filtered.length} pedido(s)</Badge>
+              <Badge variant="outline">{filtered.length} {trPT("pedido(s)")}</Badge>
             </div>
 
             {filtered.length === 0 && (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
                   <Package className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                  Aún no tienes pedidos.
+                  {trPT("Aún no tienes pedidos.")}
                 </CardContent>
               </Card>
             )}
@@ -255,14 +256,14 @@ const MisPedidos = () => {
                       <div>
                         <CardTitle className="text-base flex items-center gap-2">
                           <StoreIcon className="h-4 w-4 text-primary" />
-                          {tenants[o.tenant_id] ?? "Negocio"}
+                          {tenants[o.tenant_id] ?? trPT("Negocio")}
                         </CardTitle>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(o.created_at), "dd/MM/yy HH:mm")} ·{" "}
-                          {o.delivery_type === "delivery" ? "Delivery" : "Recogida"}
+                          {o.delivery_type === "delivery" ? trPT("Delivery") : trPT("Recogida")}
                         </p>
                       </div>
-                      <Badge className={`text-[10px] ${st.color}`}>{st.label}</Badge>
+                      <Badge className={`text-[10px] ${st.color}`}>{trPT(st.label)}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm">
@@ -290,14 +291,14 @@ const MisPedidos = () => {
                               ? asg.status === "delivered"
                                 ? `Entregado en ${asg.actual_minutes ?? "—"} min`
                                 : asg.rider_profile_id
-                                ? "Repartidor asignado · seguimiento activo"
-                                : "Buscando repartidor"
-                              : "Pendiente de preparación"}
+                                ? trPT("Repartidor asignado · seguimiento activo")
+                                : trPT("Buscando repartidor")
+                              : trPT("Pendiente de preparación")}
                           </p>
                         )}
                         {o.delivery_type === "pickup" && (
                           <p className="flex items-center gap-1">
-                            <Building2 className="h-3 w-3" /> Recoges en el negocio
+                            <Building2 className="h-3 w-3" /> {trPT("Recoges en el negocio")}
                           </p>
                         )}
                       </div>
@@ -312,17 +313,17 @@ const MisPedidos = () => {
                         onClick={() => cancelOrder(o.id)}
                       >
                         <XCircle className="h-3 w-3 mr-1" />
-                        {cancelling === o.id ? "Cancelando..." : "Cancelar pedido"}
+                        {cancelling === o.id ? "Cancelando..." : trPT("Cancelar pedido")}
                       </Button>
                     )}
                     {o.status === "delivered" && (
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => setRating({ order: o, role: "business" })}>
-                          <Star className="h-3 w-3 mr-1" /> Valorar negocio
+                          <Star className="h-3 w-3 mr-1" /> {trPT("Valorar negocio")}
                         </Button>
                         {asg?.rider_profile_id && (
                           <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => setRating({ order: o, role: "rider" })}>
-                            <Bike className="h-3 w-3 mr-1" /> Valorar repartidor
+                            <Bike className="h-3 w-3 mr-1" /> {trPT("Valorar repartidor")}
                           </Button>
                         )}
                       </div>
@@ -335,14 +336,14 @@ const MisPedidos = () => {
 
           <TabsContent value="addresses" className="space-y-3 pt-4">
             <Button size="sm" className="rounded-full" onClick={() => setAddrOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" /> Nueva dirección
+              <Plus className="h-4 w-4 mr-1" /> {trPT("Nueva dirección")}
             </Button>
             {addresses.map((a) => (
               <Card key={a.id}>
                 <CardContent className="p-4 flex items-start justify-between gap-3">
                   <div>
                     <p className="font-medium text-sm flex items-center gap-2">
-                      {a.label}
+                      {trPT(a.label)}
                       {a.is_default && <Badge className="text-[10px]">Principal</Badge>}
                     </p>
                     <p className="text-xs text-muted-foreground">{a.address}</p>
@@ -351,7 +352,7 @@ const MisPedidos = () => {
                   <div className="flex gap-1">
                     {!a.is_default && (
                       <Button size="sm" variant="ghost" className="text-xs" onClick={() => makeDefault(a.id)}>
-                        Hacer principal
+                        {trPT("Hacer principal")}
                       </Button>
                     )}
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeAddress(a.id)}>
@@ -362,7 +363,7 @@ const MisPedidos = () => {
               </Card>
             ))}
             {addresses.length === 0 && (
-              <p className="text-sm text-muted-foreground">Guarda tus direcciones para comprar más rápido.</p>
+              <p className="text-sm text-muted-foreground">{trPT("Guarda tus direcciones para comprar más rápido.")}</p>
             )}
           </TabsContent>
         </Tabs>
@@ -371,7 +372,7 @@ const MisPedidos = () => {
       <Dialog open={addrOpen} onOpenChange={setAddrOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Nueva dirección</DialogTitle>
+            <DialogTitle>{trPT("Nueva dirección")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
@@ -379,15 +380,15 @@ const MisPedidos = () => {
               <Input value={addrForm.label} onChange={(e) => setAddrForm({ ...addrForm, label: e.target.value })} />
             </div>
             <div>
-              <Label>Dirección *</Label>
+              <Label>{trPT("Dirección *")}</Label>
               <Textarea value={addrForm.address} onChange={(e) => setAddrForm({ ...addrForm, address: e.target.value })} />
             </div>
             <div>
-              <Label>Instrucciones de entrega</Label>
+              <Label>{trPT("Instrucciones de entrega")}</Label>
               <Textarea
                 value={addrForm.instructions}
                 onChange={(e) => setAddrForm({ ...addrForm, instructions: e.target.value })}
-                placeholder="Ej: tocar el timbre 2B"
+                placeholder={trPT("Ej: tocar el timbre 2B")}
               />
             </div>
             <Button className="w-full rounded-full" onClick={saveAddress} disabled={!addrForm.address.trim()}>
@@ -400,7 +401,7 @@ const MisPedidos = () => {
       <Dialog open={!!rating} onOpenChange={() => setRating(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{rating?.role === "rider" ? "Valorar al repartidor" : "Valorar al negocio"}</DialogTitle>
+            <DialogTitle>{rating?.role === "rider" ? trPT("Valorar al repartidor") : trPT("Valorar al negocio")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex gap-1 justify-center">
@@ -413,14 +414,14 @@ const MisPedidos = () => {
             <Textarea
               placeholder={
                 rating?.role === "rider"
-                  ? "Puntualidad, trato, cuidado del pedido…"
-                  : "Calidad, productos, preparación, atención…"
+                  ? trPT("Puntualidad, trato, cuidado del pedido…")
+                  : trPT("Calidad, productos, preparación, atención…")
               }
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
             <Button className="w-full rounded-full" onClick={submitRating}>
-              Enviar valoración
+              {trPT("Enviar valoración")}
             </Button>
           </div>
         </DialogContent>

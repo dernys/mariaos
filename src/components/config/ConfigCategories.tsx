@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -37,14 +38,14 @@ export function ConfigCategories() {
   const openEdit = (c: Category) => { setEditing(c); setForm({ name: c.name, description: c.description || "", color: c.color || "#10b981" }); setDialogOpen(true); };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast({ title: "Error", description: "Nombre requerido", variant: "destructive" }); return; }
+    if (!form.name.trim()) { toast({ title: "Error", description: trPT("Nombre requerido"), variant: "destructive" }); return; }
     const payload = { name: form.name.trim(), description: form.description || null, color: form.color, tenant_id: tenantId };
     if (editing) {
       await supabase.from("product_categories").update(payload).eq("id", editing.id);
-      toast({ title: "Categoría actualizada" });
+      toast({ title: trPT("Categoría actualizada") });
     } else {
       await supabase.from("product_categories").insert(payload);
-      toast({ title: "Categoría creada" });
+      toast({ title: trPT("Categoría creada") });
     }
     setDialogOpen(false);
     fetch();
@@ -52,7 +53,7 @@ export function ConfigCategories() {
 
   const handleDelete = async (id: string) => {
     await supabase.from("product_categories").delete().eq("id", id);
-    toast({ title: "Categoría eliminada" });
+    toast({ title: trPT("Categoría eliminada") });
     fetch();
   };
 
@@ -64,9 +65,9 @@ export function ConfigCategories() {
   return (
     <div className="space-y-4 max-w-2xl">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{categories.length} categorías</p>
+        <p className="text-sm text-muted-foreground">{categories.length} {trPT("categorías")}</p>
         <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground">
-          <Plus className="h-3.5 w-3.5" /> Nueva Categoría
+          <Plus className="h-3.5 w-3.5" /> {trPT("Nueva Categoría")}
         </Button>
       </div>
 
@@ -80,12 +81,12 @@ export function ConfigCategories() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">{c.name}</p>
-                  {c.description && <p className="text-[10px] text-muted-foreground">{c.description}</p>}
+                  {c.description && <p className="text-[10px] text-muted-foreground">{trPT(c.description)}</p>}
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={c.is_active ? "default" : "secondary"} className="text-[10px] cursor-pointer" onClick={() => toggleActive(c)}>
-                  {c.is_active ? "Activa" : "Inactiva"}
+                  {c.is_active ? trPT("Activa") : trPT("Inactiva")}
                 </Badge>
                 <button onClick={() => openEdit(c)} className="p-1.5 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
                 <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -93,18 +94,18 @@ export function ConfigCategories() {
             </CardContent>
           </Card>
         ))}
-        {categories.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No hay categorías configuradas</p>}
+        {categories.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">{trPT("No hay categorías configuradas")}</p>}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar" : "Nueva"} Categoría</DialogTitle>
-            <DialogDescription>Categorías de productos</DialogDescription>
+            <DialogTitle>{editing ? trPT("Editar") : trPT("Nueva")} {trPT("Categoría")}</DialogTitle>
+            <DialogDescription>{trPT("Categorías de productos")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><Label>Descripción</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+            <div><Label>{trPT("Nombre *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><Label>{trPT("Descripción")}</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <div><Label>Color</Label><Input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className="h-10 p-1" /></div>
           </div>
           <DialogFooter>

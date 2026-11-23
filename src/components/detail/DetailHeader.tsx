@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +47,7 @@ export function DetailHeader({ icon: Icon, title, subtitle, badges, kpis, action
             {badges && badges.length > 0 && (
               <div className="flex gap-1.5 mt-1.5 flex-wrap">
                 {badges.map((b, i) => (
-                  <Badge key={i} variant={b.variant || "secondary"} className="text-[10px]">{b.label}</Badge>
+                  <Badge key={i} variant={b.variant || "secondary"} className="text-[10px]">{trPT(b.label)}</Badge>
                 ))}
               </div>
             )}
@@ -59,7 +60,7 @@ export function DetailHeader({ icon: Icon, title, subtitle, badges, kpis, action
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {kpis.map((k, i) => (
             <div key={i} className="bg-card rounded-xl border shadow-card p-3">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-heading">{k.label}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-heading">{trPT(k.label)}</p>
               <p className={`text-lg font-heading font-bold mt-1 ${toneClass[k.tone || "default"]}`}>{k.value}</p>
             </div>
           ))}

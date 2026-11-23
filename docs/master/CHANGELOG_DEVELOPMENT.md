@@ -52,3 +52,10 @@
 - Plantillas: LOJA_BR (actualizada), RESTAURANTE_BR, BAR_BR, SERVICOS_BR.
 - Wizard: medios de pago por nombre (débito/crédito ya no colisionan), etiqueta CNPJ/CPF.
 - Pendiente: creación E2E de un negocio BR desde el wizard no probada.
+
+## 2026-11 — Brasil: PT-BR, demos Piracicaba, marketplace
+- Traducción PT-BR de pantallas vía `tr()` + diccionario `ptPhrasesAuto.ts` (~2100 frases); test `src/i18n/tr.test.ts`.
+- 3 demos nuevas (Restaurante, Bar, Serviços Piracicaba) + datos de ejemplo y 50 fotos de producto en `public/demo/products/`.
+- Marketplace: selector de idioma visible y precios en R$ para negocios BR (`tenants_public.country_code`).
+- Seguridad: guardas de tenant en 7 funciones, `register-superadmin` cerrado. Pendientes: políticas abiertas de `accounting_profiles`/`posting_rules`, HTML en emails/nómina, CSV formula injection.
+- Retiradas 10 librerías sin uso (maplibre-gl incluido; el Mapa Comercial sigue en borrador).

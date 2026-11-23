@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -59,20 +60,20 @@ export function PaymentMethodsPanel({ from, to }: { from?: string; to?: string }
   return (
     <div className="space-y-4">
       <KpiGrid>
-        <KpiTile label="Efectivo cobrado" value={money(cash)} icon={Banknote} />
-        <KpiTile label="Banco / tarjeta" value={money(bank)} icon={Landmark} />
-        <KpiTile label="Digital confirmado" value={money(digital)} icon={Smartphone} />
-        <KpiTile label="Digital por confirmar" value={money(pending)} icon={Clock} />
+        <KpiTile label={trPT("Efectivo cobrado")} value={money(cash)} icon={Banknote} />
+        <KpiTile label={trPT("Banco / tarjeta")} value={money(bank)} icon={Landmark} />
+        <KpiTile label={trPT("Digital confirmado")} value={money(digital)} icon={Smartphone} />
+        <KpiTile label={trPT("Digital por confirmar")} value={money(pending)} icon={Clock} />
       </KpiGrid>
 
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border bg-card p-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Cobros de ventas</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{trPT("Cobros de ventas")}</p>
           <p className="font-heading text-lg font-bold">{money(salesTotal)}</p>
         </div>
         <div className="rounded-xl border bg-card p-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Cobros de deuda (CxC)</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{trPT("Cobros de deuda (CxC)")}</p>
           <p className="font-heading text-lg font-bold">{money(collectionsTotal)}</p>
         </div>
       </div>
@@ -85,7 +86,7 @@ export function PaymentMethodsPanel({ from, to }: { from?: string; to?: string }
             <TableHead className="text-xs">Naturaleza</TableHead>
             <TableHead className="text-xs">Estado</TableHead>
             <TableHead className="text-xs text-right">Pagos</TableHead>
-            <TableHead className="text-xs text-right">Total base</TableHead>
+            <TableHead className="text-xs text-right">{trPT("Total base")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {rows
@@ -93,10 +94,10 @@ export function PaymentMethodsPanel({ from, to }: { from?: string; to?: string }
               .sort((a, b) => Number(b.total_base) - Number(a.total_base))
               .map((r, i) => (
                 <TableRow key={`${r.source}-${r.method}-${r.status}-${i}`}>
-                  <TableCell className="text-xs">{r.source === "sale" ? "Venta" : "Cobro CxC"}</TableCell>
+                  <TableCell className="text-xs">{r.source === "sale" ? trPT("Venta") : trPT("Cobro CxC")}</TableCell>
                   <TableCell className="text-xs font-medium">{methodLabel(r.method)}</TableCell>
                   <TableCell className="text-xs capitalize text-muted-foreground">
-                    {r.class === "cash" ? "Efectivo" : r.class === "digital" ? "Digital" : r.class === "bank" ? "Bancario" : r.class}
+                    {r.class === "cash" ? trPT("Efectivo") : r.class === "digital" ? trPT("Digital") : r.class === "bank" ? trPT("Bancario") : r.class}
                   </TableCell>
                   <TableCell className="text-xs">
                     <Badge variant="outline" className={`text-[10px] ${toneClass[statusTone(r.status)]}`}>
@@ -109,7 +110,7 @@ export function PaymentMethodsPanel({ from, to }: { from?: string; to?: string }
               ))}
             {rows.length === 0 && (
               <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">
-                {loading ? "Cargando…" : "Sin pagos en el período"}
+                {loading ? "Cargando…" : trPT("Sin pagos en el período")}
               </TableCell></TableRow>
             )}
           </TableBody>

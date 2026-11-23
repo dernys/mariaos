@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -129,7 +130,7 @@ export function BusinessSetupWizard({
   const checkAdminEmail = async () => {
     const email = adminForm.email.trim().toLowerCase();
     if (!/.+@.+\..+/.test(email)) {
-      toast.error("Introduce un email válido");
+      toast.error(trPT("Introduce un email válido"));
       return;
     }
     setCheckingAdmin(true);
@@ -145,10 +146,10 @@ export function BusinessSetupWizard({
     setAdminCheck(c);
     if (c.exists && c.reusable) {
       setAdminForm((f) => ({ ...f, mode: "existing", full_name: f.full_name || c.full_name || "" }));
-      toast.info("El usuario ya existe: puedes reutilizarlo como administrador");
+      toast.info(trPT("El usuario ya existe: puedes reutilizarlo como administrador"));
     } else if (c.exists) {
       setAdminForm((f) => ({ ...f, mode: "new" }));
-      toast.error("El usuario existe pero no puede reutilizarse");
+      toast.error(trPT("El usuario existe pero no puede reutilizarse"));
     } else {
       setAdminForm((f) => ({ ...f, mode: "new" }));
     }
@@ -299,8 +300,8 @@ export function BusinessSetupWizard({
       checks: validation.checks ?? [],
       admin_email: data.admin_email ?? null,
     });
-    if (ready) toast.success("Negocio creado correctamente");
-    else toast.warning("Negocio creado con avisos");
+    if (ready) toast.success(trPT("Negocio creado correctamente"));
+    else toast.warning(trPT("Negocio creado con avisos"));
     onCreated();
     // Make the new business selectable immediately (no page reload needed)
     refreshTenants();
@@ -347,9 +348,9 @@ export function BusinessSetupWizard({
               <Sparkles className="h-4 w-4 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="font-heading font-semibold text-sm">Crear nuevo negocio</h2>
+              <h2 className="font-heading font-semibold text-sm">{trPT("Crear nuevo negocio")}</h2>
               <p className="text-[10px] text-muted-foreground">
-                {result ? "Negocio provisionado" : `Paso ${step + 1} de ${STEPS.length} · ${STEPS[step]}`}
+                {result ? trPT("Negocio provisionado") : `Paso ${step + 1} de ${STEPS.length} · ${STEPS[step]}`}
               </p>
             </div>
           </div>
@@ -369,10 +370,10 @@ export function BusinessSetupWizard({
 
         {!result && failure && (
           <div className="mx-5 mt-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
-            <p className="text-xs font-medium text-destructive">No se creó el negocio</p>
+            <p className="text-xs font-medium text-destructive">{trPT("No se creó el negocio")}</p>
             <p className="text-[11px] text-destructive/90 break-words">{failure}</p>
             <p className="text-[10px] text-muted-foreground mt-1">
-              Se revirtió todo lo creado. Corrige el dato y vuelve a intentar: no se duplicará nada.
+              {trPT("Se revirtió todo lo creado. Corrige el dato y vuelve a intentar: no se duplicará nada.")}
             </p>
           </div>
         )}
@@ -388,7 +389,7 @@ export function BusinessSetupWizard({
                   </div>
                   <div>
                     <p className="font-heading font-semibold text-sm">
-                      {result.ready ? "Negocio creado correctamente" : "Negocio creado con avisos"}
+                      {result.ready ? trPT("Negocio creado correctamente") : trPT("Negocio creado con avisos")}
                     </p>
                     <p className="text-xs text-muted-foreground">{info.name}</p>
                   </div>
@@ -396,25 +397,25 @@ export function BusinessSetupWizard({
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
                   {result.admin_email ? (
                     <>
-                      <p className="text-xs font-medium">Administrador creado: {result.admin_email}</p>
+                      <p className="text-xs font-medium">{trPT("Administrador creado:")} {result.admin_email}</p>
                       <p className="text-[11px] text-muted-foreground">
-                        Rol admin y propietario del negocio, con acceso a Roles y permisos (pestaña Usuarios) dentro de su negocio.
+                        {trPT("Rol admin y propietario del negocio, con acceso a Roles y permisos (pestaña Usuarios) dentro de su negocio.")}
                       </p>
                     </>
                   ) : (
                     <p className="text-[11px] text-muted-foreground">
-                      Negocio sin administrador inicial: crea sus usuarios desde Roles y permisos.
+                      {trPT("Negocio sin administrador inicial: crea sus usuarios desde Roles y permisos.")}
                     </p>
                   )}
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" onClick={openBusiness} disabled={opening}>
                       {opening && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                      Abrir este negocio
+                      {trPT("Abrir este negocio")}
                     </Button>
                     {result.admin_email && adminForm.password && (
                       <Button size="sm" onClick={enterAsAdmin} disabled={entering}>
                         {entering && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                        Entrar como administrador
+                        {trPT("Entrar como administrador")}
                       </Button>
                     )}
                   </div>
@@ -429,7 +430,7 @@ export function BusinessSetupWizard({
                         <CircleAlert className="h-4 w-4 text-amber-500 mt-0.5" />
                       )}
                       <div className="min-w-0">
-                        <p className="text-xs font-medium">{c.label}</p>
+                        <p className="text-xs font-medium">{trPT(c.label)}</p>
                         <p className="text-[11px] text-muted-foreground">{c.detail}</p>
                       </div>
                     </div>
@@ -461,7 +462,7 @@ export function BusinessSetupWizard({
                           >
                             <Icon className="h-6 w-6 text-primary mb-2" />
                             <p className="font-heading font-semibold text-sm">{t.name}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">{t.description}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{trPT(t.description)}</p>
                             <Badge variant="secondary" className="mt-2 text-[10px]">{t.code}</Badge>
                           </button>
                         );
@@ -473,19 +474,19 @@ export function BusinessSetupWizard({
                   {step === 1 && (
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="sm:col-span-2">
-                        <Label className="text-xs">Nombre del negocio *</Label>
+                        <Label className="text-xs">{trPT("Nombre del negocio *")}</Label>
                         <Input
                           value={info.name}
-                          placeholder="Cafetería La Esquina"
+                          placeholder={trPT("Cafetería La Esquina")}
                           onChange={(e) => setInfo({ ...info, name: e.target.value, slug: info.slug || slugify(e.target.value) })}
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Identificador (URL) *</Label>
+                        <Label className="text-xs">{trPT("Identificador (URL) *")}</Label>
                         <Input value={info.slug} placeholder="cafeteria-la-esquina" onChange={(e) => setInfo({ ...info, slug: e.target.value })} />
                       </div>
                       <div>
-                        <Label className="text-xs">Teléfono</Label>
+                        <Label className="text-xs">{trPT("Teléfono")}</Label>
                         <Input value={info.phone} onChange={(e) => setInfo({ ...info, phone: e.target.value })} />
                       </div>
                       <div>
@@ -493,11 +494,11 @@ export function BusinessSetupWizard({
                         <Input type="email" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })} />
                       </div>
                       <div>
-                        <Label className="text-xs">{template?.default_country_code === "BR" ? "CNPJ / CPF" : "Identificación fiscal (NIT/RFC)"}</Label>
+                        <Label className="text-xs">{template?.default_country_code === "BR" ? trPT("CNPJ / CPF") : trPT("Identificación fiscal (NIT/RFC)")}</Label>
                         <Input value={info.rfc} onChange={(e) => setInfo({ ...info, rfc: e.target.value })} />
                       </div>
                       <div className="sm:col-span-2">
-                        <Label className="text-xs">Dirección</Label>
+                        <Label className="text-xs">{trPT("Dirección")}</Label>
                         <Input value={info.address} onChange={(e) => setInfo({ ...info, address: e.target.value })} />
                       </div>
                     </div>
@@ -509,15 +510,15 @@ export function BusinessSetupWizard({
                       {isRestaurantLike && (
                         <>
                           <ToggleRow
-                            label="Servicio en mesas"
-                            hint="Habilita mapa de mesas y cuentas abiertas"
+                            label={trPT("Servicio en mesas")}
+                            hint={trPT("Habilita mapa de mesas y cuentas abiertas")}
                             checked={ops.tables}
                             onChange={(v) => setOps({ ...ops, tables: v })}
                           />
                           {ops.tables && (
                             <div className="grid grid-cols-2 gap-3 pl-1">
                               <div>
-                                <Label className="text-xs">Cantidad de mesas</Label>
+                                <Label className="text-xs">{trPT("Cantidad de mesas")}</Label>
                                 <Input
                                   type="number"
                                   min={1}
@@ -527,7 +528,7 @@ export function BusinessSetupWizard({
                                 />
                               </div>
                               <div>
-                                <Label className="text-xs">Comensales por mesa</Label>
+                                <Label className="text-xs">{trPT("Comensales por mesa")}</Label>
                                 <Input
                                   type="number"
                                   min={1}
@@ -539,44 +540,44 @@ export function BusinessSetupWizard({
                             </div>
                           )}
                           <ToggleRow
-                            label="Comandas a cocina (KDS)"
-                            hint="Pantalla de cocina y control de preparación"
+                            label={trPT("Comandas a cocina (KDS)")}
+                            hint={trPT("Pantalla de cocina y control de preparación")}
                             checked={ops.kitchen}
                             onChange={(v) => setOps({ ...ops, kitchen: v })}
                           />
                           <ToggleRow
-                            label="Recetas y escandallos"
-                            hint="Descuento de stock por ingredientes"
+                            label={trPT("Recetas y escandallos")}
+                            hint={trPT("Descuento de stock por ingredientes")}
                             checked={ops.recipes}
                             onChange={(v) => setOps({ ...ops, recipes: v })}
                           />
                         </>
                       )}
                       <ToggleRow
-                        label="Domicilio / delivery"
-                        hint="Zonas de reparto y asignación de repartidores"
+                        label={trPT("Domicilio / delivery")}
+                        hint={trPT("Zonas de reparto y asignación de repartidores")}
                         checked={ops.delivery}
                         onChange={(v) => setOps({ ...ops, delivery: v })}
                       />
                       <ToggleRow
-                        label="Fidelización de clientes"
-                        hint="Acumulación y canje de puntos"
+                        label={trPT("Fidelización de clientes")}
+                        hint={trPT("Acumulación y canje de puntos")}
                         checked={ops.loyalty}
                         onChange={(v) => setOps({ ...ops, loyalty: v })}
                       />
                       <div className="grid gap-3 sm:grid-cols-3 pt-2 border-t">
                         <ToggleRow
-                          label="Precios con impuesto incluido"
+                          label={trPT("Precios con impuesto incluido")}
                           checked={posCfg.tax_included}
                           onChange={(v) => setPosCfg({ ...posCfg, tax_included: v })}
                         />
                         <ToggleRow
-                          label="Permitir stock negativo"
+                          label={trPT("Permitir stock negativo")}
                           checked={posCfg.allow_negative_stock}
                           onChange={(v) => setPosCfg({ ...posCfg, allow_negative_stock: v })}
                         />
                         <div>
-                          <Label className="text-xs">Días de crédito</Label>
+                          <Label className="text-xs">{trPT("Días de crédito")}</Label>
                           <Input
                             type="number"
                             min={0}
@@ -592,13 +593,12 @@ export function BusinessSetupWizard({
                   {step === 3 && (
                     <div className="space-y-3">
                       <p className="text-xs text-muted-foreground">
-                        Se creará el local <strong>{info.name || "principal"}</strong> con los almacenes siguientes,
-                        vinculados automáticamente al local.
+                        {trPT("Se creará el local")} <strong>{info.name || "principal"}</strong> {trPT("con los almacenes siguientes, vinculados automáticamente al local.")}
                       </p>
                       {warehouses.map((w, i) => (
                         <div key={i} className="flex gap-2 items-end">
                           <div className="flex-1">
-                            <Label className="text-xs">Almacén {i + 1}</Label>
+                            <Label className="text-xs">{trPT("Almacén")} {i + 1}</Label>
                             <Input
                               value={w.name}
                               onChange={(e) => {
@@ -635,7 +635,7 @@ export function BusinessSetupWizard({
                         className="text-xs"
                         onClick={() => setWarehouses([...warehouses, { name: "", warehouse_type: "general" }])}
                       >
-                        Añadir almacén
+                        {trPT("Añadir almacén")}
                       </Button>
                     </div>
                   )}
@@ -653,7 +653,7 @@ export function BusinessSetupWizard({
                         />
                       ))}
                       <p className="text-[11px] text-muted-foreground pt-2">
-                        Monedas: {(template?.config?.currencies ?? []).map((c: any) => c.code).join(" · ")}
+                        {trPT("Monedas:")} {(template?.config?.currencies ?? []).map((c: any) => c.code).join(" · ")}
                       </p>
                     </div>
                   )}
@@ -662,15 +662,15 @@ export function BusinessSetupWizard({
                   {step === 5 && (
                     <div className="space-y-3">
                       <ToggleRow
-                        label="Crear administrador inicial"
-                        hint="Recibe rol admin y propiedad del negocio"
+                        label={trPT("Crear administrador inicial")}
+                        hint={trPT("Recibe rol admin y propiedad del negocio")}
                         checked={adminForm.enabled}
                         onChange={(v) => setAdminForm({ ...adminForm, enabled: v })}
                       />
                       {adminForm.enabled && (
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div className="sm:col-span-2">
-                            <Label className="text-xs">Email *</Label>
+                            <Label className="text-xs">{trPT("Email *")}</Label>
                             <div className="flex gap-2">
                               <Input
                                 type="email"
@@ -682,11 +682,11 @@ export function BusinessSetupWizard({
                                 }}
                               />
                               <Button variant="outline" size="sm" onClick={checkAdminEmail} disabled={checkingAdmin} className="shrink-0 text-xs">
-                                {checkingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Verificar"}
+                                {checkingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : trPT("Verificar")}
                               </Button>
                             </div>
                             <p className="text-[10px] text-muted-foreground mt-1">
-                              Comprobamos si el usuario ya existe antes de crear el negocio.
+                              {trPT("Comprobamos si el usuario ya existe antes de crear el negocio.")}
                             </p>
                           </div>
 
@@ -695,16 +695,16 @@ export function BusinessSetupWizard({
                               {!adminCheck.exists ? (
                                 <p className="text-xs flex items-center gap-1.5">
                                   <Check className="h-3.5 w-3.5 text-primary" />
-                                  Email disponible: se creará un usuario nuevo.
+                                  {trPT("Email disponible: se creará un usuario nuevo.")}
                                 </p>
                               ) : adminCheck.reusable ? (
                                 <>
                                   <p className="text-xs flex items-center gap-1.5 font-medium">
                                     <CircleAlert className="h-3.5 w-3.5 text-amber-500" />
-                                    Este usuario ya existe y no pertenece a ningún negocio.
+                                    {trPT("Este usuario ya existe y no pertenece a ningún negocio.")}
                                   </p>
                                   <p className="text-[11px] text-muted-foreground">
-                                    {adminCheck.full_name || "Sin nombre"} · {adminCheck.confirmed ? "email confirmado" : "email sin confirmar"}
+                                    {adminCheck.full_name || trPT("Sin nombre")} · {adminCheck.confirmed ? trPT("email confirmado") : trPT("email sin confirmar")}
                                   </p>
                                   <div className="flex flex-wrap gap-2 pt-1">
                                     <Button
@@ -713,7 +713,7 @@ export function BusinessSetupWizard({
                                       className="text-xs"
                                       onClick={() => setAdminForm({ ...adminForm, mode: "existing", password: "" })}
                                     >
-                                      Usar este usuario existente
+                                      {trPT("Usar este usuario existente")}
                                     </Button>
                                     <Button
                                       size="sm"
@@ -721,14 +721,14 @@ export function BusinessSetupWizard({
                                       className="text-xs"
                                       onClick={() => setAdminForm({ ...adminForm, mode: "new" })}
                                     >
-                                      Usar otro email
+                                      {trPT("Usar otro email")}
                                     </Button>
                                   </div>
                                 </>
                               ) : (
                                 <p className="text-xs text-destructive">
                                   {adminCheck.is_superadmin
-                                    ? "Es un superadministrador: no puede ser administrador de un negocio."
+                                    ? trPT("Es un superadministrador: no puede ser administrador de un negocio.")
                                     : `Ya pertenece a otro negocio (${(adminCheck.tenant_names ?? []).join(", ")}). Cambia el email.`}
                                 </p>
                               )}
@@ -736,13 +736,13 @@ export function BusinessSetupWizard({
                           )}
 
                           <div className="sm:col-span-2">
-                            <Label className="text-xs">Nombre completo</Label>
+                            <Label className="text-xs">{trPT("Nombre completo")}</Label>
                             <Input value={adminForm.full_name} onChange={(e) => setAdminForm({ ...adminForm, full_name: e.target.value })} />
                           </div>
 
                           {adminForm.mode === "new" && (
                             <div className="sm:col-span-2">
-                              <Label className="text-xs">Contraseña temporal * (mín. 8)</Label>
+                              <Label className="text-xs">{trPT("Contraseña temporal * (mín. 8)")}</Label>
                               <Input type="password" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} />
                             </div>
                           )}
@@ -756,7 +756,7 @@ export function BusinessSetupWizard({
                   {step === 6 && template && (
                     <div className="space-y-3 text-xs">
                       <p className="text-[11px] text-muted-foreground">
-                        Revisa los datos. Puedes volver a cualquier paso con “Editar” antes de crear el negocio.
+                        {trPT("Revisa los datos. Puedes volver a cualquier paso con “Editar” antes de crear el negocio.")}
                       </p>
                       <SummaryRow k="Plantilla" v={`${template.name} (${template.code})`} onEdit={() => setStep(0)} />
                       <SummaryRow k="Negocio" v={`${info.name} · ${slugify(info.slug || info.name)}`} onEdit={() => setStep(1)} />
@@ -785,8 +785,7 @@ export function BusinessSetupWizard({
                       />
 
                       <p className="text-[11px] text-muted-foreground pt-2 border-t">
-                        Al crear, MarIA OS genera el maestro de cuentas propio, año fiscal, períodos y el mapeo contable
-                        del negocio. Si algo falla, no se crea nada.
+                        {trPT("Al crear, MarIA OS genera el maestro de cuentas propio, año fiscal, períodos y el mapeo contable del negocio. Si algo falla, no se crea nada.")}
                       </p>
                     </div>
                   )}
@@ -805,7 +804,7 @@ export function BusinessSetupWizard({
           ) : (
             <>
               <Button variant="ghost" size="sm" disabled={step === 0 || creating} onClick={() => setStep(step - 1)} className="gap-1 text-xs">
-                <ChevronLeft className="h-3.5 w-3.5" /> Atrás
+                <ChevronLeft className="h-3.5 w-3.5" /> {trPT("Atrás")}
               </Button>
               {step < STEPS.length - 1 ? (
                 <Button size="sm" disabled={!canAdvance()} onClick={() => setStep(step + 1)} className="gap-1 text-xs">
@@ -814,7 +813,7 @@ export function BusinessSetupWizard({
               ) : (
                 <Button size="sm" disabled={creating} onClick={submit} className="gap-1 text-xs gradient-brand text-primary-foreground">
                   {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                  Crear negocio
+                  {trPT("Crear negocio")}
                 </Button>
               )}
             </>

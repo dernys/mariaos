@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -64,7 +65,7 @@ const Operaciones = () => {
     setLoading(false);
     if (error) { toast({ title: "Error", description: error, variant: "destructive" }); return; }
     if (data) setInsights(data);
-    toast({ title: "Análisis logístico actualizado" });
+    toast({ title: trPT("Análisis logístico actualizado") });
   };
 
 
@@ -72,13 +73,13 @@ const Operaciones = () => {
   useEffect(() => { if (tenantId) runOptimizer(); }, [tenantId]);
 
   const createIncident = async () => {
-    if (!incForm.store_id || !incForm.title.trim()) { toast({ title: "Faltan datos", variant: "destructive" }); return; }
+    if (!incForm.store_id || !incForm.title.trim()) { toast({ title: trPT("Faltan datos"), variant: "destructive" }); return; }
     const { error } = await supabase.from("store_incidents").insert({
       tenant_id: tenantId, store_id: incForm.store_id, incident_type: incForm.incident_type,
       severity: incForm.severity, title: incForm.title, description: incForm.description, reported_by: user?.id,
     });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Incidencia registrada" });
+    toast({ title: trPT("Incidencia registrada") });
     setIncidentDialog(false);
     setIncForm({ store_id: "", incident_type: "operational", severity: "low", title: "", description: "" });
     load();
@@ -90,13 +91,13 @@ const Operaciones = () => {
   };
 
   const createChecklist = async () => {
-    if (!clForm.name.trim()) { toast({ title: "Nombre requerido", variant: "destructive" }); return; }
+    if (!clForm.name.trim()) { toast({ title: trPT("Nombre requerido"), variant: "destructive" }); return; }
     const items = clForm.items.split("\n").filter(Boolean).map((t, i) => ({ id: i + 1, text: t.trim(), required: true }));
     const { error } = await supabase.from("operational_checklists").insert({
       tenant_id: tenantId, name: clForm.name, checklist_type: clForm.checklist_type, scope: clForm.scope, items,
     });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Checklist creado" });
+    toast({ title: trPT("Checklist creado") });
     setChecklistDialog(false);
     setClForm({ name: "", checklist_type: "opening", scope: "store", items: "" });
     load();
@@ -113,7 +114,7 @@ const Operaciones = () => {
     <AppLayout title={t("nav.items.operationsItem")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <p className="text-sm text-muted-foreground">Centro de operaciones, logística inteligente, incidencias y checklists</p>
+          <p className="text-sm text-muted-foreground">{trPT("Centro de operaciones, logística inteligente, incidencias y checklists")}</p>
           <Button size="sm" onClick={runOptimizer} disabled={loading} className="gap-1 gradient-brand text-primary-foreground">
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Recalcular
           </Button>
@@ -129,7 +130,7 @@ const Operaciones = () => {
               { icon: AlertTriangle, label: "Incidencias", value: insights.summary.open_incidents, color: "text-destructive" },
             ].map((k, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl p-4 border shadow-card">
-                <div className="flex items-center gap-2"><k.icon className={`h-4 w-4 ${k.color}`} /><span className="text-xs text-muted-foreground">{k.label}</span></div>
+                <div className="flex items-center gap-2"><k.icon className={`h-4 w-4 ${k.color}`} /><span className="text-xs text-muted-foreground">{trPT(k.label)}</span></div>
                 <p className="font-heading font-bold text-2xl mt-1">{k.value}</p>
               </motion.div>
             ))}
@@ -138,17 +139,17 @@ const Operaciones = () => {
 
         <Tabs defaultValue="logistics" className="space-y-4">
           <TabsList className="flex flex-wrap h-auto">
-            <TabsTrigger value="logistics" className="gap-1"><Sparkles className="h-3.5 w-3.5" /> Logística</TabsTrigger>
+            <TabsTrigger value="logistics" className="gap-1"><Sparkles className="h-3.5 w-3.5" /> {trPT("Logística")}</TabsTrigger>
             <TabsTrigger value="incidents" className="gap-1"><AlertTriangle className="h-3.5 w-3.5" /> Incidencias</TabsTrigger>
             <TabsTrigger value="checklists" className="gap-1"><ClipboardCheck className="h-3.5 w-3.5" /> Checklists</TabsTrigger>
-            <TabsTrigger value="status" className="gap-1"><Activity className="h-3.5 w-3.5" /> Estado tiendas</TabsTrigger>
+            <TabsTrigger value="status" className="gap-1"><Activity className="h-3.5 w-3.5" /> {trPT("Estado tiendas")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="logistics" className="space-y-4">
             <div className="bg-card rounded-xl p-5 border shadow-card">
-              <h3 className="font-heading font-semibold mb-3 flex items-center gap-2"><ArrowRightLeft className="h-4 w-4 text-primary" /> Sugerencias de transferencia</h3>
+              <h3 className="font-heading font-semibold mb-3 flex items-center gap-2"><ArrowRightLeft className="h-4 w-4 text-primary" /> {trPT("Sugerencias de transferencia")}</h3>
               <div className="space-y-2 max-h-96 overflow-auto">
-                {insights?.suggestions.length === 0 && <p className="text-sm text-muted-foreground">Sin sugerencias por ahora.</p>}
+                {insights?.suggestions.length === 0 && <p className="text-sm text-muted-foreground">{trPT("Sin sugerencias por ahora.")}</p>}
                 {insights?.suggestions.map((s, i) => (
                   <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
                     <div>
@@ -174,7 +175,7 @@ const Operaciones = () => {
                 </div>
               </div>
               <div className="bg-card rounded-xl p-5 border shadow-card">
-                <h3 className="font-heading font-semibold mb-3 flex items-center gap-2 text-destructive"><TrendingDown className="h-4 w-4" /> Bajo stock</h3>
+                <h3 className="font-heading font-semibold mb-3 flex items-center gap-2 text-destructive"><TrendingDown className="h-4 w-4" /> {trPT("Bajo stock")}</h3>
                 <div className="space-y-2 max-h-72 overflow-auto text-xs">
                   {insights?.understock.slice(0, 20).map((o, i) => (
                     <div key={i} className="flex justify-between p-2 rounded bg-muted/30">
@@ -189,7 +190,7 @@ const Operaciones = () => {
 
           <TabsContent value="incidents" className="space-y-3">
             <div className="flex justify-end">
-              <Button size="sm" onClick={() => setIncidentDialog(true)} className="gap-1"><Plus className="h-3.5 w-3.5" /> Nueva incidencia</Button>
+              <Button size="sm" onClick={() => setIncidentDialog(true)} className="gap-1"><Plus className="h-3.5 w-3.5" /> {trPT("Nueva incidencia")}</Button>
             </div>
             <div className="space-y-2">
               {incidents.map((i: any) => (
@@ -197,23 +198,23 @@ const Operaciones = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <Badge className={sevColor[i.severity] || ""}>{i.severity}</Badge>
-                      <span className="font-medium text-sm truncate">{i.title}</span>
+                      <span className="font-medium text-sm truncate">{trPT(i.title)}</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">{i.stores?.name} · {new Date(i.created_at).toLocaleString()}</p>
-                    {i.description && <p className="text-xs mt-1 text-muted-foreground">{i.description}</p>}
+                    {i.description && <p className="text-xs mt-1 text-muted-foreground">{trPT(i.description)}</p>}
                   </div>
                   {i.status === "open" ? (
                     <Button size="sm" variant="outline" onClick={() => resolveIncident(i.id)}>Resolver</Button>
                   ) : <Badge variant="secondary">Resuelta</Badge>}
                 </div>
               ))}
-              {incidents.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Sin incidencias registradas</p>}
+              {incidents.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">{trPT("Sin incidencias registradas")}</p>}
             </div>
           </TabsContent>
 
           <TabsContent value="checklists" className="space-y-3">
             <div className="flex justify-end">
-              <Button size="sm" onClick={() => setChecklistDialog(true)} className="gap-1"><Plus className="h-3.5 w-3.5" /> Nuevo checklist</Button>
+              <Button size="sm" onClick={() => setChecklistDialog(true)} className="gap-1"><Plus className="h-3.5 w-3.5" /> {trPT("Nuevo checklist")}</Button>
             </div>
             <div className="grid md:grid-cols-2 gap-3">
               {checklists.map((c: any) => (
@@ -222,14 +223,14 @@ const Operaciones = () => {
                     <h4 className="font-medium text-sm">{c.name}</h4>
                     <Badge variant="outline" className="text-[10px]">{c.checklist_type}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{(c.items || []).length} items · {c.scope}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{(c.items || []).length} {trPT("items ·")} {c.scope}</p>
                 </div>
               ))}
-              {checklists.length === 0 && <p className="text-sm text-muted-foreground col-span-full text-center py-8">Sin checklists</p>}
+              {checklists.length === 0 && <p className="text-sm text-muted-foreground col-span-full text-center py-8">{trPT("Sin checklists")}</p>}
             </div>
             {runs.length > 0 && (
               <div className="bg-card rounded-xl p-4 border shadow-card">
-                <h3 className="font-heading font-semibold mb-2 text-sm">Ejecuciones recientes</h3>
+                <h3 className="font-heading font-semibold mb-2 text-sm">{trPT("Ejecuciones recientes")}</h3>
                 <div className="space-y-1 text-xs">
                   {runs.map((r: any) => (
                     <div key={r.id} className="flex justify-between p-2 rounded bg-muted/30">
@@ -262,8 +263,8 @@ const Operaciones = () => {
       <Dialog open={incidentDialog} onOpenChange={setIncidentDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nueva incidencia</DialogTitle>
-            <DialogDescription>Registra un evento operativo en una tienda</DialogDescription>
+            <DialogTitle>{trPT("Nueva incidencia")}</DialogTitle>
+            <DialogDescription>{trPT("Registra un evento operativo en una tienda")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div>
@@ -294,13 +295,13 @@ const Operaciones = () => {
                     <SelectItem value="low">Baja</SelectItem>
                     <SelectItem value="medium">Media</SelectItem>
                     <SelectItem value="high">Alta</SelectItem>
-                    <SelectItem value="critical">Crítica</SelectItem>
+                    <SelectItem value="critical">{trPT("Crítica")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <div><Label>Título</Label><Input value={incForm.title} onChange={(e) => setIncForm({ ...incForm, title: e.target.value })} /></div>
-            <div><Label>Descripción</Label><Textarea rows={3} value={incForm.description} onChange={(e) => setIncForm({ ...incForm, description: e.target.value })} /></div>
+            <div><Label>{trPT("Título")}</Label><Input value={incForm.title} onChange={(e) => setIncForm({ ...incForm, title: e.target.value })} /></div>
+            <div><Label>{trPT("Descripción")}</Label><Textarea rows={3} value={incForm.description} onChange={(e) => setIncForm({ ...incForm, description: e.target.value })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIncidentDialog(false)}>Cancelar</Button>
@@ -312,8 +313,8 @@ const Operaciones = () => {
       <Dialog open={checklistDialog} onOpenChange={setChecklistDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuevo checklist</DialogTitle>
-            <DialogDescription>Define una lista operativa (apertura, cierre, limpieza, etc.)</DialogDescription>
+            <DialogTitle>{trPT("Nuevo checklist")}</DialogTitle>
+            <DialogDescription>{trPT("Define una lista operativa (apertura, cierre, limpieza, etc.)")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div><Label>Nombre</Label><Input value={clForm.name} onChange={(e) => setClForm({ ...clForm, name: e.target.value })} /></div>
@@ -327,7 +328,7 @@ const Operaciones = () => {
                     <SelectItem value="closing">Cierre</SelectItem>
                     <SelectItem value="cleaning">Limpieza</SelectItem>
                     <SelectItem value="maintenance">Mantenimiento</SelectItem>
-                    <SelectItem value="audit">Auditoría</SelectItem>
+                    <SelectItem value="audit">{trPT("Auditoría")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -337,14 +338,14 @@ const Operaciones = () => {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="store">Tienda</SelectItem>
-                    <SelectItem value="warehouse">Almacén</SelectItem>
+                    <SelectItem value="warehouse">{trPT("Almacén")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <Label>Items (uno por línea)</Label>
-              <Textarea rows={6} value={clForm.items} onChange={(e) => setClForm({ ...clForm, items: e.target.value })} placeholder={"Encender luces\nRevisar caja\nLimpiar mostrador"} />
+              <Label>{trPT("Items (uno por línea)")}</Label>
+              <Textarea rows={6} value={clForm.items} onChange={(e) => setClForm({ ...clForm, items: e.target.value })} placeholder={trPT("Encender luces\nRevisar caja\nLimpiar mostrador")} />
             </div>
           </div>
           <DialogFooter>

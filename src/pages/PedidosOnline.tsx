@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -184,10 +185,10 @@ const PedidosOnline = () => {
     });
     setBusy(null);
     if (error) {
-      toast({ title: "No se pudo confirmar", description: error.message, variant: "destructive" });
+      toast({ title: trPT("No se pudo confirmar"), description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Pedido confirmado", description: "Se generó la venta ONLINE asociada." });
+    toast({ title: trPT("Pedido confirmado"), description: trPT("Se generó la venta ONLINE asociada.") });
     fetchOrders();
   };
 
@@ -213,10 +214,10 @@ const PedidosOnline = () => {
     setBusy(order.id);
     const { data, error } = await (supabase.rpc as any)("auto_assign_best_rider", { p_order_id: order.id });
     setBusy(null);
-    if (error) return toast({ title: "No se pudo asignar", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: trPT("No se pudo asignar"), description: error.message, variant: "destructive" });
     const res = data as any;
     if (!res?.assigned) {
-      return toast({ title: "Sin repartidores disponibles", description: res?.reason ?? "Intenta más tarde o asigna manualmente.", variant: "destructive" });
+      return toast({ title: trPT("Sin repartidores disponibles"), description: res?.reason ?? "Intenta más tarde o asigna manualmente.", variant: "destructive" });
     }
     toast({ title: `Asignado a ${res.rider_name}`, description: `Compatibilidad ${Number(res.score).toFixed(0)} · debe aceptar la entrega.` });
     fetchOrders();
@@ -229,7 +230,7 @@ const PedidosOnline = () => {
     const { error } = await (supabase.rpc as any)("cancel_delivery_assignment", { p_order_id: order.id, p_reason: reason || null });
     setBusy(null);
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Entrega cancelada", description: "El pedido volvió al estado Listo." });
+    toast({ title: trPT("Entrega cancelada"), description: trPT("El pedido volvió al estado Listo.") });
     fetchOrders();
     setTimelineKey((k) => k + 1);
   };
@@ -258,7 +259,7 @@ const PedidosOnline = () => {
           ].map((k) => (
             <Card key={k.label}>
               <CardContent className="p-3">
-                <p className="text-[11px] text-muted-foreground">{k.label}</p>
+                <p className="text-[11px] text-muted-foreground">{trPT(k.label)}</p>
                 <p className="text-xl font-bold">{k.value}</p>
               </CardContent>
             </Card>
@@ -267,7 +268,7 @@ const PedidosOnline = () => {
 
         <div className="flex items-center gap-3 flex-wrap">
           <Input
-            placeholder="Buscar cliente o teléfono"
+            placeholder={trPT("Buscar cliente o teléfono")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-56"
@@ -277,10 +278,10 @@ const PedidosOnline = () => {
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="all">{trPT("Todos los estados")}</SelectItem>
               {Object.entries(ORDER_STATUS).map(([k, v]) => (
                 <SelectItem key={k} value={k}>
-                  {v.label}
+                  {trPT(v.label)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -331,7 +332,7 @@ const PedidosOnline = () => {
                     <TableCell>
                       <Badge variant="outline" className="text-[10px] gap-1">
                         {order.delivery_type === "delivery" ? <Truck className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
-                        {order.delivery_type === "delivery" ? "Delivery" : "Recogida"}
+                        {order.delivery_type === "delivery" ? trPT("Delivery") : trPT("Recogida")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-[11px] text-muted-foreground">
@@ -339,7 +340,7 @@ const PedidosOnline = () => {
                     </TableCell>
                     <TableCell className="text-xs font-bold">${Number(order.total).toFixed(2)}</TableCell>
                     <TableCell>
-                      <Badge className={`text-[10px] ${st.color}`}>{st.label}</Badge>
+                      <Badge className={`text-[10px] ${st.color}`}>{trPT(st.label)}</Badge>
                     </TableCell>
                     <TableCell className="text-[11px] text-muted-foreground">
                       {order.delivery_type === "delivery" ? DELIVERY_STATUS[asg?.status ?? "pending"] : "—"}
@@ -355,11 +356,11 @@ const PedidosOnline = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Ver detalle" onClick={() => viewDetails(order)}>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title={trPT("Ver detalle")} onClick={() => viewDetails(order)}>
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
                         {!["delivered", "cancelled"].includes(order.status) && (
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Editar pedido" onClick={() => setEditOrder(order as EditableOrder)}>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title={trPT("Editar pedido")} onClick={() => setEditOrder(order as EditableOrder)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                         )}
@@ -370,7 +371,7 @@ const PedidosOnline = () => {
                             disabled={busy === order.id}
                             onClick={() => confirmOrder(order)}
                           >
-                            <ShoppingBag className="h-3 w-3 mr-1" /> Confirmar venta
+                            <ShoppingBag className="h-3 w-3 mr-1" /> {trPT("Confirmar venta")}
                           </Button>
                         )}
                         {order.sale_id && ["confirmed"].includes(order.status) && (
@@ -393,7 +394,7 @@ const PedidosOnline = () => {
                               variant={dsettings.auto_assign ? "default" : "ghost"}
                               className="h-7 text-[10px]"
                               disabled={busy === order.id}
-                              title="Asignar automáticamente el mejor repartidor"
+                              title={trPT("Asignar automáticamente el mejor repartidor")}
                               onClick={() => autoAssign(order)}
                             >
                               {busy === order.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
@@ -402,10 +403,10 @@ const PedidosOnline = () => {
                         )}
                         {["rider_assigned", "in_transit"].includes(order.status) && (
                           <>
-                            <Button size="sm" variant="ghost" className="h-7 text-[10px]" title="Reasignar repartidor" onClick={() => setReassignOrderId(order.id)}>
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px]" title={trPT("Reasignar repartidor")} onClick={() => setReassignOrderId(order.id)}>
                               <RefreshCw className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="h-7 text-[10px]" title="Cancelar entrega" disabled={busy === order.id} onClick={() => cancelDelivery(order)}>
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px]" title={trPT("Cancelar entrega")} disabled={busy === order.id} onClick={() => cancelDelivery(order)}>
                               <Ban className="h-3 w-3" />
                             </Button>
                             <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setStatus(order, "delivered")}>
@@ -438,7 +439,7 @@ const PedidosOnline = () => {
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                     <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    {loading ? t("common.loading") : "No hay pedidos online"}
+                    {loading ? t("common.loading") : trPT("No hay pedidos online")}
                   </TableCell>
                 </TableRow>
               )}
@@ -469,7 +470,7 @@ const PedidosOnline = () => {
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="sm:max-w-lg max-h-[88vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalle del pedido</DialogTitle>
+            <DialogTitle>{trPT("Detalle del pedido")}</DialogTitle>
           </DialogHeader>
 
           {selectedOrder && (
@@ -483,12 +484,12 @@ const PedidosOnline = () => {
                 <div>
                   <p className="text-muted-foreground text-xs">Estado</p>
                   <Badge className={`text-[10px] ${(ORDER_STATUS[selectedOrder.status] || ORDER_STATUS.pending).color}`}>
-                    {(ORDER_STATUS[selectedOrder.status] || ORDER_STATUS.pending).label}
+                    {trPT((ORDER_STATUS[selectedOrder.status] || ORDER_STATUS.pending).label)}
                   </Badge>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Modalidad</p>
-                  <p>{selectedOrder.delivery_type === "delivery" ? "Delivery" : "Recogida en el negocio"}</p>
+                  <p>{selectedOrder.delivery_type === "delivery" ? trPT("Delivery") : trPT("Recogida en el negocio")}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Pago</p>
@@ -497,7 +498,7 @@ const PedidosOnline = () => {
               </div>
               {selectedOrder.delivery_address && (
                 <div>
-                  <p className="text-muted-foreground text-xs">Dirección de entrega</p>
+                  <p className="text-muted-foreground text-xs">{trPT("Dirección de entrega")}</p>
                   <p>{selectedOrder.delivery_address}</p>
                   {selectedOrder.delivery_instructions && (
                     <p className="text-xs text-muted-foreground">{selectedOrder.delivery_instructions}</p>
@@ -521,7 +522,7 @@ const PedidosOnline = () => {
                 </div>
                 {Number(selectedOrder.delivery_fee) > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Envío</span>
+                    <span className="text-muted-foreground">{trPT("Envío")}</span>
                     <span>${Number(selectedOrder.delivery_fee).toFixed(2)}</span>
                   </div>
                 )}
@@ -530,21 +531,21 @@ const PedidosOnline = () => {
                   <span className="text-primary">${Number(selectedOrder.total).toFixed(2)}</span>
                 </div>
               </div>
-              {selectedOrder.notes && <p className="text-xs text-muted-foreground">Nota: {selectedOrder.notes}</p>}
+              {selectedOrder.notes && <p className="text-xs text-muted-foreground">{trPT("Nota:")} {selectedOrder.notes}</p>}
 
               <div className="flex flex-wrap gap-2">
                 {!["delivered", "cancelled"].includes(selectedOrder.status) && (
                   <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => setEditOrder(selectedOrder as EditableOrder)}>
-                    <Pencil className="h-3 w-3" /> Editar pedido
+                    <Pencil className="h-3 w-3" /> {trPT("Editar pedido")}
                   </Button>
                 )}
                 {selectedOrder.delivery_type === "delivery" && !["delivered", "cancelled"].includes(selectedOrder.status) && (
                   <>
                     <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => setRecOrderId(selectedOrder.id)}>
-                      <Bike className="h-3 w-3" /> Sugerir repartidor
+                      <Bike className="h-3 w-3" /> {trPT("Sugerir repartidor")}
                     </Button>
                     <Button size="sm" variant="ghost" className="gap-1 text-xs" onClick={() => autoAssign(selectedOrder)}>
-                      <Sparkles className="h-3 w-3" /> Asignación automática
+                      <Sparkles className="h-3 w-3" /> {trPT("Asignación automática")}
                     </Button>
                   </>
                 )}

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
@@ -117,7 +118,7 @@ const Empleados = () => {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
+    if (!form.name.trim()) { toast({ title: "Error", description: trPT("El nombre es obligatorio"), variant: "destructive" }); return; }
     const payload: any = {
       name: form.name.trim(),
       position: form.position || null,
@@ -131,12 +132,12 @@ const Empleados = () => {
       const { error } = await supabase.from("employees").update(payload).eq("id", editing.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       await logActivity({ entity_type: "employee", entity_id: editing.id, action: "Empleado actualizado", description: `Se actualizó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Empleado actualizado" });
+      toast({ title: trPT("Empleado actualizado") });
     } else {
       const { data, error } = await supabase.from("employees").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       if (data) await logActivity({ entity_type: "employee", entity_id: data.id, action: "Empleado creado", description: `Se creó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Empleado creado" });
+      toast({ title: trPT("Empleado creado") });
     }
     setDialogOpen(false);
     fetchEmployees();
@@ -147,7 +148,7 @@ const Empleados = () => {
     const { error } = await supabase.from("employees").delete().eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     await logActivity({ entity_type: "employee", entity_id: id, action: "Empleado eliminado", description: `Se eliminó ${name}`, tenant_id: tenantId, performed_by: user?.id });
-    toast({ title: "Empleado eliminado" });
+    toast({ title: trPT("Empleado eliminado") });
     fetchEmployees();
   };
 
@@ -157,14 +158,14 @@ const Empleados = () => {
 
   const savePin = async () => {
     if (!pinTarget) return;
-    if (!/^\d{4,8}$/.test(pinValue)) { toast({ title: "PIN inválido", description: "Usa 4 a 8 dígitos numéricos", variant: "destructive" }); return; }
-    if (pinValue !== pinConfirm) { toast({ title: "PIN no coincide", variant: "destructive" }); return; }
+    if (!/^\d{4,8}$/.test(pinValue)) { toast({ title: trPT("PIN inválido"), description: trPT("Usa 4 a 8 dígitos numéricos"), variant: "destructive" }); return; }
+    if (pinValue !== pinConfirm) { toast({ title: trPT("PIN no coincide"), variant: "destructive" }); return; }
     setPinSaving(true);
     const { error } = await supabase.rpc("set_employee_pin" as any, { _employee_id: pinTarget.id, _pin: pinValue });
     setPinSaving(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     await logActivity({ entity_type: "employee", entity_id: pinTarget.id, action: "PIN actualizado", description: `Se configuró el PIN de acceso a POS/Caja de ${pinTarget.name}`, tenant_id: tenantId, performed_by: user?.id });
-    toast({ title: "PIN actualizado", description: `${pinTarget.name} ya puede autorizar turnos y ventas` });
+    toast({ title: trPT("PIN actualizado"), description: `${pinTarget.name} ya puede autorizar turnos y ventas` });
     setPinDialogOpen(false);
     fetchEmployees();
   };
@@ -188,14 +189,14 @@ const Empleados = () => {
         <StatRow>
           <MiniStatCard label="Total" value={employees.length} icon={Users} tone="primary" />
           <MiniStatCard label="Activos" value={active} icon={UserCheck} tone="success" />
-          <MiniStatCard label="Nómina mensual" value={`$${totalSalary.toLocaleString()}`} icon={Briefcase} />
-          <MiniStatCard label="Adelantos pendientes" value={`$${totalAdvances.toLocaleString()}`} icon={Wallet} tone={totalAdvances > 0 ? "warning" : "default"} />
+          <MiniStatCard label={trPT("Nómina mensual")} value={`$${totalSalary.toLocaleString()}`} icon={Briefcase} />
+          <MiniStatCard label={trPT("Adelantos pendientes")} value={`$${totalAdvances.toLocaleString()}`} icon={Wallet} tone={totalAdvances > 0 ? "warning" : "default"} />
         </StatRow>
 
         <TableToolbar
           search={table.search}
           onSearchChange={table.setSearch}
-          searchPlaceholder="Buscar empleado, puesto..."
+          searchPlaceholder={trPT("Buscar empleado, puesto...")}
           filters={[{
             key: "status", label: "Estado", value: table.filters.status || "__all__",
             onChange: (v) => table.setFilter("status", v),
@@ -230,11 +231,11 @@ const Empleados = () => {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Puesto</TableHead>
-                <TableHead className="hidden sm:table-cell">Teléfono</TableHead>
+                <TableHead className="hidden sm:table-cell">{trPT("Teléfono")}</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead className="hidden lg:table-cell">Salario</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="hidden md:table-cell">PIN POS</TableHead>
+                <TableHead className="hidden md:table-cell">{trPT("PIN POS")}</TableHead>
                 <TableHead className="w-32">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -246,15 +247,15 @@ const Empleados = () => {
                   <TableCell className="hidden sm:table-cell">{e.phone || "—"}</TableCell>
                   <TableCell className="hidden md:table-cell">{e.email || "—"}</TableCell>
                   <TableCell className="hidden lg:table-cell">${e.salary.toLocaleString()}</TableCell>
-                  <TableCell><Badge variant={e.is_active ? "default" : "secondary"}>{e.is_active ? "Activo" : "Inactivo"}</Badge></TableCell>
+                  <TableCell><Badge variant={e.is_active ? "default" : "secondary"}>{e.is_active ? trPT("Activo") : trPT("Inactivo")}</Badge></TableCell>
                   <TableCell className="hidden md:table-cell">
                     {e.access_pin_hash
                       ? <Badge variant="outline" className="gap-1 text-success border-success/40"><ShieldCheck className="h-3 w-3" /> Configurado</Badge>
-                      : <Badge variant="outline" className="gap-1 text-muted-foreground">Sin PIN</Badge>}
+                      : <Badge variant="outline" className="gap-1 text-muted-foreground">{trPT("Sin PIN")}</Badge>}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <button onClick={() => openPin(e)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Configurar PIN de POS/Caja"><KeyRound className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => openPin(e)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title={trPT("Configurar PIN de POS/Caja")}><KeyRound className="h-3.5 w-3.5" /></button>
                       <button onClick={() => openDetail(e)} className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors" title="Historial"><History className="h-3.5 w-3.5" /></button>
                       <button onClick={() => openEdit(e)} className="p-1.5 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
                       <button onClick={() => handleDelete(e.id, e.name)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -266,7 +267,7 @@ const Empleados = () => {
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    {loading ? t("common.loading") : "No hay empleados"}
+                    {loading ? t("common.loading") : trPT("No hay empleados")}
                   </TableCell>
                 </TableRow>
               )}
@@ -281,19 +282,19 @@ const Empleados = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar Empleado" : "Nuevo Empleado"}</DialogTitle>
-            <DialogDescription>Ingresa los datos del empleado</DialogDescription>
+            <DialogTitle>{editing ? trPT("Editar Empleado") : trPT("Nuevo Empleado")}</DialogTitle>
+            <DialogDescription>{trPT("Ingresa los datos del empleado")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><Label>{trPT("Nombre *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div>
-              <Label>Clasificador de puesto</Label>
+              <Label>{trPT("Clasificador de puesto")}</Label>
               <Select value={form.position_id || "__none__"} onValueChange={onSelectPosition}>
                 <SelectTrigger>
-                  <SelectValue placeholder={positions.length === 0 ? "No hay puestos definidos (ir a RRHH › Puestos)" : "Seleccionar puesto"} />
+                  <SelectValue placeholder={positions.length === 0 ? trPT("No hay puestos definidos (ir a RRHH › Puestos)") : trPT("Seleccionar puesto")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">— Sin clasificar —</SelectItem>
+                  <SelectItem value="__none__">{trPT("— Sin clasificar —")}</SelectItem>
                   {positions.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       [{p.code}] {p.name} · ${Number(p.base_salary).toFixed(0)}
@@ -303,16 +304,16 @@ const Empleados = () => {
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Puesto (etiqueta)</Label><Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} placeholder="Auto desde clasificador" /></div>
+              <div><Label>{trPT("Puesto (etiqueta)")}</Label><Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} placeholder={trPT("Auto desde clasificador")} /></div>
               <div><Label>Salario</Label><Input type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} /></div>
             </div>
 
-            <div><Label>Límite de crédito (fiado)</Label><Input type="number" value={form.credit_limit} onChange={(e) => setForm({ ...form, credit_limit: e.target.value })} placeholder="0 = sin límite" /></div>
+            <div><Label>{trPT("Límite de crédito (fiado)")}</Label><Input type="number" value={form.credit_limit} onChange={(e) => setForm({ ...form, credit_limit: e.target.value })} placeholder={trPT("0 = sin límite")} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Teléfono</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div><Label>{trPT("Teléfono")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
               <div><Label>Email</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             </div>
-            <div><Label>Fecha de Contratación</Label><Input type="date" value={form.hire_date} onChange={(e) => setForm({ ...form, hire_date: e.target.value })} /></div>
+            <div><Label>{trPT("Fecha de Contratación")}</Label><Input type="date" value={form.hire_date} onChange={(e) => setForm({ ...form, hire_date: e.target.value })} /></div>
             <div><Label>Notas</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
           <DialogFooter>
@@ -326,22 +327,22 @@ const Empleados = () => {
       <Dialog open={pinDialogOpen} onOpenChange={setPinDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> PIN de acceso POS / Caja</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> {trPT("PIN de acceso POS / Caja")}</DialogTitle>
             <DialogDescription>
-              {pinTarget?.name} usará este PIN para autorizar apertura de turnos, cambios de operador y ventas sensibles.
+              {pinTarget?.name} {trPT("usará este PIN para autorizar apertura de turnos, cambios de operador y ventas sensibles.")}
             </DialogDescription>
           </DialogHeader>
           <form className="grid gap-3" autoComplete="off" onSubmit={(e) => e.preventDefault()}>
             {/* Campo señuelo: evita que el navegador rellene el buscador de la tabla con el email guardado */}
             <input type="text" name="employee-pin-decoy" autoComplete="username" className="hidden" tabIndex={-1} aria-hidden />
             <div>
-              <Label className="text-xs">Nuevo PIN (4 a 8 dígitos)</Label>
+              <Label className="text-xs">{trPT("Nuevo PIN (4 a 8 dígitos)")}</Label>
               <Input type="password" inputMode="numeric" maxLength={8} value={pinValue}
                 name="employee-pin-new" autoComplete="new-password"
                 onChange={(e) => setPinValue(e.target.value.replace(/\D/g, ""))} placeholder="••••" />
             </div>
             <div>
-              <Label className="text-xs">Confirmar PIN</Label>
+              <Label className="text-xs">{trPT("Confirmar PIN")}</Label>
               <Input type="password" inputMode="numeric" maxLength={8} value={pinConfirm}
                 name="employee-pin-confirm" autoComplete="new-password"
                 onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ""))} placeholder="••••" />
@@ -349,14 +350,14 @@ const Empleados = () => {
 
             <p className="text-[11px] text-muted-foreground flex items-start gap-1">
               <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              El PIN se guarda cifrado. Solo el empleado debe conocerlo.
+              {trPT("El PIN se guarda cifrado. Solo el empleado debe conocerlo.")}
             </p>
           </form>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setPinDialogOpen(false)} disabled={pinSaving}>Cancelar</Button>
             <Button onClick={savePin} disabled={pinSaving} className="gradient-brand text-primary-foreground">
-              {pinSaving ? "Guardando…" : "Guardar PIN"}
+              {pinSaving ? "Guardando…" : trPT("Guardar PIN")}
             </Button>
           </DialogFooter>
         </DialogContent>

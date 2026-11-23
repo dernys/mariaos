@@ -42,7 +42,7 @@ export function useMarketplaceData(): MarketplaceData {
             .gt("online_stock", 0)
             .order("created_at", { ascending: false })
             .limit(500),
-          supabase.from("tenants_public" as any).select("id, name, slug, logo_url, business_type"),
+          supabase.from("tenants_public" as any).select("id, name, slug, logo_url, business_type, country_code"),
           supabase.from("stores_public" as any).select("*"),
           supabase
             .from("product_categories")

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, X, Share, Plus, Smartphone } from "lucide-react";
@@ -43,7 +44,7 @@ export function InstallPWAPrompt({ variant = "card", delayMs = 600 }: Props) {
         >
           <div className="flex items-center gap-2">
             <Smartphone className="h-4 w-4" />
-            <span>Instala MarIA OS para una mejor experiencia</span>
+            <span>{trPT("Instala MarIA OS para una mejor experiencia")}</span>
           </div>
           <div className="flex items-center gap-2">
             {!isIOS && (
@@ -80,23 +81,23 @@ export function InstallPWAPrompt({ variant = "card", delayMs = 600 }: Props) {
             <Download className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-heading font-semibold text-sm">Instala MarIA OS</h3>
+            <h3 className="font-heading font-semibold text-sm">{trPT("Instala MarIA OS")}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Acceso rápido, modo offline y notificaciones nativas.
+              {trPT("Acceso rápido, modo offline y notificaciones nativas.")}
             </p>
             {isIOS ? (
               <div className="mt-3 text-xs space-y-1.5 bg-muted/50 rounded-lg p-2.5">
-                <p className="font-medium">Para instalar en iOS:</p>
+                <p className="font-medium">{trPT("Para instalar en iOS:")}</p>
                 <p className="flex items-center gap-1.5">
                   <span>1.</span> Toca <Share className="h-3 w-3 inline" /> Compartir
                 </p>
                 <p className="flex items-center gap-1.5">
-                  <span>2.</span> Selecciona <Plus className="h-3 w-3 inline" /> "Añadir a pantalla de inicio"
+                  <span>2.</span> Selecciona <Plus className="h-3 w-3 inline" /> {trPT("\"Añadir a pantalla de inicio\"")}
                 </p>
               </div>
             ) : (
               <Button onClick={handleInstall} size="sm" className="mt-3 gradient-brand text-primary-foreground h-8 w-full">
-                <Download className="h-3.5 w-3.5 mr-1.5" /> Instalar ahora
+                <Download className="h-3.5 w-3.5 mr-1.5" /> {trPT("Instalar ahora")}
               </Button>
             )}
           </div>

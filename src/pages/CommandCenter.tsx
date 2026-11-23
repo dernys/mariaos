@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -63,31 +64,31 @@ export default function CommandCenter() {
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-2">
-              <Sparkles className="h-3 w-3" /> MarIA OS · Centro de mando autónomo
+              <Sparkles className="h-3 w-3" /> {trPT("MarIA OS · Centro de mando autónomo")}
             </div>
-            <h2 className="text-2xl font-heading font-bold tracking-tight">Sistema nervioso empresarial</h2>
-            <p className="text-sm text-muted-foreground">Agentes, decisiones, riesgos y eventos en tiempo real.</p>
+            <h2 className="text-2xl font-heading font-bold tracking-tight">{trPT("Sistema nervioso empresarial")}</h2>
+            <p className="text-sm text-muted-foreground">{trPT("Agentes, decisiones, riesgos y eventos en tiempo real.")}</p>
           </div>
-          <Link to="/agents"><Button variant="outline" className="gap-2"><Bot className="h-4 w-4" /> Gestionar agentes</Button></Link>
+          <Link to="/agents"><Button variant="outline" className="gap-2"><Bot className="h-4 w-4" /> {trPT("Gestionar agentes")}</Button></Link>
         </div>
 
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          <KpiCard icon={Bot} label="Agentes activos" value={`${activeAgents}/${agents.length}`} accent="from-emerald-500/20 to-emerald-500/5" />
-          <KpiCard icon={Brain} label="Decisiones pendientes" value={pendingDecisions} accent="from-violet-500/20 to-violet-500/5" />
-          <KpiCard icon={AlertTriangle} label="Alertas críticas" value={criticalAlerts} accent="from-amber-500/20 to-amber-500/5" />
-          <KpiCard icon={TrendingUp} label="Ingresos 24h" value={`$${stats.revenue.toFixed(0)}`} sub={`${stats.sales} ventas · ${stats.openShifts} turnos`} accent="from-cyan-500/20 to-cyan-500/5" />
+          <KpiCard icon={Bot} label={trPT("Agentes activos")} value={`${activeAgents}/${agents.length}`} accent="from-emerald-500/20 to-emerald-500/5" />
+          <KpiCard icon={Brain} label={trPT("Decisiones pendientes")} value={pendingDecisions} accent="from-violet-500/20 to-violet-500/5" />
+          <KpiCard icon={AlertTriangle} label={trPT("Alertas críticas")} value={criticalAlerts} accent="from-amber-500/20 to-amber-500/5" />
+          <KpiCard icon={TrendingUp} label={trPT("Ingresos 24h")} value={`$${stats.revenue.toFixed(0)}`} sub={`${stats.sales} ventas · ${stats.openShifts} turnos`} accent="from-cyan-500/20 to-cyan-500/5" />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-2 border-border/50 bg-card/60 backdrop-blur">
-            <CardHeader className="flex-row items-center justify-between"><CardTitle className="text-base flex items-center gap-2"><Brain className="h-4 w-4 text-primary" /> Decisiones recientes</CardTitle><Link to="/decisions" className="text-xs text-primary hover:underline">Ver todo</Link></CardHeader>
+            <CardHeader className="flex-row items-center justify-between"><CardTitle className="text-base flex items-center gap-2"><Brain className="h-4 w-4 text-primary" /> {trPT("Decisiones recientes")}</CardTitle><Link to="/decisions" className="text-xs text-primary hover:underline">{trPT("Ver todo")}</Link></CardHeader>
             <CardContent className="space-y-2">
-              {decisions.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Aún no hay decisiones. Activa un agente.</p>}
+              {decisions.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">{trPT("Aún no hay decisiones. Activa un agente.")}</p>}
               {decisions.slice(0, 6).map((d) => (
                 <Link key={d.id} to="/decisions" className="block p-3 rounded-lg border border-border/40 hover:border-primary/40 hover:bg-accent/40 transition-colors">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{d.title}</p>
+                      <p className="text-sm font-medium truncate">{trPT(d.title)}</p>
                       <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(d.created_at), { addSuffix: true, locale: es })}</p>
                     </div>
                     <Badge variant={d.status === "pending" ? "secondary" : "default"} className="capitalize text-[10px]">{d.status}</Badge>
@@ -98,16 +99,16 @@ export default function CommandCenter() {
           </Card>
 
           <Card className="border-border/50 bg-card/60 backdrop-blur">
-            <CardHeader className="flex-row items-center justify-between"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-500" /> Riesgos activos</CardTitle><Link to="/risk" className="text-xs text-primary hover:underline">Ver todo</Link></CardHeader>
+            <CardHeader className="flex-row items-center justify-between"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-500" /> {trPT("Riesgos activos")}</CardTitle><Link to="/risk" className="text-xs text-primary hover:underline">{trPT("Ver todo")}</Link></CardHeader>
             <CardContent className="space-y-2">
-              {alerts.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Sin alertas abiertas.</p>}
+              {alerts.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">{trPT("Sin alertas abiertas.")}</p>}
               {alerts.slice(0, 6).map((a) => (
                 <div key={a.id} className="p-2.5 rounded-lg border border-border/40">
                   <div className="flex items-center gap-2 mb-1">
                     <Badge className={severityColor(a.severity)}>{a.severity}</Badge>
                     <span className="text-[10px] text-muted-foreground capitalize">{a.category}</span>
                   </div>
-                  <p className="text-xs font-medium leading-tight">{a.title}</p>
+                  <p className="text-xs font-medium leading-tight">{trPT(a.title)}</p>
                 </div>
               ))}
             </CardContent>
@@ -115,9 +116,9 @@ export default function CommandCenter() {
         </div>
 
         <Card className="border-border/50 bg-card/60 backdrop-blur">
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Feed de actividad empresarial</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> {trPT("Feed de actividad empresarial")}</CardTitle></CardHeader>
           <CardContent>
-            {events.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">Aún no hay eventos.</p>}
+            {events.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">{trPT("Aún no hay eventos.")}</p>}
             <div className="space-y-1.5">
               {events.slice(0, 12).map((e) => (
                 <div key={e.id} className="flex items-center gap-3 text-xs py-1.5 border-b border-border/30 last:border-0">
@@ -132,7 +133,7 @@ export default function CommandCenter() {
         </Card>
 
         <Card className="border-border/50 bg-gradient-to-br from-primary/5 via-card to-card backdrop-blur">
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Bot className="h-4 w-4 text-primary" /> Agentes en operación</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Bot className="h-4 w-4 text-primary" /> {trPT("Agentes en operación")}</CardTitle></CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {AGENT_DEFINITIONS.map((def) => {
@@ -142,10 +143,10 @@ export default function CommandCenter() {
                   <Link key={def.type} to="/agents" className="group p-4 rounded-xl border border-border/50 hover:border-primary/40 transition-all bg-card/40 hover:bg-card/80">
                     <div className="flex items-start justify-between mb-2">
                       <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${def.color} flex items-center justify-center shadow-lg`}><Icon className="h-4 w-4 text-white" /></div>
-                      <Badge variant={a?.status === "active" ? "default" : "secondary"} className="text-[9px]">{a?.status ?? "no provisto"}</Badge>
+                      <Badge variant={a?.status === "active" ? "default" : "secondary"} className="text-[9px]">{a?.status ?? trPT("no provisto")}</Badge>
                     </div>
                     <p className="text-sm font-semibold">{def.name}</p>
-                    <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{def.description}</p>
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{trPT(def.description)}</p>
                     <div className="flex items-center gap-1 text-[10px] text-primary mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Configurar <ChevronRight className="h-3 w-3" /></div>
                   </Link>
                 );

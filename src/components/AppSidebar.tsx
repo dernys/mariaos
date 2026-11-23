@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import {
   LayoutDashboard,
   Monitor,
@@ -316,10 +317,10 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-heading text-sm font-bold text-sidebar-primary-foreground tracking-tight">
-                MarIA OS
+                {trPT("MarIA OS")}
               </span>
               <span className="text-[10px] text-sidebar-foreground/60">
-                {tenant?.name || "Sistema"}
+                {tenant?.name || trPT("Sistema")}
               </span>
             </div>
           )}
@@ -385,10 +386,10 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/eventos")} tooltip="Event Store (shadow)">
+                  <SidebarMenuButton asChild isActive={isActive("/eventos")} tooltip={trPT("Event Store (shadow)")}>
                     <NavLink to="/eventos" className="transition-colors" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                       <Shield className="h-4 w-4" />
-                      {!collapsed && <span>Event Store</span>}
+                      {!collapsed && <span>{trPT("Event Store")}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

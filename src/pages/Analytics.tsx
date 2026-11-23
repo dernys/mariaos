@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -53,36 +54,36 @@ const Analytics = () => {
         <KpiGrid>
           <KpiTile label="Ingresos" value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
             current={a.kpis.revenue} previous={range.compare ? a.kpis.prevRevenue : undefined}
-            hint={range.compare ? "vs período anterior" : range.label} series={revenueSeries} />
+            hint={range.compare ? trPT("vs período anterior") : trPT(range.label)} series={revenueSeries} />
           <KpiTile label="Transacciones" value={String(a.kpis.tx)} icon={ShoppingCart} accentIndex={1}
             current={a.kpis.tx} previous={range.compare ? a.kpis.prevTx : undefined}
             hint={`${a.kpis.skus} SKU distintos`} series={a.timeseries.map((p) => p.tx)} />
-          <KpiTile label="Ticket promedio" value={money(a.kpis.avgTicket)} icon={TrendingUp} accentIndex={2}
+          <KpiTile label={trPT("Ticket promedio")} value={money(a.kpis.avgTicket)} icon={TrendingUp} accentIndex={2}
             current={a.kpis.avgTicket} previous={range.compare ? a.kpis.prevAvgTicket : undefined}
             series={a.timeseries.map((p) => p.avgTicket)} />
-          <KpiTile label="Margen bruto" value={`${a.kpis.margin.toFixed(1)}%`} icon={Percent} accentIndex={4}
+          <KpiTile label={trPT("Margen bruto")} value={`${a.kpis.margin.toFixed(1)}%`} icon={Percent} accentIndex={4}
             hint={`${money(a.kpis.grossProfit)} de utilidad`} />
         </KpiGrid>
 
         <KpiGrid>
-          <KpiTile label="Unidades vendidas" value={String(a.kpis.units)} icon={Package} accentIndex={1} />
-          <KpiTile label="Clientes únicos" value={String(a.kpis.uniqueCustomers)} icon={Users} accentIndex={3}
+          <KpiTile label={trPT("Unidades vendidas")} value={String(a.kpis.units)} icon={Package} accentIndex={1} />
+          <KpiTile label={trPT("Clientes únicos")} value={String(a.kpis.uniqueCustomers)} icon={Users} accentIndex={3}
             current={a.kpis.uniqueCustomers} previous={range.compare ? a.kpis.prevUniqueCustomers : undefined} />
           <KpiTile label="Impuestos" value={money(a.kpis.tax)} icon={Percent} accentIndex={2} />
-          <KpiTile label="Pendiente de cobro" value={money(a.kpis.pendingCollection)} icon={AlertCircle} accentIndex={5} invertDelta />
+          <KpiTile label={trPT("Pendiente de cobro")} value={money(a.kpis.pendingCollection)} icon={AlertCircle} accentIndex={5} invertDelta />
         </KpiGrid>
 
         <Tabs defaultValue="tendencia" className="space-y-4">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="tendencia">Tendencia</TabsTrigger>
-            <TabsTrigger value="mix">Mix de venta</TabsTrigger>
+            <TabsTrigger value="mix">{trPT("Mix de venta")}</TabsTrigger>
             <TabsTrigger value="patrones">Patrones</TabsTrigger>
             <TabsTrigger value="ranking">Rankings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tendencia" className="space-y-4">
             <ChartCard
-              title="Ingresos y transacciones"
+              title={trPT("Ingresos y transacciones")}
               subtitle={`${range.label} · granularidad ${range.granularity === "day" ? "diaria" : range.granularity === "week" ? "semanal" : "mensual"}`}
               loading={a.loading}
               empty={a.timeseries.length === 0}
@@ -106,7 +107,7 @@ const Analytics = () => {
             </ChartCard>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <ChartCard title="Ingresos acumulados" subtitle="Curva de crecimiento del período" loading={a.loading} empty={a.timeseries.length === 0}>
+              <ChartCard title={trPT("Ingresos acumulados")} subtitle={trPT("Curva de crecimiento del período")} loading={a.loading} empty={a.timeseries.length === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={a.timeseries}>
                     <defs>
@@ -124,7 +125,7 @@ const Analytics = () => {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Ticket promedio por período" loading={a.loading} empty={a.timeseries.length === 0}>
+              <ChartCard title={trPT("Ticket promedio por período")} loading={a.loading} empty={a.timeseries.length === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={a.timeseries}>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
@@ -140,7 +141,7 @@ const Analytics = () => {
 
           <TabsContent value="mix" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <ChartCard title="Por categoría" subtitle="Participación en ingresos" loading={a.loading} empty={a.byCategory.length === 0}>
+              <ChartCard title={trPT("Por categoría")} subtitle={trPT("Participación en ingresos")} loading={a.loading} empty={a.byCategory.length === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie data={a.byCategory.slice(0, 6)} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={3}>
@@ -152,7 +153,7 @@ const Analytics = () => {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Métodos de pago" subtitle="Importe en moneda base" loading={a.loading} empty={a.byMethod.length === 0}>
+              <ChartCard title={trPT("Métodos de pago")} subtitle={trPT("Importe en moneda base")} loading={a.loading} empty={a.byMethod.length === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <RadialBarChart data={a.byMethod.slice(0, 6).map((m, i) => ({ ...m, fill: colorAt(i) }))} innerRadius="30%" outerRadius="100%">
                     <RadialBar dataKey="value" background cornerRadius={4} />
@@ -162,7 +163,7 @@ const Analytics = () => {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Por tienda" subtitle="Ingresos del período" loading={a.loading} empty={a.byStore.length === 0}>
+              <ChartCard title={trPT("Por tienda")} subtitle={trPT("Ingresos del período")} loading={a.loading} empty={a.byStore.length === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={a.byStore.slice(0, 8)} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
@@ -178,7 +179,7 @@ const Analytics = () => {
             </div>
 
             <AnalyticsTable
-              title="Rentabilidad por producto"
+              title={trPT("Rentabilidad por producto")}
               rows={a.topProducts}
               loading={a.loading}
               filename="rentabilidad-productos"
@@ -197,7 +198,7 @@ const Analytics = () => {
 
           <TabsContent value="patrones" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <ChartCard title="Ventas por hora" subtitle="Identifica las horas punta" loading={a.loading} empty={a.kpis.tx === 0}>
+              <ChartCard title={trPT("Ventas por hora")} subtitle={trPT("Identifica las horas punta")} loading={a.loading} empty={a.kpis.tx === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={a.byHour}>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
@@ -209,7 +210,7 @@ const Analytics = () => {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Ventas por día de la semana" loading={a.loading} empty={a.kpis.tx === 0}>
+              <ChartCard title={trPT("Ventas por día de la semana")} loading={a.loading} empty={a.kpis.tx === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={a.byWeekday}>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
@@ -225,13 +226,13 @@ const Analytics = () => {
             </div>
 
             <AnalyticsTable
-              title="Detalle por hora"
+              title={trPT("Detalle por hora")}
               rows={a.byHour.filter((h) => h.tx > 0)}
               loading={a.loading}
               filename="ventas-por-hora"
               initialSort={{ key: "revenue", desc: true }}
               columns={[
-                { key: "label", label: "Hora", sortValue: (r) => r.hour, render: (r) => <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 text-muted-foreground" />{r.label}</span>, exportValue: (r) => r.label },
+                { key: "label", label: "Hora", sortValue: (r) => r.hour, render: (r) => <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 text-muted-foreground" />{trPT(r.label)}</span>, exportValue: (r) => r.label },
                 { key: "tx", label: "Tickets", align: "right", sortValue: (r) => r.tx, render: (r) => r.tx, exportValue: (r) => r.tx },
                 { key: "revenue", label: "Ingresos", align: "right", sortValue: (r) => r.revenue, render: (r) => <span className="font-semibold">{money(r.revenue)}</span>, exportValue: (r) => r.revenue.toFixed(2) },
                 { key: "avg", label: "Ticket medio", align: "right", sortValue: (r) => (r.tx ? r.revenue / r.tx : 0), render: (r) => money(r.tx ? r.revenue / r.tx : 0), exportValue: (r) => (r.tx ? r.revenue / r.tx : 0).toFixed(2) },
@@ -241,7 +242,7 @@ const Analytics = () => {
 
           <TabsContent value="ranking" className="space-y-4">
             <AnalyticsTable
-              title="Desempeño por empleado"
+              title={trPT("Desempeño por empleado")}
               rows={a.byEmployee}
               loading={a.loading}
               filename="ventas-empleado"
@@ -256,7 +257,7 @@ const Analytics = () => {
             />
 
             <AnalyticsTable
-              title="Mejores clientes"
+              title={trPT("Mejores clientes")}
               rows={a.byCustomer}
               loading={a.loading}
               filename="top-clientes"
@@ -272,7 +273,7 @@ const Analytics = () => {
             />
 
             <AnalyticsTable
-              title="Ingresos por tienda"
+              title={trPT("Ingresos por tienda")}
               rows={a.byStore}
               loading={a.loading}
               filename="ventas-tienda"

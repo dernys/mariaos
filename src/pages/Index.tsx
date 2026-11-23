@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -76,26 +77,26 @@ const Dashboard = () => {
         <KpiGrid>
           <KpiTile label="Ventas" value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
             current={a.kpis.revenue} previous={range.compare ? a.kpis.prevRevenue : undefined}
-            hint={range.compare ? "vs período anterior" : range.label}
+            hint={range.compare ? trPT("vs período anterior") : trPT(range.label)}
             series={a.timeseries.map((p) => p.revenue)} />
           <KpiTile label="Transacciones" value={String(a.kpis.tx)} icon={ShoppingCart} accentIndex={1}
             current={a.kpis.tx} previous={range.compare ? a.kpis.prevTx : undefined}
             series={a.timeseries.map((p) => p.tx)} />
-          <KpiTile label="Productos vendidos" value={String(a.kpis.units)} icon={Package} accentIndex={2}
+          <KpiTile label={trPT("Productos vendidos")} value={String(a.kpis.units)} icon={Package} accentIndex={2}
             hint={`${a.kpis.skus} SKU distintos`} />
-          <KpiTile label="Ticket promedio" value={money(a.kpis.avgTicket)} icon={TrendingUp} accentIndex={3}
+          <KpiTile label={trPT("Ticket promedio")} value={money(a.kpis.avgTicket)} icon={TrendingUp} accentIndex={3}
             current={a.kpis.avgTicket} previous={range.compare ? a.kpis.prevAvgTicket : undefined}
             series={a.timeseries.map((p) => p.avgTicket)} />
         </KpiGrid>
 
         <KpiGrid>
-          <KpiTile label="Margen bruto" value={`${a.kpis.margin.toFixed(1)}%`} icon={Percent} accentIndex={4}
+          <KpiTile label={trPT("Margen bruto")} value={`${a.kpis.margin.toFixed(1)}%`} icon={Percent} accentIndex={4}
             hint={`${money(a.kpis.grossProfit)} de utilidad`} />
-          <KpiTile label="Clientes atendidos" value={String(a.kpis.uniqueCustomers)} icon={Users} accentIndex={5}
+          <KpiTile label={trPT("Clientes atendidos")} value={String(a.kpis.uniqueCustomers)} icon={Users} accentIndex={5}
             current={a.kpis.uniqueCustomers} previous={range.compare ? a.kpis.prevUniqueCustomers : undefined} />
-          <KpiTile label="Valor inventario" value={money(a.inventory.value)} icon={Package} accentIndex={1}
+          <KpiTile label={trPT("Valor inventario")} value={money(a.inventory.value)} icon={Package} accentIndex={1}
             hint={`${a.inventory.list.length} productos`} />
-          <KpiTile label="Pendiente de cobro" value={money(a.kpis.pendingCollection)} icon={AlertTriangle} accentIndex={2} invertDelta />
+          <KpiTile label={trPT("Pendiente de cobro")} value={money(a.kpis.pendingCollection)} icon={AlertTriangle} accentIndex={2} invertDelta />
         </KpiGrid>
 
         {lowStock.length > 0 && (
@@ -105,17 +106,17 @@ const Dashboard = () => {
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-warning" />
                 <h3 className="font-heading font-semibold text-xs">
-                  Alertas de inventario · {a.inventory.low.length} productos por reponer
+                  {trPT("Alertas de inventario ·")} {a.inventory.low.length} {trPT("productos por reponer")}
                 </h3>
               </div>
               <Button asChild variant="ghost" size="sm" className="h-7 text-[10px]">
-                <Link to="/inventario">Ver inventario →</Link>
+                <Link to="/inventario">{trPT("Ver inventario →")}</Link>
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
               {lowStock.map((p) => (
                 <p key={p.id} className={`text-xs ${Number(p.stock) <= 0 ? "text-destructive font-medium" : "text-warning"}`}>
-                  • {p.name} — stock {p.stock} (mín. {p.min_stock})
+                  • {p.name} {trPT("— stock")} {p.stock} {trPT("(mín.")} {p.min_stock})
                 </p>
               ))}
             </div>
@@ -125,7 +126,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <ChartCard
             className="lg:col-span-2"
-            title="Evolución de ventas"
+            title={trPT("Evolución de ventas")}
             subtitle={`${range.label} · total ${money(a.kpis.revenue)}`}
             loading={a.loading}
             empty={a.timeseries.length === 0}
@@ -148,7 +149,7 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Mix por categoría" subtitle="Participación en ingresos" loading={a.loading} empty={a.byCategory.length === 0}>
+          <ChartCard title={trPT("Mix por categoría")} subtitle={trPT("Participación en ingresos")} loading={a.loading} empty={a.byCategory.length === 0}>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie data={a.byCategory.slice(0, 5)} dataKey="value" nameKey="name" innerRadius={45} outerRadius={70} paddingAngle={3}>
@@ -172,7 +173,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ChartCard title="Ventas por hora" subtitle="Detección de horas punta" loading={a.loading} empty={a.kpis.tx === 0}>
+          <ChartCard title={trPT("Ventas por hora")} subtitle={trPT("Detección de horas punta")} loading={a.loading} empty={a.kpis.tx === 0}>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={a.byHour}>
                 <defs>
@@ -191,8 +192,8 @@ const Dashboard = () => {
           </ChartCard>
 
           <ChartCard
-            title="Rendimiento por tienda"
-            subtitle={range.label}
+            title={trPT("Rendimiento por tienda")}
+            subtitle={trPT(range.label)}
             loading={a.loading}
             empty={a.byStore.length === 0}
             height={220}
@@ -224,13 +225,13 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <AnalyticsTable
-            title="Ventas recientes"
+            title={trPT("Ventas recientes")}
             rows={recentSales}
             loading={a.loading}
             pageSizeDefault={8}
             filename="ventas-recientes"
             initialSort={{ key: "created_at", desc: true }}
-            actions={<Button asChild variant="ghost" size="sm" className="h-7 text-[10px]"><Link to="/pos">Ir al POS <ArrowUpRight className="h-3 w-3 ml-1" /></Link></Button>}
+            actions={<Button asChild variant="ghost" size="sm" className="h-7 text-[10px]"><Link to="/pos">{trPT("Ir al POS")} <ArrowUpRight className="h-3 w-3 ml-1" /></Link></Button>}
             columns={[
               { key: "created_at", label: "Fecha", sortValue: (r) => r.created_at, render: (r) => <span className="inline-flex items-center gap-1 text-muted-foreground"><Clock className="h-3 w-3" />{new Date(r.created_at).toLocaleString("es", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>, exportValue: (r) => new Date(r.created_at).toLocaleString("es") },
               { key: "customer", label: "Cliente", sortValue: (r) => customerNames.get(r.customer_id ?? "") ?? "", render: (r) => customerNames.get(r.customer_id ?? "") ?? "Consumidor final", exportValue: (r) => customerNames.get(r.customer_id ?? "") ?? "Consumidor final" },
@@ -241,7 +242,7 @@ const Dashboard = () => {
           />
 
           <AnalyticsTable
-            title="Top productos"
+            title={trPT("Top productos")}
             rows={a.topProducts.slice(0, 20)}
             loading={a.loading}
             pageSizeDefault={8}

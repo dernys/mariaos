@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
@@ -130,7 +131,7 @@ export default function Delivery() {
       rider_id: assignForm.rider_id || null, zone_id: assignForm.zone_id || null,
     });
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Pedido asignado" });
+    toast({ title: trPT("Pedido asignado") });
     setAssignDialog(null); setAssignForm({ rider_id: "", zone_id: "" }); load();
   };
 
@@ -147,7 +148,7 @@ export default function Delivery() {
         <Tabs defaultValue="active">
           <TabsList>
             <TabsTrigger value="active"><Truck className="h-4 w-4 mr-2" />Activos</TabsTrigger>
-            <TabsTrigger value="map"><MapIcon className="h-4 w-4 mr-2" />Mapa GPS</TabsTrigger>
+            <TabsTrigger value="map"><MapIcon className="h-4 w-4 mr-2" />{trPT("Mapa GPS")}</TabsTrigger>
             <TabsTrigger value="riders"><Bike className="h-4 w-4 mr-2" />Repartidores</TabsTrigger>
             <TabsTrigger value="zones"><MapPin className="h-4 w-4 mr-2" />Zonas</TabsTrigger>
           </TabsList>
@@ -155,11 +156,11 @@ export default function Delivery() {
 
           <TabsContent value="active" className="space-y-4">
             <Card>
-              <CardHeader><CardTitle>Pedidos sin asignar</CardTitle></CardHeader>
+              <CardHeader><CardTitle>{trPT("Pedidos sin asignar")}</CardTitle></CardHeader>
               <CardContent>
-                {pendingOrders.length === 0 ? <p className="text-sm text-muted-foreground">No hay pedidos pendientes.</p> : (
+                {pendingOrders.length === 0 ? <p className="text-sm text-muted-foreground">{trPT("No hay pedidos pendientes.")}</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Dirección</TableHead><TableHead>Total</TableHead><TableHead></TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>{trPT("Dirección")}</TableHead><TableHead>Total</TableHead><TableHead></TableHead></TableRow></TableHeader>
                     <TableBody>
                       {pendingOrders.map(o => (
                         <TableRow key={o.id}>
@@ -178,7 +179,7 @@ export default function Delivery() {
               <CardHeader><CardTitle>Asignaciones</CardTitle></CardHeader>
               <CardContent>
                 <Table>
-                  <TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Repartidor</TableHead><TableHead>Estado</TableHead><TableHead>Acción</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Repartidor</TableHead><TableHead>Estado</TableHead><TableHead>{trPT("Acción")}</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {assignments.map(a => (
                       <TableRow key={a.id}>
@@ -201,7 +202,7 @@ export default function Delivery() {
 
           <TabsContent value="map" className="space-y-4">
             <Card>
-              <CardHeader><CardTitle>Mapa GPS en tiempo real</CardTitle></CardHeader>
+              <CardHeader><CardTitle>{trPT("Mapa GPS en tiempo real")}</CardTitle></CardHeader>
               <CardContent>
                 <DeliveryMap tenantId={tenantId} />
               </CardContent>
@@ -212,7 +213,7 @@ export default function Delivery() {
             <div className="flex justify-end"><Button onClick={() => setRiderDialog(true)}><Plus className="h-4 w-4 mr-2" />Nuevo</Button></div>
             <Card><CardContent className="pt-6">
               <Table>
-                <TableHeader><TableRow><TableHead>Nombre</TableHead><TableHead>Teléfono</TableHead><TableHead>Vehículo</TableHead><TableHead>Placa</TableHead><TableHead>Tier</TableHead><TableHead>★</TableHead><TableHead>Entregas</TableHead><TableHead>Disponible</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Nombre</TableHead><TableHead>{trPT("Teléfono")}</TableHead><TableHead>{trPT("Vehículo")}</TableHead><TableHead>Placa</TableHead><TableHead>Tier</TableHead><TableHead>★</TableHead><TableHead>Entregas</TableHead><TableHead>Disponible</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {riders.map(r => (
                     <TableRow key={r.id}>
@@ -234,10 +235,10 @@ export default function Delivery() {
 
 
           <TabsContent value="zones" className="space-y-4">
-            <div className="flex justify-end"><Button onClick={() => setZoneDialog(true)}><Plus className="h-4 w-4 mr-2" />Nueva zona</Button></div>
+            <div className="flex justify-end"><Button onClick={() => setZoneDialog(true)}><Plus className="h-4 w-4 mr-2" />{trPT("Nueva zona")}</Button></div>
             <Card><CardContent className="pt-6">
               <Table>
-                <TableHeader><TableRow><TableHead>Zona</TableHead><TableHead>Tarifa</TableHead><TableHead>Tiempo est.</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Zona</TableHead><TableHead>Tarifa</TableHead><TableHead>{trPT("Tiempo est.")}</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {zones.map(z => (
                     <TableRow key={z.id}>
@@ -252,12 +253,12 @@ export default function Delivery() {
 
         <Dialog open={zoneDialog} onOpenChange={setZoneDialog}>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nueva zona</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{trPT("Nueva zona")}</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label>Nombre</Label><Input value={zoneForm.name} onChange={e => setZoneForm({ ...zoneForm, name: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-2">
                 <div><Label>Tarifa</Label><Input type="number" value={zoneForm.fee} onChange={e => setZoneForm({ ...zoneForm, fee: e.target.value })} /></div>
-                <div><Label>Minutos est.</Label><Input type="number" value={zoneForm.estimated_minutes} onChange={e => setZoneForm({ ...zoneForm, estimated_minutes: e.target.value })} /></div>
+                <div><Label>{trPT("Minutos est.")}</Label><Input type="number" value={zoneForm.estimated_minutes} onChange={e => setZoneForm({ ...zoneForm, estimated_minutes: e.target.value })} /></div>
               </div>
             </div>
             <DialogFooter><Button onClick={saveZone}>Guardar</Button></DialogFooter>
@@ -266,12 +267,12 @@ export default function Delivery() {
 
         <Dialog open={riderDialog} onOpenChange={setRiderDialog}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Nuevo repartidor</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{trPT("Nuevo repartidor")}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Nombre *</Label><Input value={riderForm.name} onChange={e => setRiderForm({ ...riderForm, name: e.target.value })} /></div>
-                <div><Label>Teléfono</Label><Input value={riderForm.phone} onChange={e => setRiderForm({ ...riderForm, phone: e.target.value })} /></div>
-                <div><Label>Documento (CI/DNI)</Label><Input value={riderForm.document_id} onChange={e => setRiderForm({ ...riderForm, document_id: e.target.value })} /></div>
+                <div><Label>{trPT("Nombre *")}</Label><Input value={riderForm.name} onChange={e => setRiderForm({ ...riderForm, name: e.target.value })} /></div>
+                <div><Label>{trPT("Teléfono")}</Label><Input value={riderForm.phone} onChange={e => setRiderForm({ ...riderForm, phone: e.target.value })} /></div>
+                <div><Label>{trPT("Documento (CI/DNI)")}</Label><Input value={riderForm.document_id} onChange={e => setRiderForm({ ...riderForm, document_id: e.target.value })} /></div>
                 <div><Label>Tier</Label>
                   <Select value={riderForm.tier} onValueChange={v => setRiderForm({ ...riderForm, tier: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -287,13 +288,13 @@ export default function Delivery() {
               <div className="border-t pt-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Licencia</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Número de licencia</Label><Input value={riderForm.license_number} onChange={e => setRiderForm({ ...riderForm, license_number: e.target.value })} /></div>
+                  <div><Label>{trPT("Número de licencia")}</Label><Input value={riderForm.license_number} onChange={e => setRiderForm({ ...riderForm, license_number: e.target.value })} /></div>
                   <div><Label>Vence</Label><Input type="date" value={riderForm.license_expiry} onChange={e => setRiderForm({ ...riderForm, license_expiry: e.target.value })} /></div>
                 </div>
               </div>
 
               <div className="border-t pt-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Vehículo</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">{trPT("Vehículo")}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Tipo</Label>
                     <Select value={riderForm.vehicle} onValueChange={v => setRiderForm({ ...riderForm, vehicle: v })}>
@@ -302,7 +303,7 @@ export default function Delivery() {
                         <SelectItem value="moto">Moto</SelectItem>
                         <SelectItem value="bici">Bicicleta</SelectItem>
                         <SelectItem value="auto">Auto</SelectItem>
-                        <SelectItem value="caminando">A pie</SelectItem>
+                        <SelectItem value="caminando">{trPT("A pie")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -316,7 +317,7 @@ export default function Delivery() {
                 <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Seguro</p>
                 <div className="grid grid-cols-3 gap-3">
                   <div><Label>Aseguradora</Label><Input value={riderForm.insurance_provider} onChange={e => setRiderForm({ ...riderForm, insurance_provider: e.target.value })} /></div>
-                  <div><Label>Póliza</Label><Input value={riderForm.insurance_policy} onChange={e => setRiderForm({ ...riderForm, insurance_policy: e.target.value })} /></div>
+                  <div><Label>{trPT("Póliza")}</Label><Input value={riderForm.insurance_policy} onChange={e => setRiderForm({ ...riderForm, insurance_policy: e.target.value })} /></div>
                   <div><Label>Vence</Label><Input type="date" value={riderForm.insurance_expiry} onChange={e => setRiderForm({ ...riderForm, insurance_expiry: e.target.value })} /></div>
                 </div>
               </div>
@@ -329,17 +330,17 @@ export default function Delivery() {
 
         <Dialog open={!!assignDialog} onOpenChange={v => !v && setAssignDialog(null)}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader><DialogTitle>Asignar pedido</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{trPT("Asignar pedido")}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">{assignDialog?.customer_name} — {assignDialog?.delivery_address}</p>
 
               <div className="space-y-2">
                 <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Repartidores y ruta activa
+                  {trPT("Repartidores y ruta activa")}
                 </Label>
                 <div className="max-h-64 space-y-2 overflow-auto">
                   {riders.filter(r => r.is_active !== false).length === 0 && (
-                    <p className="text-xs text-muted-foreground">Sin repartidores registrados.</p>
+                    <p className="text-xs text-muted-foreground">{trPT("Sin repartidores registrados.")}</p>
                   )}
                   {riders.filter(r => r.is_active !== false).map(r => {
                     const route = activeRoutes[r.id] ?? [];
@@ -358,21 +359,21 @@ export default function Delivery() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold">{r.name}</span>
                             <Badge variant={r.is_available ? "default" : "secondary"} className="text-[10px]">
-                              {r.is_available ? "Disponible" : "Ocupado"}
+                              {r.is_available ? trPT("Disponible") : trPT("Ocupado")}
                             </Badge>
                             {suggested && (
-                              <Badge variant="outline" className="text-[10px]">Misma ruta</Badge>
+                              <Badge variant="outline" className="text-[10px]">{trPT("Misma ruta")}</Badge>
                             )}
                           </div>
                           <span className="text-[11px] text-muted-foreground">
-                            {route.length} pedido(s) en curso
+                            {route.length} {trPT("pedido(s) en curso")}
                           </span>
                         </div>
                         {route.length > 0 && (
                           <ul className="mt-2 space-y-0.5">
                             {route.slice(0, 4).map(s => (
                               <li key={s.id} className="text-[11px] text-muted-foreground truncate">
-                                • {STATUS_LABELS[s.status] ?? s.status} — {s.address || "sin dirección"}
+                                • {STATUS_LABELS[s.status] ?? s.status} — {s.address || trPT("sin dirección")}
                               </li>
                             ))}
                           </ul>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 // Conciliación operación ↔ contabilidad: compara los documentos reales de cada
 // módulo con los asientos generados y explica en lenguaje claro qué corregir.
 
@@ -179,7 +180,7 @@ export function OperationReconciliationPanel() {
                       {r.sample?.length > 0 && (
                         <ul className="font-mono">
                           {r.sample.map((s) => (
-                            <li key={s.id}>· {s.label} — {money(s.amount)}</li>
+                            <li key={s.id}>· {trPT(s.label)} — {money(s.amount)}</li>
                           ))}
                         </ul>
                       )}

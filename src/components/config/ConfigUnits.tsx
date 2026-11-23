@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -30,7 +31,7 @@ export function ConfigUnits() {
 
   const save = async () => {
     if (!form.code.trim() || !form.name.trim()) {
-      toast({ title: "Código y nombre requeridos", variant: "destructive" });
+      toast({ title: trPT("Código y nombre requeridos"), variant: "destructive" });
       return;
     }
     const payload = {
@@ -64,8 +65,8 @@ export function ConfigUnits() {
 
   const remove = async (u: UnitOfMeasure) => {
     const { error } = await (supabase as any).from("units_of_measure").delete().eq("id", u.id);
-    if (error) { toast({ title: "No se pudo eliminar", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Unidad eliminada" });
+    if (error) { toast({ title: trPT("No se pudo eliminar"), description: error.message, variant: "destructive" }); return; }
+    toast({ title: trPT("Unidad eliminada") });
     reload();
   };
 
@@ -73,10 +74,10 @@ export function ConfigUnits() {
     <div className="space-y-4 max-w-2xl">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {units.length} unidades — se usan en compras, transferencias y conteos
+          {units.length} {trPT("unidades — se usan en compras, transferencias y conteos")}
         </p>
         <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground">
-          <Plus className="h-3.5 w-3.5" /> Nueva Unidad
+          <Plus className="h-3.5 w-3.5" /> {trPT("Nueva Unidad")}
         </Button>
       </div>
 
@@ -93,20 +94,20 @@ export function ConfigUnits() {
                     {u.name} <span className="text-muted-foreground">({u.code})</span>
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    {u.decimals} decimales · factor {u.factor}
+                    {u.decimals} {trPT("decimales · factor")} {u.factor}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {u.is_default ? (
-                  <Badge className="text-[10px] gap-1"><Star className="h-3 w-3" /> Por defecto</Badge>
+                  <Badge className="text-[10px] gap-1"><Star className="h-3 w-3" /> {trPT("Por defecto")}</Badge>
                 ) : (
                   <button onClick={() => makeDefault(u)} className="text-[10px] text-muted-foreground hover:text-primary">
-                    Hacer default
+                    {trPT("Hacer default")}
                   </button>
                 )}
                 <Badge variant={u.is_active ? "default" : "secondary"} className="text-[10px] cursor-pointer" onClick={() => toggleActive(u)}>
-                  {u.is_active ? "Activa" : "Inactiva"}
+                  {u.is_active ? trPT("Activa") : trPT("Inactiva")}
                 </Badge>
                 <button onClick={() => openEdit(u)} className="p-1.5 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
                 <button onClick={() => remove(u)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -114,19 +115,19 @@ export function ConfigUnits() {
             </CardContent>
           </Card>
         ))}
-        {units.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No hay unidades configuradas</p>}
+        {units.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">{trPT("No hay unidades configuradas")}</p>}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar" : "Nueva"} Unidad de Medida</DialogTitle>
-            <DialogDescription>Ej: u, kg, L, caja. El factor convierte a la unidad base.</DialogDescription>
+            <DialogTitle>{editing ? trPT("Editar") : trPT("Nueva")} {trPT("Unidad de Medida")}</DialogTitle>
+            <DialogDescription>{trPT("Ej: u, kg, L, caja. El factor convierte a la unidad base.")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-xs">Código *</Label><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="kg" /></div>
-              <div><Label className="text-xs">Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Kilogramo" /></div>
+              <div><Label className="text-xs">{trPT("Código *")}</Label><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="kg" /></div>
+              <div><Label className="text-xs">{trPT("Nombre *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Kilogramo" /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs">Decimales</Label><Input type="number" min="0" max="4" value={form.decimals} onChange={(e) => setForm({ ...form, decimals: e.target.value })} /></div>

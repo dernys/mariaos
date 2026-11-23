@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { Fragment, useEffect, useMemo, useState } from "react";
@@ -212,11 +213,11 @@ export default function Devoluciones() {
       .filter((i) => Number(draft[i.sale_item_id]) > 0)
       .map((i) => ({ sale_item_id: i.sale_item_id, qty: Number(draft[i.sale_item_id]) }));
     if (!itemsArr.length) {
-      toast({ title: "Ingresa al menos una cantidad a devolver", variant: "destructive" });
+      toast({ title: trPT("Ingresa al menos una cantidad a devolver"), variant: "destructive" });
       return;
     }
     if (overLimit) {
-      toast({ title: "Cantidad no permitida", description: "Una línea supera lo disponible a devolver", variant: "destructive" });
+      toast({ title: trPT("Cantidad no permitida"), description: trPT("Una línea supera lo disponible a devolver"), variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -234,7 +235,7 @@ export default function Devoluciones() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Devolución registrada", description: `Reembolso $${totalRefund.toFixed(2)}` });
+    toast({ title: trPT("Devolución registrada"), description: `Reembolso $${totalRefund.toFixed(2)}` });
     setOpen(false);
     history.refetch();
     salesTable.refetch();
@@ -318,14 +319,14 @@ export default function Devoluciones() {
         <TabsContent value="history" className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
             <MiniStatCard label="Devoluciones" value={String(history.total)} icon={Undo2} />
-            <MiniStatCard label="Importe devuelto" value={`$${totals.amount.toFixed(2)}`} icon={Coins} />
-            <MiniStatCard label="Unidades devueltas" value={String(totals.units)} icon={PackageCheck} />
+            <MiniStatCard label={trPT("Importe devuelto")} value={`$${totals.amount.toFixed(2)}`} icon={Coins} />
+            <MiniStatCard label={trPT("Unidades devueltas")} value={String(totals.units)} icon={PackageCheck} />
           </div>
 
           <TableToolbar
             search={history.search}
             onSearchChange={history.setSearch}
-            searchPlaceholder="Buscar por nº, ticket, cliente o motivo..."
+            searchPlaceholder={trPT("Buscar por nº, ticket, cliente o motivo...")}
             filters={[
               {
                 key: "status",
@@ -365,7 +366,7 @@ export default function Devoluciones() {
                   <TableHead className="text-xs">Cliente</TableHead>
                   <TableHead className="text-xs">Items</TableHead>
                   <TableHead className="text-xs">Reembolso</TableHead>
-                  <TableHead className="text-xs">Método</TableHead>
+                  <TableHead className="text-xs">{trPT("Método")}</TableHead>
                   <TableHead className="text-xs">Estado</TableHead>
                   <TableHead className="text-xs">Responsable</TableHead>
                   <TableHead className="text-xs">Motivo</TableHead>
@@ -388,15 +389,15 @@ export default function Devoluciones() {
                       </TableCell>
                       <TableCell className="text-xs">{r.customer_name || "—"}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {r.lines_returned} línea(s) · {Number(r.units_returned)} u.
+                        {r.lines_returned} {trPT("línea(s) ·")} {Number(r.units_returned)} u.
                       </TableCell>
                       <TableCell className="text-xs font-heading font-bold">${Number(r.total).toFixed(2)}</TableCell>
                       <TableCell className="text-xs">
-                        {REFUND_METHODS.find((m) => m.value === r.refund_method)?.label || r.refund_method}
+                        {trPT(REFUND_METHODS.find((m) => m.value === r.refund_method)?.label) || r.refund_method}
                       </TableCell>
                       <TableCell>
                         <Badge variant={r.status === "cancelled" ? "destructive" : "outline"} className="text-[10px]">
-                          {r.status === "cancelled" ? "Cancelada" : "Completada"}
+                          {r.status === "cancelled" ? trPT("Cancelada") : trPT("Completada")}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{r.performed_by_name || "—"}</TableCell>
@@ -407,12 +408,12 @@ export default function Devoluciones() {
                       <TableRow key={`${r.id}-detail`} className="bg-muted/30 hover:bg-muted/30">
                         <TableCell colSpan={11} className="p-4">
                           <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
-                            Productos devueltos de la compra {r.ticket_number || r.sale_id.slice(0, 8)}
+                            {trPT("Productos devueltos de la compra")} {r.ticket_number || r.sale_id.slice(0, 8)}
                           </p>
                           {detailLoading ? (
-                            <p className="text-xs text-muted-foreground">Cargando detalle…</p>
+                            <p className="text-xs text-muted-foreground">{trPT("Cargando detalle…")}</p>
                           ) : (detail[r.id] ?? []).length === 0 ? (
-                            <p className="text-xs text-muted-foreground">Sin líneas registradas.</p>
+                            <p className="text-xs text-muted-foreground">{trPT("Sin líneas registradas.")}</p>
                           ) : (
                             <Table>
                               <TableHeader>
@@ -470,14 +471,14 @@ export default function Devoluciones() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Devolución de venta</DialogTitle>
+            <DialogTitle>{trPT("Devolución de venta")}</DialogTitle>
             <DialogDescription>
-              Ticket {selectedSale?.ticket_number || selectedSale?.id.slice(0, 8)} · Total ${Number(selectedSale?.total || 0).toFixed(2)}
+              Ticket {selectedSale?.ticket_number || selectedSale?.id.slice(0, 8)} {trPT("· Total $")}{Number(selectedSale?.total || 0).toFixed(2)}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             {nothingToReturn && (
-              <p className="text-xs text-destructive">Todas las unidades de esta venta ya fueron devueltas.</p>
+              <p className="text-xs text-destructive">{trPT("Todas las unidades de esta venta ya fueron devueltas.")}</p>
             )}
             <div className="bg-card rounded-lg border overflow-hidden">
               <Table>
@@ -520,22 +521,22 @@ export default function Devoluciones() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Método de reembolso</Label>
+                <Label className="text-xs">{trPT("Método de reembolso")}</Label>
                 <Select value={refundMethod} onValueChange={setRefundMethod}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {REFUND_METHODS.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                    {REFUND_METHODS.map((m) => <SelectItem key={m.value} value={m.value}>{trPT(m.label)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Total a reembolsar</Label>
+                <Label className="text-xs">{trPT("Total a reembolsar")}</Label>
                 <Input value={totalRefund.toFixed(2)} disabled className="font-bold" />
               </div>
             </div>
             <label className="flex items-center gap-2 text-xs">
               <input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} className="h-4 w-4" />
-              Reponer inventario de los productos devueltos
+              {trPT("Reponer inventario de los productos devueltos")}
             </label>
             <div>
               <Label className="text-xs">Motivo</Label>
@@ -549,7 +550,7 @@ export default function Devoluciones() {
               disabled={saving || overLimit || totalRefund <= 0}
               onClick={submit}
             >
-              <RotateCcw className="h-3.5 w-3.5 mr-1" /> Confirmar Devolución
+              <RotateCcw className="h-3.5 w-3.5 mr-1" /> {trPT("Confirmar Devolución")}
             </Button>
           </DialogFooter>
         </DialogContent>

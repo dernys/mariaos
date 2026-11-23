@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -43,11 +44,11 @@ export function StockAdjustmentDialog({ open, onOpenChange, productId, productNa
   }, [open]);
 
   const submit = async () => {
-    if (!productId) return toast.error("Producto requerido");
-    if (!locId) return toast.error("Selecciona ubicación");
+    if (!productId) return toast.error(trPT("Producto requerido"));
+    if (!locId) return toast.error(trPT("Selecciona ubicación"));
     const n = parseFloat(qty);
-    if (!n || n <= 0) return toast.error("Cantidad inválida");
-    if (reason.trim().length < 3) return toast.error("Motivo requerido");
+    if (!n || n <= 0) return toast.error(trPT("Cantidad inválida"));
+    if (reason.trim().length < 3) return toast.error(trPT("Motivo requerido"));
     setSaving(true);
     const { error } = await supabase.rpc("register_stock_adjustment" as any, {
       p_product_id: productId,
@@ -59,7 +60,7 @@ export function StockAdjustmentDialog({ open, onOpenChange, productId, productNa
     });
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Ajuste de stock registrado");
+    toast.success(trPT("Ajuste de stock registrado"));
     onSaved?.();
     onOpenChange(false);
   };
@@ -70,23 +71,23 @@ export function StockAdjustmentDialog({ open, onOpenChange, productId, productNa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-warning" /> Merma / Rotura / Ajuste</DialogTitle>
-          <DialogDescription>{productName || "Producto"} — descuenta unidades con motivo</DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-warning" /> {trPT("Merma / Rotura / Ajuste")}</DialogTitle>
+          <DialogDescription>{productName || trPT("Producto")} {trPT("— descuenta unidades con motivo")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Tipo de ubicación</Label>
+              <Label className="text-xs">{trPT("Tipo de ubicación")}</Label>
               <Select value={locType} onValueChange={(v) => { setLocType(v as any); setLocId(""); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="store">Tienda</SelectItem>
-                  <SelectItem value="warehouse">Almacén</SelectItem>
+                  <SelectItem value="warehouse">{trPT("Almacén")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Ubicación</Label>
+              <Label className="text-xs">{trPT("Ubicación")}</Label>
               <Select value={locId} onValueChange={setLocId}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                 <SelectContent>
@@ -101,24 +102,24 @@ export function StockAdjustmentDialog({ open, onOpenChange, productId, productNa
               <Input type="number" min="0" step="0.01" value={qty} onChange={(e) => setQty(e.target.value)} />
             </div>
             <div>
-              <Label className="text-xs">Motivo del ajuste</Label>
+              <Label className="text-xs">{trPT("Motivo del ajuste")}</Label>
               <Select value={kind} onValueChange={setKind}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
+                  {KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{trPT(k.label)}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div>
-            <Label className="text-xs">Descripción / motivo</Label>
-            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Detalle de la merma…" />
+            <Label className="text-xs">{trPT("Descripción / motivo")}</Label>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder={trPT("Detalle de la merma…")} />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={submit} disabled={saving} className="gradient-brand text-primary-foreground">
-            Registrar ajuste
+            {trPT("Registrar ajuste")}
           </Button>
         </DialogFooter>
       </DialogContent>

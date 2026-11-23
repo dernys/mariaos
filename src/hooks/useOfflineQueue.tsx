@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { migrateLegacyQueue, OP_LABELS, type PendingOp } from "@/lib/offline/db";
@@ -77,11 +78,11 @@ export function useOfflineQueue(tenantId?: string | null) {
   useEffect(() => {
     const goOnline = () => {
       setOnline(true);
-      toast.success("Conexión restablecida — sincronizando…");
+      toast.success(trPT("Conexión restablecida — sincronizando…"));
       void flush();
       void prefetch(true);
     };
-    const goOffline = () => { setOnline(false); toast.warning("Sin conexión — puedes seguir vendiendo"); };
+    const goOffline = () => { setOnline(false); toast.warning(trPT("Sin conexión — puedes seguir vendiendo")); };
     window.addEventListener("online", goOnline);
     window.addEventListener("offline", goOffline);
     return () => {

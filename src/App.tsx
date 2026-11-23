@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -96,7 +97,10 @@ const P = ({ children, m, sa }: { children: React.ReactNode; m?: string; sa?: bo
 );
 
 
-const App = () => (
+const App = () => {
+  // Re-render all screens (without remounting or losing state) when the language changes
+  useTranslation();
+  return (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TenantProvider>
@@ -181,5 +185,6 @@ const App = () => (
     </AuthProvider>
   </QueryClientProvider>
 );
+};
 
 export default App;

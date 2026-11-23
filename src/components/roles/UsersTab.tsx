@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -71,7 +72,7 @@ export function UsersTab() {
       body: { action: "list" },
     });
     if (error) {
-      toast.error("Error cargando usuarios");
+      toast.error(trPT("Error cargando usuarios"));
     } else {
       setUsers(data.users ?? []);
       setCanManage(!!data.can_manage);
@@ -98,7 +99,7 @@ export function UsersTab() {
     if (error || data?.error) {
       toast.error(data?.error || "Error al crear usuario");
     } else {
-      toast.success("Usuario creado exitosamente");
+      toast.success(trPT("Usuario creado exitosamente"));
       setCreateOpen(false);
       setNewEmail("");
       setNewPassword("");
@@ -129,7 +130,7 @@ export function UsersTab() {
     if (error || data?.error) {
       toast.error(data?.error || "Error eliminando usuario");
     } else {
-      toast.success("Usuario eliminado");
+      toast.success(trPT("Usuario eliminado"));
       await fetchUsers();
     }
   };
@@ -153,28 +154,28 @@ export function UsersTab() {
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2 gradient-brand text-primary-foreground font-heading font-semibold">
               <UserPlus className="h-4 w-4" />
-              Nuevo Usuario
+              {trPT("Nuevo Usuario")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-heading">Crear Usuario</DialogTitle>
+              <DialogTitle className="font-heading">{trPT("Crear Usuario")}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Nombre completo</label>
+                <label className="text-xs font-medium text-muted-foreground">{trPT("Nombre completo")}</label>
                 <Input value={newName} onChange={(e) => setNewName(e.target.value)} required />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Correo electrónico</label>
+                <label className="text-xs font-medium text-muted-foreground">{trPT("Correo electrónico")}</label>
                 <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Contraseña</label>
+                <label className="text-xs font-medium text-muted-foreground">{trPT("Contraseña")}</label>
                 <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Rol inicial</label>
+                <label className="text-xs font-medium text-muted-foreground">{trPT("Rol inicial")}</label>
                 <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -187,7 +188,7 @@ export function UsersTab() {
                 </Select>
               </div>
               <Button type="submit" disabled={creating} className="w-full gradient-brand text-primary-foreground font-heading font-semibold">
-                {creating ? "Creando..." : "Crear Usuario"}
+                {creating ? "Creando..." : trPT("Crear Usuario")}
               </Button>
             </form>
           </DialogContent>
@@ -210,7 +211,7 @@ export function UsersTab() {
               {users.map((u) => (
                 <tr key={u.user_id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                   <td className="p-3">
-                    <p className="text-xs font-medium">{u.full_name ?? "Sin nombre"}</p>
+                    <p className="text-xs font-medium">{u.full_name ?? trPT("Sin nombre")}</p>
                   </td>
                   <td className="p-3">
                     <p className="text-xs text-muted-foreground">{u.email}</p>
@@ -218,7 +219,7 @@ export function UsersTab() {
                   <td className="p-3">
                     <div className="flex gap-1 flex-wrap items-center">
                       {u.roles.length === 0 && (
-                        <span className="text-[10px] text-muted-foreground">Sin rol</span>
+                        <span className="text-[10px] text-muted-foreground">{trPT("Sin rol")}</span>
                       )}
                       {u.roles.map((r) => (
                         <Badge
@@ -226,7 +227,7 @@ export function UsersTab() {
                           variant="outline"
                           className={`text-[10px] cursor-pointer ${ROLE_COLORS[r]}`}
                           onClick={() => canManage && handleToggleRole(u.user_id, r, true)}
-                          title={canManage ? "Click para remover" : ROLE_LABELS[r]}
+                          title={canManage ? trPT("Click para remover") : ROLE_LABELS[r]}
                         >
                           {ROLE_LABELS[r]}{canManage && <ShieldMinus className="h-2.5 w-2.5 ml-1" />}
                         </Badge>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,8 +29,7 @@ const Configuracion = () => {
         <div className="mb-4 flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/10 p-3">
           <Lock className="h-4 w-4 text-warning mt-0.5 shrink-0" />
           <p className="text-xs text-muted-foreground">
-            Tu rol puede consultar la configuración pero no modificarla. Solicita acceso de edición al
-            administrador del negocio.
+            {trPT("Tu rol puede consultar la configuración pero no modificarla. Solicita acceso de edición al administrador del negocio.")}
           </p>
         </div>
       )}
@@ -37,16 +37,16 @@ const Configuracion = () => {
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="general" className="gap-1.5 text-xs"><Building2 className="h-3.5 w-3.5" />General</TabsTrigger>
           <TabsTrigger value="pos" className="gap-1.5 text-xs"><ShoppingCart className="h-3.5 w-3.5" />POS</TabsTrigger>
-          <TabsTrigger value="modules" className="gap-1.5 text-xs"><Settings2 className="h-3.5 w-3.5" />Módulos</TabsTrigger>
+          <TabsTrigger value="modules" className="gap-1.5 text-xs"><Settings2 className="h-3.5 w-3.5" />{trPT("Módulos")}</TabsTrigger>
           <TabsTrigger value="hr" className="gap-1.5 text-xs"><Users className="h-3.5 w-3.5" />RRHH</TabsTrigger>
           <TabsTrigger value="delivery" className="gap-1.5 text-xs"><Bike className="h-3.5 w-3.5" />Delivery</TabsTrigger>
-          <TabsTrigger value="categories" className="gap-1.5 text-xs"><Tag className="h-3.5 w-3.5" />Categorías</TabsTrigger>
+          <TabsTrigger value="categories" className="gap-1.5 text-xs"><Tag className="h-3.5 w-3.5" />{trPT("Categorías")}</TabsTrigger>
           <TabsTrigger value="units" className="gap-1.5 text-xs"><Ruler className="h-3.5 w-3.5" />Unidades</TabsTrigger>
           <TabsTrigger value="taxes" className="gap-1.5 text-xs"><Percent className="h-3.5 w-3.5" />Impuestos</TabsTrigger>
 
-          <TabsTrigger value="fiscal" className="gap-1.5 text-xs"><Scale className="h-3.5 w-3.5" />Motor Fiscal</TabsTrigger>
+          <TabsTrigger value="fiscal" className="gap-1.5 text-xs"><Scale className="h-3.5 w-3.5" />{trPT("Motor Fiscal")}</TabsTrigger>
           <TabsTrigger value="currencies" className="gap-1.5 text-xs"><Coins className="h-3.5 w-3.5" />Monedas</TabsTrigger>
-          <TabsTrigger value="payments" className="gap-1.5 text-xs"><CreditCard className="h-3.5 w-3.5" />Métodos de Pago</TabsTrigger>
+          <TabsTrigger value="payments" className="gap-1.5 text-xs"><CreditCard className="h-3.5 w-3.5" />{trPT("Métodos de Pago")}</TabsTrigger>
         </TabsList>
 
         <div className={readOnly ? "pointer-events-none opacity-70 select-none" : ""}>

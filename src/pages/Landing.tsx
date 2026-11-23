@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -58,6 +59,9 @@ const demoBusinessTypes = [
   { id: "bar", icon: Store, title: "Bar / Cafetería", desc: "Cuentas abiertas, comanda rápida y cobro por consumición.", accent: "from-amber-500 to-orange-500" },
   { id: "restaurant", icon: Utensils, title: "Restaurante", desc: "Mapa de mesas, KDS de cocina y división de cuentas.", accent: "from-rose-500 to-red-500" },
   { id: "br", icon: Store, title: "Mercado (Brasil)", desc: "Piracicaba-SP: precios en R$, PIX y catálogo en portugués.", accent: "from-emerald-500 to-yellow-500" },
+  { id: "br-restaurante", icon: Utensils, title: "Restaurante (Brasil)", desc: "Piracicaba-SP: feijoada, pizzas, mesas, cocina y Vale-Refeição.", accent: "from-orange-500 to-yellow-500" },
+  { id: "br-bar", icon: Store, title: "Bar / Choperia (Brasil)", desc: "Piracicaba-SP: chopp, porciones, comandas abiertas y PIX.", accent: "from-yellow-500 to-amber-600" },
+  { id: "br-servicos", icon: Building2, title: "Servicios (Brasil)", desc: "Piracicaba-SP: barbería y taller, ISS municipal y Simples Nacional.", accent: "from-sky-500 to-emerald-500" },
   { id: "retail", icon: Building2, title: "Retail / Empresa", desc: "Búsqueda por SKU, multi-tienda y facturación.", accent: "from-primary to-emerald-500" },
 ];
 
@@ -164,8 +168,9 @@ const Landing = () => {
   }, []);
 
   const isBr = (name?: string) => /piracicaba/i.test(name ?? "");
+  const BR_NAME: Record<string, RegExp> = { br: /^mercado/i, "br-restaurante": /^restaurante/i, "br-bar": /^bar /i, "br-servicos": /^servi/i };
   const matches = (type: string, bizType?: string, name?: string) =>
-    type === "br" ? isBr(name) : !isBr(name) && (TYPE_ALIASES[type] ?? [type]).includes((bizType ?? "").toLowerCase());
+    BR_NAME[type] ? isBr(name) && BR_NAME[type].test(name ?? "") : !isBr(name) && (TYPE_ALIASES[type] ?? [type]).includes((bizType ?? "").toLowerCase());
   const findTenant = (type: string) => demoTenants.find((t) => matches(type, t.business_type, t.name));
 
   const findBusiness = (type: string) => stats?.businesses?.find((b) => matches(type, b.type, b.name));
@@ -198,8 +203,8 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       <Seo
-        title={isPt ? "MarIA OS — Sistema de gestão empresarial com IA" : "MarIA OS — Sistema operativo empresarial con IA para Cuba y LatAm"}
-        description={isPt ? "PDV, estoque, contabilidade, RH, delivery e agentes de IA em uma única plataforma. Teste as demos reais por tipo de negócio." : "POS, inventario, contabilidad de partida doble, RRHH, delivery y agentes de IA en una sola plataforma. Prueba las demos reales por tipo de negocio."}
+        title={isPt ? trPT("MarIA OS — Sistema de gestão empresarial com IA") : trPT("MarIA OS — Sistema operativo empresarial con IA para Cuba y LatAm")}
+        description={isPt ? trPT("PDV, estoque, contabilidade, RH, delivery e agentes de IA em uma única plataforma. Teste as demos reais por tipo de negócio.") : trPT("POS, inventario, contabilidad de partida doble, RRHH, delivery y agentes de IA en una sola plataforma. Prueba las demos reales por tipo de negocio.")}
         path="/"
         jsonLd={{
           "@context": "https://schema.org",
@@ -216,7 +221,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
           <Link to="/" className="flex items-center gap-2 min-w-0">
             <img src={mariaLogo} alt="MarIA" width={36} height={36} className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" decoding="async" />
-            <span className="font-heading font-bold text-base sm:text-lg tracking-tight truncate">MarIA OS</span>
+            <span className="font-heading font-bold text-base sm:text-lg tracking-tight truncate">{trPT("MarIA OS")}</span>
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm">
             {NAV_LINKS.map((l) => (
@@ -236,7 +241,7 @@ const Landing = () => {
               <SheetContent side="right" className="w-[86vw] max-w-xs p-0 flex flex-col">
                 <div className="flex items-center gap-2 px-5 h-16 border-b">
                   <img src={mariaLogo} alt="" width={28} height={28} className="h-7 w-7" />
-                  <span className="font-heading font-bold">MarIA OS</span>
+                  <span className="font-heading font-bold">{trPT("MarIA OS")}</span>
                 </div>
                 <nav className="flex flex-col p-3">
                   {NAV_LINKS.map((l) => (
@@ -328,7 +333,7 @@ const Landing = () => {
                 <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/80" />
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
                 <div className="flex-1 mx-4 h-6 rounded-md bg-background/60 border border-border/50 flex items-center justify-center text-[10px] text-muted-foreground font-mono">
-                  app.kirabit.cloud / dashboard
+                  {trPT("app.kirabit.cloud / dashboard")}
                 </div>
               </div>
               <img
@@ -593,24 +598,21 @@ const Landing = () => {
             <div className="rounded-2xl border bg-card p-6">
               <p className="font-heading text-3xl font-bold text-primary mb-2">MarIA</p>
               <p className="text-sm text-muted-foreground">
-                {isPt ? LANDING_PT["MARIA_DESC"] : (<><span className="text-foreground font-medium">M</span>otor de <span className="text-foreground font-medium">A</span>dministración de{" "}
-                <span className="text-foreground font-medium">R</span>ecursos con <span className="text-foreground font-medium">I</span>nteligencia{" "}
-                <span className="text-foreground font-medium">A</span>plicada: la capa que administra ventas, inventario,
-                finanzas y personas de forma unificada.</>)}
+                {isPt ? LANDING_PT["MARIA_DESC"] : (<><span className="text-foreground font-medium">M</span>{trPT("otor de")} <span className="text-foreground font-medium">A</span>{trPT("dministración de")}{" "}
+                <span className="text-foreground font-medium">R</span>{trPT("ecursos con")} <span className="text-foreground font-medium">I</span>nteligencia{" "}
+                <span className="text-foreground font-medium">A</span>{trPT("plicada: la capa que administra ventas, inventario, finanzas y personas de forma unificada.")}</>)}
               </p>
             </div>
             <div className="rounded-2xl border bg-card p-6">
               <p className="font-heading text-3xl font-bold text-primary mb-2">OS</p>
               <p className="text-sm text-muted-foreground">
-                {isPt ? LANDING_PT["OS_DESC"] : (<><span className="text-foreground font-medium">Operating System</span> — sistema operativo empresarial.
-                No es un módulo aislado: es la base sobre la que opera todo el negocio, del POS a la contabilidad.</>)}
+                {isPt ? LANDING_PT["OS_DESC"] : (<><span className="text-foreground font-medium">{trPT("Operating System")}</span> {trPT("— sistema operativo empresarial. No es un módulo aislado: es la base sobre la que opera todo el negocio, del POS a la contabilidad.")}</>)}
               </p>
             </div>
             <div className="rounded-2xl border bg-card p-6">
               <p className="font-heading text-3xl font-bold text-primary mb-2">IA</p>
               <p className="text-sm text-muted-foreground">
-                {isPt ? LANDING_PT["IA_DESC"] : (<><span className="text-foreground font-medium">Inteligencia Artificial</span> integrada en la operación:
-                agentes que analizan riesgos, demanda, caja y decisiones, no un chat añadido al final.</>)}
+                {isPt ? LANDING_PT["IA_DESC"] : (<><span className="text-foreground font-medium">{trPT("Inteligencia Artificial")}</span> {trPT("integrada en la operación: agentes que analizan riesgos, demanda, caja y decisiones, no un chat añadido al final.")}</>)}
               </p>
             </div>
           </div>
@@ -620,9 +622,7 @@ const Landing = () => {
               <Heart className="h-5 w-5 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground">
-              {isPt ? LANDING_PT["HEART_DESC"] : (<>El nombre también honra a <span className="text-foreground font-medium">María</span>, origen de la
-              inspiración de este proyecto. Esa raíz explica el criterio con el que se construye: herramientas fiables
-              para negocios reales, hechas con cuidado por las personas que los sostienen.</>)}
+              {isPt ? LANDING_PT["HEART_DESC"] : (<>{trPT("El nombre también honra a")} <span className="text-foreground font-medium">{trPT("María")}</span>{trPT(", origen de la inspiración de este proyecto. Esa raíz explica el criterio con el que se construye: herramientas fiables para negocios reales, hechas con cuidado por las personas que los sostienen.")}</>)}
             </p>
           </div>
         </div>
@@ -766,8 +766,8 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src={mariaLogo} alt="MarIA" width={28} height={28} className="h-7 w-7" decoding="async" />
-            <span className="font-heading font-semibold text-sm">MarIA OS</span>
-            <span className="text-xs text-muted-foreground ml-2">© {new Date().getFullYear()} Kirabit · {T("Todos los derechos reservados.")}</span>
+            <span className="font-heading font-semibold text-sm">{trPT("MarIA OS")}</span>
+            <span className="text-xs text-muted-foreground ml-2">© {new Date().getFullYear()} {trPT("Kirabit ·")} {T("Todos los derechos reservados.")}</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <a href="#modulos" className="hover:text-foreground">{T("Módulos")}</a>

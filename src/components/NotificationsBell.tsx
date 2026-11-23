@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { Bell, Check, Trash2, AlertTriangle, Info, CheckCircle2, AlertCircle, BellRing, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -33,11 +34,11 @@ export function NotificationsBell() {
   const togglePush = async () => {
     if (enabled) {
       disable();
-      toast.success("Notificaciones push desactivadas");
+      toast.success(trPT("Notificaciones push desactivadas"));
     } else {
       const ok = await requestPermission();
-      if (ok) toast.success("Notificaciones activadas");
-      else if (permission === "denied") toast.error("Permiso denegado. Habilítalo en ajustes del navegador.");
+      if (ok) toast.success(trPT("Notificaciones activadas"));
+      else if (permission === "denied") toast.error(trPT("Permiso denegado. Habilítalo en ajustes del navegador."));
     }
   };
 
@@ -66,21 +67,21 @@ export function NotificationsBell() {
                 size="sm"
                 onClick={togglePush}
                 className="h-7 text-xs"
-                title={enabled ? "Desactivar push" : "Activar push"}
+                title={enabled ? trPT("Desactivar push") : trPT("Activar push")}
               >
                 {enabled ? <BellRing className="h-3 w-3 text-primary" /> : <BellOff className="h-3 w-3" />}
               </Button>
             )}
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" onClick={markAllRead} className="h-7 text-xs">
-                <Check className="h-3 w-3 mr-1" /> Marcar todas
+                <Check className="h-3 w-3 mr-1" /> {trPT("Marcar todas")}
               </Button>
             )}
           </div>
         </div>
         {supported && permission === "default" && (
           <div className="p-3 bg-primary/5 border-b text-xs flex items-center justify-between gap-2">
-            <span className="text-muted-foreground">Activa notificaciones para recibir alertas en tiempo real.</span>
+            <span className="text-muted-foreground">{trPT("Activa notificaciones para recibir alertas en tiempo real.")}</span>
             <Button size="sm" onClick={togglePush} className="h-7 text-xs gradient-brand text-primary-foreground shrink-0">
               Activar
             </Button>
@@ -88,7 +89,7 @@ export function NotificationsBell() {
         )}
         <ScrollArea className="h-96">
           {items.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">Sin notificaciones</div>
+            <div className="p-8 text-center text-sm text-muted-foreground">{trPT("Sin notificaciones")}</div>
           ) : (
             <div className="divide-y">
               {items.map((n) => {
@@ -107,7 +108,7 @@ export function NotificationsBell() {
                   >
                     <Icon className={cn("h-4 w-4 mt-0.5 shrink-0", severityColor[n.severity])} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium leading-tight">{n.title}</p>
+                      <p className="text-sm font-medium leading-tight">{trPT(n.title)}</p>
                       {n.message && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>}
                       <p className="text-[10px] text-muted-foreground mt-1">
                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: es })}

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -61,11 +62,11 @@ export function PayrollDetailDialog({ payroll: p, tenantName, onOpenChange, onSi
       <DialogContent className="sm:max-w-2xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5 text-primary" /> {p.employees?.name || "Trabajador"}
+            <Receipt className="h-5 w-5 text-primary" /> {p.employees?.name || trPT("Trabajador")}
             <Badge className={`text-[10px] ${statusVariant(p.status)}`}>{PAYROLL_STATUS_LABEL[p.status] || p.status}</Badge>
           </DialogTitle>
           <DialogDescription>
-            Período {p.period_start} → {p.period_end}
+            {trPT("Período")} {p.period_start} → {p.period_end}
             {p.receipt_number ? ` · Comprobante Nº ${p.receipt_number}` : ""}
             {p.employees?.position ? ` · ${p.employees.position}` : ""}
           </DialogDescription>
@@ -79,18 +80,18 @@ export function PayrollDetailDialog({ payroll: p, tenantName, onOpenChange, onSi
             <Download className="h-3.5 w-3.5" /> Descargar
           </Button>
           <Button size="sm" variant="outline" className="gap-1" onClick={() => printPayrollDocument(buildDocData(p, tenantName, true))}>
-            <FileSignature className="h-3.5 w-3.5" /> Documento para firma
+            <FileSignature className="h-3.5 w-3.5" /> {trPT("Documento para firma")}
           </Button>
           <Button size="sm" className="gap-1 gradient-brand text-primary-foreground" onClick={() => onSign(p)}>
-            <PenLine className="h-3.5 w-3.5" /> Registrar firma
+            <PenLine className="h-3.5 w-3.5" /> {trPT("Registrar firma")}
           </Button>
         </div>
 
         <Tabs defaultValue="resumen" className="mt-2">
           <TabsList>
             <TabsTrigger value="resumen">Desglose</TabsTrigger>
-            <TabsTrigger value="historial">Historial ({events.length})</TabsTrigger>
-            <TabsTrigger value="firmas">Firmas ({signatures.length})</TabsTrigger>
+            <TabsTrigger value="historial">{trPT("Historial (")}{events.length})</TabsTrigger>
+            <TabsTrigger value="firmas">{trPT("Firmas (")}{signatures.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="resumen" className="space-y-3 pt-3">
@@ -112,7 +113,7 @@ export function PayrollDetailDialog({ payroll: p, tenantName, onOpenChange, onSi
               {line("Fecha de pago", p.paid_at ? new Date(p.paid_at).toLocaleString("es-ES") : "Pendiente")}
               <Separator className="my-2" />
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">Neto a percibir</span>
+                <span className="text-sm font-semibold">{trPT("Neto a percibir")}</span>
                 <span className="text-lg font-heading font-bold tabular-nums">{money(p.net_pay)}</span>
               </div>
             </div>
@@ -129,7 +130,7 @@ export function PayrollDetailDialog({ payroll: p, tenantName, onOpenChange, onSi
               <div className="py-8 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
             ) : events.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                <History className="h-7 w-7 mx-auto mb-2 opacity-30" /> Sin eventos registrados todavía.
+                <History className="h-7 w-7 mx-auto mb-2 opacity-30" /> {trPT("Sin eventos registrados todavía.")}
               </p>
             ) : (
               <ol className="relative border-l border-border ml-2 space-y-4">
@@ -138,7 +139,7 @@ export function PayrollDetailDialog({ payroll: p, tenantName, onOpenChange, onSi
                     <span className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
                     <p className="text-sm font-medium">{PAYROLL_EVENT_LABEL[e.event_type] || e.event_type}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(e.created_at).toLocaleString("es-ES")} · {e.actor_label || "Sistema"}
+                      {new Date(e.created_at).toLocaleString("es-ES")} · {e.actor_label || trPT("Sistema")}
                       {e.from_status && e.to_status
                         ? ` · ${PAYROLL_STATUS_LABEL[e.from_status] || e.from_status} → ${PAYROLL_STATUS_LABEL[e.to_status] || e.to_status}`
                         : ""}
@@ -153,7 +154,7 @@ export function PayrollDetailDialog({ payroll: p, tenantName, onOpenChange, onSi
           <TabsContent value="firmas" className="pt-3 space-y-2">
             {signatures.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                <PenLine className="h-7 w-7 mx-auto mb-2 opacity-30" /> Esta nómina aún no tiene firmas registradas.
+                <PenLine className="h-7 w-7 mx-auto mb-2 opacity-30" /> {trPT("Esta nómina aún no tiene firmas registradas.")}
               </p>
             ) : (
               signatures.map((s) => (
@@ -169,7 +170,7 @@ export function PayrollDetailDialog({ payroll: p, tenantName, onOpenChange, onSi
                   </div>
                   {s.evidence_url && (
                     <a href={s.evidence_url} target="_blank" rel="noreferrer" className="text-xs text-primary underline shrink-0">
-                      Ver evidencia
+                      {trPT("Ver evidencia")}
                     </a>
                   )}
                 </div>

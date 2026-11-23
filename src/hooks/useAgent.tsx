@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 // Unified hook to invoke MarIA OS AI edge functions with:
 // - Standardized error handling (rate limit, credits, validation)
 // - Correlation ID generation and propagation (client → edge → DB)
@@ -58,11 +59,11 @@ export function useAgent() {
           const msg = (error as any)?.message ?? "Error invocando agente";
           // Map well-known HTTP errors
           if (/429/.test(msg)) {
-            if (notify) toast.error("Límite de uso alcanzado. Intenta más tarde.");
+            if (notify) toast.error(trPT("Límite de uso alcanzado. Intenta más tarde."));
           } else if (/402/.test(msg)) {
-            if (notify) toast.error("Créditos de IA agotados. Añade créditos al workspace.");
+            if (notify) toast.error(trPT("Créditos de IA agotados. Añade créditos al workspace."));
           } else if (/401|403/.test(msg)) {
-            if (notify) toast.error("No autorizado para esta operación.");
+            if (notify) toast.error(trPT("No autorizado para esta operación."));
           } else if (notify) {
             toast.error(msg);
           }
@@ -75,7 +76,7 @@ export function useAgent() {
             : null;
 
         if (notify && validationOk === false) {
-          toast.warning("Resultado parcialmente válido — revisa la decisión generada.");
+          toast.warning(trPT("Resultado parcialmente válido — revisa la decisión generada."));
         }
 
         return {

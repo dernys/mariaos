@@ -25,6 +25,7 @@ export interface Tenant {
   slug?: string | null;
   logo_url?: string | null;
   business_type: string;
+  country_code?: string | null;
 }
 
 export interface StorePublic {
@@ -150,9 +151,12 @@ export const distanceKm = (
   return R * 2 * Math.asin(Math.sqrt(x));
 };
 
+/** Currency of a marketplace business, from its country (Brazil sells in R$). */
+export const currencyForCountry = (country?: string | null) => (country === "BR" ? "BRL" : "CUP");
+
 export const formatPrice = (value: number, currency = "CUP") => {
   try {
-    return new Intl.NumberFormat("es-CU", {
+    return new Intl.NumberFormat(currency === "BRL" ? "pt-BR" : "es-CU", {
       style: "currency",
       currency,
       maximumFractionDigits: 2,

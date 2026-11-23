@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -62,9 +63,9 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Buscar páginas, acciones... (Ctrl/Cmd+K)" />
+      <CommandInput placeholder={trPT("Buscar páginas, acciones... (Ctrl/Cmd+K)")} />
       <CommandList>
-        <CommandEmpty>Sin resultados.</CommandEmpty>
+        <CommandEmpty>{trPT("Sin resultados.")}</CommandEmpty>
         {groups.map((g, i) => (
           <div key={g}>
             {i > 0 && <CommandSeparator />}
@@ -81,7 +82,7 @@ export function CommandPalette() {
                     }}
                   >
                     <Icon className="mr-2 h-4 w-4" />
-                    {r.label}
+                    {trPT(r.label)}
                   </CommandItem>
                 );
               })}

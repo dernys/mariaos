@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 // Integridad de la configuración contable: qué operaciones tienen cuenta
 // configurada (USED/UNUSED), qué falta (MISSING), qué es inválido (INVALID),
 // qué está en conflicto (CONFLICTING) y qué cuentas históricas podrían estar
@@ -97,18 +98,17 @@ export function AccountingConfigReportPanel() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <h3 className="text-base font-semibold flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4" /> Integridad de la configuración contable
+            <ShieldCheck className="h-4 w-4" /> {trPT("Integridad de la configuración contable")}
           </h3>
           <p className="text-xs text-muted-foreground max-w-2xl">
-            Si una operación no tiene cuenta válida configurada, la aplicación la rechaza completa
-            (sin venta, pago, stock ni asiento parcial) y deja registro de control.
+            {trPT("Si una operación no tiene cuenta válida configurada, la aplicación la rechaza completa (sin venta, pago, stock ni asiento parcial) y deja registro de control.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={blocking === 0 ? "default" : "destructive"} className="gap-1">
             {blocking === 0
-              ? <><CheckCircle2 className="h-3.5 w-3.5" /> Configuración completa</>
-              : <><AlertTriangle className="h-3.5 w-3.5" /> {blocking} operación(es) bloqueada(s)</>}
+              ? <><CheckCircle2 className="h-3.5 w-3.5" /> {trPT("Configuración completa")}</>
+              : <><AlertTriangle className="h-3.5 w-3.5" /> {blocking} {trPT("operación(es) bloqueada(s)")}</>}
           </Badge>
           <Button size="sm" variant="outline" onClick={load} className="gap-1">
             <RefreshCw className="h-3.5 w-3.5" />
@@ -153,10 +153,10 @@ export function AccountingConfigReportPanel() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-xs">Operación</TableHead>
+              <TableHead className="text-xs">{trPT("Operación")}</TableHead>
               <TableHead className="text-xs">Cuenta</TableHead>
               <TableHead className="text-xs">Estado</TableHead>
-              <TableHead className="text-xs">Acción</TableHead>
+              <TableHead className="text-xs">{trPT("Acción")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -192,13 +192,12 @@ export function AccountingConfigReportPanel() {
 
 
       <div className="space-y-2">
-        <h4 className="text-sm font-semibold">Propuesta de reclasificación histórica</h4>
+        <h4 className="text-sm font-semibold">{trPT("Propuesta de reclasificación histórica")}</h4>
         <p className="text-[11px] text-muted-foreground">
-          Diagnóstico únicamente: los asientos ya contabilizados no se modifican. Cada propuesta
-          requiere un asiento de reclasificación aprobado por contabilidad.
+          {trPT("Diagnóstico únicamente: los asientos ya contabilizados no se modifican. Cada propuesta requiere un asiento de reclasificación aprobado por contabilidad.")}
         </p>
         {reclass.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Sin cuentas históricas mal clasificadas detectadas.</p>
+          <p className="text-xs text-muted-foreground">{trPT("Sin cuentas históricas mal clasificadas detectadas.")}</p>
         ) : (
           <div className="rounded-xl border overflow-hidden">
             <Table>
@@ -206,7 +205,7 @@ export function AccountingConfigReportPanel() {
                 <TableRow>
                   <TableHead className="text-xs">Cuenta</TableHead>
                   <TableHead className="text-xs">Clave</TableHead>
-                  <TableHead className="text-xs text-right">Líneas</TableHead>
+                  <TableHead className="text-xs text-right">{trPT("Líneas")}</TableHead>
                   <TableHead className="text-xs text-right">Importe</TableHead>
                 </TableRow>
               </TableHeader>

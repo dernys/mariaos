@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState, useEffect } from "react";
 import { useModuleSettings } from "@/hooks/useModuleSettings";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +31,7 @@ export function ConfigModules() {
 
   const saveAll = async () => {
     await Promise.all([inv.save(i), pur.save(p), invc.save(iv), sh.save(s)]);
-    toast({ title: "Ajustes guardados" });
+    toast({ title: trPT("Ajustes guardados") });
   };
 
   return (
@@ -38,8 +39,8 @@ export function ConfigModules() {
       <Card><CardContent className="p-4 space-y-3">
         <h3 className="text-sm font-heading font-semibold">Inventario</h3>
         <div className="grid grid-cols-2 gap-3">
-          <div><Label className="text-xs">Umbral global stock bajo</Label><Input type="number" value={i.low_stock_threshold} onChange={(e) => setI({ ...i, low_stock_threshold: parseInt(e.target.value) || 0 })} /></div>
-          <div><Label className="text-xs">Método costeo</Label>
+          <div><Label className="text-xs">{trPT("Umbral global stock bajo")}</Label><Input type="number" value={i.low_stock_threshold} onChange={(e) => setI({ ...i, low_stock_threshold: parseInt(e.target.value) || 0 })} /></div>
+          <div><Label className="text-xs">{trPT("Método costeo")}</Label>
             <select className="w-full h-9 rounded-md border bg-background px-2 text-sm" value={i.cost_method} onChange={(e) => setI({ ...i, cost_method: e.target.value as any })}>
               <option value="average">Promedio</option><option value="fifo">FIFO</option>
             </select>
@@ -50,29 +51,29 @@ export function ConfigModules() {
       <Card><CardContent className="p-4 space-y-3">
         <h3 className="text-sm font-heading font-semibold">Compras</h3>
         <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center gap-2"><Switch checked={p.require_approval} onCheckedChange={(v) => setP({ ...p, require_approval: v })} /><Label className="text-xs">Requerir aprobación</Label></div>
-          <div><Label className="text-xs">Días pago proveedor</Label><Input type="number" value={p.default_payment_days} onChange={(e) => setP({ ...p, default_payment_days: parseInt(e.target.value) || 0 })} /></div>
+          <div className="flex items-center gap-2"><Switch checked={p.require_approval} onCheckedChange={(v) => setP({ ...p, require_approval: v })} /><Label className="text-xs">{trPT("Requerir aprobación")}</Label></div>
+          <div><Label className="text-xs">{trPT("Días pago proveedor")}</Label><Input type="number" value={p.default_payment_days} onChange={(e) => setP({ ...p, default_payment_days: parseInt(e.target.value) || 0 })} /></div>
         </div>
       </CardContent></Card>
 
       <Card><CardContent className="p-4 space-y-3">
-        <h3 className="text-sm font-heading font-semibold">Facturación</h3>
+        <h3 className="text-sm font-heading font-semibold">{trPT("Facturación")}</h3>
         <div className="grid grid-cols-3 gap-3">
           <div><Label className="text-xs">Serie</Label><Input value={iv.default_series} onChange={(e) => setIv({ ...iv, default_series: e.target.value })} /></div>
           <div><Label className="text-xs">Prefijo</Label><Input value={iv.default_prefix} onChange={(e) => setIv({ ...iv, default_prefix: e.target.value })} /></div>
-          <div><Label className="text-xs">IVA por defecto (%)</Label><Input type="number" value={iv.default_tax_rate} onChange={(e) => setIv({ ...iv, default_tax_rate: parseFloat(e.target.value) || 0 })} /></div>
+          <div><Label className="text-xs">{trPT("IVA por defecto (%)")}</Label><Input type="number" value={iv.default_tax_rate} onChange={(e) => setIv({ ...iv, default_tax_rate: parseFloat(e.target.value) || 0 })} /></div>
         </div>
       </CardContent></Card>
 
       <Card><CardContent className="p-4 space-y-3">
         <h3 className="text-sm font-heading font-semibold">Turnos</h3>
         <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center gap-2"><Switch checked={s.require_opening_count} onCheckedChange={(v) => setS({ ...s, require_opening_count: v })} /><Label className="text-xs">Requerir conteo apertura</Label></div>
-          <div className="flex items-center gap-2"><Switch checked={s.require_difference_reason} onCheckedChange={(v) => setS({ ...s, require_difference_reason: v })} /><Label className="text-xs">Motivo en diferencias</Label></div>
+          <div className="flex items-center gap-2"><Switch checked={s.require_opening_count} onCheckedChange={(v) => setS({ ...s, require_opening_count: v })} /><Label className="text-xs">{trPT("Requerir conteo apertura")}</Label></div>
+          <div className="flex items-center gap-2"><Switch checked={s.require_difference_reason} onCheckedChange={(v) => setS({ ...s, require_difference_reason: v })} /><Label className="text-xs">{trPT("Motivo en diferencias")}</Label></div>
         </div>
       </CardContent></Card>
 
-      <Button onClick={saveAll} className="gap-2 gradient-brand text-primary-foreground"><Save className="h-3.5 w-3.5" /> Guardar ajustes</Button>
+      <Button onClick={saveAll} className="gap-2 gradient-brand text-primary-foreground"><Save className="h-3.5 w-3.5" /> {trPT("Guardar ajustes")}</Button>
     </div>
   );
 }

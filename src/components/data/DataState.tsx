@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 // Sprint C — Estados vacíos / carga / error homogéneos para todos los listados.
 
 import { AlertTriangle, Inbox, LucideIcon, RefreshCw } from "lucide-react";
@@ -28,7 +29,7 @@ export function DataState({
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-10 text-muted-foreground">
         <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-        <span className="text-xs">Cargando…</span>
+        <span className="text-xs">{trPT("Cargando…")}</span>
       </div>
     );
   }
@@ -37,7 +38,7 @@ export function DataState({
       <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
         <AlertTriangle className="h-7 w-7 text-destructive" />
         <div className="space-y-1">
-          <p className="text-sm font-medium">No se pudieron cargar los datos</p>
+          <p className="text-sm font-medium">{trPT("No se pudieron cargar los datos")}</p>
           <p className="text-xs text-muted-foreground max-w-sm">{error.message}</p>
         </div>
         {onRetry && (

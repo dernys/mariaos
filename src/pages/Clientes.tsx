@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
@@ -103,7 +104,7 @@ const Clientes = () => {
   const openDetail = (c: Customer) => navigate(`/clientes/${c.id}`);
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
+    if (!form.name.trim()) { toast({ title: "Error", description: trPT("El nombre es obligatorio"), variant: "destructive" }); return; }
     const payload = {
       name: form.name.trim(), phone: form.phone || null, email: form.email || null,
       address: form.address || null, rfc: form.rfc || null,
@@ -113,12 +114,12 @@ const Clientes = () => {
       const { error } = await supabase.from("customers").update(payload).eq("id", editing.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       await logActivity({ entity_type: "customer", entity_id: editing.id, action: "Cliente actualizado", description: `Se actualizó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Cliente actualizado" });
+      toast({ title: trPT("Cliente actualizado") });
     } else {
       const { data, error } = await supabase.from("customers").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       if (data) await logActivity({ entity_type: "customer", entity_id: data.id, action: "Cliente creado", description: `Se creó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Cliente creado" });
+      toast({ title: trPT("Cliente creado") });
     }
     setDialogOpen(false);
     refresh();
@@ -128,7 +129,7 @@ const Clientes = () => {
     const { error } = await supabase.from("customers").delete().eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     await logActivity({ entity_type: "customer", entity_id: id, action: "Cliente eliminado", description: `Se eliminó ${name}`, tenant_id: tenantId, performed_by: user?.id });
-    toast({ title: "Cliente eliminado" });
+    toast({ title: trPT("Cliente eliminado") });
     refresh();
   };
 
@@ -138,15 +139,15 @@ const Clientes = () => {
       <div className="space-y-4">
         <StatRow>
           <MiniStatCard label="Clientes" value={statRows.length} icon={UsersIcon} tone="primary" />
-          <MiniStatCard label="Con deuda" value={withDebt} icon={AlertTriangle} tone={withDebt > 0 ? "warning" : "default"} />
-          <MiniStatCard label="Saldo por cobrar" value={`$${totalDebt.toLocaleString()}`} icon={Wallet} tone={totalDebt > 0 ? "destructive" : "success"} />
-          <MiniStatCard label="Crédito otorgado" value={`$${totalCredit.toLocaleString()}`} tone="default" />
+          <MiniStatCard label={trPT("Con deuda")} value={withDebt} icon={AlertTriangle} tone={withDebt > 0 ? "warning" : "default"} />
+          <MiniStatCard label={trPT("Saldo por cobrar")} value={`$${totalDebt.toLocaleString()}`} icon={Wallet} tone={totalDebt > 0 ? "destructive" : "success"} />
+          <MiniStatCard label={trPT("Crédito otorgado")} value={`$${totalCredit.toLocaleString()}`} tone="default" />
         </StatRow>
 
         <TableToolbar
           search={table.search}
           onSearchChange={table.setSearch}
-          searchPlaceholder="Buscar cliente, email, teléfono..."
+          searchPlaceholder={trPT("Buscar cliente, email, teléfono...")}
           filters={[{
             key: "status", label: "Estado", value: table.filters.status || "__all__",
             onChange: (v) => table.setFilter("status", v),
@@ -178,10 +179,10 @@ const Clientes = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
-                <TableHead className="hidden sm:table-cell">Teléfono</TableHead>
+                <TableHead className="hidden sm:table-cell">{trPT("Teléfono")}</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead className="hidden lg:table-cell">RFC</TableHead>
-                <TableHead>Límite Crédito</TableHead>
+                <TableHead>{trPT("Límite Crédito")}</TableHead>
                 <TableHead>Saldo</TableHead>
                 <TableHead className="w-28">Acciones</TableHead>
               </TableRow>
@@ -230,19 +231,19 @@ const Clientes = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar Cliente" : "Nuevo Cliente"}</DialogTitle>
-            <DialogDescription>Ingresa los datos del cliente</DialogDescription>
+            <DialogTitle>{editing ? trPT("Editar Cliente") : trPT("Nuevo Cliente")}</DialogTitle>
+            <DialogDescription>{trPT("Ingresa los datos del cliente")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><Label>{trPT("Nombre *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Teléfono</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div><Label>{trPT("Teléfono")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
               <div><Label>Email</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             </div>
-            <div><Label>Dirección</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div><Label>{trPT("Dirección")}</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>RFC</Label><Input value={form.rfc} onChange={(e) => setForm({ ...form, rfc: e.target.value })} /></div>
-              <div><Label>Límite de Crédito</Label><Input type="number" value={form.credit_limit} onChange={(e) => setForm({ ...form, credit_limit: e.target.value })} /></div>
+              <div><Label>{trPT("Límite de Crédito")}</Label><Input type="number" value={form.credit_limit} onChange={(e) => setForm({ ...form, credit_limit: e.target.value })} /></div>
             </div>
             <div><Label>Notas</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>

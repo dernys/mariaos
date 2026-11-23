@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
   }, [summary]);
 
   if (!summary) {
-    return <div className="bg-card rounded-xl border p-6 text-center text-xs text-muted-foreground">Calculando flujo de caja…</div>;
+    return <div className="bg-card rounded-xl border p-6 text-center text-xs text-muted-foreground">{trPT("Calculando flujo de caja…")}</div>;
   }
 
   const collections = summary.collections ?? [];
@@ -90,7 +91,7 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
         <div className="lg:col-span-2 bg-card rounded-xl border p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-primary" /> Flujo de efectivo del turno
+              <Wallet className="h-4 w-4 text-primary" /> {trPT("Flujo de efectivo del turno")}
             </h3>
             {isOpen && onNewMovement && (
               <Button size="sm" variant="outline" className="h-8 gap-1 text-xs" onClick={onNewMovement}>
@@ -105,7 +106,7 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
                 <div key={f.label} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
-                      <f.icon className="h-3.5 w-3.5" /> {f.label}
+                      <f.icon className="h-3.5 w-3.5" /> {trPT(f.label)}
                     </span>
                     <span className={`font-heading font-bold ${f.sign === 1 ? "text-success" : f.sign === -1 ? "text-destructive" : ""}`}>
                       {f.sign === 1 ? "+" : f.sign === -1 ? "−" : ""}{money(f.value)}
@@ -122,21 +123,21 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
             })}
           </div>
           <div className="mt-4 rounded-lg bg-primary/10 border border-primary/20 p-3 flex items-center justify-between">
-            <span className="text-xs font-heading font-bold uppercase tracking-wide">Efectivo esperado en caja</span>
+            <span className="text-xs font-heading font-bold uppercase tracking-wide">{trPT("Efectivo esperado en caja")}</span>
             <span className="font-heading font-bold text-lg text-primary">{money(summary.expected_cash)}</span>
           </div>
         </div>
 
         <div className="bg-card rounded-xl border p-4 space-y-3">
-          <h3 className="font-heading font-semibold text-sm">Cobros sin efecto en caja</h3>
+          <h3 className="font-heading font-semibold text-sm">{trPT("Cobros sin efecto en caja")}</h3>
           {nonCash.map((n) => (
             <div key={n.label} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
-              <span className="text-xs text-muted-foreground flex items-center gap-1.5"><n.icon className="h-3.5 w-3.5" /> {n.label}</span>
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5"><n.icon className="h-3.5 w-3.5" /> {trPT(n.label)}</span>
               <span className="text-xs font-heading font-bold">{money(n.value)}</span>
             </div>
           ))}
           <div className="border-t pt-2 flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Ventas totales · {summary.transactions} tickets</span>
+            <span className="text-muted-foreground">{trPT("Ventas totales ·")} {summary.transactions} tickets</span>
             <span className="font-heading font-bold">{money(summary.total_sales)}</span>
           </div>
         </div>
@@ -146,9 +147,9 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
       <div className="bg-card rounded-xl border overflow-hidden">
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
-            <HandCoins className="h-4 w-4 text-primary" /> Cobros de deudas y pagos ({collections.length})
+            <HandCoins className="h-4 w-4 text-primary" /> {trPT("Cobros de deudas y pagos (")}{collections.length})
           </h3>
-          <span className="text-[11px] text-muted-foreground">Reducen la deuda, no se cuentan como venta</span>
+          <span className="text-[11px] text-muted-foreground">{trPT("Reducen la deuda, no se cuentan como venta")}</span>
         </div>
         <div className="overflow-x-auto">
           <Table>
@@ -156,7 +157,7 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
               <TableHead className="text-xs">Hora</TableHead>
               <TableHead className="text-xs">Tipo</TableHead>
               <TableHead className="text-xs">Contraparte</TableHead>
-              <TableHead className="text-xs">Método</TableHead>
+              <TableHead className="text-xs">{trPT("Método")}</TableHead>
               <TableHead className="text-xs text-right">Monto</TableHead>
             </TableRow></TableHeader>
             <TableBody>
@@ -167,7 +168,7 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
                     <TableCell className="text-xs">{format(new Date(c.created_at), "dd/MM HH:mm")}</TableCell>
                     <TableCell>
                       <Badge variant={isIn ? "default" : "destructive"} className="text-[10px]">
-                        {isIn ? "Cobro" : "Pago"}
+                        {isIn ? trPT("Cobro") : trPT("Pago")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs">{c.party_name || "—"}</TableCell>
@@ -179,7 +180,7 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
                 );
               })}
               {collections.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin cobros de deudas en este turno</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin cobros de deudas en este turno")}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -189,16 +190,16 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
       {/* Movimientos con trazabilidad contable */}
       <div className="bg-card rounded-xl border overflow-hidden">
         <div className="px-4 py-3 border-b flex items-center justify-between">
-          <h3 className="font-heading font-semibold text-sm">Movimientos de caja ({movements.length})</h3>
-          <span className="text-[11px] text-muted-foreground">Cada movimiento está contabilizado</span>
+          <h3 className="font-heading font-semibold text-sm">{trPT("Movimientos de caja (")}{movements.length})</h3>
+          <span className="text-[11px] text-muted-foreground">{trPT("Cada movimiento está contabilizado")}</span>
         </div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader><TableRow>
               <TableHead className="text-xs">Hora</TableHead>
               <TableHead className="text-xs">Tipo</TableHead>
-              <TableHead className="text-xs">Concepto contable</TableHead>
-              <TableHead className="text-xs">Justificación</TableHead>
+              <TableHead className="text-xs">{trPT("Concepto contable")}</TableHead>
+              <TableHead className="text-xs">{trPT("Justificación")}</TableHead>
               <TableHead className="text-xs text-right">Monto</TableHead>
               <TableHead className="text-xs text-right">Asiento</TableHead>
             </TableRow></TableHeader>
@@ -211,7 +212,7 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
                     <TableCell>
                       <Badge variant={isIn ? "default" : "destructive"} className="text-[10px] gap-1">
                         {isIn ? <ArrowDownCircle className="h-2.5 w-2.5" /> : <ArrowUpCircle className="h-2.5 w-2.5" />}
-                        {isIn ? "Ingreso" : "Egreso"}
+                        {isIn ? trPT("Ingreso") : trPT("Egreso")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs">{cashCategoryLabel(m.category)}</TableCell>
@@ -232,7 +233,7 @@ export function CashFlowPanel({ summary, movements, isOpen, onNewMovement }: Pro
                 );
               })}
               {movements.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Sin movimientos de caja registrados</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin movimientos de caja registrados")}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

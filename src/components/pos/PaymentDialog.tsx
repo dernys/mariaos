@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { tr } from "@/i18n/tr";
+import { tr as trPT } from "@/i18n/tr";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -227,7 +227,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
     if (overpay > change + 0.01) {
       toast({
         title: t("common.error"),
-        description: tr("El sobrepago sólo se admite en efectivo (vuelto). Ajuste los montos no efectivos."),
+        description: trPT("El sobrepago sólo se admite en efectivo (vuelto). Ajuste los montos no efectivos."),
         variant: "destructive",
       });
       return;
@@ -411,7 +411,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
         });
         if (billErr) {
           console.error("bill_kitchen_order error:", billErr);
-          toast({ title: tr("Venta registrada"), description: tr("No se pudo cerrar la orden de cocina: ") + billErr.message });
+          toast({ title: trPT("Venta registrada"), description: trPT("No se pudo cerrar la orden de cocina: ") + billErr.message });
         }
       }
 
@@ -553,7 +553,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                     partyType === opt.v ? "gradient-brand text-primary-foreground border-transparent" : "bg-background hover:bg-muted"
                   }`}
                 >
-                  {opt.label}
+                  {trPT(opt.label)}
                 </button>
               ))}
             </div>
@@ -622,7 +622,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                 </div>
                 {!party && (
                   <p className="text-[10px] text-muted-foreground px-2">
-                    Solo se puede fiar asociando la venta a un cliente o empleado.
+                    {trPT("Solo se puede fiar asociando la venta a un cliente o empleado.")}
                   </p>
                 )}
 
@@ -662,7 +662,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                         {m.code === "CARD_POS" && <CreditCard className="h-3 w-3" />}
                         {m.cls === "digital" && <QrCode className="h-3 w-3" />}
                         {m.code === "BANK_TRANSFER" && <Landmark className="h-3 w-3" />}
-                        {m.label}
+                        {trPT(m.label)}
                       </button>
                     ))}
                   </div>
@@ -677,7 +677,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                   <div className="rounded-md border border-warning/30 bg-warning/10 p-2 space-y-2">
                     <p className="flex items-center gap-1 text-[10px] font-semibold text-warning">
                       <Clock className="h-3 w-3" />
-                      Queda PENDIENTE de confirmación: se cobra sólo al verificar el comprobante real.
+                      {trPT("Queda PENDIENTE de confirmación: se cobra sólo al verificar el comprobante real.")}
                     </p>
                     <div>
                       <Label className="text-[10px]">
@@ -687,7 +687,7 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
                         className="h-8 text-xs"
                         value={p.reference}
                         onChange={(e) => updatePayment(idx, "reference", e.target.value)}
-                        placeholder={tr("Nro. de operación / transferencia")}
+                        placeholder={trPT("Nro. de operación / transferencia")}
                       />
                     </div>
                   </div>
@@ -803,30 +803,30 @@ export function PaymentDialog({ open, onOpenChange, cart, subtotal, tax, total, 
               <span className="font-heading font-semibold">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{tr("Cobrado en firme (efectivo/tarjeta)")}</span>
+              <span className="text-muted-foreground">{trPT("Cobrado en firme (efectivo/tarjeta)")}</span>
               <span className="font-heading font-semibold text-primary">${confirmedInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
             </div>
             {pendingInBase > 0 && (
               <div className="flex justify-between text-warning">
-                <span>{tr("Digital por confirmar")}</span>
+                <span>{trPT("Digital por confirmar")}</span>
                 <span className="font-heading font-semibold">${pendingInBase.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
               </div>
             )}
             {remaining > 0.01 && (
               <div className="flex justify-between text-destructive">
-                <span>{isPartial ? "A crédito (fiado)" : t("pos.payment.pending")}</span>
+                <span>{isPartial ? trPT("A crédito (fiado)") : t("pos.payment.pending")}</span>
                 <span className="font-heading font-bold">${remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
               </div>
             )}
             {change > 0 && (
               <div className="flex justify-between text-primary">
-                <span>{t("pos.payment.change")} (efectivo)</span>
+                <span>{t("pos.payment.change")} {trPT("(efectivo)")}</span>
                 <span className="font-heading font-bold">${change.toLocaleString(undefined, { maximumFractionDigits: 2 })} {baseCode}</span>
               </div>
             )}
             {overpay > change && (
               <p className="text-[10px] text-destructive">
-                El exceso sólo puede devolverse en efectivo; ajuste los montos no efectivos.
+                {trPT("El exceso sólo puede devolverse en efectivo; ajuste los montos no efectivos.")}
               </p>
             )}
           </div>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +16,7 @@ import {
   ShoppingCart, Plus, Minus, Trash2, ArrowLeft, ChevronRight,
   Truck, Building2, Check, User as UserIcon, MapPinned, AlertTriangle, Ticket, Loader2,
 } from "lucide-react";
-import { bizIcon, formatPrice } from "./types";
+import { bizIcon, formatPrice, currencyForCountry } from "./types";
 import type { CartItem, Tenant } from "./types";
 
 interface Props {
@@ -103,6 +104,8 @@ export const MarketplaceCartSheet = ({
   }, [cart]);
 
   const tenantIds = useMemo(() => Object.keys(cartByTenant), [cartByTenant]);
+  const cartCurrency = currencyForCountry(tenantsMap[cart[0]?.tenant_id]?.country_code);
+  const fmtCart = (v: number) => formatPrice(v, cartCurrency);
   const cartSubtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
 
@@ -283,7 +286,7 @@ export const MarketplaceCartSheet = ({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{item.name}</p>
-                        <p className="text-xs text-primary font-semibold">{formatPrice(item.price * item.qty)}</p>
+                        <p className="text-xs text-primary font-semibold">{fmtCart(item.price * item.qty)}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <button onClick={() => onUpdateQty(item.id, -1)} className="h-7 w-7 rounded-full bg-card border border-border hover:bg-muted flex items-center justify-center">
@@ -305,7 +308,7 @@ export const MarketplaceCartSheet = ({
             <div className="border-t p-5 space-y-3 bg-card">
               <div className="flex justify-between text-lg font-bold">
                 <span>{t("marketplace.subtotal")}</span>
-                <span className="text-primary">{formatPrice(cartSubtotal)}</span>
+                <span className="text-primary">{fmtCart(cartSubtotal)}</span>
               </div>
               <Button onClick={proceed} className="w-full rounded-full h-11">
                 {t("marketplace.continueOrder")} <ChevronRight className="h-4 w-4 ml-1" />
@@ -374,7 +377,7 @@ export const MarketplaceCartSheet = ({
                         <SelectContent>
                           {addresses.map((a) => (
                             <SelectItem key={a.id} value={a.id}>
-                              {a.label} — {a.address.slice(0, 40)}
+                              {trPT(a.label)} — {a.address.slice(0, 40)}
                             </SelectItem>
                           ))}
                           <SelectItem value="new">
@@ -409,7 +412,7 @@ export const MarketplaceCartSheet = ({
                           <SelectContent>
                             {tz.map((z) => (
                               <SelectItem key={z.id} value={z.id}>
-                                {z.name} — {formatPrice(Number(z.fee))}
+                                {z.name} — {fmtCart(Number(z.fee))}
                                 {z.estimated_minutes ? ` · ${z.estimated_minutes} min` : ""}
                               </SelectItem>
                             ))}
@@ -494,23 +497,23 @@ export const MarketplaceCartSheet = ({
                       {items.map((i) => (
                         <div key={i.id} className="flex justify-between text-xs">
                           <span className="truncate">{i.qty}× {i.name}</span>
-                          <span>{formatPrice(i.price * i.qty)}</span>
+                          <span>{fmtCart(i.price * i.qty)}</span>
                         </div>
                       ))}
                       <Separator className="my-2" />
                       {q ? (
                         <div className="space-y-0.5 text-xs">
-                          <div className="flex justify-between"><span>{t("marketplace.subtotal")}</span><span>{formatPrice(Number(q.subtotal))}</span></div>
+                          <div className="flex justify-between"><span>{t("marketplace.subtotal")}</span><span>{fmtCart(Number(q.subtotal))}</span></div>
                           {Number(q.discount) > 0 && (
-                            <div className="flex justify-between text-success"><span>{t("marketplace.discount", { defaultValue: "Descuento" })}</span><span>-{formatPrice(Number(q.discount))}</span></div>
+                            <div className="flex justify-between text-success"><span>{t("marketplace.discount", { defaultValue: "Descuento" })}</span><span>-{fmtCart(Number(q.discount))}</span></div>
                           )}
                           {Number(q.tax) > 0 && (
-                            <div className="flex justify-between"><span>{t("marketplace.tax", { defaultValue: "Impuestos" })}</span><span>{formatPrice(Number(q.tax))}</span></div>
+                            <div className="flex justify-between"><span>{t("marketplace.tax", { defaultValue: "Impuestos" })}</span><span>{fmtCart(Number(q.tax))}</span></div>
                           )}
                           {Number(q.delivery_fee) > 0 && (
-                            <div className="flex justify-between"><span>{t("marketplace.deliveryFee", { defaultValue: "Envío" })}</span><span>{formatPrice(Number(q.delivery_fee))}</span></div>
+                            <div className="flex justify-between"><span>{t("marketplace.deliveryFee", { defaultValue: "Envío" })}</span><span>{fmtCart(Number(q.delivery_fee))}</span></div>
                           )}
-                          <div className="flex justify-between font-semibold pt-1"><span>{t("marketplace.total")}</span><span>{formatPrice(Number(q.total))}</span></div>
+                          <div className="flex justify-between font-semibold pt-1"><span>{t("marketplace.total")}</span><span>{fmtCart(Number(q.total))}</span></div>
                         </div>
                       ) : (
                         <p className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> {t("marketplace.processing")}</p>
@@ -521,7 +524,7 @@ export const MarketplaceCartSheet = ({
               </div>
               <div className="flex justify-between font-bold text-lg pt-2">
                 <span>{t("marketplace.total")}</span>
-                <span className="text-primary">{formatPrice(quote ? quoteTotal : cartSubtotal)}</span>
+                <span className="text-primary">{fmtCart(quote ? quoteTotal : cartSubtotal)}</span>
               </div>
               <p className="text-[11px] text-muted-foreground text-center">
                 {t("marketplace.paymentOnDelivery", { defaultValue: "Pago contra entrega o en la tienda. No se cobra en línea." })}

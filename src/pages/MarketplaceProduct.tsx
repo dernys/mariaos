@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +19,7 @@ import { MarketplaceCartSheet } from "@/components/marketplace/MarketplaceCartSh
 import { ProductReviewsSection } from "@/components/marketplace/ProductReviewsSection";
 import { RatingStars } from "@/components/marketplace/RatingStars";
 import {
-  bizIcon, formatPrice, distanceKm,
+  bizIcon, formatPrice, currencyForCountry, distanceKm,
 } from "@/components/marketplace/types";
 import type {
   MarketProduct, Tenant, StorePublic, CartItem, Promotion,
@@ -63,7 +64,7 @@ const MarketplaceProduct = () => {
         setProduct(p as unknown as MarketProduct);
 
         const [{ data: tn }, { data: ss }, { data: rel }, { data: pr }] = await Promise.all([
-          supabase.from("tenants_public" as any).select("id, name, slug, logo_url, business_type").eq("id", p.tenant_id).maybeSingle(),
+          supabase.from("tenants_public" as any).select("id, name, slug, logo_url, business_type, country_code").eq("id", p.tenant_id).maybeSingle(),
           supabase.from("stores_public" as any).select("*").eq("tenant_id", p.tenant_id),
           supabase
             .from("products")
@@ -336,14 +337,14 @@ const MarketplaceProduct = () => {
             )}
 
             <div className="flex items-end gap-3 pt-1">
-              <span className="text-3xl font-bold text-primary">{formatPrice(finalPrice)}</span>
+              <span className="text-3xl font-bold text-primary">{formatPrice(finalPrice, currencyForCountry(tenant?.country_code))}</span>
               {discount > 0 && (
-                <span className="text-base text-muted-foreground line-through">{formatPrice(product.price)}</span>
+                <span className="text-base text-muted-foreground line-through">{formatPrice(product.price, currencyForCountry(tenant?.country_code))}</span>
               )}
             </div>
 
             {product.description && (
-              <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{trPT(product.description)}</p>
             )}
 
             <div className="flex items-center gap-3 pt-2">
@@ -353,27 +354,27 @@ const MarketplaceProduct = () => {
                 <button onClick={() => setQty((q) => Math.min(product.online_stock, q + 1))} className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted"><Plus className="h-4 w-4" /></button>
               </div>
               <Button onClick={addCurrentToCart} disabled={stockState === "out"} className="flex-1 rounded-full h-11">
-                <ShoppingCart className="h-4 w-4 mr-2" /> {t("marketplace.addToCart")} · {formatPrice(finalPrice * qty)}
+                <ShoppingCart className="h-4 w-4 mr-2" /> {t("marketplace.addToCart")} · {formatPrice(finalPrice * qty, currencyForCountry(tenant?.country_code))}
               </Button>
             </div>
 
             <Tabs defaultValue="business" className="pt-3">
               <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="business">{t("marketplace.tab.business")}</TabsTrigger>
-                <TabsTrigger value="description">Descripción</TabsTrigger>
+                <TabsTrigger value="description">{trPT("Descripción")}</TabsTrigger>
                 <TabsTrigger value="delivery">{t("marketplace.tab.delivery")}</TabsTrigger>
               </TabsList>
               <TabsContent value="description" className="pt-3 text-sm">
                 <div className="bg-card border border-border rounded-xl p-3 space-y-2">
                   <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                    {product.description?.trim() || "Este producto aún no tiene una descripción ampliada."}
+                    {product.description?.trim() || trPT("Este producto aún no tiene una descripción ampliada.")}
                   </p>
                   <dl className="grid grid-cols-2 gap-2 pt-2 text-xs">
                     {product.sku && (<><dt className="text-muted-foreground">SKU</dt><dd className="font-medium">{product.sku}</dd></>)}
                     {product.brand && (<><dt className="text-muted-foreground">Marca</dt><dd className="font-medium">{product.brand}</dd></>)}
-                    {product.category && (<><dt className="text-muted-foreground">Categoría</dt><dd className="font-medium">{product.category}</dd></>)}
+                    {product.category && (<><dt className="text-muted-foreground">{trPT("Categoría")}</dt><dd className="font-medium">{product.category}</dd></>)}
                     {product.prep_minutes != null && product.prep_minutes > 0 && (
-                      <><dt className="text-muted-foreground">Preparación</dt><dd className="font-medium">{product.prep_minutes} min</dd></>
+                      <><dt className="text-muted-foreground">{trPT("Preparación")}</dt><dd className="font-medium">{product.prep_minutes} min</dd></>
                     )}
                   </dl>
                 </div>
@@ -490,7 +491,7 @@ const MarketplaceProduct = () => {
         <div className="flex items-center gap-2">
           <div className="flex-1">
             <p className="text-xs text-muted-foreground">{t("marketplace.total")}</p>
-            <p className="text-base font-bold text-primary">{formatPrice(finalPrice * qty)}</p>
+            <p className="text-base font-bold text-primary">{formatPrice(finalPrice * qty, currencyForCountry(tenant?.country_code))}</p>
           </div>
           <Button onClick={addCurrentToCart} disabled={stockState === "out"} className="rounded-full h-11 px-6">
             <ShoppingCart className="h-4 w-4 mr-2" /> {t("marketplace.addToCart")}

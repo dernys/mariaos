@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { tr } from "@/i18n/tr";
+import { tr as trPT } from "@/i18n/tr";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ShoppingCart, X, UtensilsCrossed, Soup, Fish, Salad, Cake, Wine, ChefHat, MapPin, SplitSquareVertical, Send, UserCheck, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -350,7 +350,7 @@ export function POSRestaurant() {
               <MapPin className="h-3.5 w-3.5" /> {t("pos.restaurantView.tables")}
             </TabsTrigger>
             <TabsTrigger value="orders" className="flex-1 text-xs gap-1.5">
-              <ChefHat className="h-3.5 w-3.5" /> Órdenes
+              <ChefHat className="h-3.5 w-3.5" /> {trPT("Órdenes")}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -481,7 +481,7 @@ export function POSRestaurant() {
               <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={activeOrderId ? `Cobrar orden $${total.toFixed(2)}` : t("pos.restaurantView.sendToCash")} onEditNote={openNote} extraActions={
                 <div className="flex gap-2 mb-2">
                   <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
-                    <Send className="h-3 w-3" /> {activeOrderId ? "Actualizar cocina" : t("pos.restaurantView.sendToKitchen")}
+                    <Send className="h-3 w-3" /> {activeOrderId ? trPT("Actualizar cocina") : t("pos.restaurantView.sendToKitchen")}
                   </Button>
                   <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
                     <SplitSquareVertical className="h-3 w-3" /> {t("pos.restaurantView.split")}
@@ -500,14 +500,14 @@ export function POSRestaurant() {
           <p className="text-[10px] text-muted-foreground">{t("pos.restaurantView.dishesCount", { n: totalItems })} • ${subtotal.toLocaleString()} CUP</p>
           {activeOrderId && (
             <Badge variant="outline" className="mt-1 text-[9px] border-emerald-500/40 text-emerald-400">
-              Orden abierta en cocina · pendiente de cobro
+              {trPT("Orden abierta en cocina · pendiente de cobro")}
             </Badge>
           )}
         </div>
         <CartContent cart={cart} updateQty={updateQty} removeItem={removeItem} subtotal={subtotal} tax={tax} total={total} onCheckout={() => setPaymentOpen(true)} taxLabel={t("pos.restaurantView.serviceLabel", { rate: taxRatePct })} checkoutLabel={activeOrderId ? `Cobrar orden $${total.toFixed(2)}` : t("pos.restaurantView.sendToCash")} onEditNote={openNote} extraActions={
           <div className="flex gap-2 mb-2">
             <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={sendToKitchen} disabled={cart.length === 0}>
-              <Send className="h-3 w-3" /> {activeOrderId ? "Actualizar cocina" : t("pos.restaurantView.kitchen")}
+              <Send className="h-3 w-3" /> {activeOrderId ? trPT("Actualizar cocina") : t("pos.restaurantView.kitchen")}
             </Button>
             <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => setSplitBillOpen(true)} disabled={cart.length === 0}>
               <SplitSquareVertical className="h-3 w-3" /> {t("pos.restaurantView.split")}
@@ -523,17 +523,17 @@ export function POSRestaurant() {
       <Dialog open={noteItemId !== null} onOpenChange={(v) => { if (!v) setNoteItemId(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{tr("Modificaciones y sugerencias")}</DialogTitle>
+            <DialogTitle>{trPT("Modificaciones y sugerencias")}</DialogTitle>
           </DialogHeader>
           <Textarea
             value={noteDraft}
             onChange={(e) => setNoteDraft(e.target.value)}
-            placeholder={tr("Sin cebolla, término medio, salsa aparte…")}
+            placeholder={trPT("Sin cebolla, término medio, salsa aparte…")}
             rows={4}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setNoteItemId(null)}>{tr("Cancelar")}</Button>
-            <Button onClick={saveNote}>{tr("Guardar")}</Button>
+            <Button variant="outline" onClick={() => setNoteItemId(null)}>{trPT("Cancelar")}</Button>
+            <Button onClick={saveNote}>{trPT("Guardar")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

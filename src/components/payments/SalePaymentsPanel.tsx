@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -72,7 +73,7 @@ export function SalePaymentsPanel({ payments, onChanged }: Props) {
   const submit = async () => {
     if (!target) return;
     if (mode === "PAID" && !reference.trim()) {
-      toast({ title: "Referencia requerida", description: "Registra la referencia real del cobro antes de confirmarlo.", variant: "destructive" });
+      toast({ title: trPT("Referencia requerida"), description: trPT("Registra la referencia real del cobro antes de confirmarlo."), variant: "destructive" });
       return;
     }
     setBusy(true);
@@ -113,11 +114,11 @@ export function SalePaymentsPanel({ payments, onChanged }: Props) {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border bg-card p-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Cobrado en firme</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{trPT("Cobrado en firme")}</p>
           <p className="font-heading text-lg font-bold text-success">${paidTotal.toFixed(2)}</p>
         </div>
         <div className="rounded-xl border bg-card p-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Digital por confirmar</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{trPT("Digital por confirmar")}</p>
           <p className="font-heading text-lg font-bold text-warning">${pendingTotal.toFixed(2)}</p>
         </div>
       </div>
@@ -131,7 +132,7 @@ export function SalePaymentsPanel({ payments, onChanged }: Props) {
             <TableHead className="text-xs">Referencia</TableHead>
             <TableHead className="text-xs">Moneda</TableHead>
             <TableHead className="text-xs text-right">Monto</TableHead>
-            <TableHead className="text-xs text-right">En base</TableHead>
+            <TableHead className="text-xs text-right">{trPT("En base")}</TableHead>
             <TableHead className="text-xs text-right">Acciones</TableHead>
           </TableRow></TableHeader>
           <TableBody>
@@ -167,14 +168,14 @@ export function SalePaymentsPanel({ payments, onChanged }: Props) {
                       </div>
                     )}
                     {isPending && !canConfirm && (
-                      <span className="text-[10px] text-muted-foreground">Requiere autorización</span>
+                      <span className="text-[10px] text-muted-foreground">{trPT("Requiere autorización")}</span>
                     )}
                   </TableCell>
                 </TableRow>
               );
             })}
             {payments.length === 0 && (
-              <TableRow><TableCell colSpan={8} className="text-center text-xs text-muted-foreground py-6">Sin pagos</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin pagos")}</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -183,23 +184,23 @@ export function SalePaymentsPanel({ payments, onChanged }: Props) {
       <Dialog open={!!target} onOpenChange={(v) => !v && setTarget(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{mode === "PAID" ? "Confirmar cobro" : "Rechazar pago"}</DialogTitle>
+            <DialogTitle>{mode === "PAID" ? trPT("Confirmar cobro") : trPT("Rechazar pago")}</DialogTitle>
             <DialogDescription>
-              {target && <>{methodLabel(target.method)} · ${Number(target.amount_in_base).toFixed(2)} en base</>}
+              {target && <>{methodLabel(target.method)} · ${Number(target.amount_in_base).toFixed(2)} {trPT("en base")}</>}
               {mode === "PAID"
-                ? " · Se verifica contra el comprobante real del proveedor."
-                : " · La deuda del cliente se mantiene."}
+                ? trPT(" · Se verifica contra el comprobante real del proveedor.")
+                : trPT(" · La deuda del cliente se mantiene.")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             {mode === "PAID" && (
               <>
                 <div>
-                  <Label className="text-xs">Referencia del cobro *</Label>
-                  <Input className="h-9 text-xs" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Nro. de operación / transferencia" />
+                  <Label className="text-xs">{trPT("Referencia del cobro *")}</Label>
+                  <Input className="h-9 text-xs" value={reference} onChange={(e) => setReference(e.target.value)} placeholder={trPT("Nro. de operación / transferencia")} />
                 </div>
                 <div>
-                  <Label className="text-xs">ID de transacción del proveedor</Label>
+                  <Label className="text-xs">{trPT("ID de transacción del proveedor")}</Label>
                   <Input className="h-9 text-xs" value={txId} onChange={(e) => setTxId(e.target.value)} placeholder="Opcional" />
                 </div>
               </>
@@ -213,7 +214,7 @@ export function SalePaymentsPanel({ payments, onChanged }: Props) {
             <Button variant="outline" onClick={() => setTarget(null)}>Cancelar</Button>
             <Button onClick={submit} disabled={busy} className={mode === "PAID" ? "gradient-brand text-primary-foreground" : ""} variant={mode === "PAID" ? "default" : "destructive"}>
               {busy && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-              {mode === "PAID" ? "Confirmar cobro" : "Marcar fallido"}
+              {mode === "PAID" ? trPT("Confirmar cobro") : trPT("Marcar fallido")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -53,7 +54,7 @@ export default function Reportes() {
         <Tabs defaultValue="ventas" className="space-y-4">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="ventas">Ventas</TabsTrigger>
-            <TabsTrigger value="pagos">Medios de pago</TabsTrigger>
+            <TabsTrigger value="pagos">{trPT("Medios de pago")}</TabsTrigger>
             <TabsTrigger value="financiero">Financiero</TabsTrigger>
             <TabsTrigger value="inventario">Inventario</TabsTrigger>
             <TabsTrigger value="clientes">Clientes</TabsTrigger>
@@ -63,17 +64,17 @@ export default function Reportes() {
           {/* ---------------- VENTAS ---------------- */}
           <TabsContent value="ventas" className="space-y-4">
             <KpiGrid>
-              <KpiTile label="Ventas totales" value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
+              <KpiTile label={trPT("Ventas totales")} value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
                 current={a.kpis.revenue} previous={range.compare ? a.kpis.prevRevenue : undefined}
                 series={a.timeseries.map((p) => p.revenue)} />
               <KpiTile label="Transacciones" value={String(a.kpis.tx)} icon={ShoppingCart} accentIndex={1}
                 current={a.kpis.tx} previous={range.compare ? a.kpis.prevTx : undefined} />
-              <KpiTile label="Ticket promedio" value={money(a.kpis.avgTicket)} icon={TrendingUp} accentIndex={2}
+              <KpiTile label={trPT("Ticket promedio")} value={money(a.kpis.avgTicket)} icon={TrendingUp} accentIndex={2}
                 current={a.kpis.avgTicket} previous={range.compare ? a.kpis.prevAvgTicket : undefined} />
               <KpiTile label="Impuestos" value={money(a.kpis.tax)} icon={Percent} accentIndex={3} />
             </KpiGrid>
 
-            <ChartCard title="Evolución de ventas" subtitle={`${range.label} · ${a.kpis.tx} tickets`} loading={a.loading} empty={a.timeseries.length === 0} height={280}>
+            <ChartCard title={trPT("Evolución de ventas")} subtitle={`${range.label} · ${a.kpis.tx} tickets`} loading={a.loading} empty={a.timeseries.length === 0} height={280}>
               <ResponsiveContainer width="100%" height={280}>
                 <ComposedChart data={a.timeseries}>
                   <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
@@ -90,7 +91,7 @@ export default function Reportes() {
             </ChartCard>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <ChartCard title="Métodos de pago" subtitle="Importes en moneda base" loading={a.loading} empty={a.byMethod.length === 0}>
+              <ChartCard title={trPT("Métodos de pago")} subtitle={trPT("Importes en moneda base")} loading={a.loading} empty={a.byMethod.length === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie data={a.byMethod} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={3}>
@@ -101,7 +102,7 @@ export default function Reportes() {
                   </PieChart>
                 </ResponsiveContainer>
               </ChartCard>
-              <ChartCard title="Ventas por día de la semana" loading={a.loading} empty={a.kpis.tx === 0}>
+              <ChartCard title={trPT("Ventas por día de la semana")} loading={a.loading} empty={a.kpis.tx === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={a.byWeekday}>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
@@ -117,7 +118,7 @@ export default function Reportes() {
             </div>
 
             <AnalyticsTable
-              title="Top productos"
+              title={trPT("Top productos")}
               rows={a.topProducts}
               loading={a.loading}
               filename="top-productos"
@@ -132,7 +133,7 @@ export default function Reportes() {
             />
 
             <AnalyticsTable
-              title="Ventas por empleado"
+              title={trPT("Ventas por empleado")}
               rows={a.byEmployee}
               loading={a.loading}
               filename="ventas-empleado"
@@ -159,30 +160,30 @@ export default function Reportes() {
             <KpiGrid>
               <KpiTile label="Ingresos" value={money(a.kpis.revenue)} icon={DollarSign} accentIndex={0}
                 current={a.kpis.revenue} previous={range.compare ? a.kpis.prevRevenue : undefined} />
-              <KpiTile label="COGS estimado" value={money(a.kpis.cogs)} icon={Package} accentIndex={2} />
-              <KpiTile label="Utilidad bruta" value={money(a.kpis.grossProfit)} icon={TrendingUp} accentIndex={4} />
-              <KpiTile label="% Margen" value={`${a.kpis.margin.toFixed(1)}%`} icon={Percent} accentIndex={1} />
+              <KpiTile label={trPT("COGS estimado")} value={money(a.kpis.cogs)} icon={Package} accentIndex={2} />
+              <KpiTile label={trPT("Utilidad bruta")} value={money(a.kpis.grossProfit)} icon={TrendingUp} accentIndex={4} />
+              <KpiTile label={trPT("% Margen")} value={`${a.kpis.margin.toFixed(1)}%`} icon={Percent} accentIndex={1} />
             </KpiGrid>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <ChartCard title="Estado de resultados simplificado" subtitle="Derivado de ventas e inventario del período" loading={a.loading} height={220}>
+              <ChartCard title={trPT("Estado de resultados simplificado")} subtitle={trPT("Derivado de ventas e inventario del período")} loading={a.loading} height={220}>
                 <Table>
                   <TableBody className="text-xs">
-                    <TableRow><TableCell>Ingresos por ventas</TableCell><TableCell className="text-right font-semibold">{money(a.kpis.revenue)}</TableCell></TableRow>
-                    <TableRow><TableCell className="text-muted-foreground">(-) Impuestos incluidos</TableCell><TableCell className="text-right">{money(a.kpis.tax)}</TableCell></TableRow>
-                    <TableRow><TableCell className="text-muted-foreground">(-) Costo de mercancía vendida</TableCell><TableCell className="text-right">{money(a.kpis.cogs)}</TableCell></TableRow>
+                    <TableRow><TableCell>{trPT("Ingresos por ventas")}</TableCell><TableCell className="text-right font-semibold">{money(a.kpis.revenue)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">{trPT("(-) Impuestos incluidos")}</TableCell><TableCell className="text-right">{money(a.kpis.tax)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">{trPT("(-) Costo de mercancía vendida")}</TableCell><TableCell className="text-right">{money(a.kpis.cogs)}</TableCell></TableRow>
                     <TableRow className="border-t-2">
-                      <TableCell className="font-semibold">= Utilidad bruta</TableCell>
+                      <TableCell className="font-semibold">{trPT("= Utilidad bruta")}</TableCell>
                       <TableCell className={`text-right font-bold ${a.kpis.grossProfit >= 0 ? "text-success" : "text-destructive"}`}>{money(a.kpis.grossProfit)}</TableCell>
                     </TableRow>
-                    <TableRow><TableCell className="text-muted-foreground">Compras recibidas del período</TableCell><TableCell className="text-right">{money(a.purchaseTotals.received)}</TableCell></TableRow>
-                    <TableRow><TableCell className="text-muted-foreground">Compras pendientes</TableCell><TableCell className="text-right">{money(a.purchaseTotals.pending)}</TableCell></TableRow>
-                    <TableRow><TableCell className="text-muted-foreground">Pendiente de cobro (fiado)</TableCell><TableCell className="text-right">{money(a.kpis.pendingCollection)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">{trPT("Compras recibidas del período")}</TableCell><TableCell className="text-right">{money(a.purchaseTotals.received)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">{trPT("Compras pendientes")}</TableCell><TableCell className="text-right">{money(a.purchaseTotals.pending)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground">{trPT("Pendiente de cobro (fiado)")}</TableCell><TableCell className="text-right">{money(a.kpis.pendingCollection)}</TableCell></TableRow>
                   </TableBody>
                 </Table>
               </ChartCard>
 
-              <ChartCard title="Flujo de ingresos" subtitle="Acumulado del período" loading={a.loading} empty={a.timeseries.length === 0}>
+              <ChartCard title={trPT("Flujo de ingresos")} subtitle={trPT("Acumulado del período")} loading={a.loading} empty={a.timeseries.length === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={a.timeseries}>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
@@ -196,7 +197,7 @@ export default function Reportes() {
             </div>
 
             <AnalyticsTable
-              title="Margen por producto"
+              title={trPT("Margen por producto")}
               rows={a.topProducts}
               loading={a.loading}
               filename="margen-producto"
@@ -216,13 +217,13 @@ export default function Reportes() {
           <TabsContent value="inventario" className="space-y-4">
             <KpiGrid>
               <KpiTile label="Productos" value={String(a.inventory.list.length)} icon={Package} accentIndex={1} />
-              <KpiTile label="Valor inventario" value={money(a.inventory.value)} icon={DollarSign} accentIndex={0} />
-              <KpiTile label="Stock bajo" value={String(a.inventory.low.length)} icon={TrendingDown} accentIndex={2} />
-              <KpiTile label="Sin stock" value={String(a.inventory.out.length)} icon={AlertTriangle} accentIndex={5} />
+              <KpiTile label={trPT("Valor inventario")} value={money(a.inventory.value)} icon={DollarSign} accentIndex={0} />
+              <KpiTile label={trPT("Stock bajo")} value={String(a.inventory.low.length)} icon={TrendingDown} accentIndex={2} />
+              <KpiTile label={trPT("Sin stock")} value={String(a.inventory.out.length)} icon={AlertTriangle} accentIndex={5} />
             </KpiGrid>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <ChartCard title="Clasificación ABC" subtitle="Concentración de ingresos por producto" loading={a.loading} empty={a.abc.length === 0}>
+              <ChartCard title={trPT("Clasificación ABC")} subtitle={trPT("Concentración de ingresos por producto")} loading={a.loading} empty={a.abc.length === 0}>
                 <ResponsiveContainer width="100%" height={240}>
                   <ComposedChart data={a.abc.slice(0, 20)}>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
@@ -237,22 +238,22 @@ export default function Reportes() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Rotación e inmovilizado" subtitle="Indicadores clave de inventario" loading={a.loading} height={240}>
+              <ChartCard title={trPT("Rotación e inmovilizado")} subtitle={trPT("Indicadores clave de inventario")} loading={a.loading} height={240}>
                 <div className="grid grid-cols-2 gap-3 h-full content-center">
                   <div className="rounded-lg border p-3">
-                    <p className="text-[10px] uppercase text-muted-foreground">Rotación estimada</p>
+                    <p className="text-[10px] uppercase text-muted-foreground">{trPT("Rotación estimada")}</p>
                     <p className="text-xl font-heading font-bold">{a.inventory.rotation.toFixed(2)}x</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-[10px] uppercase text-muted-foreground">Valor inmovilizado</p>
+                    <p className="text-[10px] uppercase text-muted-foreground">{trPT("Valor inmovilizado")}</p>
                     <p className="text-xl font-heading font-bold">{money(a.inventory.idle.reduce((s, p) => s + p.value, 0))}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-[10px] uppercase text-muted-foreground">Sin movimiento</p>
+                    <p className="text-[10px] uppercase text-muted-foreground">{trPT("Sin movimiento")}</p>
                     <p className="text-xl font-heading font-bold">{a.inventory.idle.length}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-[10px] uppercase text-muted-foreground">Unidades vendidas</p>
+                    <p className="text-[10px] uppercase text-muted-foreground">{trPT("Unidades vendidas")}</p>
                     <p className="text-xl font-heading font-bold">{a.kpis.units}</p>
                   </div>
                 </div>
@@ -260,7 +261,7 @@ export default function Reportes() {
             </div>
 
             <AnalyticsTable
-              title="Análisis ABC detallado"
+              title={trPT("Análisis ABC detallado")}
               rows={a.abc}
               loading={a.loading}
               filename="analisis-abc"
@@ -276,7 +277,7 @@ export default function Reportes() {
             />
 
             <AnalyticsTable
-              title="Productos sin movimiento en el período"
+              title={trPT("Productos sin movimiento en el período")}
               rows={a.inventory.idle}
               loading={a.loading}
               filename="sin-movimiento"
@@ -291,7 +292,7 @@ export default function Reportes() {
             />
 
             <AnalyticsTable
-              title="Alertas de reposición"
+              title={trPT("Alertas de reposición")}
               rows={a.inventory.low}
               loading={a.loading}
               filename="stock-bajo"
@@ -309,14 +310,14 @@ export default function Reportes() {
           {/* ---------------- CLIENTES ---------------- */}
           <TabsContent value="clientes" className="space-y-4">
             <KpiGrid>
-              <KpiTile label="Clientes registrados" value={String(a.customers.length)} icon={Users} accentIndex={1} />
-              <KpiTile label="Activos en período" value={String(a.byCustomer.length)} icon={TrendingUp} accentIndex={0}
+              <KpiTile label={trPT("Clientes registrados")} value={String(a.customers.length)} icon={Users} accentIndex={1} />
+              <KpiTile label={trPT("Activos en período")} value={String(a.byCustomer.length)} icon={TrendingUp} accentIndex={0}
                 current={a.kpis.uniqueCustomers} previous={range.compare ? a.kpis.prevUniqueCustomers : undefined} />
               <KpiTile label="Inactivos" value={String(inactiveCustomers.length)} icon={TrendingDown} accentIndex={2} invertDelta />
-              <KpiTile label="Ticket promedio" value={money(a.kpis.avgTicket)} icon={DollarSign} accentIndex={3} />
+              <KpiTile label={trPT("Ticket promedio")} value={money(a.kpis.avgTicket)} icon={DollarSign} accentIndex={3} />
             </KpiGrid>
 
-            <ChartCard title="Concentración de clientes" subtitle="Top 10 por ingresos del período" loading={a.loading} empty={a.byCustomer.length === 0}>
+            <ChartCard title={trPT("Concentración de clientes")} subtitle={trPT("Top 10 por ingresos del período")} loading={a.loading} empty={a.byCustomer.length === 0}>
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={a.byCustomer.slice(0, 10)} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
@@ -331,7 +332,7 @@ export default function Reportes() {
             </ChartCard>
 
             <AnalyticsTable
-              title="Clientes activos"
+              title={trPT("Clientes activos")}
               rows={a.byCustomer}
               loading={a.loading}
               filename="clientes-activos"
@@ -347,7 +348,7 @@ export default function Reportes() {
             />
 
             <AnalyticsTable
-              title="Clientes inactivos en el período"
+              title={trPT("Clientes inactivos en el período")}
               rows={inactiveCustomers}
               loading={a.loading}
               filename="clientes-inactivos"

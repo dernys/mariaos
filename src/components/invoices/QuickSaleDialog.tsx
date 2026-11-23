@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -134,7 +135,7 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
 
   const create = async () => {
     if (!tenantId) return;
-    if (items.length === 0) return toast.error("Agrega al menos una línea");
+    if (items.length === 0) return toast.error(trPT("Agrega al menos una línea"));
     if (creditWithoutParty) {
       return toast.error(kind === "purchase"
         ? "No se puede dejar pendiente sin proveedor"
@@ -187,23 +188,23 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Operación rápida</DialogTitle>
+          <DialogTitle>{trPT("Operación rápida")}</DialogTitle>
           <DialogDescription>
-            Registra una venta a cliente/empleado o una compra a proveedor, con varias formas de pago y saldo fiado.
+            {trPT("Registra una venta a cliente/empleado o una compra a proveedor, con varias formas de pago y saldo fiado.")}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={kind} onValueChange={(v) => { setKind(v as Kind); setItems([]); }}>
           <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="sale">Venta (por cobrar)</TabsTrigger>
-            <TabsTrigger value="purchase">Compra (por pagar)</TabsTrigger>
+            <TabsTrigger value="sale">{trPT("Venta (por cobrar)")}</TabsTrigger>
+            <TabsTrigger value="purchase">{trPT("Compra (por pagar)")}</TabsTrigger>
           </TabsList>
         </Tabs>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {kind === "sale" && (
             <div className="space-y-1">
-              <Label className="text-xs">Tipo de contraparte</Label>
+              <Label className="text-xs">{trPT("Tipo de contraparte")}</Label>
               <Select value={partyType} onValueChange={(v) => setPartyType(v as PartyType)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -214,7 +215,7 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
             </div>
           )}
           <div className="space-y-1">
-            <Label className="text-xs">{kind === "purchase" ? "Proveedor" : partyType === "employee" ? "Empleado" : "Cliente"}</Label>
+            <Label className="text-xs">{kind === "purchase" ? trPT("Proveedor") : partyType === "employee" ? trPT("Empleado") : trPT("Cliente")}</Label>
             <SearchableSelect
               options={partyList.map((p) => ({
                 value: p.id,
@@ -222,16 +223,16 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
               }))}
               value={partyId}
               onChange={setPartyId}
-              placeholder={kind === "sale" && partyType === "customer" ? "Consumidor final" : "Selecciona"}
+              placeholder={kind === "sale" && partyType === "customer" ? trPT("Consumidor final") : trPT("Selecciona")}
               searchPlaceholder="Buscar..."
             />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Impuesto</Label>
             <Select value={taxRateId || "none"} onValueChange={(v) => setTaxRateId(v === "none" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="Sin impuesto" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={trPT("Sin impuesto")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Sin impuesto (0%)</SelectItem>
+                <SelectItem value="none">{trPT("Sin impuesto (0%)")}</SelectItem>
                 {taxes.map((t) => <SelectItem key={t.id} value={t.id}>{t.name} — {Number(t.rate)}%</SelectItem>)}
               </SelectContent>
             </Select>
@@ -239,10 +240,10 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
         </div>
 
         <div>
-          <Label className="text-xs">Buscar producto</Label>
+          <Label className="text-xs">{trPT("Buscar producto")}</Label>
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nombre o SKU..." />
+            <Input className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={trPT("Nombre o SKU...")} />
           </div>
           {search && (
             <div className="mt-2 flex flex-wrap gap-1 max-h-32 overflow-y-auto">
@@ -262,12 +263,12 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
               <TableHead className="text-xs">Producto</TableHead>
               <TableHead className="text-xs w-20 text-right">Cant.</TableHead>
               <TableHead className="text-xs w-24">Unidad</TableHead>
-              <TableHead className="text-xs w-24 text-right">{kind === "purchase" ? "Costo" : "Precio"}</TableHead>
+              <TableHead className="text-xs w-24 text-right">{kind === "purchase" ? trPT("Costo") : trPT("Precio")}</TableHead>
               <TableHead className="text-xs w-24 text-right">Total</TableHead>
               <TableHead className="w-10" />
             </TableRow></TableHeader>
             <TableBody>
-              {items.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-4">Sin líneas</TableCell></TableRow>}
+              {items.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-4">{trPT("Sin líneas")}</TableCell></TableRow>}
               {items.map((it, idx) => (
                 <TableRow key={idx}>
                   <TableCell className="text-xs">{it.product_name}</TableCell>
@@ -296,9 +297,9 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
         {/* Multi-pago */}
         <div className="border rounded-lg p-3 space-y-2 bg-muted/30">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Formas de pago</Label>
+            <Label className="text-sm font-medium">{trPT("Formas de pago")}</Label>
             <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setPayments([...payments, newPayment()])}>
-              <Plus className="h-3 w-3 mr-1" />Añadir pago
+              <Plus className="h-3 w-3 mr-1" />{trPT("Añadir pago")}
             </Button>
           </div>
           {payments.map((p, i) => (
@@ -307,7 +308,7 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
                 <Select value={p.method} onValueChange={(v) => { const n = [...payments]; n[i].method = v; setPayments(n); }}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {METHODS.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                    {METHODS.map((m) => <SelectItem key={m.value} value={m.value}>{trPT(m.label)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -324,7 +325,7 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
                 >
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {currencyOptions.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                    {currencyOptions.map((c) => <SelectItem key={c.value} value={c.value}>{trPT(c.label)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -345,11 +346,11 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button size="sm" variant="secondary" className="h-7 text-[10px]"
               onClick={() => { const n = [...payments]; n[0] = { ...n[0], amount: String(total), exchange_rate: "1", currency: n[0].currency }; setPayments([n[0]]); }}>
-              Pagar total
+              {trPT("Pagar total")}
             </Button>
             <Button size="sm" variant="secondary" className="h-7 text-[10px]"
               onClick={() => setPayments([{ ...newPayment(), amount: "0" }])}>
-              Todo fiado
+              {trPT("Todo fiado")}
             </Button>
             {pending > 0.01 && (
               <div className="flex items-center gap-2">
@@ -363,12 +364,12 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <Label className="text-xs">Notas</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Referencia, factura del proveedor..." />
+            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={trPT("Referencia, factura del proveedor...")} />
           </div>
           {kind === "sale" && (
             <div className="flex items-end gap-2">
               <Switch checked={issueAfter} onCheckedChange={setIssueAfter} />
-              <Label className="text-xs">Emitir factura al crear</Label>
+              <Label className="text-xs">{trPT("Emitir factura al crear")}</Label>
             </div>
           )}
         </div>
@@ -377,19 +378,19 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
           <div className="flex items-center gap-2 text-xs text-destructive border border-destructive/40 rounded-md p-2">
             <AlertTriangle className="h-4 w-4" />
             {kind === "purchase"
-              ? "Selecciona el proveedor para registrar la cuenta por pagar."
-              : "Selecciona cliente o empleado para registrar la cuenta por cobrar."}
+              ? trPT("Selecciona el proveedor para registrar la cuenta por pagar.")
+              : trPT("Selecciona cliente o empleado para registrar la cuenta por cobrar.")}
           </div>
         )}
 
         <div className="flex flex-wrap justify-end gap-4 text-sm border-t pt-3">
-          <span>Subtotal: <strong>${subtotal.toFixed(2)}</strong></span>
-          <span>Impuesto ({rate}%): <strong>${tax.toFixed(2)}</strong></span>
-          <span className="text-base">Total: <strong className="text-primary">${total.toFixed(2)}</strong></span>
-          <span>Pagado: <strong>${paid.toFixed(2)}</strong></span>
+          <span>{trPT("Subtotal:")} <strong>${subtotal.toFixed(2)}</strong></span>
+          <span>{trPT("Impuesto (")}{rate}%): <strong>${tax.toFixed(2)}</strong></span>
+          <span className="text-base">{trPT("Total:")} <strong className="text-primary">${total.toFixed(2)}</strong></span>
+          <span>{trPT("Pagado:")} <strong>${paid.toFixed(2)}</strong></span>
           {pending > 0.01 && (
             <Badge variant="outline" className="text-[10px]">
-              {kind === "purchase" ? "Por pagar" : "Por cobrar"}: ${pending.toFixed(2)}
+              {kind === "purchase" ? trPT("Por pagar") : trPT("Por cobrar")}: ${pending.toFixed(2)}
               {selectedParty ? ` · ${selectedParty.name}` : ""}
             </Badge>
           )}
@@ -398,7 +399,7 @@ export function QuickSaleDialog({ open, onOpenChange, onCreated }: Props) {
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={create} disabled={busy || items.length === 0 || creditWithoutParty}>
-            {busy ? "Registrando..." : kind === "purchase" ? "Registrar compra" : "Crear venta"}
+            {busy ? "Registrando..." : kind === "purchase" ? trPT("Registrar compra") : trPT("Crear venta")}
           </Button>
         </DialogFooter>
       </DialogContent>

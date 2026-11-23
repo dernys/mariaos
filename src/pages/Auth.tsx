@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,7 +99,7 @@ const Auth = () => {
           <div className="h-12 w-12 rounded-xl gradient-brand flex items-center justify-center mb-3">
             <Zap className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="font-heading text-xl font-bold tracking-tight">MarIA OS</h1>
+          <h1 className="font-heading text-xl font-bold tracking-tight">{trPT("MarIA OS")}</h1>
           <p className="text-xs text-muted-foreground mt-1">{t("auth.tagline")}</p>
         </div>
 
@@ -170,17 +171,16 @@ const Auth = () => {
         <div className="mt-4 rounded-2xl border bg-card/70 backdrop-blur p-3 space-y-2">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-primary" />
-            <p className="text-xs font-heading font-semibold">Acceso corporativo controlado</p>
+            <p className="text-xs font-heading font-semibold">{trPT("Acceso corporativo controlado")}</p>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Los usuarios de empresa (administradores, gerentes, cajeros, contadores y empleados) los crea el
-            superadministrador o el administrador de cada negocio. Aquí no hay registro público.
+            {trPT("Los usuarios de empresa (administradores, gerentes, cajeros, contadores y empleados) los crea el superadministrador o el administrador de cada negocio. Aquí no hay registro público.")}
           </p>
           <Link
             to="/marketplace/acceso?view=register"
             className="inline-flex items-center gap-1.5 text-[11px] text-primary font-medium hover:underline"
           >
-            <ShoppingBag className="h-3.5 w-3.5" /> ¿Eres comprador? Crea tu cuenta del marketplace
+            <ShoppingBag className="h-3.5 w-3.5" /> {trPT("¿Eres comprador? Crea tu cuenta del marketplace")}
           </Link>
         </div>
 

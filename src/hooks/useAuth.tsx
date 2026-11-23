@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -23,12 +23,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const loadedUserId = useRef<string | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        // Keep the same user object across token refreshes (tab refocus) so screens
+        // that depend on the user don't reload their data or reset half-filled forms.
+        setUser((prev) => (prev && session?.user && prev.id === session.user.id ? prev : session?.user ?? null));
+
+        if (session?.user && loadedUserId.current === session.user.id) return;
+        loadedUserId.current = session?.user?.id ?? null;
 
         if (session?.user) {
           // Fetch profile and roles with setTimeout to avoid deadlock

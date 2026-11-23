@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -114,10 +115,10 @@ export function DeliveryMap({ tenantId }: { tenantId: string | null }) {
           <Marker key={l.rider_id} position={[l.latitude, l.longitude]} icon={riderIcon}>
             <Popup>
               <div className="text-sm space-y-1">
-                <p className="font-bold">{l.name || "Repartidor"}</p>
-                <p>Vehículo: {l.vehicle || "—"}</p>
-                <p>Estado: {l.is_available ? "🟢 Disponible" : "🔴 Ocupado"}</p>
-                <p className="text-xs text-gray-500">Actualizado: {new Date(l.recorded_at).toLocaleTimeString()}</p>
+                <p className="font-bold">{l.name || trPT("Repartidor")}</p>
+                <p>{trPT("Vehículo:")} {l.vehicle || "—"}</p>
+                <p>{trPT("Estado:")} {l.is_available ? trPT("🟢 Disponible") : trPT("🔴 Ocupado")}</p>
+                <p className="text-xs text-gray-500">{trPT("Actualizado:")} {new Date(l.recorded_at).toLocaleTimeString()}</p>
               </div>
             </Popup>
           </Marker>
@@ -126,7 +127,7 @@ export function DeliveryMap({ tenantId }: { tenantId: string | null }) {
       {locations.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <p className="bg-white/90 px-4 py-2 rounded-full text-sm text-gray-600 shadow">
-            Esperando ubicaciones GPS de repartidores…
+            {trPT("Esperando ubicaciones GPS de repartidores…")}
           </p>
         </div>
       )}

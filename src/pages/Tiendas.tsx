@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
@@ -53,13 +54,13 @@ const Tiendas = () => {
   const [locating, setLocating] = useState(false);
 
   const useMyLocation = () => {
-    if (!navigator.geolocation) { toast({ title: "Geolocalización no disponible", variant: "destructive" }); return; }
+    if (!navigator.geolocation) { toast({ title: trPT("Geolocalización no disponible"), variant: "destructive" }); return; }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setForm((f) => ({ ...f, latitude: pos.coords.latitude.toFixed(6), longitude: pos.coords.longitude.toFixed(6) }));
         setLocating(false);
-        toast({ title: "Ubicación capturada" });
+        toast({ title: trPT("Ubicación capturada") });
       },
       (err) => { setLocating(false); toast({ title: "Error", description: err.message, variant: "destructive" }); },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -96,7 +97,7 @@ const Tiendas = () => {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast({ title: "Error", description: "El nombre es obligatorio", variant: "destructive" }); return; }
+    if (!form.name.trim()) { toast({ title: "Error", description: trPT("El nombre es obligatorio"), variant: "destructive" }); return; }
     const payload: any = {
       name: form.name.trim(), address: form.address || null, phone: form.phone || null,
       email: form.email || null, manager_id: form.manager_id || null, tenant_id: tenantId,
@@ -110,12 +111,12 @@ const Tiendas = () => {
       const { error } = await supabase.from("stores").update(payload).eq("id", editing.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       await logActivity({ entity_type: "store", entity_id: editing.id, action: "Tienda actualizada", description: `Se actualizó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Tienda actualizada" });
+      toast({ title: trPT("Tienda actualizada") });
     } else {
       const { data, error } = await supabase.from("stores").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       if (data) await logActivity({ entity_type: "store", entity_id: data.id, action: "Tienda creada", description: `Se creó ${payload.name}`, tenant_id: tenantId, performed_by: user?.id });
-      toast({ title: "Tienda creada" });
+      toast({ title: trPT("Tienda creada") });
     }
     setDialogOpen(false);
     fetchData();
@@ -125,7 +126,7 @@ const Tiendas = () => {
     const { error } = await supabase.from("stores").delete().eq("id", s.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     await logActivity({ entity_type: "store", entity_id: s.id, action: "Tienda eliminada", description: `Se eliminó ${s.name}`, tenant_id: tenantId, performed_by: user?.id });
-    toast({ title: "Tienda eliminada" });
+    toast({ title: trPT("Tienda eliminada") });
     fetchData();
   };
 
@@ -141,9 +142,9 @@ const Tiendas = () => {
     <AppLayout title={t("nav.items.stores")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{stores.length} tiendas registradas</p>
+          <p className="text-sm text-muted-foreground">{stores.length} {trPT("tiendas registradas")}</p>
           <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground">
-            <Plus className="h-3.5 w-3.5" /> Nueva Tienda
+            <Plus className="h-3.5 w-3.5" /> {trPT("Nueva Tienda")}
           </Button>
         </div>
 
@@ -162,7 +163,7 @@ const Tiendas = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={store.is_active ? "default" : "secondary"} className="text-[10px] cursor-pointer" onClick={() => toggleActive(store)}>
-                    {store.is_active ? "Activa" : "Inactiva"}
+                    {store.is_active ? trPT("Activa") : trPT("Inactiva")}
                   </Badge>
                   <button onClick={() => openEdit(store)} className="p-1 rounded hover:bg-muted transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
                   <button onClick={() => handleDelete(store)} className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -194,7 +195,7 @@ const Tiendas = () => {
           {stores.length === 0 && !loading && (
             <div className="col-span-full text-center py-12 text-muted-foreground">
               <Store className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No hay tiendas registradas</p>
+              <p className="text-sm">{trPT("No hay tiendas registradas")}</p>
             </div>
           )}
         </div>
@@ -204,20 +205,20 @@ const Tiendas = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar Tienda" : "Nueva Tienda"}</DialogTitle>
-            <DialogDescription>Datos de la tienda y ubicación para el marketplace</DialogDescription>
+            <DialogTitle>{editing ? trPT("Editar Tienda") : trPT("Nueva Tienda")}</DialogTitle>
+            <DialogDescription>{trPT("Datos de la tienda y ubicación para el marketplace")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><Label>Dirección</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div><Label>{trPT("Nombre *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><Label>{trPT("Dirección")}</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Teléfono</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div><Label>{trPT("Teléfono")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
               <div><Label>Email</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             </div>
             <div>
               <Label>Encargado</Label>
               <Select value={form.manager_id} onValueChange={(v) => setForm({ ...form, manager_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={trPT("Seleccionar empleado")} /></SelectTrigger>
                 <SelectContent>
                   {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
                 </SelectContent>
@@ -226,24 +227,24 @@ const Tiendas = () => {
 
             <div className="border-t pt-3 space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ubicación (Marketplace)</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{trPT("Ubicación (Marketplace)")}</Label>
                 <Button type="button" size="sm" variant="outline" onClick={useMyLocation} disabled={locating} className="h-7 text-xs gap-1">
-                  <MapPin className="h-3 w-3" /> {locating ? "Capturando..." : "Usar mi ubicación"}
+                  <MapPin className="h-3 w-3" /> {locating ? "Capturando..." : trPT("Usar mi ubicación")}
                 </Button>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label className="text-xs">Latitud</Label><Input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="23.135" /></div>
                 <div><Label className="text-xs">Longitud</Label><Input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="-82.359" /></div>
               </div>
-              <div><Label className="text-xs">Radio de entrega (km)</Label><Input type="number" step="0.5" value={form.delivery_radius_km} onChange={(e) => setForm({ ...form, delivery_radius_km: e.target.value })} /></div>
+              <div><Label className="text-xs">{trPT("Radio de entrega (km)")}</Label><Input type="number" step="0.5" value={form.delivery_radius_km} onChange={(e) => setForm({ ...form, delivery_radius_km: e.target.value })} /></div>
               <div className="flex gap-4 pt-1">
                 <label className="flex items-center gap-2 text-xs cursor-pointer">
                   <input type="checkbox" checked={form.accepts_delivery} onChange={(e) => setForm({ ...form, accepts_delivery: e.target.checked })} />
-                  Acepta delivery
+                  {trPT("Acepta delivery")}
                 </label>
                 <label className="flex items-center gap-2 text-xs cursor-pointer">
                   <input type="checkbox" checked={form.accepts_pickup} onChange={(e) => setForm({ ...form, accepts_pickup: e.target.checked })} />
-                  Acepta recogida
+                  {trPT("Acepta recogida")}
                 </label>
               </div>
               {form.latitude && form.longitude && (
@@ -252,7 +253,7 @@ const Tiendas = () => {
                   target="_blank" rel="noreferrer"
                   className="text-xs text-primary underline inline-flex items-center gap-1"
                 >
-                  <MapPin className="h-3 w-3" /> Ver en mapa
+                  <MapPin className="h-3 w-3" /> {trPT("Ver en mapa")}
                 </a>
               )}
             </div>
@@ -269,7 +270,7 @@ const Tiendas = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{detailStore?.name}</DialogTitle>
-            <DialogDescription>Historial de actividad</DialogDescription>
+            <DialogDescription>{trPT("Historial de actividad")}</DialogDescription>
           </DialogHeader>
           {detailStore && <ActivityTimeline entityType="store" entityId={detailStore.id} />}
         </DialogContent>

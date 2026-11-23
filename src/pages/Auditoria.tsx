@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -198,7 +199,7 @@ export default function Auditoria() {
   const goToEntity = (log: AuditLog) => {
     const route = ENTITY_ROUTES[log.entity_type];
     if (route && log.entity_id) navigate(route(log.entity_id));
-    else toast.info("No hay vista detallada para este tipo");
+    else toast.info(trPT("No hay vista detallada para este tipo"));
   };
 
   const clearFilters = () => {
@@ -225,8 +226,8 @@ export default function Auditoria() {
               <ShieldAlert className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="font-heading font-semibold text-sm">Registro de Auditoría</h2>
-              <p className="text-[10px] text-muted-foreground">{total.toLocaleString()} eventos · acceso restringido a superadmin</p>
+              <h2 className="font-heading font-semibold text-sm">{trPT("Registro de Auditoría")}</h2>
+              <p className="text-[10px] text-muted-foreground">{total.toLocaleString()} {trPT("eventos · acceso restringido a superadmin")}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -242,11 +243,11 @@ export default function Auditoria() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <div className="bg-card rounded-xl p-3 border shadow-card">
-            <p className="text-[10px] text-muted-foreground uppercase">Eventos página</p>
+            <p className="text-[10px] text-muted-foreground uppercase">{trPT("Eventos página")}</p>
             <p className="text-lg font-heading font-semibold">{logs.length}</p>
           </div>
           <div className="bg-card rounded-xl p-3 border shadow-card">
-            <p className="text-[10px] text-muted-foreground uppercase">Usuarios activos</p>
+            <p className="text-[10px] text-muted-foreground uppercase">{trPT("Usuarios activos")}</p>
             <p className="text-lg font-heading font-semibold">{stats.users}</p>
           </div>
           <div className="bg-card rounded-xl p-3 border shadow-card">
@@ -254,7 +255,7 @@ export default function Auditoria() {
             <p className="text-lg font-heading font-semibold text-destructive">{stats.destructive}</p>
           </div>
           <div className="bg-card rounded-xl p-3 border shadow-card">
-            <p className="text-[10px] text-muted-foreground uppercase">Top entidad</p>
+            <p className="text-[10px] text-muted-foreground uppercase">{trPT("Top entidad")}</p>
             <p className="text-sm font-heading font-semibold capitalize truncate">{stats.types[0]?.[0] ?? "—"} <span className="text-muted-foreground text-[10px]">({stats.types[0]?.[1] ?? 0})</span></p>
           </div>
         </div>
@@ -277,7 +278,7 @@ export default function Auditoria() {
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
-                placeholder="Buscar acción/desc..."
+                placeholder={trPT("Buscar acción/desc...")}
                 value={filters.search}
                 onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
                 onKeyDown={e => e.key === "Enter" && (setPage(0), fetchLogs())}
@@ -287,14 +288,14 @@ export default function Auditoria() {
             <Select value={filters.tenant_id || "all"} onValueChange={v => setFilters(f => ({ ...f, tenant_id: v === "all" ? "" : v }))}>
               <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Empresa" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas las empresas</SelectItem>
+                <SelectItem value="all">{trPT("Todas las empresas")}</SelectItem>
                 {tenants.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filters.entity_type || "all"} onValueChange={v => setFilters(f => ({ ...f, entity_type: v === "all" ? "" : v }))}>
-              <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Tipo entidad" /></SelectTrigger>
+              <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={trPT("Tipo entidad")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas las entidades</SelectItem>
+                <SelectItem value="all">{trPT("Todas las entidades")}</SelectItem>
                 {ENTITY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -306,7 +307,7 @@ export default function Auditoria() {
           </div>
           {filters.user_id && (
             <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
-              <UserSearch className="h-3 w-3" /> Filtrando por usuario: <code className="bg-muted px-1.5 py-0.5 rounded">{filters.user_id.slice(0, 8)}…</code>
+              <UserSearch className="h-3 w-3" /> {trPT("Filtrando por usuario:")} <code className="bg-muted px-1.5 py-0.5 rounded">{filters.user_id.slice(0, 8)}…</code>
               <Button size="sm" variant="ghost" className="h-5 px-1" onClick={() => { setFilters(f => ({ ...f, user_id: "" })); setTimeout(fetchLogs, 0); }}>
                 <X className="h-3 w-3" />
               </Button>
@@ -321,7 +322,7 @@ export default function Auditoria() {
           ) : logs.length === 0 ? (
             <div className="text-center py-16">
               <ShieldAlert className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Sin eventos para los filtros aplicados</p>
+              <p className="text-sm text-muted-foreground">{trPT("Sin eventos para los filtros aplicados")}</p>
             </div>
           ) : (
             <>
@@ -330,7 +331,7 @@ export default function Auditoria() {
                 <div className="col-span-2">Usuario</div>
                 <div className="col-span-2">Empresa</div>
                 <div className="col-span-2">Entidad</div>
-                <div className="col-span-3">Acción / Descripción</div>
+                <div className="col-span-3">{trPT("Acción / Descripción")}</div>
                 <div className="col-span-1 text-right">Acciones</div>
               </div>
               <div className="divide-y">
@@ -349,7 +350,7 @@ export default function Auditoria() {
                     <div className="col-span-2 flex items-center gap-1.5 min-w-0">
                       <UserIcon className="h-3 w-3 shrink-0 text-muted-foreground" />
                       <div className="min-w-0">
-                        <p className="font-medium truncate">{l.user_name ?? "Sistema"}</p>
+                        <p className="font-medium truncate">{l.user_name ?? trPT("Sistema")}</p>
                         {l.user_email && <p className="text-[10px] text-muted-foreground truncate">{l.user_email}</p>}
                       </div>
                     </div>
@@ -369,7 +370,7 @@ export default function Auditoria() {
                           {actionIcon(l.action)} {l.action}
                         </Badge>
                       </div>
-                      {l.description && <p className="text-[10px] text-muted-foreground line-clamp-2 mt-1">{l.description}</p>}
+                      {l.description && <p className="text-[10px] text-muted-foreground line-clamp-2 mt-1">{trPT(l.description)}</p>}
                     </div>
                     <div className="col-span-1 flex justify-end items-start">
                       <DropdownMenu>
@@ -381,26 +382,26 @@ export default function Auditoria() {
                         <DropdownMenuContent align="end" className="w-56">
                           <DropdownMenuLabel className="text-[10px]">Acciones</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => setDetail(l)} className="text-xs">
-                            <Eye className="h-3.5 w-3.5 mr-2" /> Ver detalle completo
+                            <Eye className="h-3.5 w-3.5 mr-2" /> {trPT("Ver detalle completo")}
                           </DropdownMenuItem>
                           {l.entity_id && (
                             <DropdownMenuItem onClick={() => openEntityHistory(l)} className="text-xs">
-                              <History className="h-3.5 w-3.5 mr-2" /> Historial de esta entidad
+                              <History className="h-3.5 w-3.5 mr-2" /> {trPT("Historial de esta entidad")}
                             </DropdownMenuItem>
                           )}
                           {ENTITY_ROUTES[l.entity_type] && l.entity_id && (
                             <DropdownMenuItem onClick={() => goToEntity(l)} className="text-xs">
-                              <ExternalLink className="h-3.5 w-3.5 mr-2" /> Abrir entidad
+                              <ExternalLink className="h-3.5 w-3.5 mr-2" /> {trPT("Abrir entidad")}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
                           {l.performed_by && (
                             <DropdownMenuItem onClick={() => filterByUser(l)} className="text-xs">
-                              <UserSearch className="h-3.5 w-3.5 mr-2" /> Filtrar por este usuario
+                              <UserSearch className="h-3.5 w-3.5 mr-2" /> {trPT("Filtrar por este usuario")}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => filterByEntityType(l)} className="text-xs">
-                            <Layers className="h-3.5 w-3.5 mr-2" /> Filtrar por tipo "{l.entity_type}"
+                            <Layers className="h-3.5 w-3.5 mr-2" /> {trPT("Filtrar por tipo \"")}{l.entity_type}"
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -410,7 +411,7 @@ export default function Auditoria() {
               </div>
               <div className="flex items-center justify-between px-4 py-3 border-t text-xs">
                 <span className="text-muted-foreground">
-                  Página {page + 1} de {Math.max(1, totalPages)} · {total.toLocaleString()} eventos
+                  {trPT("Página")} {page + 1} de {Math.max(1, totalPages)} · {total.toLocaleString()} eventos
                 </span>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage(p => p - 1)} className="text-xs h-8">Anterior</Button>
@@ -436,14 +437,14 @@ export default function Auditoria() {
           {detail && (
             <Tabs defaultValue="info" className="w-full">
               <TabsList className="grid grid-cols-2 w-full">
-                <TabsTrigger value="info" className="text-xs">Información</TabsTrigger>
-                <TabsTrigger value="meta" className="text-xs">Metadata JSON</TabsTrigger>
+                <TabsTrigger value="info" className="text-xs">{trPT("Información")}</TabsTrigger>
+                <TabsTrigger value="meta" className="text-xs">{trPT("Metadata JSON")}</TabsTrigger>
               </TabsList>
               <TabsContent value="info" className="space-y-3 mt-3">
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
                     <p className="text-muted-foreground text-[10px] uppercase">Usuario</p>
-                    <p className="font-medium">{detail.user_name ?? "Sistema"}</p>
+                    <p className="font-medium">{detail.user_name ?? trPT("Sistema")}</p>
                     {detail.user_email && <p className="text-[10px] text-muted-foreground">{detail.user_email}</p>}
                   </div>
                   <div>
@@ -451,24 +452,24 @@ export default function Auditoria() {
                     <p className="font-medium">{detail.tenant_name ?? "—"}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-[10px] uppercase">Tipo entidad</p>
+                    <p className="text-muted-foreground text-[10px] uppercase">{trPT("Tipo entidad")}</p>
                     <Badge variant="secondary" className="capitalize">{detail.entity_type}</Badge>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-[10px] uppercase">Entity ID</p>
+                    <p className="text-muted-foreground text-[10px] uppercase">{trPT("Entity ID")}</p>
                     <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded break-all">{detail.entity_id ?? "—"}</code>
                   </div>
                 </div>
                 {detail.description && (
                   <div>
-                    <p className="text-muted-foreground text-[10px] uppercase mb-1">Descripción</p>
-                    <p className="text-xs bg-muted/50 p-2 rounded">{detail.description}</p>
+                    <p className="text-muted-foreground text-[10px] uppercase mb-1">{trPT("Descripción")}</p>
+                    <p className="text-xs bg-muted/50 p-2 rounded">{trPT(detail.description)}</p>
                   </div>
                 )}
               </TabsContent>
               <TabsContent value="meta" className="mt-3">
                 <pre className="text-[10px] bg-muted/50 p-3 rounded overflow-auto max-h-[400px]">
-                  {detail.metadata ? JSON.stringify(detail.metadata, null, 2) : "Sin metadata"}
+                  {detail.metadata ? JSON.stringify(detail.metadata, null, 2) : trPT("Sin metadata")}
                 </pre>
               </TabsContent>
             </Tabs>
@@ -477,12 +478,12 @@ export default function Auditoria() {
             <div className="flex gap-2 flex-wrap">
               {detail?.entity_id && (
                 <Button size="sm" variant="outline" onClick={() => detail && openEntityHistory(detail)} className="text-xs">
-                  <History className="h-3.5 w-3.5 mr-1" /> Ver historial
+                  <History className="h-3.5 w-3.5 mr-1" /> {trPT("Ver historial")}
                 </Button>
               )}
               {detail && ENTITY_ROUTES[detail.entity_type] && detail.entity_id && (
                 <Button size="sm" variant="outline" onClick={() => { goToEntity(detail); setDetail(null); }} className="text-xs">
-                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Abrir entidad
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> {trPT("Abrir entidad")}
                 </Button>
               )}
             </div>
@@ -496,7 +497,7 @@ export default function Auditoria() {
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <History className="h-4 w-4" /> Historial completo de la entidad
+              <History className="h-4 w-4" /> {trPT("Historial completo de la entidad")}
             </DialogTitle>
             <DialogDescription className="text-xs">
               {entityHistory.log && (
@@ -510,7 +511,7 @@ export default function Auditoria() {
           {entityHistory.loading ? (
             <div className="flex justify-center py-12"><div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>
           ) : entityHistory.logs.length === 0 ? (
-            <p className="text-center text-xs text-muted-foreground py-8">Sin historial</p>
+            <p className="text-center text-xs text-muted-foreground py-8">{trPT("Sin historial")}</p>
           ) : (
             <div className="relative pl-6 space-y-3 max-h-[500px] overflow-y-auto">
               <div className="absolute left-2 top-2 bottom-2 w-px bg-border" />
@@ -528,13 +529,13 @@ export default function Auditoria() {
                         </span>
                       </div>
                       <span className="text-[10px] text-muted-foreground">
-                        {l.user_name ?? l.user_email ?? "Sistema"}
+                        {l.user_name ?? l.user_email ?? trPT("Sistema")}
                       </span>
                     </div>
-                    {l.description && <p className="text-xs mt-2">{l.description}</p>}
+                    {l.description && <p className="text-xs mt-2">{trPT(l.description)}</p>}
                     {l.metadata && Object.keys(l.metadata).length > 0 && (
                       <details className="mt-2">
-                        <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">Ver metadata</summary>
+                        <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">{trPT("Ver metadata")}</summary>
                         <pre className="text-[9px] bg-background p-2 rounded mt-1 overflow-auto">{JSON.stringify(l.metadata, null, 2)}</pre>
                       </details>
                     )}

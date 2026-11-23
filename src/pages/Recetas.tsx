@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
@@ -191,12 +192,12 @@ export default function Recetas() {
   const saveRecipe = async () => {
     if (!tenantId) return;
     if (!header.name.trim()) {
-      toast({ title: "Indica el nombre del producto preparado", variant: "destructive" });
+      toast({ title: trPT("Indica el nombre del producto preparado"), variant: "destructive" });
       return;
     }
     const valid = draftLines.filter((l) => l.ingredient_id && parseFloat(l.quantity) > 0);
     if (valid.length === 0) {
-      toast({ title: "Agrega al menos un ingrediente", variant: "destructive" });
+      toast({ title: trPT("Agrega al menos un ingrediente"), variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -241,7 +242,7 @@ export default function Recetas() {
       );
       if (insErr) throw insErr;
 
-      toast({ title: "Receta guardada", description: `${valid.length} ingredientes · costo unitario $${draftUnitCost.toFixed(2)}` });
+      toast({ title: trPT("Receta guardada"), description: `${valid.length} ingredientes · costo unitario $${draftUnitCost.toFixed(2)}` });
       setDialogOpen(false);
       setNewParentId("");
       setHeader(emptyHeader);
@@ -254,11 +255,11 @@ export default function Recetas() {
   };
 
   const deleteRecipe = async (productId: string) => {
-    if (!confirm("¿Eliminar la receta completa?")) return;
+    if (!confirm(trPT("¿Eliminar la receta completa?"))) return;
     const { error } = await supabase.from("product_recipes").delete().eq("product_id", productId);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     await supabase.from("products").update({ product_type: "simple" } as any).eq("id", productId);
-    toast({ title: "Receta eliminada" });
+    toast({ title: trPT("Receta eliminada") });
     fetchAll();
   };
 
@@ -273,21 +274,21 @@ export default function Recetas() {
           <Card><CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center"><ChefHat className="h-5 w-5 text-primary" /></div>
             <div>
-              <p className="text-[10px] text-muted-foreground">Productos preparados</p>
+              <p className="text-[10px] text-muted-foreground">{trPT("Productos preparados")}</p>
               <p className="font-heading font-bold text-lg">{productsWithRecipes.length}</p>
             </div>
           </CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center"><Package className="h-5 w-5 text-success" /></div>
             <div>
-              <p className="text-[10px] text-muted-foreground">Líneas de receta</p>
+              <p className="text-[10px] text-muted-foreground">{trPT("Líneas de receta")}</p>
               <p className="font-heading font-bold text-lg">{recipes.length}</p>
             </div>
           </CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center"><DollarSign className="h-5 w-5 text-warning" /></div>
             <div>
-              <p className="text-[10px] text-muted-foreground">Insumos de stock</p>
+              <p className="text-[10px] text-muted-foreground">{trPT("Insumos de stock")}</p>
               <p className="font-heading font-bold text-lg">{stockProducts.length}</p>
             </div>
           </CardContent></Card>
@@ -295,29 +296,29 @@ export default function Recetas() {
 
         <div className="flex items-center justify-between flex-wrap gap-2">
           <p className="text-sm text-muted-foreground">
-            Una receta es la mezcla de productos del stock. Define el nombre, la descripción y el rendimiento del plato o coctel; el stock de los insumos se descuenta al vender.
+            {trPT("Una receta es la mezcla de productos del stock. Define el nombre, la descripción y el rendimiento del plato o coctel; el stock de los insumos se descuenta al vender.")}
           </p>
           <Button size="sm" onClick={openNew} className="gap-1 text-xs gradient-brand text-primary-foreground">
-            <Plus className="h-3.5 w-3.5" /> Nueva Receta
+            <Plus className="h-3.5 w-3.5" /> {trPT("Nueva Receta")}
           </Button>
         </div>
 
         <TableToolbar
           search={tableState.search}
           onSearchChange={tableState.setSearch}
-          searchPlaceholder="Buscar receta…"
+          searchPlaceholder={trPT("Buscar receta…")}
         />
 
         <div className="bg-card rounded-xl shadow-card border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs">Producto preparado</TableHead>
+                <TableHead className="text-xs">{trPT("Producto preparado")}</TableHead>
                 <TableHead className="text-xs">SKU</TableHead>
                 <TableHead className="text-xs">Ingredientes</TableHead>
                 <TableHead className="text-xs">Rend.</TableHead>
-                <TableHead className="text-xs">Precio venta</TableHead>
-                <TableHead className="text-xs">Costo unitario</TableHead>
+                <TableHead className="text-xs">{trPT("Precio venta")}</TableHead>
+                <TableHead className="text-xs">{trPT("Costo unitario")}</TableHead>
                 <TableHead className="text-xs">Margen</TableHead>
                 <TableHead className="text-xs w-24">Acciones</TableHead>
               </TableRow>
@@ -327,7 +328,7 @@ export default function Recetas() {
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-xs">
                     <Utensils className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    No hay recetas todavía. Crea la primera para automatizar el descuento de inventario.
+                    {trPT("No hay recetas todavía. Crea la primera para automatizar el descuento de inventario.")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -340,7 +341,7 @@ export default function Recetas() {
                     <TableRow key={p.id} className="hover:bg-muted/20">
                       <TableCell className="text-xs font-heading font-semibold">
                         {p.name}
-                        {p.description && <span className="block text-[10px] font-normal text-muted-foreground truncate max-w-[220px]">{p.description}</span>}
+                        {p.description && <span className="block text-[10px] font-normal text-muted-foreground truncate max-w-[220px]">{trPT(p.description)}</span>}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{p.sku}</TableCell>
                       <TableCell className="text-xs">
@@ -373,9 +374,9 @@ export default function Recetas() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingProduct ? `Receta: ${editingProduct.name}` : "Nueva receta"}</DialogTitle>
+              <DialogTitle>{editingProduct ? `Receta: ${editingProduct.name}` : trPT("Nueva receta")}</DialogTitle>
               <DialogDescription>
-                Los ingredientes son productos del stock. Cada venta del producto preparado descuenta sus insumos.
+                {trPT("Los ingredientes son productos del stock. Cada venta del producto preparado descuenta sus insumos.")}
               </DialogDescription>
             </DialogHeader>
 
@@ -383,19 +384,19 @@ export default function Recetas() {
               {!editingProduct && (
                 <div className="flex gap-2">
                   <Button size="sm" variant={mode === "new" ? "default" : "outline"} className="text-xs" onClick={() => { setMode("new"); setNewParentId(""); setHeader(emptyHeader); }}>
-                    Crear producto nuevo
+                    {trPT("Crear producto nuevo")}
                   </Button>
                   <Button size="sm" variant={mode === "existing" ? "default" : "outline"} className="text-xs" onClick={() => setMode("existing")}>
-                    Usar producto existente
+                    {trPT("Usar producto existente")}
                   </Button>
                 </div>
               )}
 
               {!editingProduct && mode === "existing" && (
                 <div>
-                  <Label className="text-xs">Producto existente</Label>
+                  <Label className="text-xs">{trPT("Producto existente")}</Label>
                   <Select value={newParentId} onValueChange={selectExistingParent}>
-                    <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={trPT("Selecciona…")} /></SelectTrigger>
                     <SelectContent>
                       {availableParents.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>
@@ -408,41 +409,41 @@ export default function Recetas() {
               {/* Cabecera del producto preparado */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Nombre del producto preparado *</Label>
-                  <Input className="h-9 text-xs" value={header.name} onChange={(e) => setHeader({ ...header, name: e.target.value })} placeholder="Mojito clásico" />
+                  <Label className="text-xs">{trPT("Nombre del producto preparado *")}</Label>
+                  <Input className="h-9 text-xs" value={header.name} onChange={(e) => setHeader({ ...header, name: e.target.value })} placeholder={trPT("Mojito clásico")} />
                 </div>
                 <div>
                   <Label className="text-xs">SKU</Label>
-                  <Input className="h-9 text-xs" value={header.sku} onChange={(e) => setHeader({ ...header, sku: e.target.value })} placeholder="Se genera automáticamente" />
+                  <Input className="h-9 text-xs" value={header.sku} onChange={(e) => setHeader({ ...header, sku: e.target.value })} placeholder={trPT("Se genera automáticamente")} />
                 </div>
                 <div>
-                  <Label className="text-xs">Categoría</Label>
+                  <Label className="text-xs">{trPT("Categoría")}</Label>
                   <Input className="h-9 text-xs" value={header.category} onChange={(e) => setHeader({ ...header, category: e.target.value })} placeholder="Cocteles" />
                 </div>
                 <div>
-                  <Label className="text-xs">Precio de venta</Label>
+                  <Label className="text-xs">{trPT("Precio de venta")}</Label>
                   <Input type="number" step="0.01" className="h-9 text-xs" value={header.price} onChange={(e) => setHeader({ ...header, price: e.target.value })} />
                 </div>
                 <div>
-                  <Label className="text-xs">Rendimiento (porciones que produce)</Label>
+                  <Label className="text-xs">{trPT("Rendimiento (porciones que produce)")}</Label>
                   <Input type="number" step="1" min="1" className="h-9 text-xs" value={header.recipe_yield} onChange={(e) => setHeader({ ...header, recipe_yield: e.target.value })} />
                 </div>
                 <div className="sm:col-span-2">
-                  <Label className="text-xs">Descripción</Label>
-                  <Textarea rows={2} className="text-xs" value={header.description} onChange={(e) => setHeader({ ...header, description: e.target.value })} placeholder="Descripción comercial que verá el cliente…" />
+                  <Label className="text-xs">{trPT("Descripción")}</Label>
+                  <Textarea rows={2} className="text-xs" value={header.description} onChange={(e) => setHeader({ ...header, description: e.target.value })} placeholder={trPT("Descripción comercial que verá el cliente…")} />
                 </div>
                 <div className="sm:col-span-2">
-                  <Label className="text-xs">Preparación / notas de cocina</Label>
-                  <Textarea rows={3} className="text-xs" value={header.recipe_notes} onChange={(e) => setHeader({ ...header, recipe_notes: e.target.value })} placeholder="Pasos, tiempos, presentación, alérgenos…" />
+                  <Label className="text-xs">{trPT("Preparación / notas de cocina")}</Label>
+                  <Textarea rows={3} className="text-xs" value={header.recipe_notes} onChange={(e) => setHeader({ ...header, recipe_notes: e.target.value })} placeholder={trPT("Pasos, tiempos, presentación, alérgenos…")} />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs">Ingredientes (productos del stock)</Label>
+                <Label className="text-xs">{trPT("Ingredientes (productos del stock)")}</Label>
                 {draftLines.map((l, i) => (
                   <div key={i} className="grid grid-cols-[1fr_90px_110px_36px] gap-2 items-center">
                     <Select value={l.ingredient_id} onValueChange={(v) => updateLine(i, "ingredient_id", v)}>
-                      <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Ingrediente…" /></SelectTrigger>
+                      <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={trPT("Ingrediente…")} /></SelectTrigger>
                       <SelectContent>
                         {stockProducts
                           .filter((p) => p.id !== parentIdInDialog)
@@ -471,17 +472,17 @@ export default function Recetas() {
                   </div>
                 ))}
                 <Button size="sm" variant="outline" onClick={addLine} className="text-xs gap-1">
-                  <Plus className="h-3.5 w-3.5" /> Añadir ingrediente
+                  <Plus className="h-3.5 w-3.5" /> {trPT("Añadir ingrediente")}
                 </Button>
               </div>
 
               <div className="grid grid-cols-3 gap-2 rounded-lg border bg-muted/30 p-3 text-xs">
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Costo total receta</p>
+                  <p className="text-[10px] text-muted-foreground">{trPT("Costo total receta")}</p>
                   <p className="font-heading font-bold">${draftCost.toFixed(2)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Costo unitario</p>
+                  <p className="text-[10px] text-muted-foreground">{trPT("Costo unitario")}</p>
                   <p className="font-heading font-bold">${draftUnitCost.toFixed(2)}</p>
                 </div>
                 <div>
@@ -494,7 +495,7 @@ export default function Recetas() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
               <Button onClick={saveRecipe} disabled={saving} className="gradient-brand text-primary-foreground">
-                {saving ? "Guardando…" : "Guardar receta"}
+                {saving ? "Guardando…" : trPT("Guardar receta")}
               </Button>
             </DialogFooter>
           </DialogContent>

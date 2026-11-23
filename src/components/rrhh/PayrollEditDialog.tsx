@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -65,8 +66,8 @@ export function PayrollEditDialog({ payroll, onOpenChange, onSaved }: Props) {
       p_payment_method: form.method,
     });
     setSaving(false);
-    if (error) return toast({ title: "No se pudo guardar", description: error.message, variant: "destructive" });
-    toast({ title: "Nómina actualizada", description: `Neto recalculado: $${net.toFixed(2)}` });
+    if (error) return toast({ title: trPT("No se pudo guardar"), description: error.message, variant: "destructive" });
+    toast({ title: trPT("Nómina actualizada"), description: `Neto recalculado: $${net.toFixed(2)}` });
     onOpenChange(false);
     onSaved();
   };
@@ -75,7 +76,7 @@ export function PayrollEditDialog({ payroll, onOpenChange, onSaved }: Props) {
     <Dialog open={!!payroll} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar nómina</DialogTitle>
+          <DialogTitle>{trPT("Editar nómina")}</DialogTitle>
           <DialogDescription>
             {payroll?.employees?.name} · {payroll?.period_start} → {payroll?.period_end}
           </DialogDescription>
@@ -83,17 +84,17 @@ export function PayrollEditDialog({ payroll, onOpenChange, onSaved }: Props) {
 
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <div><Label className="text-xs">Salario base del período</Label>
+            <div><Label className="text-xs">{trPT("Salario base del período")}</Label>
               <Input type="number" step="0.01" value={form.base} onChange={(e) => setForm({ ...form, base: e.target.value })} /></div>
-            <div><Label className="text-xs">Horas trabajadas</Label>
+            <div><Label className="text-xs">{trPT("Horas trabajadas")}</Label>
               <Input type="number" step="0.01" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} /></div>
-            <div><Label className="text-xs">Bonos / incentivos</Label>
+            <div><Label className="text-xs">{trPT("Bonos / incentivos")}</Label>
               <Input type="number" step="0.01" value={form.bonus} onChange={(e) => setForm({ ...form, bonus: e.target.value })} /></div>
             <div><Label className="text-xs">Deducciones</Label>
               <Input type="number" step="0.01" value={form.ded} onChange={(e) => setForm({ ...form, ded: e.target.value })} /></div>
           </div>
 
-          <div><Label className="text-xs">Forma de pago</Label>
+          <div><Label className="text-xs">{trPT("Forma de pago")}</Label>
             <Select value={form.method} onValueChange={(v) => setForm({ ...form, method: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -106,12 +107,12 @@ export function PayrollEditDialog({ payroll, onOpenChange, onSaved }: Props) {
           </div>
 
           <div><Label className="text-xs">Notas</Label>
-            <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Justificación de ajustes, incidencias del período…" /></div>
+            <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={trPT("Justificación de ajustes, incidencias del período…")} /></div>
 
           <div className="rounded-lg border p-3 text-sm space-y-1">
             <div className="flex justify-between"><span className="text-muted-foreground">Bruto</span><span className="tabular-nums">${gross.toFixed(2)}</span></div>
             <div className="flex justify-between text-destructive"><span>Deducciones</span><span className="tabular-nums">-${n(form.ded).toFixed(2)}</span></div>
-            <div className="flex justify-between border-t pt-1 font-bold"><span>Neto a pagar</span><span className="tabular-nums">${net.toFixed(2)}</span></div>
+            <div className="flex justify-between border-t pt-1 font-bold"><span>{trPT("Neto a pagar")}</span><span className="tabular-nums">${net.toFixed(2)}</span></div>
           </div>
         </div>
 

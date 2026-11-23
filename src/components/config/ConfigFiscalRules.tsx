@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 // Sprint D — Configuración del motor fiscal: catálogo por país + reglas propias.
 
 import { useState } from "react";
@@ -117,7 +118,7 @@ export function ConfigFiscalRules() {
       const { error } = await supabase.from("fiscal_rules").delete().eq("id", id);
       if (error) throw new Error(error.message);
     },
-    onSuccess: () => { toast.success("Regla eliminada"); invalidate(); },
+    onSuccess: () => { toast.success(trPT("Regla eliminada")); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -135,7 +136,7 @@ export function ConfigFiscalRules() {
   const sourceBadge = (r: FiscalRule) =>
     r.source === "tenant"
       ? <Badge variant="default" className="text-[10px]">Propia</Badge>
-      : <Badge variant="secondary" className="text-[10px]">Catálogo</Badge>;
+      : <Badge variant="secondary" className="text-[10px]">{trPT("Catálogo")}</Badge>;
 
   return (
     <div className="space-y-4">
@@ -146,10 +147,9 @@ export function ConfigFiscalRules() {
               <Scale className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-base font-semibold">Motor fiscal</h3>
+              <h3 className="text-base font-semibold">{trPT("Motor fiscal")}</h3>
               <p className="text-xs text-muted-foreground max-w-xl">
-                Las reglas se resuelven en el servidor: primero las de tu empresa, después el catálogo
-                del país. Nada está codificado en la aplicación.
+                {trPT("Las reglas se resuelven en el servidor: primero las de tu empresa, después el catálogo del país. Nada está codificado en la aplicación.")}
               </p>
             </div>
           </div>
@@ -159,7 +159,7 @@ export function ConfigFiscalRules() {
             </Badge>
             {canCreate("configuracion") && (
               <Button size="sm" onClick={openNew} className="gap-1">
-                <Plus className="h-4 w-4" /> Nueva regla
+                <Plus className="h-4 w-4" /> {trPT("Nueva regla")}
               </Button>
             )}
           </div>
@@ -169,10 +169,10 @@ export function ConfigFiscalRules() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Código</TableHead>
+                <TableHead>{trPT("Código")}</TableHead>
                 <TableHead>Nombre</TableHead>
                 <TableHead className="hidden md:table-cell">Tipo</TableHead>
-                <TableHead className="hidden sm:table-cell">Ámbito</TableHead>
+                <TableHead className="hidden sm:table-cell">{trPT("Ámbito")}</TableHead>
                 <TableHead className="text-right">Tasa</TableHead>
                 <TableHead>Origen</TableHead>
               </TableRow>
@@ -183,7 +183,7 @@ export function ConfigFiscalRules() {
                   <TableCell className="font-mono text-xs">{r.code}</TableCell>
                   <TableCell className="text-sm">
                     {r.name}
-                    {r.is_default && <Badge variant="outline" className="ml-2 text-[10px]">por defecto</Badge>}
+                    {r.is_default && <Badge variant="outline" className="ml-2 text-[10px]">{trPT("por defecto")}</Badge>}
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
                     {RULE_TYPE_LABELS[r.rule_type] ?? r.rule_type}
@@ -198,12 +198,12 @@ export function ConfigFiscalRules() {
               {!effective.isLoading && (effective.data ?? []).length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
-                    Sin reglas vigentes para este país.
+                    {trPT("Sin reglas vigentes para este país.")}
                   </TableCell>
                 </TableRow>
               )}
               {effective.isLoading && (
-                <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">Cargando…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">{trPT("Cargando…")}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -211,12 +211,12 @@ export function ConfigFiscalRules() {
       </Card>
 
       <Card className="p-4 space-y-3">
-        <h4 className="text-sm font-semibold">Reglas propias de la empresa</h4>
+        <h4 className="text-sm font-semibold">{trPT("Reglas propias de la empresa")}</h4>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Código</TableHead>
+                <TableHead>{trPT("Código")}</TableHead>
                 <TableHead>Nombre</TableHead>
                 <TableHead className="text-right">Tasa</TableHead>
                 <TableHead>Estado</TableHead>
@@ -231,7 +231,7 @@ export function ConfigFiscalRules() {
                   <TableCell className="text-right">{r.rate}%</TableCell>
                   <TableCell>
                     <Badge variant={r.is_active ? "default" : "secondary"} className="text-[10px]">
-                      {r.is_active ? "Activa" : "Inactiva"}
+                      {r.is_active ? trPT("Activa") : trPT("Inactiva")}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -253,7 +253,7 @@ export function ConfigFiscalRules() {
               {(ownRules.data ?? []).length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-6">
-                    Aún no has creado reglas propias. Se aplica el catálogo del país.
+                    {trPT("Aún no has creado reglas propias. Se aplica el catálogo del país.")}
                   </TableCell>
                 </TableRow>
               )}
@@ -264,15 +264,15 @@ export function ConfigFiscalRules() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editingId ? "Editar regla fiscal" : "Nueva regla fiscal"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingId ? trPT("Editar regla fiscal") : trPT("Nueva regla fiscal")}</DialogTitle></DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <Label>Código</Label>
+              <Label>{trPT("Código")}</Label>
               <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="ES_IVA_GEN" />
             </div>
             <div>
               <Label>Nombre</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="IVA general" />
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={trPT("IVA general")} />
             </div>
             <div>
               <Label>Tipo</Label>
@@ -284,7 +284,7 @@ export function ConfigFiscalRules() {
               </Select>
             </div>
             <div>
-              <Label>Ámbito</Label>
+              <Label>{trPT("Ámbito")}</Label>
               <Select value={form.applies_to} onValueChange={(v) => setForm({ ...form, applies_to: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -293,21 +293,21 @@ export function ConfigFiscalRules() {
               </Select>
             </div>
             <div>
-              <Label>Tasa (%) · negativa para retenciones</Label>
+              <Label>{trPT("Tasa (%) · negativa para retenciones")}</Label>
               <Input type="number" step="0.0001" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} />
             </div>
             <div>
-              <Label>Base de cálculo</Label>
+              <Label>{trPT("Base de cálculo")}</Label>
               <Select value={form.base} onValueChange={(v) => setForm({ ...form, base: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="net">Sobre base imponible</SelectItem>
-                  <SelectItem value="gross">Sobre importe bruto</SelectItem>
+                  <SelectItem value="net">{trPT("Sobre base imponible")}</SelectItem>
+                  <SelectItem value="gross">{trPT("Sobre importe bruto")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center justify-between rounded-md border p-2">
-              <Label className="text-xs">Aplicar por defecto</Label>
+              <Label className="text-xs">{trPT("Aplicar por defecto")}</Label>
               <Switch checked={form.is_default} onCheckedChange={(v) => setForm({ ...form, is_default: v })} />
             </div>
             <div className="flex items-center justify-between rounded-md border p-2">
@@ -318,7 +318,7 @@ export function ConfigFiscalRules() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
             <Button onClick={() => save.mutate()} disabled={save.isPending}>
-              {save.isPending ? "Guardando…" : "Guardar"}
+              {save.isPending ? "Guardando…" : trPT("Guardar")}
             </Button>
           </DialogFooter>
         </DialogContent>

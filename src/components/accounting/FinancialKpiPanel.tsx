@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -217,10 +218,10 @@ export function FinancialKpiPanel() {
               <div className="rounded-lg border bg-card/50 p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <tile.icon className={`h-3.5 w-3.5 ${tile.tone}`} />
-                  {tile.label}
+                  {trPT(tile.label)}
                 </div>
                 <div className="mt-1 text-lg font-semibold">{tile.value}</div>
-                <p className="mt-1 text-[10px] text-muted-foreground leading-snug">{tile.hint}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground leading-snug">{trPT(tile.hint)}</p>
                 {rows.length > 0 && (
                   <>
                     <CollapsibleTrigger className="mt-1 flex items-center gap-1 text-[10px] text-primary hover:underline">

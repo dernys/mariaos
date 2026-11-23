@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,7 +66,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    aria-label="Menú de usuario"
+                    aria-label={trPT("Menú de usuario")}
                     className="h-8 w-8 rounded-full gradient-brand flex items-center justify-center text-primary-foreground text-xs font-bold font-heading ml-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {initials}
@@ -92,16 +93,16 @@ export function AppLayout({ children, title }: AppLayoutProps) {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => nav("/portal-empleado")} className="gap-2 text-sm">
-                    <UserIcon className="h-4 w-4" /> Mi perfil
+                    <UserIcon className="h-4 w-4" /> {trPT("Mi perfil")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => nav("/turnos")} className="gap-2 text-sm">
-                    <Clock className="h-4 w-4" /> Mis turnos
+                    <Clock className="h-4 w-4" /> {trPT("Mis turnos")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => nav("/configuracion")} className="gap-2 text-sm">
-                    <Settings className="h-4 w-4" /> Configuración
+                    <Settings className="h-4 w-4" /> {trPT("Configuración")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => nav("/roles")} className="gap-2 text-sm">
-                    <ShieldCheck className="h-4 w-4" /> Roles y permisos
+                    <ShieldCheck className="h-4 w-4" /> {trPT("Roles y permisos")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -111,7 +112,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
                     }}
                     className="gap-2 text-sm text-destructive focus:text-destructive"
                   >
-                    <LogOut className="h-4 w-4" /> Cerrar sesión
+                    <LogOut className="h-4 w-4" /> {trPT("Cerrar sesión")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

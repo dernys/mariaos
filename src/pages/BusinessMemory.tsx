@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -25,15 +26,15 @@ export default function BusinessMemory() {
   return (
     <AppLayout title={t("nav.items.memory")}>
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Aprendizaje organizacional acumulado a partir de decisiones, resultados y eventos.</p>
-        <Input placeholder="Buscar en la memoria..." value={q} onChange={(e) => setQ(e.target.value)} className="max-w-md" />
-        {filtered.length === 0 && <Card><CardContent className="py-12 text-center text-sm text-muted-foreground"><Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />Sin recuerdos aún.</CardContent></Card>}
+        <p className="text-sm text-muted-foreground">{trPT("Aprendizaje organizacional acumulado a partir de decisiones, resultados y eventos.")}</p>
+        <Input placeholder={trPT("Buscar en la memoria...")} value={q} onChange={(e) => setQ(e.target.value)} className="max-w-md" />
+        {filtered.length === 0 && <Card><CardContent className="py-12 text-center text-sm text-muted-foreground"><Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />{trPT("Sin recuerdos aún.")}</CardContent></Card>}
         <div className="space-y-3">
           {filtered.map((d) => (
             <Card key={d.id} className="border-border/50">
               <CardHeader>
-                <div className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" /><CardTitle className="text-sm">{d.title}</CardTitle></div>
-                <p className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(d.created_at), { locale: es, addSuffix: true })} · estado: {d.status}</p>
+                <div className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" /><CardTitle className="text-sm">{trPT(d.title)}</CardTitle></div>
+                <p className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(d.created_at), { locale: es, addSuffix: true })} {trPT("· estado:")} {d.status}</p>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground line-clamp-3">{d.reasoning ?? JSON.stringify(d.recommendation)?.slice(0, 240)}</p>

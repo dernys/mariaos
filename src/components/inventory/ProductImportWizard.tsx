@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -56,12 +57,12 @@ export function ProductImportWizard({
   const close = (v: boolean) => { if (!v) reset(); onOpenChange(v); };
 
   const handleFile = async (file: File) => {
-    if (!/\.(xlsx|xls)$/i.test(file.name)) { toast.error("Solo se admiten archivos .xlsx o .xls"); return; }
-    if (file.size > MAX_IMPORT_BYTES) { toast.error("El archivo supera los 5 MB permitidos"); return; }
+    if (!/\.(xlsx|xls)$/i.test(file.name)) { toast.error(trPT("Solo se admiten archivos .xlsx o .xls")); return; }
+    if (file.size > MAX_IMPORT_BYTES) { toast.error(trPT("El archivo supera los 5 MB permitidos")); return; }
     try {
       const buf = await file.arrayBuffer();
       const { headers: h, rows: r } = parseWorkbook(buf);
-      if (r.length === 0) { toast.error("El archivo no contiene filas de datos"); return; }
+      if (r.length === 0) { toast.error(trPT("El archivo no contiene filas de datos")); return; }
       if (r.length > MAX_IMPORT_ROWS) { toast.error(`Máximo ${MAX_IMPORT_ROWS} filas por archivo`); return; }
       setFileName(file.name);
       setHeaders(h);
@@ -140,10 +141,10 @@ export function ProductImportWizard({
       <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-heading flex items-center gap-2">
-            <FileSpreadsheet className="h-4 w-4 text-primary" /> Importación masiva de productos
+            <FileSpreadsheet className="h-4 w-4 text-primary" /> {trPT("Importación masiva de productos")}
           </DialogTitle>
           <DialogDescription>
-            Paso {step} de 5 — {STEP_LABELS[step]}
+            Paso {step} {trPT("de 5 —")} {STEP_LABELS[step]}
           </DialogDescription>
         </DialogHeader>
 
@@ -161,14 +162,14 @@ export function ProductImportWizard({
               <div className="rounded-xl border border-dashed p-6 text-center space-y-3">
                 <FileSpreadsheet className="h-8 w-8 mx-auto text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  Descarga la plantilla, complétala y vuelve a subirla. Formatos admitidos: .xlsx y .xls (máx. 5 MB, {MAX_IMPORT_ROWS} filas).
+                  {trPT("Descarga la plantilla, complétala y vuelve a subirla. Formatos admitidos: .xlsx y .xls (máx. 5 MB,")} {MAX_IMPORT_ROWS} {trPT("filas).")}
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => downloadTemplate()} className="gap-1">
-                    <Download className="h-3.5 w-3.5" /> Descargar plantilla Excel
+                    <Download className="h-3.5 w-3.5" /> {trPT("Descargar plantilla Excel")}
                   </Button>
                   <Button size="sm" className="gap-1" onClick={() => fileRef.current?.click()}>
-                    <Upload className="h-3.5 w-3.5" /> Subir archivo
+                    <Upload className="h-3.5 w-3.5" /> {trPT("Subir archivo")}
                   </Button>
                 </div>
                 <input
@@ -177,12 +178,12 @@ export function ProductImportWizard({
                 />
               </div>
               <div className="rounded-lg border bg-muted/30 p-3">
-                <p className="text-xs font-semibold mb-2">Columnas de la plantilla</p>
+                <p className="text-xs font-semibold mb-2">{trPT("Columnas de la plantilla")}</p>
                 <div className="grid gap-1 sm:grid-cols-2">
                   {IMPORT_FIELDS.map((f) => (
                     <p key={f.key} className="text-[11px] text-muted-foreground">
                       <span className="font-medium text-foreground">{f.header}</span>
-                      {f.required && <span className="text-destructive"> *</span>} — {f.hint}
+                      {f.required && <span className="text-destructive"> *</span>} — {trPT(f.hint)}
                     </p>
                   ))}
                 </div>
@@ -193,8 +194,7 @@ export function ProductImportWizard({
           {step === 2 && (
             <div className="space-y-3 py-2">
               <p className="text-xs text-muted-foreground">
-                Archivo <span className="font-medium text-foreground">{fileName}</span> — {rawRows.length} filas detectadas.
-                Ajusta el mapeo si alguna columna no se reconoció.
+                Archivo <span className="font-medium text-foreground">{fileName}</span> — {rawRows.length} {trPT("filas detectadas. Ajusta el mapeo si alguna columna no se reconoció.")}
               </p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {headers.map((h) => (
@@ -206,7 +206,7 @@ export function ProductImportWizard({
                     >
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__ignore__">Ignorar columna</SelectItem>
+                        <SelectItem value="__ignore__">{trPT("Ignorar columna")}</SelectItem>
                         {IMPORT_FIELDS.map((f) => (
                           <SelectItem key={f.key} value={f.key}>
                             {f.header}{f.required ? " *" : ""}
@@ -224,10 +224,10 @@ export function ProductImportWizard({
             <div className="space-y-3 py-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="text-[11px]">{rows.length} filas</Badge>
-                <Badge variant={errorCount ? "destructive" : "outline"} className="text-[11px]">{errorCount} con error</Badge>
-                <Badge variant="outline" className="text-[11px] text-amber-600">{warningCount} con avisos</Badge>
+                <Badge variant={errorCount ? "destructive" : "outline"} className="text-[11px]">{errorCount} {trPT("con error")}</Badge>
+                <Badge variant="outline" className="text-[11px] text-amber-600">{warningCount} {trPT("con avisos")}</Badge>
                 <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setOnlyProblems((v) => !v)}>
-                  {onlyProblems ? "Ver todas" : "Ver solo problemas"}
+                  {onlyProblems ? trPT("Ver todas") : trPT("Ver solo problemas")}
                 </Button>
                 <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={downloadErrors}>
                   <Download className="h-3 w-3" /> Reporte
@@ -237,9 +237,9 @@ export function ProductImportWizard({
                   <Select value={strategy} onValueChange={(v) => setStrategy(v as Strategy)}>
                     <SelectTrigger className="h-8 w-44 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="skip">Omitir existentes</SelectItem>
-                      <SelectItem value="update">Actualizar existentes</SelectItem>
-                      <SelectItem value="fail">Marcar como error</SelectItem>
+                      <SelectItem value="skip">{trPT("Omitir existentes")}</SelectItem>
+                      <SelectItem value="update">{trPT("Actualizar existentes")}</SelectItem>
+                      <SelectItem value="fail">{trPT("Marcar como error")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -296,7 +296,7 @@ export function ProductImportWizard({
                 </Table>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Las filas con error no se importan. Corrige los valores directamente en la tabla o descarga el reporte.
+                {trPT("Las filas con error no se importan. Corrige los valores directamente en la tabla o descarga el reporte.")}
               </p>
             </div>
           )}
@@ -304,13 +304,13 @@ export function ProductImportWizard({
           {step === 4 && result?.dry_run && (
             <div className="space-y-3 py-2">
               <div className="grid gap-2 sm:grid-cols-3">
-                <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Se crearán</p><p className="text-xl font-bold text-primary">{result.to_create}</p></div>
-                <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Se actualizarán</p><p className="text-xl font-bold">{result.to_update}</p></div>
-                <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Se omitirán</p><p className="text-xl font-bold text-muted-foreground">{result.skipped}</p></div>
+                <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">{trPT("Se crearán")}</p><p className="text-xl font-bold text-primary">{result.to_create}</p></div>
+                <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">{trPT("Se actualizarán")}</p><p className="text-xl font-bold">{result.to_update}</p></div>
+                <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">{trPT("Se omitirán")}</p><p className="text-xl font-bold text-muted-foreground">{result.skipped}</p></div>
               </div>
               {(result.errors ?? []).length > 0 && (
                 <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 space-y-1">
-                  <p className="text-xs font-semibold text-destructive">Rechazadas por el servidor ({result.errors.length})</p>
+                  <p className="text-xs font-semibold text-destructive">{trPT("Rechazadas por el servidor (")}{result.errors.length})</p>
                   {result.errors.slice(0, 8).map((e: any) => (
                     <p key={e.row} className="text-[11px] text-muted-foreground">Fila {e.row} ({e.sku}): {e.messages.join("; ")}</p>
                   ))}
@@ -318,7 +318,7 @@ export function ProductImportWizard({
               )}
               {(result.warnings ?? []).length > 0 && (
                 <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 space-y-1">
-                  <p className="text-xs font-semibold text-amber-600">Advertencias ({result.warnings.length})</p>
+                  <p className="text-xs font-semibold text-amber-600">{trPT("Advertencias (")}{result.warnings.length})</p>
                   {result.warnings.slice(0, 8).map((w: any) => (
                     <p key={w.row} className="text-[11px] text-muted-foreground">Fila {w.row} ({w.sku}): {w.messages.join("; ")}</p>
                   ))}
@@ -341,7 +341,7 @@ export function ProductImportWizard({
                     <p key={f.row} className="text-[11px] text-muted-foreground">Fila {f.row} ({f.sku}): {f.messages.join("; ")}</p>
                   ))}
                   <Button size="sm" variant="outline" className="text-xs h-7 mt-1" onClick={retryFailed}>
-                    Reintentar solo fallidos
+                    {trPT("Reintentar solo fallidos")}
                   </Button>
                 </div>
               )}
@@ -355,17 +355,17 @@ export function ProductImportWizard({
           </Button>
           <div className="flex items-center gap-2">
             {step > 1 && step < 5 && (
-              <Button variant="outline" size="sm" className="text-xs" onClick={() => setStep((s) => (s - 1) as Step)}>Atrás</Button>
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => setStep((s) => (s - 1) as Step)}>{trPT("Atrás")}</Button>
             )}
             {step === 2 && <Button size="sm" className="text-xs" onClick={applyMapping}>Previsualizar</Button>}
             {step === 3 && (
               <Button size="sm" className="text-xs gap-1" disabled={busy || validRows.length === 0} onClick={() => runImport(true)}>
-                {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Validar en servidor ({validRows.length})
+                {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {trPT("Validar en servidor (")}{validRows.length})
               </Button>
             )}
             {step === 4 && (
               <Button size="sm" className="text-xs gap-1" disabled={busy} onClick={() => runImport(false)}>
-                {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Importar ahora
+                {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {trPT("Importar ahora")}
               </Button>
             )}
             {step === 5 && <Button size="sm" className="text-xs" onClick={() => close(false)}>Finalizar</Button>}

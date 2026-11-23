@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/AppLayout";
@@ -34,7 +35,7 @@ export default function PortalEmpleado() {
         supabase.rpc("my_attendance", { _from: null, _to: null }),
         supabase.rpc("my_vacation_balance"),
       ]);
-      if (empR.error) toast.error("No se encontró tu ficha de empleado");
+      if (empR.error) toast.error(trPT("No se encontró tu ficha de empleado"));
       setEmp((empR.data as EmpRec[])?.[0] ?? null);
       setPayslips((psR.data as Payslip[]) ?? []);
       setLeaves((lvR.data as Leave[]) ?? []);
@@ -45,14 +46,14 @@ export default function PortalEmpleado() {
   }, []);
 
   const downloadPayslip = async (p: Payslip) => {
-    if (!p.payslip_url) { toast.info("Recibo aún no generado"); return; }
+    if (!p.payslip_url) { toast.info(trPT("Recibo aún no generado")); return; }
     const { data, error } = await supabase.storage.from("payslips").createSignedUrl(p.payslip_url, 60);
-    if (error || !data) { toast.error("No se pudo descargar"); return; }
+    if (error || !data) { toast.error(trPT("No se pudo descargar")); return; }
     window.open(data.signedUrl, "_blank");
   };
 
   if (loading) return <AppLayout title={t("nav.items.employeePortal")}><div className="p-8 text-center text-muted-foreground">{t("common.loading")}</div></AppLayout>;
-  if (!emp) return <AppLayout title={t("nav.items.employeePortal")}><div className="p-8 text-center text-muted-foreground">No tienes un perfil de empleado asignado.</div></AppLayout>;
+  if (!emp) return <AppLayout title={t("nav.items.employeePortal")}><div className="p-8 text-center text-muted-foreground">{trPT("No tienes un perfil de empleado asignado.")}</div></AppLayout>;
 
   return (
     <AppLayout title={t("nav.items.employeePortal")}>
@@ -73,7 +74,7 @@ export default function PortalEmpleado() {
 
         {vac && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Días vacaciones</p><p className="text-2xl font-heading font-bold">{vac.entitled}</p></CardContent></Card>
+            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{trPT("Días vacaciones")}</p><p className="text-2xl font-heading font-bold">{vac.entitled}</p></CardContent></Card>
             <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Disfrutados</p><p className="text-2xl font-heading font-bold">{vac.taken}</p></CardContent></Card>
             <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Pendientes</p><p className="text-2xl font-heading font-bold text-warning">{vac.pending}</p></CardContent></Card>
             <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Disponibles</p><p className="text-2xl font-heading font-bold text-success">{vac.remaining}</p></CardContent></Card>
@@ -82,19 +83,19 @@ export default function PortalEmpleado() {
 
         <Tabs defaultValue="payslips">
           <TabsList>
-            <TabsTrigger value="payslips" className="gap-2 text-xs"><FileText className="h-3.5 w-3.5" />Nóminas</TabsTrigger>
+            <TabsTrigger value="payslips" className="gap-2 text-xs"><FileText className="h-3.5 w-3.5" />{trPT("Nóminas")}</TabsTrigger>
             <TabsTrigger value="leaves" className="gap-2 text-xs"><Plane className="h-3.5 w-3.5" />Ausencias</TabsTrigger>
             <TabsTrigger value="attendance" className="gap-2 text-xs"><Clock className="h-3.5 w-3.5" />Fichajes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="payslips" className="space-y-2">
-            {payslips.length === 0 && <p className="text-xs text-muted-foreground text-center py-6">Aún no tienes nóminas.</p>}
+            {payslips.length === 0 && <p className="text-xs text-muted-foreground text-center py-6">{trPT("Aún no tienes nóminas.")}</p>}
             {payslips.map(p => (
               <Card key={p.id}>
                 <CardContent className="p-4 flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">{format(new Date(p.period_start), "dd/MM/yyyy")} – {format(new Date(p.period_end), "dd/MM/yyyy")}</p>
-                    <p className="text-xs text-muted-foreground">Bruto €{Number(p.gross_salary).toFixed(2)} · IRPF €{Number(p.irpf_amount).toFixed(2)} · SS €{Number(p.ss_worker_amount).toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">{trPT("Bruto €")}{Number(p.gross_salary).toFixed(2)} {trPT("· IRPF €")}{Number(p.irpf_amount).toFixed(2)} {trPT("· SS €")}{Number(p.ss_worker_amount).toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={p.status === "paid" ? "default" : "outline"}>{p.status}</Badge>
@@ -110,7 +111,7 @@ export default function PortalEmpleado() {
           </TabsContent>
 
           <TabsContent value="leaves" className="space-y-2">
-            {leaves.length === 0 && <p className="text-xs text-muted-foreground text-center py-6">No has solicitado ausencias.</p>}
+            {leaves.length === 0 && <p className="text-xs text-muted-foreground text-center py-6">{trPT("No has solicitado ausencias.")}</p>}
             {leaves.map(l => (
               <Card key={l.id}>
                 <CardContent className="p-4 flex items-center justify-between">
@@ -125,12 +126,12 @@ export default function PortalEmpleado() {
           </TabsContent>
 
           <TabsContent value="attendance" className="space-y-2">
-            {att.length === 0 && <p className="text-xs text-muted-foreground text-center py-6">Sin fichajes registrados.</p>}
+            {att.length === 0 && <p className="text-xs text-muted-foreground text-center py-6">{trPT("Sin fichajes registrados.")}</p>}
             {att.map(a => (
               <Card key={a.id}>
                 <CardContent className="p-3 flex items-center justify-between text-xs">
                   <span>{format(new Date(a.check_in), "dd/MM/yyyy HH:mm")} → {a.check_out ? format(new Date(a.check_out), "HH:mm") : "—"}</span>
-                  <span className="font-medium">{a.hours_worked ? `${Number(a.hours_worked).toFixed(2)} h` : "Abierto"}</span>
+                  <span className="font-medium">{a.hours_worked ? `${Number(a.hours_worked).toFixed(2)} h` : trPT("Abierto")}</span>
                 </CardContent>
               </Card>
             ))}

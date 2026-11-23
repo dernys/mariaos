@@ -13,9 +13,11 @@ import { useTranslation } from "react-i18next";
 
 interface Props {
   collapsed?: boolean;
+  /** "surface" for light page headers (marketplace); default matches the sidebar */
+  variant?: "sidebar" | "surface";
 }
 
-export function LanguageSwitcher({ collapsed }: Props) {
+export function LanguageSwitcher({ collapsed, variant = "sidebar" }: Props) {
   const { locale, setUserLocale } = useLocale();
   const { t } = useTranslation();
   const current = SUPPORTED_LOCALES.find((l) => l.code === locale) ?? SUPPORTED_LOCALES[0];
@@ -24,7 +26,9 @@ export function LanguageSwitcher({ collapsed }: Props) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+          className={variant === "surface"
+            ? "flex items-center gap-2 w-full px-3 py-2 rounded-full border border-border text-xs text-foreground whitespace-nowrap hover:bg-muted transition-colors"
+            : "flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"}
           aria-label={t("common.language")}
         >
           <Languages className="h-3.5 w-3.5 shrink-0" />

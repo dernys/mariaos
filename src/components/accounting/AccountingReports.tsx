@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -99,18 +100,18 @@ export function AccountingReports({ accounts, tenantName }: Props) {
   }, [tenantId]);
 
   async function closeMonth() {
-    if (!selectedPeriod) { toast({ title: "Selecciona un período", variant: "destructive" }); return; }
-    if (!confirm("¿Cerrar este período contable? No podrás registrar nuevos asientos en él.")) return;
+    if (!selectedPeriod) { toast({ title: trPT("Selecciona un período"), variant: "destructive" }); return; }
+    if (!confirm(trPT("¿Cerrar este período contable? No podrás registrar nuevos asientos en él."))) return;
     setLoading("close");
     try {
       const { data, error } = await supabase.rpc("close_accounting_period", { p_period: selectedPeriod });
       if (error) throw error;
-      toast({ title: "Período cerrado", description: `Filas en libro mayor: ${(data as any)?.gl_rows ?? 0}` });
+      toast({ title: trPT("Período cerrado"), description: `Filas en libro mayor: ${(data as any)?.gl_rows ?? 0}` });
       const { data: pdata } = await supabase.from("accounting_periods")
         .select("id,name,status,start_date,end_date").eq("tenant_id", tenantId!).order("start_date", { ascending: false });
       setPeriods(pdata ?? []);
     } catch (e: any) {
-      toast({ title: "Error al cerrar", description: e.message, variant: "destructive" });
+      toast({ title: trPT("Error al cerrar"), description: e.message, variant: "destructive" });
     } finally { setLoading(null); }
   }
 
@@ -214,7 +215,7 @@ export function AccountingReports({ accounts, tenantName }: Props) {
       const p = await build(key);
       setPreview(p);
       setPage(1);
-      if (p.rows.length === 0) toast({ title: "Sin movimientos contabilizados en el rango seleccionado" });
+      if (p.rows.length === 0) toast({ title: trPT("Sin movimientos contabilizados en el rango seleccionado") });
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     } finally { setLoading(null); }
@@ -256,7 +257,7 @@ export function AccountingReports({ accounts, tenantName }: Props) {
           </div>
           <Button size="sm" variant={active ? "default" : "outline"} className="w-full gap-2" onClick={() => show(key)} disabled={loading !== null}>
             {loading === key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
-            Ver reporte
+            {trPT("Ver reporte")}
           </Button>
         </CardContent>
       </Card>
@@ -281,13 +282,13 @@ export function AccountingReports({ accounts, tenantName }: Props) {
       <Card>
         <CardContent className="p-4 flex flex-col sm:flex-row gap-3 sm:items-end">
           <div className="flex-1">
-            <Label className="text-xs">Cierre de período</Label>
+            <Label className="text-xs">{trPT("Cierre de período")}</Label>
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger><SelectValue placeholder="Selecciona un período" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={trPT("Selecciona un período")} /></SelectTrigger>
               <SelectContent>
                 {periods.map(p => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.name} · {p.status === "closed" ? "Cerrado" : p.status === "locked" ? "Bloqueado" : "Abierto"}
+                    {p.name} · {p.status === "closed" ? trPT("Cerrado") : p.status === "locked" ? trPT("Bloqueado") : trPT("Abierto")}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -295,7 +296,7 @@ export function AccountingReports({ accounts, tenantName }: Props) {
           </div>
           <Button onClick={closeMonth} disabled={loading !== null || !selectedPeriod} className="gap-2">
             {loading === "close" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-            Cerrar mes
+            {trPT("Cerrar mes")}
           </Button>
         </CardContent>
       </Card>
@@ -313,24 +314,24 @@ export function AccountingReports({ accounts, tenantName }: Props) {
           <CardContent className="p-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="font-heading font-semibold">{preview.title}</p>
-                <p className="text-xs text-muted-foreground">{tenantName} · {preview.subtitle}</p>
+                <p className="font-heading font-semibold">{trPT(preview.title)}</p>
+                <p className="text-xs text-muted-foreground">{tenantName} · {trPT(preview.subtitle)}</p>
               </div>
               <div className="flex items-center gap-2">
                 {preview.balanced !== undefined && (
                   <Badge variant={preview.balanced ? "default" : "destructive"}>
-                    {preview.balanced ? "Cuadrado" : "Descuadre"}
+                    {preview.balanced ? trPT("Cuadrado") : trPT("Descuadre")}
                   </Badge>
                 )}
                 <Button size="sm" variant="outline" className="gap-2" onClick={() => exportPdf(preview)} disabled={preview.rows.length === 0}>
-                  <FileType className="h-3.5 w-3.5" /> Exportar PDF
+                  <FileType className="h-3.5 w-3.5" /> {trPT("Exportar PDF")}
                 </Button>
               </div>
             </div>
 
             {preview.rows.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                No hay asientos contabilizados en este rango de fechas.
+                {trPT("No hay asientos contabilizados en este rango de fechas.")}
               </p>
             ) : (
               <div className="rounded-md border overflow-hidden">

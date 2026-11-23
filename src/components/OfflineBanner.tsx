@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { WifiOff, CloudUpload, RefreshCw, Wifi, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ export function OfflineBanner() {
       <PopoverTrigger asChild>
         <button
           className={`flex items-center gap-2 px-2.5 h-8 rounded-full text-xs font-medium border transition-colors ${tone}`}
-          aria-label="Estado de sincronización"
+          aria-label={trPT("Estado de sincronización")}
         >
           <Icon className={`h-3.5 w-3.5 ${syncing ? "animate-pulse" : ""}`} />
           <span className="hidden sm:inline">{label}</span>
@@ -38,12 +39,12 @@ export function OfflineBanner() {
         <div className="space-y-1">
           <p className="text-sm font-semibold flex items-center gap-2">
             {!online ? <WifiOff className="h-4 w-4 text-destructive" /> : <Wifi className="h-4 w-4 text-emerald-500" />}
-            {!online ? "Modo offline" : "Conectado"}
+            {!online ? trPT("Modo offline") : trPT("Conectado")}
           </p>
           <p className="text-xs text-muted-foreground">
             {!online
-              ? "Puedes seguir vendiendo y registrando movimientos; todo se enviará al recuperar la conexión."
-              : ready ? "Datos del negocio precargados para trabajar sin conexión." : "Preparando datos para uso sin conexión…"}
+              ? trPT("Puedes seguir vendiendo y registrando movimientos; todo se enviará al recuperar la conexión.")
+              : ready ? trPT("Datos del negocio precargados para trabajar sin conexión.") : trPT("Preparando datos para uso sin conexión…")}
           </p>
         </div>
 
@@ -59,14 +60,14 @@ export function OfflineBanner() {
           {(stats.failed > 0 || stats.conflict > 0) && (
             <div className="col-span-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive" />
-              <span>{stats.failed + stats.conflict} requieren revisión</span>
+              <span>{stats.failed + stats.conflict} {trPT("requieren revisión")}</span>
             </div>
           )}
         </div>
 
         {lastSync && (
           <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-            <CheckCircle2 className="h-3 w-3" /> Datos actualizados {new Date(lastSync).toLocaleTimeString()}
+            <CheckCircle2 className="h-3 w-3" /> {trPT("Datos actualizados")} {new Date(lastSync).toLocaleTimeString()}
           </p>
         )}
 

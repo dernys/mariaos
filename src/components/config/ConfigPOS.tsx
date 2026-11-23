@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePOSSettings } from "@/hooks/usePOSSettings";
@@ -29,7 +30,7 @@ export function ConfigPOS() {
 
   const handleSave = async () => {
     await save(local);
-    toast({ title: "Ajustes guardados" });
+    toast({ title: trPT("Ajustes guardados") });
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">Cargando...</p>;
@@ -38,21 +39,21 @@ export function ConfigPOS() {
     <div className="space-y-4 max-w-2xl">
       <Card>
         <CardContent className="p-4 space-y-4">
-          <h3 className="text-sm font-heading font-semibold">Impuestos y precios</h3>
+          <h3 className="text-sm font-heading font-semibold">{trPT("Impuestos y precios")}</h3>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">Impuesto por defecto</Label>
+              <Label className="text-xs">{trPT("Impuesto por defecto")}</Label>
               <Select value={local.default_tax_rate_id || "none"} onValueChange={(v) => setLocal({ ...local, default_tax_rate_id: v === "none" ? null : v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Sin impuesto</SelectItem>
+                  <SelectItem value="none">{trPT("Sin impuesto")}</SelectItem>
                   {taxes.map((t) => <SelectItem key={t.id} value={t.id}>{t.name} ({t.rate}%)</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center gap-2 pt-5">
               <Switch checked={local.tax_included} onCheckedChange={(v) => setLocal({ ...local, tax_included: v })} />
-              <Label className="text-xs">Impuesto incluido en precio</Label>
+              <Label className="text-xs">{trPT("Impuesto incluido en precio")}</Label>
             </div>
           </div>
         </CardContent>
@@ -63,17 +64,17 @@ export function ConfigPOS() {
           <h3 className="text-sm font-heading font-semibold">Propinas</h3>
           <div className="flex items-center gap-2">
             <Switch checked={local.tip_enabled} onCheckedChange={(v) => setLocal({ ...local, tip_enabled: v })} />
-            <Label className="text-xs">Habilitar propinas en POS</Label>
+            <Label className="text-xs">{trPT("Habilitar propinas en POS")}</Label>
           </div>
           {local.tip_enabled && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">% sugeridos (separados por coma)</Label>
+                <Label className="text-xs">{trPT("% sugeridos (separados por coma)")}</Label>
                 <Input value={local.tip_percentages.join(",")} onChange={(e) => setLocal({ ...local, tip_percentages: e.target.value.split(",").map((x) => parseFloat(x.trim()) || 0).filter(Boolean) })} />
               </div>
               <div className="flex items-center gap-2 pt-5">
                 <Switch checked={local.tip_required} onCheckedChange={(v) => setLocal({ ...local, tip_required: v })} />
-                <Label className="text-xs">Propina obligatoria</Label>
+                <Label className="text-xs">{trPT("Propina obligatoria")}</Label>
               </div>
             </div>
           )}
@@ -82,7 +83,7 @@ export function ConfigPOS() {
 
       <Card>
         <CardContent className="p-4 space-y-4">
-          <h3 className="text-sm font-heading font-semibold">Operación</h3>
+          <h3 className="text-sm font-heading font-semibold">{trPT("Operación")}</h3>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Redondeo</Label>
@@ -90,47 +91,47 @@ export function ConfigPOS() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Ninguno</SelectItem>
-                  <SelectItem value="nearest">Más cercano</SelectItem>
-                  <SelectItem value="up">Hacia arriba</SelectItem>
+                  <SelectItem value="nearest">{trPT("Más cercano")}</SelectItem>
+                  <SelectItem value="up">{trPT("Hacia arriba")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Descuento máx (%)</Label>
+              <Label className="text-xs">{trPT("Descuento máx (%)")}</Label>
               <Input type="number" value={local.max_discount_pct} onChange={(e) => setLocal({ ...local, max_discount_pct: parseFloat(e.target.value) || 0 })} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-2"><Switch checked={local.allow_discounts} onCheckedChange={(v) => setLocal({ ...local, allow_discounts: v })} /><Label className="text-xs">Permitir descuentos</Label></div>
-            <div className="flex items-center gap-2"><Switch checked={local.allow_negative_stock} onCheckedChange={(v) => setLocal({ ...local, allow_negative_stock: v })} /><Label className="text-xs">Permitir stock negativo</Label></div>
+            <div className="flex items-center gap-2"><Switch checked={local.allow_discounts} onCheckedChange={(v) => setLocal({ ...local, allow_discounts: v })} /><Label className="text-xs">{trPT("Permitir descuentos")}</Label></div>
+            <div className="flex items-center gap-2"><Switch checked={local.allow_negative_stock} onCheckedChange={(v) => setLocal({ ...local, allow_negative_stock: v })} /><Label className="text-xs">{trPT("Permitir stock negativo")}</Label></div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-4 space-y-4">
-          <h3 className="text-sm font-heading font-semibold">Impresión de ticket</h3>
+          <h3 className="text-sm font-heading font-semibold">{trPT("Impresión de ticket")}</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2">
               <Switch checked={local.auto_print_receipt} onCheckedChange={(v) => setLocal({ ...local, auto_print_receipt: v })} />
-              <Label className="text-xs">Imprimir ticket automáticamente al cerrar venta</Label>
+              <Label className="text-xs">{trPT("Imprimir ticket automáticamente al cerrar venta")}</Label>
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={local.silent_print} onCheckedChange={(v) => setLocal({ ...local, silent_print: v })} disabled={!local.auto_print_receipt} />
-              <Label className="text-xs">Impresión silenciosa (sin ventana)</Label>
+              <Label className="text-xs">{trPT("Impresión silenciosa (sin ventana)")}</Label>
             </div>
             <div>
-              <Label className="text-xs">Ancho del papel</Label>
+              <Label className="text-xs">{trPT("Ancho del papel")}</Label>
               <Select value={String(local.receipt_width)} onValueChange={(v) => setLocal({ ...local, receipt_width: (Number(v) === 58 ? 58 : 80) })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="58">58 mm</SelectItem>
-                  <SelectItem value="80">80 mm</SelectItem>
+                  <SelectItem value="58">{trPT("58 mm")}</SelectItem>
+                  <SelectItem value="80">{trPT("80 mm")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Mensaje de pie de ticket</Label>
+              <Label className="text-xs">{trPT("Mensaje de pie de ticket")}</Label>
               <Input value={local.receipt_footer} onChange={(e) => setLocal({ ...local, receipt_footer: e.target.value })} />
             </div>
           </div>
@@ -139,17 +140,17 @@ export function ConfigPOS() {
 
       <Card>
         <CardContent className="p-4 space-y-4">
-          <h3 className="text-sm font-heading font-semibold">Monedas y crédito</h3>
+          <h3 className="text-sm font-heading font-semibold">{trPT("Monedas y crédito")}</h3>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label className="text-xs">Moneda base</Label>
+              <Label className="text-xs">{trPT("Moneda base")}</Label>
               <Select value={local.default_currency} onValueChange={(v) => setLocal({ ...local, default_currency: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{currencies.map((c) => <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Moneda secundaria</Label>
+              <Label className="text-xs">{trPT("Moneda secundaria")}</Label>
               <Select value={local.secondary_currency || "none"} onValueChange={(v) => setLocal({ ...local, secondary_currency: v === "none" ? null : v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -159,7 +160,7 @@ export function ConfigPOS() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Días de crédito</Label>
+              <Label className="text-xs">{trPT("Días de crédito")}</Label>
               <Input type="number" value={local.default_credit_days} onChange={(e) => setLocal({ ...local, default_credit_days: parseInt(e.target.value) || 0 })} />
             </div>
           </div>
@@ -167,7 +168,7 @@ export function ConfigPOS() {
       </Card>
 
       <Button onClick={handleSave} className="gap-2 gradient-brand text-primary-foreground">
-        <Save className="h-3.5 w-3.5" /> Guardar ajustes POS
+        <Save className="h-3.5 w-3.5" /> {trPT("Guardar ajustes POS")}
       </Button>
     </div>
   );

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
@@ -76,7 +77,7 @@ const SuperAdmin = () => {
   };
 
   const createTenant = async () => {
-    if (!form.name || !form.slug) return toast.error("Nombre y slug son requeridos");
+    if (!form.name || !form.slug) return toast.error(trPT("Nombre y slug son requeridos"));
     const { error } = await supabase.from("tenants").insert({
       name: form.name,
       slug: form.slug.toLowerCase().replace(/\s+/g, "-"),
@@ -87,7 +88,7 @@ const SuperAdmin = () => {
       business_type: form.business_type,
     } as any);
     if (error) return toast.error(error.message);
-    toast.success("Empresa creada correctamente");
+    toast.success(trPT("Empresa creada correctamente"));
     setShowCreate(false);
     setForm({ name: "", slug: "", email: "", phone: "", address: "", rfc: "", business_type: "empresa" });
     fetchTenants();
@@ -108,7 +109,7 @@ const SuperAdmin = () => {
   const deleteTenant = async (id: string) => {
     const { error } = await supabase.from("tenants").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    toast.success("Empresa eliminada");
+    toast.success(trPT("Empresa eliminada"));
     if (selectedTenant?.id === id) setSelectedTenant(null);
     fetchTenants();
   };
@@ -140,7 +141,7 @@ const SuperAdmin = () => {
       user_id: userId,
     });
     if (error) return toast.error(error.message);
-    toast.success("Usuario agregado a la empresa");
+    toast.success(trPT("Usuario agregado a la empresa"));
     setShowAddUser(false);
     selectTenant(selectedTenant);
   };
@@ -148,7 +149,7 @@ const SuperAdmin = () => {
   const removeUserFromTenant = async (id: string) => {
     const { error } = await supabase.from("tenant_users").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    toast.success("Usuario removido");
+    toast.success(trPT("Usuario removido"));
     if (selectedTenant) selectTenant(selectedTenant);
   };
 
@@ -190,9 +191,9 @@ const SuperAdmin = () => {
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
             <div>
-              <h2 className="font-heading font-semibold text-sm">Gestión de Empresas (Tenants)</h2>
+              <h2 className="font-heading font-semibold text-sm">{trPT("Gestión de Empresas (Tenants)")}</h2>
               <p className="text-[10px] text-muted-foreground">
-                {tenants.length} empresa(s) registrada(s)
+                {tenants.length} {trPT("empresa(s) registrada(s)")}
               </p>
             </div>
           </div>
@@ -213,14 +214,14 @@ const SuperAdmin = () => {
               }}
               className="gap-1 text-xs"
             >
-              <UserPlus className="h-3.5 w-3.5" /> Sembrar usuarios demo
+              <UserPlus className="h-3.5 w-3.5" /> {trPT("Sembrar usuarios demo")}
             </Button>
             <Button
               size="sm"
               onClick={() => setShowCreate(!showCreate)}
               className="gap-1 text-xs gradient-brand text-primary-foreground"
             >
-              <Plus className="h-3.5 w-3.5" /> Nueva Empresa
+              <Plus className="h-3.5 w-3.5" /> {trPT("Nueva Empresa")}
             </Button>
           </div>
         </div>
@@ -242,7 +243,7 @@ const SuperAdmin = () => {
             ) : tenants.length === 0 ? (
               <div className="bg-card rounded-xl p-8 shadow-card border text-center">
                 <Building2 className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No hay empresas</p>
+                <p className="text-sm text-muted-foreground">{trPT("No hay empresas")}</p>
               </div>
             ) : (
               tenants.map((tenant) => (
@@ -275,7 +276,7 @@ const SuperAdmin = () => {
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {tenant.is_active ? "Activa" : "Inactiva"}
+                      {tenant.is_active ? trPT("Activa") : trPT("Inactiva")}
                     </span>
                   </div>
                   {tenant.email && (
@@ -322,7 +323,7 @@ const SuperAdmin = () => {
                 {/* Tenant Info */}
                 <div className="bg-card rounded-xl p-5 shadow-card border">
                   <h3 className="font-heading font-semibold text-sm mb-3">
-                    Detalles de {selectedTenant.name}
+                    {trPT("Detalles de")} {selectedTenant.name}
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                     <div>
@@ -330,7 +331,7 @@ const SuperAdmin = () => {
                       <p className="font-medium">{selectedTenant.email || "—"}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Teléfono</p>
+                      <p className="text-muted-foreground">{trPT("Teléfono")}</p>
                       <p className="font-medium">{selectedTenant.phone || "—"}</p>
                     </div>
                     <div>
@@ -338,7 +339,7 @@ const SuperAdmin = () => {
                       <p className="font-medium">{selectedTenant.rfc || "—"}</p>
                     </div>
                     <div className="col-span-2 sm:col-span-3">
-                      <p className="text-muted-foreground">Dirección</p>
+                      <p className="text-muted-foreground">{trPT("Dirección")}</p>
                       <p className="font-medium">{selectedTenant.address || "—"}</p>
                     </div>
                     <div>
@@ -356,7 +357,7 @@ const SuperAdmin = () => {
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <h3 className="font-heading font-semibold text-sm">
-                        Usuarios ({tenantUsers.length})
+                        {trPT("Usuarios (")}{tenantUsers.length})
                       </h3>
                     </div>
                     <Button
@@ -382,7 +383,7 @@ const SuperAdmin = () => {
                           <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                             <Input
-                              placeholder="Buscar usuario..."
+                              placeholder={trPT("Buscar usuario...")}
                               value={searchUsers}
                               onChange={(e) => setSearchUsers(e.target.value)}
                               className="pl-9 h-8 text-xs"
@@ -391,7 +392,7 @@ const SuperAdmin = () => {
                           <div className="max-h-32 overflow-auto space-y-1">
                             {availableUsers.length === 0 ? (
                               <p className="text-[10px] text-muted-foreground text-center py-2">
-                                No hay usuarios disponibles
+                                {trPT("No hay usuarios disponibles")}
                               </p>
                             ) : (
                               availableUsers.map((p) => (
@@ -400,7 +401,7 @@ const SuperAdmin = () => {
                                   onClick={() => addUserToTenant(p.user_id)}
                                   className="w-full text-left px-3 py-1.5 rounded text-xs hover:bg-muted transition-colors"
                                 >
-                                  {p.full_name || "Sin nombre"}
+                                  {p.full_name || trPT("Sin nombre")}
                                 </button>
                               ))
                             )}
@@ -415,7 +416,7 @@ const SuperAdmin = () => {
                       <div className="p-8 text-center">
                         <Users className="h-6 w-6 text-muted-foreground/30 mx-auto mb-2" />
                         <p className="text-xs text-muted-foreground">
-                          Sin usuarios asignados
+                          {trPT("Sin usuarios asignados")}
                         </p>
                       </div>
                     ) : (
@@ -454,7 +455,7 @@ const SuperAdmin = () => {
                                       : "bg-muted text-muted-foreground"
                                   }`}
                                 >
-                                  {tu.is_owner ? "Sí" : "No"}
+                                  {tu.is_owner ? trPT("Sí") : "No"}
                                 </button>
                               </td>
                               <td className="p-3 text-xs text-muted-foreground">
@@ -480,7 +481,7 @@ const SuperAdmin = () => {
               <div className="bg-card rounded-xl p-12 shadow-card border text-center">
                 <Building2 className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">
-                  Selecciona una empresa para ver detalles
+                  {trPT("Selecciona una empresa para ver detalles")}
                 </p>
               </div>
             )}

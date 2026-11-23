@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { Fragment, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Lightbulb, Search, Undo2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,7 @@ export function ImportReviewTable({
               className="h-7 text-xs"
               onClick={() => { setFilter(f.key); setPage(0); }}
             >
-              {f.label} <Badge variant="secondary" className="ml-2 px-1.5">{counts[f.key]}</Badge>
+              {trPT(f.label)} <Badge variant="secondary" className="ml-2 px-1.5">{counts[f.key]}</Badge>
             </Button>
           ))}
         </div>
@@ -118,13 +119,13 @@ export function ImportReviewTable({
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              className="pl-8 h-9" placeholder="Buscar en los datos…"
+              className="pl-8 h-9" placeholder={trPT("Buscar en los datos…")}
               value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             />
           </div>
           <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
             <SelectTrigger className="h-9 w-[110px]"><SelectValue /></SelectTrigger>
-            <SelectContent>{PAGE_SIZES.map((s) => <SelectItem key={s} value={String(s)}>{s} / página</SelectItem>)}</SelectContent>
+            <SelectContent>{PAGE_SIZES.map((s) => <SelectItem key={s} value={String(s)}>{s} {trPT("/ página")}</SelectItem>)}</SelectContent>
           </Select>
         </div>
 
@@ -134,29 +135,29 @@ export function ImportReviewTable({
             <span className="font-medium">{selectedIds.length} seleccionados</span>
             <Button size="sm" variant="outline" className="h-7 text-xs" disabled={!selectedIds.length}
               onClick={() => onApplyAllSuggestions(targets())}>
-              <Lightbulb className="h-3.5 w-3.5 mr-1" /> Aceptar sugerencias
+              <Lightbulb className="h-3.5 w-3.5 mr-1" /> {trPT("Aceptar sugerencias")}
             </Button>
             <Button size="sm" variant="outline" className="h-7 text-xs" disabled={!selectedIds.length}
               onClick={() => onAcceptWarnings(targets(), true)}>
-              Ignorar advertencias
+              {trPT("Ignorar advertencias")}
             </Button>
             <Button size="sm" variant="outline" className="h-7 text-xs" disabled={!selectedIds.length}
               onClick={() => onToggleInclude(targets(), false)}>
-              Excluir de la importación
+              {trPT("Excluir de la importación")}
             </Button>
             <Button size="sm" variant="outline" className="h-7 text-xs" disabled={!selectedIds.length}
               onClick={() => onToggleInclude(targets(), true)}>
-              <Undo2 className="h-3.5 w-3.5 mr-1" /> Volver a incluir
+              <Undo2 className="h-3.5 w-3.5 mr-1" /> {trPT("Volver a incluir")}
             </Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs" disabled={!selectedIds.length}
-              onClick={() => setSelected(new Set())}>Limpiar selección</Button>
+              onClick={() => setSelected(new Set())}>{trPT("Limpiar selección")}</Button>
           </div>
           {fields.some((f) => f.key === "category") && (
             <div className="flex flex-wrap items-end gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">Asignar categoría a la selección</Label>
+                <Label className="text-xs">{trPT("Asignar categoría a la selección")}</Label>
                 <Select value={bulkCategory} onValueChange={setBulkCategory}>
-                  <SelectTrigger className="h-8 w-[220px] text-xs"><SelectValue placeholder="Elegir categoría" /></SelectTrigger>
+                  <SelectTrigger className="h-8 w-[220px] text-xs"><SelectValue placeholder={trPT("Elegir categoría")} /></SelectTrigger>
                   <SelectContent>
                     {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
@@ -187,7 +188,7 @@ export function ImportReviewTable({
                 <TableHead className="w-8" />
                 <TableHead className="w-14 text-xs">Fila</TableHead>
                 <TableHead className="w-24 text-xs">Estado</TableHead>
-                <TableHead className="w-28 text-xs">Acción</TableHead>
+                <TableHead className="w-28 text-xs">{trPT("Acción")}</TableHead>
                 {fields.map((fd) => (
                   <TableHead key={fd.key} className="text-xs whitespace-nowrap">
                     {fd.header}{fd.required && <span className="text-destructive"> *</span>}
@@ -198,7 +199,7 @@ export function ImportReviewTable({
             <TableBody>
               {pageRows.length === 0 && (
                 <TableRow><TableCell colSpan={fields.length + 5} className="text-center text-sm text-muted-foreground py-8">
-                  Ningún registro con este filtro.
+                  {trPT("Ningún registro con este filtro.")}
                 </TableCell></TableRow>
               )}
               {pageRows.map((r) => {
@@ -221,7 +222,7 @@ export function ImportReviewTable({
                           <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" /> Error</Badge>
                         ) : lvl === "warning" ? (
                           <Badge variant="outline" className="gap-1 border-amber-500 text-amber-600">
-                            <AlertTriangle className="h-3 w-3" /> {r.warningsAccepted ? "Aceptado" : "Aviso"}
+                            <AlertTriangle className="h-3 w-3" /> {r.warningsAccepted ? trPT("Aceptado") : trPT("Aviso")}
                           </Badge>
                         ) : (
                           <Badge variant="secondary" className="gap-1"><CheckCircle2 className="h-3 w-3" /> Listo</Badge>
@@ -233,9 +234,9 @@ export function ImportReviewTable({
                           : r.op === "update" ? (
                             <Tooltip>
                               <TooltipTrigger asChild><Badge variant="secondary">Actualiza</Badge></TooltipTrigger>
-                              <TooltipContent>Coincide con «{r.matchLabel}»</TooltipContent>
+                              <TooltipContent>{trPT("Coincide con «")}{r.matchLabel}»</TooltipContent>
                             </Tooltip>
-                          ) : <Badge variant="outline">Sin cambios</Badge>}
+                          ) : <Badge variant="outline">{trPT("Sin cambios")}</Badge>}
                         {r.suggestions.length > 0 && (
                           <Badge variant="outline" className="ml-1 gap-1 border-primary/40 text-primary">
                             <Lightbulb className="h-3 w-3" /> {r.suggestions.length}
@@ -285,12 +286,12 @@ export function ImportReviewTable({
                           {rowLevel(r) === "warning" && (
                             <Button size="sm" variant="outline" className="h-7 text-xs"
                               onClick={() => onAcceptWarnings([r.id], !r.warningsAccepted)}>
-                              {r.warningsAccepted ? "Revocar aceptación de avisos" : "Aceptar avisos de esta fila"}
+                              {r.warningsAccepted ? trPT("Revocar aceptación de avisos") : trPT("Aceptar avisos de esta fila")}
                             </Button>
                           )}
                           <Button size="sm" variant="ghost" className="h-7 text-xs"
                             onClick={() => onToggleInclude([r.id], !r.included)}>
-                            {r.included ? "Excluir esta fila" : "Incluir esta fila"}
+                            {r.included ? trPT("Excluir esta fila") : trPT("Incluir esta fila")}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -303,7 +304,7 @@ export function ImportReviewTable({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>{filtered.length} registros · página {page + 1} de {pages}</span>
+          <span>{filtered.length} {trPT("registros · página")} {page + 1} de {pages}</span>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" className="h-7 text-xs" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Anterior</Button>
             <Button size="sm" variant="outline" className="h-7 text-xs" disabled={page + 1 >= pages} onClick={() => setPage((p) => p + 1)}>Siguiente</Button>

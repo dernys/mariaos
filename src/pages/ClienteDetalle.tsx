@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -44,7 +45,7 @@ export default function ClienteDetalle() {
         <DetailHeader
           icon={User}
           title={c.name}
-          subtitle={c.email || c.phone || "Sin contacto"}
+          subtitle={c.email || c.phone || trPT("Sin contacto")}
           backTo="/clientes"
           badges={[
             { label: c.loyalty_tier || "bronze", variant: "outline" },
@@ -61,9 +62,9 @@ export default function ClienteDetalle() {
         <Tabs defaultValue="resumen">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="resumen">Resumen</TabsTrigger>
-            <TabsTrigger value="sales">Compras ({sales.length})</TabsTrigger>
-            <TabsTrigger value="payments">Pagos ({payments.length})</TabsTrigger>
-            <TabsTrigger value="loyalty">Fidelización</TabsTrigger>
+            <TabsTrigger value="sales">{trPT("Compras (")}{sales.length})</TabsTrigger>
+            <TabsTrigger value="payments">{trPT("Pagos (")}{payments.length})</TabsTrigger>
+            <TabsTrigger value="loyalty">{trPT("Fidelización")}</TabsTrigger>
             <TabsTrigger value="activity">Actividad</TabsTrigger>
           </TabsList>
 
@@ -72,8 +73,8 @@ export default function ClienteDetalle() {
               {c.phone && <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> {c.phone}</div>}
               {c.email && <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> {c.email}</div>}
               {c.address && <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" /> {c.address}</div>}
-              {c.rfc && <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> RFC: {c.rfc}</div>}
-              <div className="text-xs text-muted-foreground">Crédito autorizado: ${Number(c.credit_limit || 0).toLocaleString()}</div>
+              {c.rfc && <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> {trPT("RFC:")} {c.rfc}</div>}
+              <div className="text-xs text-muted-foreground">{trPT("Crédito autorizado: $")}{Number(c.credit_limit || 0).toLocaleString()}</div>
               {c.notes && <p className="text-xs text-muted-foreground italic mt-2">{c.notes}</p>}
             </div>
           </TabsContent>
@@ -100,7 +101,7 @@ export default function ClienteDetalle() {
                       <TableCell><Badge variant={s.status === "paid" ? "default" : "outline"} className="text-[10px]">{s.status}</Badge></TableCell>
                     </TableRow>
                   ))}
-                  {sales.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin compras</TableCell></TableRow>}
+                  {sales.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin compras")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -113,7 +114,7 @@ export default function ClienteDetalle() {
                   <TableRow>
                     <TableHead className="text-xs">Fecha</TableHead>
                     <TableHead className="text-xs">Tipo</TableHead>
-                    <TableHead className="text-xs">Método</TableHead>
+                    <TableHead className="text-xs">{trPT("Método")}</TableHead>
                     <TableHead className="text-xs">Notas</TableHead>
                     <TableHead className="text-xs text-right">Monto</TableHead>
                   </TableRow>
@@ -122,13 +123,13 @@ export default function ClienteDetalle() {
                   {payments.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell className="text-xs">{format(new Date(p.created_at), "dd/MM/yy HH:mm")}</TableCell>
-                      <TableCell><Badge variant="outline" className={`text-[10px] ${p.direction === "in" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{p.direction === "in" ? "Cobro" : "Pago"}</Badge></TableCell>
+                      <TableCell><Badge variant="outline" className={`text-[10px] ${p.direction === "in" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{p.direction === "in" ? trPT("Cobro") : trPT("Pago")}</Badge></TableCell>
                       <TableCell className="text-xs capitalize">{p.method}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{p.notes || "—"}</TableCell>
                       <TableCell className="text-xs text-right font-bold">${Number(p.amount_in_base).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
-                  {payments.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Sin pagos</TableCell></TableRow>}
+                  {payments.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin pagos")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -154,7 +155,7 @@ export default function ClienteDetalle() {
                       <TableCell className={`text-xs text-right font-bold ${Number(l.points) > 0 ? "text-success" : "text-destructive"}`}>{Number(l.points) > 0 ? "+" : ""}{l.points}</TableCell>
                     </TableRow>
                   ))}
-                  {loyalty.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">Sin movimientos de fidelización</TableCell></TableRow>}
+                  {loyalty.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">{trPT("Sin movimientos de fidelización")}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>

@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,7 +108,7 @@ const Repartidor = () => {
       p_avatar_url: null,
     });
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Solicitud enviada", description: "Un administrador revisará tu solicitud." });
+    toast({ title: trPT("Solicitud enviada"), description: trPT("Un administrador revisará tu solicitud.") });
     reload();
   };
 
@@ -119,7 +120,7 @@ const Repartidor = () => {
   };
 
   const shareLocation = () => {
-    if (!navigator.geolocation) return toast({ title: "Geolocalización no disponible", variant: "destructive" });
+    if (!navigator.geolocation) return toast({ title: trPT("Geolocalización no disponible"), variant: "destructive" });
     navigator.geolocation.getCurrentPosition(
       async (p) => {
         const { error } = await supabase.rpc("update_rider_location" as any, {
@@ -131,7 +132,7 @@ const Repartidor = () => {
           p_battery: null,
         });
         if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-        toast({ title: "Ubicación actualizada" });
+        toast({ title: trPT("Ubicación actualizada") });
         reload();
         loadJobs();
       },
@@ -174,7 +175,7 @@ const Repartidor = () => {
             <ArrowLeft className="h-4 w-4" /> Marketplace
           </Link>
           <Link to="/marketplace/mis-pedidos" className="text-sm text-muted-foreground hover:text-foreground">
-            Mis pedidos
+            {trPT("Mis pedidos")}
           </Link>
         </div>
       </header>
@@ -187,30 +188,30 @@ const Repartidor = () => {
         </div>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <p className="text-sm text-muted-foreground">{trPT("Cargando…")}</p>
         ) : !profile || ["pending", "reviewing", "rejected"].includes(profile.status) ? (
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                {!profile ? "Quiero ser repartidor" : `Solicitud: ${RIDER_STATUS_LABEL[profile.status]}`}
+                {!profile ? trPT("Quiero ser repartidor") : `Solicitud: ${RIDER_STATUS_LABEL[profile.status]}`}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {profile?.review_notes && (
-                <p className="text-xs text-muted-foreground">Nota de revisión: {profile.review_notes}</p>
+                <p className="text-xs text-muted-foreground">{trPT("Nota de revisión:")} {profile.review_notes}</p>
               )}
               {profile && profile.status !== "rejected" && (
                 <p className="text-sm text-muted-foreground">
-                  Tu solicitud está en proceso. Puedes actualizar tus datos mientras se revisa.
+                  {trPT("Tu solicitud está en proceso. Puedes actualizar tus datos mientras se revisa.")}
                 </p>
               )}
               <div className="grid md:grid-cols-2 gap-3">
                 <div>
-                  <Label>Nombre completo *</Label>
+                  <Label>{trPT("Nombre completo *")}</Label>
                   <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
                 </div>
                 <div>
-                  <Label>Teléfono *</Label>
+                  <Label>{trPT("Teléfono *")}</Label>
                   <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
                 <div>
@@ -218,11 +219,11 @@ const Repartidor = () => {
                   <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 </div>
                 <div>
-                  <Label>Documento de identidad</Label>
+                  <Label>{trPT("Documento de identidad")}</Label>
                   <Input value={form.document_id} onChange={(e) => setForm({ ...form, document_id: e.target.value })} />
                 </div>
                 <div>
-                  <Label>Medio de transporte</Label>
+                  <Label>{trPT("Medio de transporte")}</Label>
                   <Select value={form.vehicle_type} onValueChange={(v) => setForm({ ...form, vehicle_type: v })}>
                     <SelectTrigger>
                       <SelectValue />
@@ -237,11 +238,11 @@ const Repartidor = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Matrícula / identificación del vehículo</Label>
+                  <Label>{trPT("Matrícula / identificación del vehículo")}</Label>
                   <Input value={form.vehicle_plate} onChange={(e) => setForm({ ...form, vehicle_plate: e.target.value })} />
                 </div>
                 <div>
-                  <Label>Años de experiencia</Label>
+                  <Label>{trPT("Años de experiencia")}</Label>
                   <Input
                     type="number"
                     value={form.experience_years}
@@ -249,16 +250,16 @@ const Repartidor = () => {
                   />
                 </div>
                 <div>
-                  <Label>Zona habitual</Label>
+                  <Label>{trPT("Zona habitual")}</Label>
                   <Input value={form.preferred_zone} onChange={(e) => setForm({ ...form, preferred_zone: e.target.value })} />
                 </div>
               </div>
               <div>
-                <Label>Sobre ti</Label>
+                <Label>{trPT("Sobre ti")}</Label>
                 <Textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
               </div>
               <Button className="rounded-full" onClick={apply} disabled={!form.full_name.trim() || !form.phone.trim()}>
-                {profile ? "Actualizar solicitud" : "Enviar solicitud"}
+                {profile ? trPT("Actualizar solicitud") : trPT("Enviar solicitud")}
               </Button>
             </CardContent>
           </Card>
@@ -266,7 +267,7 @@ const Repartidor = () => {
           <Tabs defaultValue="panel">
             <TabsList>
               <TabsTrigger value="panel">Panel</TabsTrigger>
-              <TabsTrigger value="jobs">Pedidos recomendados</TabsTrigger>
+              <TabsTrigger value="jobs">{trPT("Pedidos recomendados")}</TabsTrigger>
               <TabsTrigger value="history">Historial</TabsTrigger>
             </TabsList>
 
@@ -280,7 +281,7 @@ const Repartidor = () => {
                 ].map((k) => (
                   <Card key={k.label}>
                     <CardContent className="p-3">
-                      <p className="text-[11px] text-muted-foreground">{k.label}</p>
+                      <p className="text-[11px] text-muted-foreground">{trPT(k.label)}</p>
                       <p className="text-lg font-bold">{k.value}</p>
                     </CardContent>
                   </Card>
@@ -290,7 +291,7 @@ const Repartidor = () => {
               <Card>
                 <CardContent className="p-4 flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Disponibilidad:</span>
+                    <span className="text-sm text-muted-foreground">{trPT("Disponibilidad:")}</span>
                     <Select value={profile.availability} onValueChange={setAvailability}>
                       <SelectTrigger className="w-[180px]">
                         <SelectValue />
@@ -305,7 +306,7 @@ const Repartidor = () => {
                     </Select>
                   </div>
                   <Button size="sm" variant="outline" className="rounded-full" onClick={shareLocation}>
-                    <Navigation className="h-4 w-4 mr-1" /> Compartir ubicación
+                    <Navigation className="h-4 w-4 mr-1" /> {trPT("Compartir ubicación")}
                   </Button>
                   {profile.location_updated_at && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -316,8 +317,8 @@ const Repartidor = () => {
               </Card>
 
               <div className="space-y-3">
-                <h2 className="text-sm font-semibold">Entregas activas</h2>
-                {active.length === 0 && <p className="text-sm text-muted-foreground">Sin entregas activas.</p>}
+                <h2 className="text-sm font-semibold">{trPT("Entregas activas")}</h2>
+                {active.length === 0 && <p className="text-sm text-muted-foreground">{trPT("Sin entregas activas.")}</p>}
                 {active.map((a) => (
                   <Card key={a.id}>
                     <CardContent className="p-4 space-y-2 text-sm">
@@ -326,12 +327,12 @@ const Repartidor = () => {
                         <Badge variant="outline">{a.status}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> Recogida: {a.pickup_address ?? "—"}
+                        <MapPin className="h-3 w-3" /> {trPT("Recogida:")} {a.pickup_address ?? "—"}
                       </p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> Entrega: {a.dropoff_address ?? a.online_orders?.delivery_address ?? "—"}
+                        <MapPin className="h-3 w-3" /> {trPT("Entrega:")} {a.dropoff_address ?? a.online_orders?.delivery_address ?? "—"}
                       </p>
-                      {a.instructions && <p className="text-xs text-muted-foreground">Instrucciones: {a.instructions}</p>}
+                      {a.instructions && <p className="text-xs text-muted-foreground">{trPT("Instrucciones:")} {a.instructions}</p>}
                       <div className="flex flex-wrap gap-2 pt-1">
                         {a.status === "assigned" && (
                           <>
@@ -345,12 +346,12 @@ const Repartidor = () => {
                         )}
                         {a.status === "accepted" && (
                           <Button size="sm" className="rounded-full" onClick={() => advance(a.id, "picked_up")}>
-                            Marcar recogido
+                            {trPT("Marcar recogido")}
                           </Button>
                         )}
                         {a.status === "picked_up" && (
                           <Button size="sm" className="rounded-full" onClick={() => advance(a.id, "in_transit")}>
-                            En camino
+                            {trPT("En camino")}
                           </Button>
                         )}
                         {["picked_up", "in_transit"].includes(a.status) && (
@@ -368,8 +369,7 @@ const Repartidor = () => {
             <TabsContent value="jobs" className="space-y-3 pt-4">
               {jobs.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  No hay pedidos compatibles ahora. Marca tu disponibilidad y comparte tu ubicación para recibir mejores
-                  recomendaciones.
+                  {trPT("No hay pedidos compatibles ahora. Marca tu disponibilidad y comparte tu ubicación para recibir mejores recomendaciones.")}
                 </p>
               )}
               {jobs.map((j) => (
@@ -381,12 +381,12 @@ const Repartidor = () => {
                       </p>
                       <Badge variant="outline">Compatibilidad {Number(j.score).toFixed(0)}</Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">Recogida: {j.pickup_address ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground">Destino: {j.dropoff_address ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">{trPT("Recogida:")} {j.pickup_address ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">{trPT("Destino:")} {j.dropoff_address ?? "—"}</p>
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       {j.distance_to_pickup != null && (
                         <span className="flex items-center gap-1">
-                          <Navigation className="h-3 w-3" /> {Number(j.distance_to_pickup).toFixed(1)} km a la recogida
+                          <Navigation className="h-3 w-3" /> {Number(j.distance_to_pickup).toFixed(1)} {trPT("km a la recogida")}
                         </span>
                       )}
                       {j.extra_distance != null && (
@@ -395,14 +395,14 @@ const Repartidor = () => {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs">Envío: ${Number(j.delivery_fee ?? 0).toFixed(2)}</p>
+                    <p className="text-xs">{trPT("Envío: $")}{Number(j.delivery_fee ?? 0).toFixed(2)}</p>
                   </CardContent>
                 </Card>
               ))}
             </TabsContent>
 
             <TabsContent value="history" className="space-y-3 pt-4">
-              {history.length === 0 && <p className="text-sm text-muted-foreground">Sin entregas registradas.</p>}
+              {history.length === 0 && <p className="text-sm text-muted-foreground">{trPT("Sin entregas registradas.")}</p>}
               {history.map((a) => (
                 <Card key={a.id}>
                   <CardContent className="p-4 flex items-center justify-between text-sm">

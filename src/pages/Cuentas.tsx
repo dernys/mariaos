@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
@@ -120,9 +121,9 @@ export default function Cuentas() {
 
         <StatRow>
           <MiniStatCard label="Total" value={list.length} icon={Users} tone="primary" />
-          <MiniStatCard label="Con saldo" value={withDebt} icon={AlertTriangle} tone={withDebt > 0 ? "warning" : "default"} />
+          <MiniStatCard label={trPT("Con saldo")} value={withDebt} icon={AlertTriangle} tone={withDebt > 0 ? "warning" : "default"} />
           <MiniStatCard
-            label={isPayable ? "Por pagar" : "Por cobrar"}
+            label={isPayable ? trPT("Por pagar") : trPT("Por cobrar")}
             value={`$${totalDebt.toLocaleString()}`}
             icon={DollarSign}
             tone={totalDebt > 0 ? (isPayable ? "warning" : "destructive") : "success"}
@@ -132,7 +133,7 @@ export default function Cuentas() {
         <TableToolbar
           search={table.search}
           onSearchChange={table.setSearch}
-          searchPlaceholder="Buscar por nombre, teléfono, email..."
+          searchPlaceholder={trPT("Buscar por nombre, teléfono, email...")}
           filters={[{
             key: "balance", label: "Saldo", value: table.filters.balance || "__all__",
             onChange: (v) => table.setFilter("balance", v),
@@ -157,7 +158,7 @@ export default function Cuentas() {
           <div className="bg-card rounded-xl shadow-card border overflow-hidden">
             <div className="px-4 py-3 border-b flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-warning" />
-              <h3 className="text-sm font-semibold">Vencimientos de cuentas por pagar</h3>
+              <h3 className="text-sm font-semibold">{trPT("Vencimientos de cuentas por pagar")}</h3>
               <Badge variant="outline" className="text-[10px]">{payables.length}</Badge>
             </div>
             <Table>
@@ -177,7 +178,7 @@ export default function Cuentas() {
                   return (
                     <TableRow key={ap.id}>
                       <TableCell className="text-xs font-medium">{supplier?.name || "—"}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{ap.description || ap.source_type}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{trPT(ap.description) || ap.source_type}</TableCell>
                       <TableCell className="text-xs">
                         <Badge variant="outline" className={`text-[10px] ${overdue ? "bg-destructive/10 text-destructive" : "bg-muted"}`}>
                           {ap.due_date ? format(new Date(ap.due_date), "dd/MM/yyyy") : "—"}
@@ -225,7 +226,7 @@ export default function Cuentas() {
                           </Button>
                           <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground" onClick={() => openPay(p)} disabled={debt <= 0}>
                             {isPayable ? <ArrowUpFromLine className="h-3 w-3 mr-1" /> : <ArrowDownToLine className="h-3 w-3 mr-1" />}
-                            {isPayable ? "Pagar" : "Cobrar"}
+                            {isPayable ? trPT("Pagar") : trPT("Cobrar")}
                           </Button>
                         </div>
                       </TableCell>
@@ -233,7 +234,7 @@ export default function Cuentas() {
                   );
                 })}
                 {table.total === 0 && (
-                  <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-8">Sin registros</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-8">{trPT("Sin registros")}</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
@@ -254,7 +255,7 @@ export default function Cuentas() {
           partyName={activeParty.name}
           amountDue={Math.max(0, Number(activeParty.balance || 0))}
           referenceType={null}
-          title={isPayable ? "Pagar a proveedor" : "Registrar cobro"}
+          title={isPayable ? trPT("Pagar a proveedor") : trPT("Registrar cobro")}
           onPaid={fetchAll}
         />
       )}

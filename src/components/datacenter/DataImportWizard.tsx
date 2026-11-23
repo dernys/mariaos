@@ -1,3 +1,4 @@
+import { tr as trPT } from "@/i18n/tr";
 import { useMemo, useRef, useState } from "react";
 import {
   AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Download, FileSpreadsheet, Loader2, ShieldCheck, Upload,
@@ -84,7 +85,7 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
   };
 
   const onFile = async (file: File) => {
-    if (file.size > MAX_BYTES) { toast({ title: "Archivo demasiado grande", description: "El límite es 6 MB.", variant: "destructive" }); return; }
+    if (file.size > MAX_BYTES) { toast({ title: trPT("Archivo demasiado grande"), description: trPT("El límite es 6 MB."), variant: "destructive" }); return; }
     try {
       const buf = await file.arrayBuffer();
       bufferRef.current = buf;
@@ -95,14 +96,14 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
       setChecksum(await sha256Hex(buf));
       setStep(2);
     } catch (e) {
-      toast({ title: "No se pudo leer el archivo", description: (e as Error).message, variant: "destructive" });
+      toast({ title: trPT("No se pudo leer el archivo"), description: (e as Error).message, variant: "destructive" });
     }
   };
 
   const changeSheet = (name: string) => {
     if (!bufferRef.current) return;
     try { loadSheet(bufferRef.current, name); }
-    catch (e) { toast({ title: "Hoja no utilizable", description: (e as Error).message, variant: "destructive" }); }
+    catch (e) { toast({ title: trPT("Hoja no utilizable"), description: (e as Error).message, variant: "destructive" }); }
   };
 
   const missingRequired = form.fields.filter((fd) => fd.required && !Object.values(mapping).includes(fd.key));
@@ -123,7 +124,7 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
         entity: form.key, rows: staged.length, file_name: fileName,
       });
     } catch (e) {
-      toast({ title: "No se pudo preparar la revisión", description: (e as Error).message, variant: "destructive" });
+      toast({ title: trPT("No se pudo preparar la revisión"), description: (e as Error).message, variant: "destructive" });
     }
     setBusy(false);
   };
@@ -191,7 +192,7 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
       const edited = rows.filter((r) => r.edited).length;
       if (edited) logEvent("IMPORT_MODIFIED", `${edited} filas corregidas manualmente antes de confirmar`, { entity: form.key, edited });
     } catch (e) {
-      toast({ title: "Error al validar en el servidor", description: (e as Error).message, variant: "destructive" });
+      toast({ title: trPT("Error al validar en el servidor"), description: (e as Error).message, variant: "destructive" });
     }
     setBusy(false);
   };
@@ -208,9 +209,9 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
       setResult(res);
       setStep(5);
       onDone?.();
-      toast({ title: "Importación completada", description: `${res.created ?? 0} creados · ${res.updated ?? 0} actualizados` });
+      toast({ title: trPT("Importación completada"), description: `${res.created ?? 0} creados · ${res.updated ?? 0} actualizados` });
     } catch (e) {
-      toast({ title: "Importación fallida", description: (e as Error).message, variant: "destructive" });
+      toast({ title: trPT("Importación fallida"), description: (e as Error).message, variant: "destructive" });
     }
     setBusy(false);
   };
@@ -218,7 +219,7 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
   const cancel = () => {
     logEvent("IMPORT_CANCELLED", `Importación de ${form.label} cancelada antes de confirmar`, { entity: form.key, rows: rows.length });
     reset();
-    toast({ title: "Importación cancelada", description: "No se modificó ningún dato." });
+    toast({ title: trPT("Importación cancelada"), description: trPT("No se modificó ningún dato.") });
   };
 
   const downloadErrors = () => {
@@ -238,9 +239,9 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Upload className="h-5 w-5 text-primary" /> Estudio de importación
+          <Upload className="h-5 w-5 text-primary" /> {trPT("Estudio de importación")}
         </CardTitle>
-        <CardDescription>Paso {step} de 5 · {STEPS[step - 1]}</CardDescription>
+        <CardDescription>Paso {step} {trPT("de 5 ·")} {STEPS[step - 1]}</CardDescription>
         <div className="flex gap-1 pt-2">
           {STEPS.map((s, i) => (
             <div key={s} className={`h-1.5 flex-1 rounded-full ${i < step ? "bg-primary" : "bg-muted"}`} />
@@ -253,31 +254,31 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>¿Qué vas a importar?</Label>
+                <Label>{trPT("¿Qué vas a importar?")}</Label>
                 <Select value={entity} onValueChange={(v) => { setEntity(v); reset(); setEntity(v); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {forms.map((f) => <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>)}
+                    {forms.map((f) => <SelectItem key={f.key} value={f.key}>{trPT(f.label)}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">{form.description}</p>
+                <p className="text-xs text-muted-foreground">{trPT(form.description)}</p>
               </div>
               <div className="space-y-2">
                 <Label>Duplicados</Label>
                 <Select value={strategy} onValueChange={(v) => setStrategy(v as Strategy)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="upsert">Crear nuevos y actualizar existentes</SelectItem>
-                    <SelectItem value="create">Solo crear nuevos (ignorar existentes)</SelectItem>
-                    <SelectItem value="update">Solo actualizar existentes</SelectItem>
-                    <SelectItem value="fail">Detener si hay duplicados</SelectItem>
+                    <SelectItem value="upsert">{trPT("Crear nuevos y actualizar existentes")}</SelectItem>
+                    <SelectItem value="create">{trPT("Solo crear nuevos (ignorar existentes)")}</SelectItem>
+                    <SelectItem value="update">{trPT("Solo actualizar existentes")}</SelectItem>
+                    <SelectItem value="fail">{trPT("Detener si hay duplicados")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <Button variant="outline" size="sm" onClick={() => downloadEntityTemplate(form)}>
-              <Download className="h-4 w-4 mr-2" /> Descargar plantilla de {form.label}
+              <Download className="h-4 w-4 mr-2" /> {trPT("Descargar plantilla de")} {trPT(form.label)}
             </Button>
 
             <div
@@ -287,8 +288,8 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
               onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) onFile(f); }}
             >
               <FileSpreadsheet className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm font-medium">Arrastra tu Excel, CSV o la plantilla del negocio completo</p>
-              <p className="text-xs text-muted-foreground mt-1">Máximo {MAX_ROWS} filas por hoja · 6 MB</p>
+              <p className="text-sm font-medium">{trPT("Arrastra tu Excel, CSV o la plantilla del negocio completo")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{trPT("Máximo")} {MAX_ROWS} {trPT("filas por hoja · 6 MB")}</p>
               <input
                 ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.currentTarget.value = ""; }}
@@ -303,37 +304,37 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div className="text-sm">
                 <span className="font-medium">{fileName}</span>
-                <span className="text-muted-foreground"> · {rawRows.length} filas · {headers.length} columnas</span>
+                <span className="text-muted-foreground"> · {rawRows.length} {trPT("filas ·")} {headers.length} columnas</span>
               </div>
               {sheets.length > 1 && (
                 <div className="space-y-1">
-                  <Label className="text-xs">Hoja del archivo</Label>
+                  <Label className="text-xs">{trPT("Hoja del archivo")}</Label>
                   <Select value={sheet} onValueChange={changeSheet}>
                     <SelectTrigger className="h-8 w-[240px] text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {sheets.map((s) => (
                         <SelectItem key={s} value={s}>
-                          {s}{entityForSheet(forms, s) ? "" : " (no reconocida)"}
+                          {s}{entityForSheet(forms, s) ? "" : trPT(" (no reconocida)")}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               )}
-              <Button variant="ghost" size="sm" onClick={reset}>Cambiar archivo</Button>
+              <Button variant="ghost" size="sm" onClick={reset}>{trPT("Cambiar archivo")}</Button>
             </div>
 
             <Alert>
-              <AlertTitle className="text-sm">Destino: {form.label}</AlertTitle>
+              <AlertTitle className="text-sm">{trPT("Destino:")} {trPT(form.label)}</AlertTitle>
               <AlertDescription className="text-xs">
-                Detectado a partir de la hoja «{sheet}». Puedes cambiar la hoja o volver atrás para elegir otra entidad.
+                {trPT("Detectado a partir de la hoja «")}{sheet}{trPT("». Puedes cambiar la hoja o volver atrás para elegir otra entidad.")}
               </AlertDescription>
             </Alert>
 
             {missingRequired.length > 0 && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Faltan columnas obligatorias</AlertTitle>
+                <AlertTitle>{trPT("Faltan columnas obligatorias")}</AlertTitle>
                 <AlertDescription>{missingRequired.map((f) => f.header).join(", ")}</AlertDescription>
               </Alert>
             )}
@@ -342,9 +343,9 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Columna del archivo</TableHead>
-                    <TableHead>Campo del sistema</TableHead>
-                    <TableHead>Primer valor</TableHead>
+                    <TableHead>{trPT("Columna del archivo")}</TableHead>
+                    <TableHead>{trPT("Campo del sistema")}</TableHead>
+                    <TableHead>{trPT("Primer valor")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -358,7 +359,7 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
                         >
                           <SelectTrigger className="h-8 w-56"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="__ignore">— Ignorar —</SelectItem>
+                            <SelectItem value="__ignore">{trPT("— Ignorar —")}</SelectItem>
                             {form.fields.map((fd) => (
                               <SelectItem key={fd.key} value={fd.key}>{fd.header}{fd.required ? " *" : ""}</SelectItem>
                             ))}
@@ -375,10 +376,10 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
             </div>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4 mr-2" /> Atrás</Button>
+              <Button variant="outline" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4 mr-2" /> {trPT("Atrás")}</Button>
               <Button onClick={startReview} disabled={busy || missingRequired.length > 0}>
                 {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ArrowRight className="h-4 w-4 mr-2" />}
-                Analizar y revisar
+                {trPT("Analizar y revisar")}
               </Button>
             </div>
           </div>
@@ -395,7 +396,7 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
                 { label: "Con errores", value: summary.errors },
               ].map((s) => (
                 <div key={s.label} className="rounded-lg border p-3">
-                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                  <p className="text-xs text-muted-foreground">{trPT(s.label)}</p>
                   <p className="text-2xl font-semibold">{s.value as number}</p>
                 </div>
               ))}
@@ -404,11 +405,11 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
             {summary.errors > 0 && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>{summary.errors} filas con errores críticos</AlertTitle>
+                <AlertTitle>{summary.errors} {trPT("filas con errores críticos")}</AlertTitle>
                 <AlertDescription className="space-y-2">
-                  <p>Corrige las celdas marcadas o excluye esas filas para poder continuar.</p>
+                  <p>{trPT("Corrige las celdas marcadas o excluye esas filas para poder continuar.")}</p>
                   <Button size="sm" variant="outline" onClick={downloadErrors}>
-                    <Download className="h-4 w-4 mr-2" /> Informe de revisión (CSV)
+                    <Download className="h-4 w-4 mr-2" /> {trPT("Informe de revisión (CSV)")}
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -428,12 +429,12 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
               </div>
               <Button onClick={goPreview} disabled={busy || summary.blocked || summary.create + summary.update === 0}>
                 {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ArrowRight className="h-4 w-4 mr-2" />}
-                Ver preview final
+                {trPT("Ver preview final")}
               </Button>
             </div>
             {summary.blocked && (
               <p className="text-xs text-destructive">
-                No puedes continuar mientras existan errores críticos en filas incluidas.
+                {trPT("No puedes continuar mientras existan errores críticos en filas incluidas.")}
               </p>
             )}
           </div>
@@ -443,7 +444,7 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
         {step === 4 && serverPreview && (
           <div className="space-y-4">
             <div className="rounded-lg border divide-y">
-              <div className="p-3 font-medium text-sm">Resumen de importación</div>
+              <div className="p-3 font-medium text-sm">{trPT("Resumen de importación")}</div>
               {[
                 ["Nuevos", serverPreview.to_create],
                 ["Actualizaciones", serverPreview.to_update],
@@ -461,32 +462,32 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
 
             <Alert>
               <ShieldCheck className="h-4 w-4" />
-              <AlertTitle>¿Qué va a cambiar?</AlertTitle>
+              <AlertTitle>{trPT("¿Qué va a cambiar?")}</AlertTitle>
               <AlertDescription className="text-sm space-y-1">
-                <p>{form.label}: {serverPreview.to_create} nuevos y {serverPreview.to_update} actualizados.</p>
+                <p>{trPT(form.label)}: {serverPreview.to_create} {trPT("nuevos y")} {serverPreview.to_update} actualizados.</p>
                 {summary.newCategories.length > 0 && (
-                  <p>Categorías nuevas detectadas: {summary.newCategories.join(", ")}</p>
+                  <p>{trPT("Categorías nuevas detectadas:")} {summary.newCategories.join(", ")}</p>
                 )}
-                <p>Los registros excluidos y las filas con errores no se tocan.</p>
+                <p>{trPT("Los registros excluidos y las filas con errores no se tocan.")}</p>
               </AlertDescription>
             </Alert>
 
             {summary.newCategories.length > 0 && (
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox checked={createCategories} onCheckedChange={(v) => setCreateCategories(!!v)} />
-                Crear las {summary.newCategories.length} categorías nuevas al importar
+                {trPT("Crear las")} {summary.newCategories.length} {trPT("categorías nuevas al importar")}
               </label>
             )}
 
             <label className="flex items-center gap-2 text-sm">
               <Checkbox checked={restorePoint} onCheckedChange={(v) => setRestorePoint(!!v)} />
-              Crear punto de restauración antes de guardar (si falla, la importación se cancela)
+              {trPT("Crear punto de restauración antes de guardar (si falla, la importación se cancela)")}
             </label>
 
             {serverPreview.errors > 0 && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>El servidor rechazó {serverPreview.errors} filas</AlertTitle>
+                <AlertTitle>{trPT("El servidor rechazó")} {serverPreview.errors} filas</AlertTitle>
                 <AlertDescription className="text-xs">
                   {(serverPreview.error_rows ?? []).slice(0, 5).map((e: any, i: number) => (
                     <p key={i}>Fila {e.row}: {e.problem}</p>
@@ -497,12 +498,12 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
 
             <div className="flex flex-wrap justify-between gap-2">
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setStep(3)}><ArrowLeft className="h-4 w-4 mr-2" /> Volver a revisar</Button>
+                <Button variant="outline" onClick={() => setStep(3)}><ArrowLeft className="h-4 w-4 mr-2" /> {trPT("Volver a revisar")}</Button>
                 <Button variant="ghost" onClick={cancel}>Cancelar</Button>
               </div>
               <Button onClick={commit} disabled={busy || serverPreview.errors > 0 || serverPreview.to_create + serverPreview.to_update === 0}>
                 {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                Confirmar e importar
+                {trPT("Confirmar e importar")}
               </Button>
             </div>
           </div>
@@ -513,16 +514,16 @@ export function DataImportWizard({ forms, tenantId, onDone }: Props) {
           <div className="space-y-4 text-center py-6">
             <CheckCircle2 className="h-12 w-12 mx-auto text-primary" />
             <div className="space-y-1">
-              <p className="text-lg font-semibold">Importación completada</p>
+              <p className="text-lg font-semibold">{trPT("Importación completada")}</p>
               <p className="text-sm text-muted-foreground">
-                {result.created ?? 0} creados · {result.updated ?? 0} actualizados · {summary.excluded} excluidos
+                {result.created ?? 0} {trPT("creados ·")} {result.updated ?? 0} {trPT("actualizados ·")} {summary.excluded} excluidos
                 {result.categories_created ? ` · ${result.categories_created} categorías nuevas` : ""}
               </p>
               {result.restore_point_id && (
-                <Badge variant="outline" className="mt-2">Punto de restauración creado</Badge>
+                <Badge variant="outline" className="mt-2">{trPT("Punto de restauración creado")}</Badge>
               )}
             </div>
-            <Button onClick={reset}>Importar otro archivo</Button>
+            <Button onClick={reset}>{trPT("Importar otro archivo")}</Button>
           </div>
         )}
       </CardContent>
