@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef, useId, useMemo } from "react"
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useTenantContext } from "./useTenantContext";
+import { offlineDB } from "@/lib/offline/db";
 
 export interface ActiveShift {
   id: string;
@@ -33,13 +34,23 @@ export function useActiveShift() {
       return;
     }
     setLoading(true);
-    const { data } = await supabase
-      .from("sales_shifts")
-      .select("id, user_id, store_id, store_name, opened_at, opening_cash")
-      .eq("tenant_id", tenantId)
-      .eq("status", "open")
-      .order("opened_at", { ascending: false });
-    setOpenShifts(((data as ActiveShift[]) || []));
+    const cacheKey = `${tenantId}:open_shifts`;
+    const { data, error } = navigator.onLine
+      ? await supabase
+          .from("sales_shifts")
+          .select("id, user_id, store_id, store_name, opened_at, opening_cash")
+          .eq("tenant_id", tenantId)
+          .eq("status", "open")
+          .order("opened_at", { ascending: false })
+      : { data: null, error: new Error("offline") };
+    if (!error && data) {
+      setOpenShifts(data as ActiveShift[]);
+      void offlineDB.snapshots.put({ key: cacheKey, tenant_id: tenantId, kind: "open_shifts", data, updated_at: Date.now() }).catch(() => {});
+    } else {
+      // Sin red: último listado verificado de turnos abiertos de este negocio.
+      const blob = await offlineDB.snapshots.get(cacheKey).catch(() => undefined);
+      setOpenShifts(blob?.tenant_id === tenantId ? (blob.data as ActiveShift[]) : []);
+    }
     setLoading(false);
   }, [user, tenantId]);
 

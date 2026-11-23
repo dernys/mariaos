@@ -12,6 +12,7 @@ import { usePOSSettings } from "@/hooks/usePOSSettings";
 import { FloorMap } from "./FloorMap";
 import { SplitBillDialog } from "./SplitBillDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { loadPOSProducts } from "@/lib/offline/posProducts";
 import { usePOSStock, notifyStockChanged } from "@/hooks/usePOSStock";
 import { toast as stockToast } from "sonner";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -123,9 +124,13 @@ export function POSRestaurant() {
 
   useEffect(() => {
     if (!tenantId) return;
-    supabase.from("products").select("id, name, price, sku, stock, category, image_url").eq("tenant_id", tenantId).eq("is_active", true).order("category").then(({ data }) => {
-      if (data) setProducts(data);
+    let cancelled = false;
+    void loadPOSProducts(tenantId, "category").then(({ data, offline }) => {
+      if (cancelled) return;
+      setProducts(data as any);
+      if (offline && data.length) stockToast.info(t("pos.bar.offlineToast"));
     });
+    return () => { cancelled = true; };
   }, [tenantId]);
 
   const categories = useMemo(() => ["Todos", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[]], [products]);
