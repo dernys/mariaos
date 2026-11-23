@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { availableStock } from "@/lib/pos/stockRule";
+import { offlineDB } from "@/lib/offline/db";
+
+// Copia verificada por tenant+tienda para operar sin conexión (nunca de otra tienda).
+const cacheKey = (tenantId: string, storeId: string | null | undefined) => `${tenantId}:pos_stock:${storeId ?? "tenant"}`;
 
 /**
  * Existencia real por tienda para el POS.
@@ -20,8 +24,20 @@ export function usePOSStock(tenantId: string | null | undefined, storeId: string
   const requestVersion = useRef(0);
 
   const refresh = useCallback(async () => {
-    if (!tenantId || !navigator.onLine) return;
+    if (!tenantId) return;
     const version = ++requestVersion.current;
+    const loadCached = async () => {
+      try {
+        const blob = await offlineDB.snapshots.get(cacheKey(tenantId, storeId));
+        if (currentScope.current !== scope || requestVersion.current !== version) return;
+        if (!blob || blob.tenant_id !== tenantId || blob.data?.scope !== scope) return;
+        setStoreStock(new Map(blob.data.stock as [string, number][]));
+        setRecipeIds(new Set(blob.data.recipes as string[]));
+        setLoadedScope(scope);
+        setLoaded(true);
+      } catch { /* sin copia: se mantiene en 0 */ }
+    };
+    if (!navigator.onLine) { await loadCached(); return; }
     const locType = storeId ? "store" : "tenant";
     const locId = storeId ?? tenantId;
     const [stockRes, recipeRes] = await Promise.all([
@@ -33,10 +49,14 @@ export function usePOSStock(tenantId: string | null | undefined, storeId: string
     if (stockRes.error || recipeRes.error || !stockRes.data || !recipeRes.data) {
       setLoaded(false);
       setLoadedScope(null);
+      await loadCached();
       return;
     }
-    setStoreStock(new Map(stockRes.data.map((r) => [r.product_id, Number(r.stock ?? 0)])));
-    setRecipeIds(new Set(recipeRes.data.map((r) => r.product_id)));
+    const stockEntries = stockRes.data.map((r) => [r.product_id, Number(r.stock ?? 0)] as [string, number]);
+    const recipes = recipeRes.data.map((r) => r.product_id);
+    setStoreStock(new Map(stockEntries));
+    setRecipeIds(new Set(recipes));
+    void offlineDB.snapshots.put({ key: cacheKey(tenantId, storeId), tenant_id: tenantId, kind: "pos_stock", data: { scope, stock: stockEntries, recipes }, updated_at: Date.now() }).catch(() => {});
     setLoadedScope(scope);
     setLoaded(true);
   }, [tenantId, storeId, scope]);
