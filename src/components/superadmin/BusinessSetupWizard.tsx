@@ -181,7 +181,7 @@ export function BusinessSetupWizard({
       warehouse_type: w.warehouse_type ?? "general",
     })));
     const pm: Record<string, boolean> = {};
-    (cfg.payment_methods ?? []).forEach((m: any) => (pm[m.type] = true));
+    (cfg.payment_methods ?? []).forEach((m: any) => (pm[m.name] = true));
     setMethods(pm);
     setPosCfg({
       tax_included: cfg.pos?.tax_included ?? true,
@@ -236,7 +236,7 @@ export function BusinessSetupWizard({
     if (!template) return;
     setCreating(true);
     setFailure(null);
-    const cfgMethods = (template.config?.payment_methods ?? []).filter((m: any) => methods[m.type]);
+    const cfgMethods = (template.config?.payment_methods ?? []).filter((m: any) => methods[m.name]);
     const payload = {
       name: info.name.trim(),
       slug: slugify(info.slug || info.name),
@@ -493,7 +493,7 @@ export function BusinessSetupWizard({
                         <Input type="email" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })} />
                       </div>
                       <div>
-                        <Label className="text-xs">Identificación fiscal (NIT/RFC)</Label>
+                        <Label className="text-xs">{template?.default_country_code === "BR" ? "CNPJ / CPF" : "Identificación fiscal (NIT/RFC)"}</Label>
                         <Input value={info.rfc} onChange={(e) => setInfo({ ...info, rfc: e.target.value })} />
                       </div>
                       <div className="sm:col-span-2">
@@ -645,11 +645,11 @@ export function BusinessSetupWizard({
                     <div className="space-y-2">
                       {(template?.config?.payment_methods ?? []).map((m: any) => (
                         <ToggleRow
-                          key={m.type}
+                          key={m.name}
                           label={m.name}
                           hint={m.type}
-                          checked={!!methods[m.type]}
-                          onChange={(v) => setMethods({ ...methods, [m.type]: v })}
+                          checked={!!methods[m.name]}
+                          onChange={(v) => setMethods({ ...methods, [m.name]: v })}
                         />
                       ))}
                       <p className="text-[11px] text-muted-foreground pt-2">
@@ -675,7 +675,7 @@ export function BusinessSetupWizard({
                               <Input
                                 type="email"
                                 value={adminForm.email}
-                                placeholder="admin@negocio.cu"
+                                placeholder={template?.default_country_code === "BR" ? "admin@empresa.com.br" : "admin@negocio.cu"}
                                 onChange={(e) => {
                                   setAdminForm({ ...adminForm, email: e.target.value, mode: "new" });
                                   setAdminCheck(null);

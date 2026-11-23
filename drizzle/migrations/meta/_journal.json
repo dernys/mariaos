@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1795460289847,
+      "tag": "0000_brazil_accounting_engine_and_templates",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795460319461,
+      "tag": "0001_brazil_resync_existing_tenants",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795460344217,
+      "tag": "0002_brazil_fix_auto_mappings",
+      "breakpoints": true
+    }
+  ]
+}

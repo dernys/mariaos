@@ -10277,6 +10277,10 @@ export type Database = {
         Args: { p_ibge: string; p_service?: string }
         Returns: number
       }
+      br_mapping_account_code: {
+        Args: { p_key: string; p_profile: string }
+        Returns: string
+      }
       calculate_shift_summary: { Args: { p_shift_id: string }; Returns: Json }
       can_manage_accounting: { Args: { _tenant: string }; Returns: boolean }
       cancel_delivery_assignment: {

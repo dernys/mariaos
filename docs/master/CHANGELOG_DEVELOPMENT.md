@@ -44,3 +44,11 @@
 - Cobro POS usa la moneda base del tenant (no CUP fijo).
 - Plantilla `LOJA_BR` (BRL, PIX, BR-SIMP) y demo `Mercado Piracicaba` (20 productos de ejemplo en Loja Centro). Clave demo renovada (la anterior era rechazada por la protección de claves filtradas).
 - Pendiente: ~100 pantallas con textos fijos en español (Turnos, Data Center, etc.); PIX dinámico; venta E2E en la demo BR no probada.
+
+## 2026-11-23 — Brasil: motor contable y plantillas
+- `ensure_default_accounts` omite tenants BR; `sync_accounting_mappings` usa `br_mapping_account_code()` para BR.
+- Nuevas cuentas BR: 1.1.06, 2.1.13, 2.1.14, 4.2.01, 4.2.02, 5.1.02, 5.3.02, 5.4.02.
+- Mercado Piracicaba: mapeos corregidos (verificado por consulta), cuentas genéricas ES desactivadas.
+- Plantillas: LOJA_BR (actualizada), RESTAURANTE_BR, BAR_BR, SERVICOS_BR.
+- Wizard: medios de pago por nombre (débito/crédito ya no colisionan), etiqueta CNPJ/CPF.
+- Pendiente: creación E2E de un negocio BR desde el wizard no probada.
