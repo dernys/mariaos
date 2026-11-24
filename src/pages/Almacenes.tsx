@@ -92,7 +92,7 @@ const Almacenes = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { if (tenantId) fetchData(); }, [tenantId]);
 
   const openNew = () => { setEditing(null); setForm({ name: "", location: "", capacity: "0" }); setSelectedStores([]); setDialogOpen(true); };
   const openEdit = (w: WarehouseItem) => {
@@ -103,16 +103,22 @@ const Almacenes = () => {
   };
 
   const syncStores = async (warehouseId: string) => {
+    try { await syncStoresImpl(warehouseId); return true; }
+    catch (e: any) { toast({ title: "Error", description: e?.message ?? String(e), variant: "destructive" }); return false; }
+  };
+  const syncStoresImpl = async (warehouseId: string) => {
     const current = links[warehouseId] || [];
     const toAdd = selectedStores.filter((s) => !current.includes(s));
     const toRemove = current.filter((s) => !selectedStores.includes(s));
     if (toAdd.length) {
-      await supabase.from("warehouse_stores").insert(
+      const { error } = await supabase.from("warehouse_stores").insert(
         toAdd.map((store_id) => ({ warehouse_id: warehouseId, store_id, tenant_id: tenantId! })),
       );
+      if (error) throw error;
     }
     if (toRemove.length) {
-      await supabase.from("warehouse_stores").delete().eq("warehouse_id", warehouseId).in("store_id", toRemove);
+      const { error } = await supabase.from("warehouse_stores").delete().eq("warehouse_id", warehouseId).in("store_id", toRemove);
+      if (error) throw error;
     }
   };
 
@@ -122,14 +128,14 @@ const Almacenes = () => {
     if (editing) {
       const { error } = await supabase.from("warehouses").update(payload).eq("id", editing.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-      await syncStores(editing.id);
+      if (!(await syncStores(editing.id))) return;
       await logActivity({ entity_type: "warehouse", entity_id: editing.id, action: "Almacén actualizado", description: `Se actualizó ${payload.name} · ${selectedStores.length} tienda(s) asociada(s)`, tenant_id: tenantId, performed_by: user?.id });
       toast({ title: trPT("Almacén actualizado") });
     } else {
       const { data, error } = await supabase.from("warehouses").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       if (data) {
-        await syncStores(data.id);
+        if (!(await syncStores(data.id))) return;
         await logActivity({ entity_type: "warehouse", entity_id: data.id, action: "Almacén creado", description: `Se creó ${payload.name} · ${selectedStores.length} tienda(s) asociada(s)`, tenant_id: tenantId, performed_by: user?.id });
       }
       toast({ title: trPT("Almacén creado") });

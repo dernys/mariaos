@@ -57,7 +57,7 @@ export default function Conteos() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchCounts(); }, []);
+  useEffect(() => { if (tenantId) fetchCounts(); }, [tenantId]);
 
   const openCount = async (c: Count) => {
     setActiveCount(c);
@@ -118,13 +118,15 @@ export default function Conteos() {
   };
 
   const updateCounted = async (it: Item, val: number) => {
-    await supabase.from("physical_count_items").update({ counted_qty: val }).eq("id", it.id);
+    const { error } = await supabase.from("physical_count_items").update({ counted_qty: val }).eq("id", it.id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     setItems(items.map((i) => i.id === it.id ? { ...i, counted_qty: val, difference: val - i.expected_qty } : i));
   };
 
   const completeCount = async () => {
     if (!activeCount) return;
-    await supabase.from("physical_counts").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", activeCount.id);
+    const { error } = await supabase.from("physical_counts").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", activeCount.id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     await logActivity({ entity_type: "physical_count", entity_id: activeCount.id, action: "Conteo completado", description: `${items.length} productos`, tenant_id: tenantId, performed_by: user?.id });
     toast({ title: trPT("Conteo completado") });
     setActiveCount(null);

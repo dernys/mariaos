@@ -166,7 +166,7 @@ export default function Transferencias() {
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { if (tenantId) fetchAll(); }, [tenantId]);
 
 
   const openTracking = async (tr: Transfer) => {

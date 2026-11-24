@@ -1,3 +1,4 @@
+import { useTenant } from "@/hooks/useTenant";
 import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
@@ -82,7 +83,8 @@ export default function Cuentas() {
     setPayables((ap.data as any[]) || []);
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  const tenantId = useTenant();
+  useEffect(() => { if (tenantId) fetchAll(); }, [tenantId]);
 
   const list = tab === "customer" ? customers : tab === "employee" ? employees : suppliers;
   const isPayable = tab === "supplier";

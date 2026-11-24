@@ -1,3 +1,4 @@
+import { useTenant } from "@/hooks/useTenant";
 import { tr as trPT } from "@/i18n/tr";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
@@ -28,7 +29,8 @@ export default function Consignacion() {
     ]);
     setLots(lR.data || []); setSettlements(sR.data || []);
   };
-  useEffect(() => { fetchAll(); }, []);
+  const tenantId = useTenant();
+  useEffect(() => { if (tenantId) fetchAll(); }, [tenantId]);
 
   const activeLots = lots.filter((l) => l.status === "active");
   const totalUnits = activeLots.reduce((a, l) => a + Number(l.quantity_remaining || 0), 0);

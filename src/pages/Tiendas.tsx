@@ -77,7 +77,7 @@ const Tiendas = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { if (tenantId) fetchData(); }, [tenantId]);
 
   const openNew = () => {
     setEditing(null);
@@ -131,7 +131,8 @@ const Tiendas = () => {
   };
 
   const toggleActive = async (s: StoreItem) => {
-    await supabase.from("stores").update({ is_active: !s.is_active }).eq("id", s.id);
+    const { error } = await supabase.from("stores").update({ is_active: !s.is_active }).eq("id", s.id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     await logActivity({ entity_type: "store", entity_id: s.id, action: s.is_active ? "Tienda desactivada" : "Tienda activada", tenant_id: tenantId, performed_by: user?.id });
     fetchData();
   };

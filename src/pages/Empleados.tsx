@@ -85,7 +85,7 @@ const Empleados = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchEmployees(); }, []);
+  useEffect(() => { if (tenantId) fetchEmployees(); }, [tenantId]);
 
   const openNew = () => {
     setEditing(null);

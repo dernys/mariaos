@@ -114,7 +114,7 @@ export default function Compras() {
     setCurrenciesList((curR.data as any) || []);
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { if (tenantId) fetchAll(); }, [tenantId]);
 
   const subtotal = items.reduce((a, b) => a + (Number(b.qty) || 0) * (Number(b.cost) || 0), 0);
   const selectedTax = taxes.find((t) => t.id === taxRateId);
